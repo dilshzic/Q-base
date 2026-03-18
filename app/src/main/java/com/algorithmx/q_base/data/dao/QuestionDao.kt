@@ -14,6 +14,9 @@ interface QuestionDao {
     @Query("SELECT * FROM Questions WHERE category = :category")
     fun getQuestionsByCategory(category: String): Flow<List<Question>>
 
+    @Query("SELECT * FROM Questions WHERE category = :category AND subject = :subject")
+    fun getQuestionsByCategoryAndSubject(category: String, subject: String): Flow<List<Question>>
+
     @Query("SELECT * FROM Question_Options WHERE question_id = :questionId")
     fun getOptionsForQuestion(questionId: String): Flow<List<QuestionOption>>
 

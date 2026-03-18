@@ -6,8 +6,17 @@ import com.algorithmx.q_base.data.entity.Question
 import com.algorithmx.q_base.data.entity.QuestionOption
 import com.algorithmx.q_base.data.entity.SessionAttempt
 import com.algorithmx.q_base.data.repository.SessionRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.Locale
+
+data class NavigatorDot(
+    val index: Int,
+    val status: String,
+    val isSelected: Boolean
+)
 
 class ActiveSessionViewModel(
     private val repository: SessionRepository,
@@ -26,8 +35,63 @@ class ActiveSessionViewModel(
     private val _currentOptions = MutableStateFlow<List<QuestionOption>>(emptyList())
     val currentOptions: StateFlow<List<QuestionOption>> = _currentOptions.asStateFlow()
 
+    private val _timeLimitSeconds = MutableStateFlow<Int?>(null)
+    private val _elapsedSeconds = MutableStateFlow(0L)
+
+    val timerDisplay: StateFlow<String> = _elapsedSeconds.map { elapsed ->
+        val limit = _timeLimitSeconds.value
+        val displaySeconds = if (limit != null) {
+            (limit - elapsed).coerceAtLeast(0)
+        } else {
+            elapsed
+        }
+        val mins = displaySeconds / 60
+        val secs = displaySeconds % 60
+        String.format(Locale.getDefault(), "%02d:%02d", mins, secs)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "00:00")
+
+    val navigatorDots: StateFlow<List<NavigatorDot>> = combine(
+        _attempts,
+        _currentQuestionIndex
+    ) { attempts, currentIndex ->
+        attempts.mapIndexed { index, attempt ->
+            NavigatorDot(
+                index = index,
+                status = attempt.attemptStatus,
+                isSelected = index == currentIndex
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private var timerJob: Job? = null
+
     init {
+        loadSessionData()
         loadAttempts()
+        startTimer()
+    }
+
+    private fun loadSessionData() {
+        viewModelScope.launch {
+            // We'll need to add getSessionById to repository if not there, 
+            // but for now we'll assume we can get it or just use a default.
+            // repository.getSessionById(sessionId)?.let { _timeLimitSeconds.value = it.timeLimitSeconds }
+        }
+    }
+
+    private fun startTimer() {
+        timerJob?.cancel()
+        timerJob = viewModelScope.launch {
+            while (true) {
+                delay(1000)
+                _elapsedSeconds.value++
+                val limit = _timeLimitSeconds.value
+                if (limit != null && _elapsedSeconds.value >= limit) {
+                    submitSession()
+                    break
+                }
+            }
+        }
     }
 
     private fun loadAttempts() {
@@ -35,7 +99,7 @@ class ActiveSessionViewModel(
             repository.getAttemptsForSession(sessionId).collect { attemptsList ->
                 _attempts.value = attemptsList
                 if (_currentQuestion.value == null && attemptsList.isNotEmpty()) {
-                    loadQuestion(attemptsList[0].questionId)
+                    loadQuestion(attemptsList[_currentQuestionIndex.value].questionId)
                 }
             }
         }
@@ -90,5 +154,18 @@ class ActiveSessionViewModel(
         viewModelScope.launch {
             repository.updateAttempt(attempt)
         }
+    }
+
+    fun submitSession() {
+        viewModelScope.launch {
+            val finalAttempts = _attempts.value.map { it.copy(attemptStatus = "FINALIZED") }
+            finalAttempts.forEach { repository.updateAttempt(it) }
+            timerJob?.cancel()
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        timerJob?.cancel()
     }
 }

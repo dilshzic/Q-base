@@ -5,59 +5,107 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.OutlinedFlag
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.algorithmx.q_base.data.entity.Question
-import com.algorithmx.q_base.data.entity.QuestionOption
-import com.algorithmx.q_base.data.entity.SessionAttempt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActiveSessionScreen(
     viewModel: ActiveSessionViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onViewResults: () -> Unit
 ) {
-    val currentQuestion by viewModel.currentQuestion.collectAsState()
-    val options by viewModel.currentOptions.collectAsState()
-    val attempts by viewModel.attempts.collectAsState()
-    val currentIndex by viewModel.currentQuestionIndex.collectAsState()
+    val currentQuestion by viewModel.currentQuestion.collectAsStateWithLifecycle()
+    val options by viewModel.currentOptions.collectAsStateWithLifecycle()
+    val attempts by viewModel.attempts.collectAsStateWithLifecycle()
+    val currentIndex by viewModel.currentQuestionIndex.collectAsStateWithLifecycle()
+    val timerText by viewModel.timerDisplay.collectAsStateWithLifecycle()
+    val navDots by viewModel.navigatorDots.collectAsStateWithLifecycle()
     
     var showNavigator by remember { mutableStateOf(false) }
     val currentAttempt = attempts.getOrNull(currentIndex)
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Question ${currentIndex + 1} of ${attempts.size}") },
-                actions = {
-                    IconButton(onClick = { viewModel.toggleFlag() }) {
+            Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
+                TopAppBar(
+                    title = {
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            Text(text = "Time: $timerText", style = MaterialTheme.typography.titleMedium)
+                        }
+                    },
+                    navigationIcon = {
+                        TextButton(onClick = onNavigateBack) {
+                            Text("[X] Quit", color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    actions = {
+                        TextButton(onClick = { 
+                            viewModel.submitSession()
+                            onViewResults()
+                        }) {
+                            Text("[ Submit ]", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                )
+                
+                // Inline Master Navigator Section
+                Column(modifier = Modifier.padding(bottom = 8.dp)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showNavigator = true }
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Master Navigator", 
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
                         Icon(
-                            imageVector = if (currentAttempt?.attemptStatus == "FLAGGED") Icons.Default.Flag else Icons.Default.OutlinedFlag,
-                            contentDescription = "Flag Question",
-                            tint = if (currentAttempt?.attemptStatus == "FLAGGED") Color(0xFFFFA500) else LocalContentColor.current
+                            Icons.Default.KeyboardArrowDown, 
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.secondary
                         )
                     }
-                    IconButton(onClick = { showNavigator = true }) {
-                        Icon(Icons.Default.GridView, contentDescription = "Master Navigator")
+                    
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        itemsIndexed(navDots) { _, dot ->
+                            StatusDot(
+                                status = dot.status,
+                                isSelected = dot.isSelected,
+                                onClick = { viewModel.navigateToQuestion(dot.index) }
+                            )
+                        }
                     }
                 }
-            )
+                HorizontalDivider()
+            }
         },
         bottomBar = {
             Surface(tonalElevation = 3.dp) {
@@ -68,17 +116,21 @@ fun ActiveSessionScreen(
                         .navigationBarsPadding(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Button(
+                    TextButton(
                         onClick = { viewModel.navigateToQuestion(currentIndex - 1) },
                         enabled = currentIndex > 0
                     ) {
-                        Text("Previous")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Previous Question")
                     }
-                    Button(
+                    TextButton(
                         onClick = { viewModel.navigateToQuestion(currentIndex + 1) },
                         enabled = currentIndex < attempts.size - 1
                     ) {
-                        Text("Next")
+                        Text("Next Question")
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
                     }
                 }
             }
@@ -93,9 +145,17 @@ fun ActiveSessionScreen(
         ) {
             currentQuestion?.let { question ->
                 Text(
+                    text = "Question ${currentIndex + 1} of ${attempts.size}",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
                     text = question.stem ?: "No question stem available",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Medium
                 )
                 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -103,10 +163,17 @@ fun ActiveSessionScreen(
                 options.forEach { option ->
                     val isSelected = currentAttempt?.userSelectedAnswers?.split(",")?.contains(option.optionLetter ?: "") == true
                     
+                    val surfaceColor = if (isSelected) {
+                        if (question.questionType == "SBA") Color(0xFFE3F2FD) // Soft blue for SBA selection
+                        else MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    }
+
                     Surface(
                         onClick = { viewModel.onAnswerSelected(option.optionLetter ?: "") },
                         shape = MaterialTheme.shapes.medium,
-                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                        color = surfaceColor,
                         border = BorderStroke(
                             1.dp, 
                             if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
@@ -116,8 +183,7 @@ fun ActiveSessionScreen(
                             .padding(vertical = 4.dp)
                     ) {
                         Row(
-                            modifier = Modifier
-                                .padding(16.dp),
+                            modifier = Modifier.padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (question.questionType == "SBA") {
@@ -132,9 +198,36 @@ fun ActiveSessionScreen(
                                 )
                             }
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text(text = option.optionText ?: "")
+                            Text(text = "${option.optionLetter}. ${option.optionText}")
                         }
                     }
+                }
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                // Flag for Review Button
+                OutlinedButton(
+                    onClick = { viewModel.toggleFlag() },
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    colors = if (currentAttempt?.attemptStatus == "FLAGGED") {
+                        ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color(0xFFFFF3E0),
+                            contentColor = Color(0xFFE65100)
+                        )
+                    } else {
+                        ButtonDefaults.outlinedButtonColors()
+                    },
+                    border = BorderStroke(
+                        1.dp,
+                        if (currentAttempt?.attemptStatus == "FLAGGED") Color(0xFFFFB74D) else MaterialTheme.colorScheme.outline
+                    )
+                ) {
+                    Icon(
+                        imageVector = if (currentAttempt?.attemptStatus == "FLAGGED") Icons.Default.Flag else Icons.Default.OutlinedFlag,
+                        contentDescription = null
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = if (currentAttempt?.attemptStatus == "FLAGGED") "Flagged (🟠)" else "Flag for Review")
                 }
             }
         }
@@ -143,8 +236,7 @@ fun ActiveSessionScreen(
     if (showNavigator) {
         ModalBottomSheet(onDismissRequest = { showNavigator = false }) {
             MasterNavigator(
-                attempts = attempts,
-                currentIndex = currentIndex,
+                dots = navDots,
                 onQuestionClick = { index ->
                     viewModel.navigateToQuestion(index)
                     showNavigator = false
@@ -155,9 +247,30 @@ fun ActiveSessionScreen(
 }
 
 @Composable
+fun StatusDot(status: String, isSelected: Boolean, onClick: () -> Unit) {
+    val color = when (status) {
+        "ATTEMPTED" -> Color(0xFF2196F3) // Blue
+        "FLAGGED" -> Color(0xFFFFA500) // Orange
+        "FINALIZED" -> Color.DarkGray
+        else -> Color(0xFFE0E0E0) // Gray
+    }
+    
+    Box(
+        modifier = Modifier
+            .size(20.dp)
+            .clip(CircleShape)
+            .background(color)
+            .then(
+                if (isSelected) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                else Modifier
+            )
+            .clickable { onClick() }
+    )
+}
+
+@Composable
 fun MasterNavigator(
-    attempts: List<SessionAttempt>,
-    currentIndex: Int,
+    dots: List<NavigatorDot>,
     onQuestionClick: (Int) -> Unit
 ) {
     Column(
@@ -179,9 +292,9 @@ fun MasterNavigator(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.heightIn(max = 400.dp)
         ) {
-            itemsIndexed(attempts) { index, attempt ->
-                val backgroundColor = when (attempt.attemptStatus) {
-                    "ATTEMPTED" -> MaterialTheme.colorScheme.primary
+            itemsIndexed(dots) { index, dot ->
+                val backgroundColor = when (dot.status) {
+                    "ATTEMPTED" -> Color(0xFF2196F3)
                     "FLAGGED" -> Color(0xFFFFA500)
                     "FINALIZED" -> Color.DarkGray
                     else -> Color.Transparent
@@ -193,8 +306,8 @@ fun MasterNavigator(
                         .clip(CircleShape)
                         .background(backgroundColor)
                         .border(
-                            width = if (index == currentIndex) 3.dp else 1.dp,
-                            color = if (index == currentIndex) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outline,
+                            width = if (dot.isSelected) 3.dp else 1.dp,
+                            color = if (dot.isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                             shape = CircleShape
                         )
                         .clickable { onQuestionClick(index) },
@@ -202,10 +315,10 @@ fun MasterNavigator(
                 ) {
                     Text(
                         text = (index + 1).toString(),
-                        color = if (attempt.attemptStatus == "UNATTEMPTED") 
+                        color = if (dot.status == "UNATTEMPTED") 
                                     MaterialTheme.colorScheme.onSurface 
                                 else Color.White,
-                        fontWeight = if (index == currentIndex) FontWeight.ExtraBold else FontWeight.Normal
+                        fontWeight = if (dot.isSelected) FontWeight.ExtraBold else FontWeight.Normal
                     )
                 }
             }

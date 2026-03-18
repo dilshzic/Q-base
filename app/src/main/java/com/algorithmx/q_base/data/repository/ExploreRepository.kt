@@ -15,11 +15,16 @@ class ExploreRepository(
 ) {
     fun getAllCategories(): Flow<List<MasterCategory>> = categoryDao.getAllCategories()
 
-    fun getCollectionsByCategory(masterCategory: String): Flow<List<QuestionCollection>> =
-        categoryDao.getCollectionsByCategory(masterCategory)
+    fun getCollectionsByMasterCategoryId(masterCategoryId: String): Flow<List<QuestionCollection>> =
+        categoryDao.getCollectionsByMasterCategoryId(masterCategoryId)
 
-    fun getQuestionsByCategory(category: String): Flow<List<Question>> =
-        questionDao.getQuestionsByCategory(category)
+    /** All questions in a collection via the crossref join — for subject derivation. */
+    fun getQuestionsForCollection(collectionId: String): Flow<List<Question>> =
+        categoryDao.getQuestionsForCollection(collectionId)
+
+    /** Returns questions filtered by both collection and subject (for the Questions screen). */
+    fun getQuestionsByCategoryAndSubject(category: String, subject: String): Flow<List<Question>> =
+        questionDao.getQuestionsByCategoryAndSubject(category, subject)
 
     fun getOptionsForQuestion(questionId: String): Flow<List<QuestionOption>> =
         questionDao.getOptionsForQuestion(questionId)
@@ -27,3 +32,4 @@ class ExploreRepository(
     fun getAnswerForQuestion(questionId: String): Flow<Answer?> =
         questionDao.getAnswerForQuestion(questionId)
 }
+

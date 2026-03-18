@@ -9,8 +9,13 @@ data class StudySession(
     @PrimaryKey
     @ColumnInfo(name = "session_id")
     val sessionId: String,
+    @ColumnInfo(name = "title")
+    val title: String = "",
     @ColumnInfo(name = "time_limit_seconds")
     val timeLimitSeconds: Int?,
     @ColumnInfo(name = "score_achieved")
-    val scoreAchieved: Float
+    val scoreAchieved: Float = 0f,
+    @ColumnInfo(name = "created_timestamp")
+    val createdTimestamp: Long = System.currentTimeMillis()
 )
+

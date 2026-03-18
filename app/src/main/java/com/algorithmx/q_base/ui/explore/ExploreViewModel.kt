@@ -19,6 +19,10 @@ class ExploreViewModel(private val repository: ExploreRepository) : ViewModel() 
     private val _collections = MutableStateFlow<List<QuestionCollection>>(emptyList())
     val collections: StateFlow<List<QuestionCollection>> = _collections.asStateFlow()
 
+    // Distinct subjects inside the selected collection
+    private val _subjects = MutableStateFlow<List<String>>(emptyList())
+    val subjects: StateFlow<List<String>> = _subjects.asStateFlow()
+
     private val _questions = MutableStateFlow<List<Question>>(emptyList())
     val questions: StateFlow<List<Question>> = _questions.asStateFlow()
 
@@ -28,17 +32,35 @@ class ExploreViewModel(private val repository: ExploreRepository) : ViewModel() 
     private val _currentAnswer = MutableStateFlow<Answer?>(null)
     val currentAnswer: StateFlow<Answer?> = _currentAnswer.asStateFlow()
 
-    fun selectCategory(masterCategory: String) {
+    /** Called with the UUID of the clicked Master Category. */
+    fun selectCategory(masterCategoryId: String) {
         viewModelScope.launch {
-            repository.getCollectionsByCategory(masterCategory).collect {
+            repository.getCollectionsByMasterCategoryId(masterCategoryId).collect {
                 _collections.value = it
             }
         }
     }
 
-    fun selectCollection(category: String) {
+    /** Called with the UUID of the clicked Collection. Loads subjects via crossref join. */
+    fun selectCollection(collectionId: String) {
         viewModelScope.launch {
-            repository.getQuestionsByCategory(category).collect {
+            repository.getQuestionsForCollection(collectionId).collect { questions ->
+                _subjects.value = questions
+                    .mapNotNull { it.subject?.trim() }
+                    .filter { it.isNotEmpty() }
+                    .distinct()
+                    .sorted()
+            }
+        }
+    }
+
+    /**
+     * Called with the collection title (category) and subject name.
+     * Questions are still queried by the string fields on the Question entity.
+     */
+    fun selectSubject(category: String, subject: String) {
+        viewModelScope.launch {
+            repository.getQuestionsByCategoryAndSubject(category, subject).collect {
                 _questions.value = it
             }
         }
@@ -55,3 +77,4 @@ class ExploreViewModel(private val repository: ExploreRepository) : ViewModel() 
         }
     }
 }
+

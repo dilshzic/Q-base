@@ -1,20 +1,26 @@
 package com.algorithmx.q_base.ui.sessions
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.text.KeyboardOptions
 import com.algorithmx.q_base.data.entity.MasterCategory
 import com.algorithmx.q_base.data.entity.StudySession
 import java.util.Locale
@@ -22,55 +28,142 @@ import java.util.Locale
 @Composable
 fun SessionsListScreen(
     sessions: List<StudySession>,
+    categories: List<MasterCategory>,
     onSessionClick: (String) -> Unit,
     onFabClick: () -> Unit
 ) {
     Scaffold(
+        topBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .statusBarsPadding(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Q-base",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Person, contentDescription = "Profile")
+                }
+            }
+        },
         floatingActionButton = {
-            FloatingActionButton(onClick = onFabClick) {
+            FloatingActionButton(
+                onClick = onFabClick,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White
+            ) {
                 Icon(Icons.Default.Add, contentDescription = "Create Session")
             }
         }
     ) { padding ->
-        if (sessions.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            item {
                 Text(
-                    text = "No past sessions found.\nTap + to start a new one.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    text = "Master Categories",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(16.dp)
+                )
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(categories) { category ->
+                        CategoryChip(category.name)
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                Text(
+                    text = "Recent Sessions",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(16.dp)
                 )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-                items(sessions) { session ->
-                    ListItem(
-                        headlineContent = { Text("Session ${session.sessionId.take(8)}") },
-                        supportingContent = { 
-                            val score = String.format(Locale.getDefault(), "%.1f", session.scoreAchieved)
-                            Text("Score: $score%") 
-                        },
-                        trailingContent = {
-                            if (session.scoreAchieved >= 80f) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        },
-                        modifier = Modifier.clickable { onSessionClick(session.sessionId) }
-                    )
-                    HorizontalDivider()
+
+            if (sessions.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 64.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No sessions yet. Tap + to start.")
+                    }
                 }
+            } else {
+                items(sessions) { session ->
+                    SessionCard(session, onSessionClick)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CategoryChip(name: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier.clickable { }
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = name, fontWeight = FontWeight.Medium)
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(Icons.Default.ChevronRight, contentDescription = null, modifier = Modifier.size(16.dp))
+        }
+    }
+}
+
+@Composable
+fun SessionCard(session: StudySession, onSessionClick: (String) -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onSessionClick(session.sessionId) },
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Mock Session: ${session.sessionId.take(5).uppercase()}",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val score = String.format(Locale.getDefault(), "%.0f", session.scoreAchieved)
+                Text(
+                    text = "Score: $score%",
+                    color = if (session.scoreAchieved >= 50) Color(0xFF2E7D32) else Color.Red,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(" | ", color = Color.Gray)
+                Text("50 Questions", style = MaterialTheme.typography.bodySmall)
+                Text(" | ", color = Color.Gray)
+                Text("45 Mins", style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -123,9 +216,9 @@ fun CreateSessionBottomSheet(
                 ) {
                     categories.forEach { category ->
                         DropdownMenuItem(
-                            text = { Text(category.masterCategory) },
+                            text = { Text(category.name) },
                             onClick = {
-                                selectedCategory = category.masterCategory
+                                selectedCategory = category.name
                                 expanded = false
                             }
                         )

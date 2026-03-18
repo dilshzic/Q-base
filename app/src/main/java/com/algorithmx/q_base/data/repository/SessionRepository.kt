@@ -5,6 +5,7 @@ import com.algorithmx.q_base.data.dao.QuestionDao
 import com.algorithmx.q_base.data.dao.SessionDao
 import com.algorithmx.q_base.data.entity.MasterCategory
 import com.algorithmx.q_base.data.entity.Question
+import com.algorithmx.q_base.data.entity.QuestionCollection
 import com.algorithmx.q_base.data.entity.QuestionOption
 import com.algorithmx.q_base.data.entity.SessionAttempt
 import com.algorithmx.q_base.data.entity.StudySession
@@ -21,21 +22,28 @@ class SessionRepository(
 
     fun getAllCategories(): Flow<List<MasterCategory>> = categoryDao.getAllCategories()
 
+    fun getAllCollections(): Flow<List<QuestionCollection>> = sessionDao.getAllCollections()
+
+    suspend fun getSessionById(sessionId: String): StudySession? = sessionDao.getSessionById(sessionId)
+
     suspend fun createNewSession(
-        category: String,
+        categoryName: String,
         questionCount: Int,
         timeLimitSeconds: Int?
     ): String {
         val sessionId = UUID.randomUUID().toString()
+        
+        // Find questions by category name (stemming from the 'category' field in Question entity)
+        val allQuestions = questionDao.getQuestionsByCategory(categoryName).first()
+        val selectedQuestions = allQuestions.shuffled().take(questionCount)
+
         val session = StudySession(
             sessionId = sessionId,
+            title = "$categoryName – $questionCount Qs",
             timeLimitSeconds = timeLimitSeconds,
-            scoreAchieved = 0f
+            createdTimestamp = System.currentTimeMillis()
         )
-        
-        val allQuestions = questionDao.getQuestionsByCategory(category).first()
-        val selectedQuestions = allQuestions.shuffled().take(questionCount)
-        
+
         val attempts = selectedQuestions.map { question ->
             SessionAttempt(
                 sessionId = sessionId,
@@ -44,10 +52,10 @@ class SessionRepository(
                 userSelectedAnswers = ""
             )
         }
-        
+
         sessionDao.insertSession(session)
         sessionDao.insertAttempts(attempts)
-        
+
         return sessionId
     }
 

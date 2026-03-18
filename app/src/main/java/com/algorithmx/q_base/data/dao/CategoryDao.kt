@@ -1,7 +1,9 @@
 package com.algorithmx.q_base.data.dao
 
 import androidx.room.*
+import com.algorithmx.q_base.data.entity.CollectionQuestionCrossRef
 import com.algorithmx.q_base.data.entity.MasterCategory
+import com.algorithmx.q_base.data.entity.Question
 import com.algorithmx.q_base.data.entity.QuestionCollection
 import kotlinx.coroutines.flow.Flow
 
@@ -10,15 +12,26 @@ interface CategoryDao {
     @Query("SELECT * FROM Master_Categories")
     fun getAllCategories(): Flow<List<MasterCategory>>
 
-    @Query("SELECT * FROM Question_Collections")
-    fun getAllCollections(): Flow<List<QuestionCollection>>
+    @Query("SELECT COUNT(*) FROM Master_Categories")
+    suspend fun getMasterCategoryCount(): Int
 
-    @Query("SELECT * FROM Question_Collections WHERE master_category = :masterCategory")
-    fun getCollectionsByCategory(masterCategory: String): Flow<List<QuestionCollection>>
+    @Query("SELECT * FROM Question_Collections WHERE master_category_id = :masterCategoryId")
+    fun getCollectionsByMasterCategoryId(masterCategoryId: String): Flow<List<QuestionCollection>>
+
+    @Query("""
+        SELECT q.* FROM Questions q
+        INNER JOIN Collection_Questions_CrossRef x ON q.question_id = x.question_id
+        WHERE x.collection_id = :collectionId
+    """)
+    fun getQuestionsForCollection(collectionId: String): Flow<List<Question>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMasterCategories(categories: List<MasterCategory>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCollections(collections: List<QuestionCollection>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCrossRefs(refs: List<CollectionQuestionCrossRef>)
 }
+

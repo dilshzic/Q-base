@@ -33,5 +33,8 @@ data class SessionAttempt(
     @ColumnInfo(name = "attempt_status")
     val attemptStatus: String, // "UNATTEMPTED", "ATTEMPTED", "FLAGGED", "FINALIZED"
     @ColumnInfo(name = "user_selected_answers")
-    val userSelectedAnswers: String
+    val userSelectedAnswers: String,
+    @ColumnInfo(name = "time_spent_seconds")
+    val timeSpentSeconds: Int = 0
 )
+

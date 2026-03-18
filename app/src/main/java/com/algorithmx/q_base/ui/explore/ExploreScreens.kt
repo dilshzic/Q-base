@@ -34,11 +34,11 @@ fun CategoryListScreen(
         LazyColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
             items(categories) { category ->
                 ListItem(
-                    headlineContent = { Text(category.masterCategory) },
+                    headlineContent = { Text(category.name) },
                     trailingContent = {
                         Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null)
                     },
-                    modifier = Modifier.clickable { onCategoryClick(category.masterCategory) }
+                    modifier = Modifier.clickable { onCategoryClick(category.masterCategoryId) }
                 )
                 HorizontalDivider()
             }
@@ -50,7 +50,7 @@ fun CategoryListScreen(
 @Composable
 fun CollectionListScreen(
     collections: List<QuestionCollection>,
-    onCollectionClick: (String) -> Unit,
+    onCollectionClick: (QuestionCollection) -> Unit,
     onBack: () -> Unit
 ) {
     Scaffold(
@@ -68,13 +68,57 @@ fun CollectionListScreen(
         LazyColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
             items(collections) { collection ->
                 ListItem(
-                    headlineContent = { Text(collection.category) },
+                    headlineContent = { Text(collection.title) },
                     trailingContent = {
                         Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null)
                     },
-                    modifier = Modifier.clickable { onCollectionClick(collection.category) }
+                    modifier = Modifier.clickable { onCollectionClick(collection) }
                 )
                 HorizontalDivider()
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SubjectListScreen(
+    category: String,
+    subjects: List<String>,
+    onSubjectClick: (String) -> Unit,
+    onBack: () -> Unit
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(category) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        if (subjects.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            LazyColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
+                items(subjects) { subject ->
+                    ListItem(
+                        headlineContent = { Text(subject) },
+                        trailingContent = {
+                            Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null)
+                        },
+                        modifier = Modifier.clickable { onSubjectClick(subject) }
+                    )
+                    HorizontalDivider()
+                }
             }
         }
     }

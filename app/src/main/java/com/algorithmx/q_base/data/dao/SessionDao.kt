@@ -1,6 +1,7 @@
 package com.algorithmx.q_base.data.dao
 
 import androidx.room.*
+import com.algorithmx.q_base.data.entity.QuestionCollection
 import com.algorithmx.q_base.data.entity.SessionAttempt
 import com.algorithmx.q_base.data.entity.StudySession
 import kotlinx.coroutines.flow.Flow
@@ -12,6 +13,12 @@ interface SessionDao {
 
     @Query("SELECT * FROM Study_Sessions ORDER BY session_id DESC")
     fun getAllSessions(): Flow<List<StudySession>>
+
+    @Query("SELECT * FROM Study_Sessions WHERE session_id = :sessionId")
+    suspend fun getSessionById(sessionId: String): StudySession?
+
+    @Query("SELECT * FROM Question_Collections")
+    fun getAllCollections(): Flow<List<QuestionCollection>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAttempts(attempts: List<SessionAttempt>)
