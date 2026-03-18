@@ -35,6 +35,7 @@ data class SessionAttempt(
     @ColumnInfo(name = "user_selected_answers")
     val userSelectedAnswers: String,
     @ColumnInfo(name = "time_spent_seconds")
-    val timeSpentSeconds: Int = 0
+    val timeSpentSeconds: Int = 0,
+    @ColumnInfo(name = "marks_obtained")
+    val marksObtained: Float = 0f
 )
-

@@ -25,5 +25,7 @@ data class QuestionOption(
     @ColumnInfo(name = "option_letter")
     val optionLetter: String?,
     @ColumnInfo(name = "option_text")
-    val optionText: String?
+    val optionText: String?,
+    @ColumnInfo(name = "option_explanation")
+    val optionExplanation: String? = null
 )

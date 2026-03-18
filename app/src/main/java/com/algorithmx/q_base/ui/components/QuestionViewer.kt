@@ -1,15 +1,20 @@
 package com.algorithmx.q_base.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.algorithmx.q_base.data.entity.Question
@@ -62,11 +67,13 @@ fun QuestionViewer(
     isAnswerRevealed: Boolean = false,
     correctAnswers: List<String> = emptyList(),
     explanation: String? = null,
+    references: String? = null,
     onCheckAnswer: (() -> Unit)? = null
 ) {
     val scrollState = rememberScrollState()
     val isSBA = question.questionType == "SBA"
     val isMTF = question.questionType == "MTF"
+    val isDarkMode = isSystemInDarkTheme()
 
     // Marking Logic
     val marks = remember(isAnswerRevealed, selectedAnswers, correctAnswers, isSBA, isMTF) {
@@ -91,7 +98,7 @@ fun QuestionViewer(
                     }
                 }
                 total.coerceIn(0f, 5f)
-            } else 0f // Default or other types
+            } else 0f
         }
     }
 
@@ -112,8 +119,19 @@ fun QuestionViewer(
                 color = MaterialTheme.colorScheme.secondary
             )
             if (isAnswerRevealed) {
+                val markBgColor = if (marks > 0) {
+                    if (isDarkMode) Color(0xFF1B5E20) else Color(0xFFE8F5E9)
+                } else {
+                    if (isDarkMode) Color(0xFFB71C1C) else Color(0xFFFFEBEE)
+                }
+                val markTextColor = if (marks > 0) {
+                    if (isDarkMode) Color(0xFFA5D6A7) else Color(0xFF2E7D32)
+                } else {
+                    if (isDarkMode) Color(0xFFEF9A9A) else Color(0xFFC62828)
+                }
+
                 Surface(
-                    color = if (marks > 0) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
+                    color = markBgColor,
                     shape = MaterialTheme.shapes.small
                 ) {
                     Text(
@@ -121,7 +139,7 @@ fun QuestionViewer(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
-                        color = if (marks > 0) Color(0xFF2E7D32) else Color(0xFFC62828)
+                        color = markTextColor
                     )
                 }
             }
@@ -158,65 +176,111 @@ fun QuestionViewer(
                 correctAnswers.contains(letter)
             }
 
+            // Theme-aware colors for options
             val backgroundColor = when {
-                !isAnswerRevealed -> if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
-                isCorrect -> Color(0xFFE8F5E9) // Soft Green
-                isSelected && !isCorrect -> Color(0xFFFFEBEE) // Soft Red
+                !isAnswerRevealed -> {
+                    if (isSelected) MaterialTheme.colorScheme.primaryContainer 
+                    else MaterialTheme.colorScheme.surface
+                }
+                isCorrect -> {
+                    if (isDarkMode) Color(0xFF1B5E20).copy(alpha = 0.6f) // Darker Green
+                    else Color(0xFFE8F5E9) // Soft Green
+                }
+                isSelected && !isCorrect -> {
+                    if (isDarkMode) Color(0xFFB71C1C).copy(alpha = 0.6f) // Darker Red
+                    else Color(0xFFFFEBEE) // Soft Red
+                }
                 else -> MaterialTheme.colorScheme.surface
             }
 
             val borderColor = when {
-                !isAnswerRevealed -> if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
-                isCorrect -> Color(0xFF4CAF50) // Green
-                isSelected && !isCorrect -> Color(0xFFF44336) // Red
+                !isAnswerRevealed -> {
+                    if (isSelected) MaterialTheme.colorScheme.primary 
+                    else MaterialTheme.colorScheme.outlineVariant
+                }
+                isCorrect -> {
+                    if (isDarkMode) Color(0xFF81C784) else Color(0xFF4CAF50)
+                }
+                isSelected && !isCorrect -> {
+                    if (isDarkMode) Color(0xFFE57373) else Color(0xFFF44336)
+                }
                 else -> MaterialTheme.colorScheme.outlineVariant
             }
 
-            Surface(
-                onClick = { if (!isAnswerRevealed && !isMTF) onOptionToggled(letter) },
-                shape = MaterialTheme.shapes.medium,
-                color = backgroundColor,
-                border = BorderStroke(1.dp, borderColor),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                Surface(
+                    onClick = { if (!isAnswerRevealed && !isMTF) onOptionToggled(letter) },
+                    shape = MaterialTheme.shapes.medium,
+                    color = backgroundColor,
+                    border = BorderStroke(1.dp, borderColor),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    when {
-                        isMTF -> {
-                            TrueFalseToggle(
-                                isTrueSelected = isTrueSelected,
-                                onSelectionChange = { onOptionToggled("${letter}_${if (it) "T" else "F"}") },
-                                enabled = !isAnswerRevealed
-                            )
-                        }
-                        isSBA -> {
-                            RadioButton(
-                                selected = isSelected,
-                                onClick = null,
-                                colors = RadioButtonDefaults.colors(
-                                    selectedColor = if (isAnswerRevealed && isCorrect) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        when {
+                            isMTF -> {
+                                TrueFalseToggle(
+                                    isTrueSelected = isTrueSelected,
+                                    onSelectionChange = { onOptionToggled("${letter}_${if (it) "T" else "F"}") },
+                                    enabled = !isAnswerRevealed
                                 )
-                            )
-                        }
-                        else -> {
-                            Checkbox(
-                                checked = isSelected,
-                                onCheckedChange = null,
-                                colors = CheckboxDefaults.colors(
-                                    checkedColor = if (isAnswerRevealed && isCorrect) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
+                            }
+                            isSBA -> {
+                                RadioButton(
+                                    selected = isSelected,
+                                    onClick = null,
+                                    colors = RadioButtonDefaults.colors(
+                                        selectedColor = if (isAnswerRevealed && isCorrect) {
+                                            if (isDarkMode) Color(0xFF81C784) else Color(0xFF4CAF50)
+                                        } else MaterialTheme.colorScheme.primary
+                                    )
                                 )
+                            }
+                            else -> {
+                                Checkbox(
+                                    checked = isSelected,
+                                    onCheckedChange = null,
+                                    colors = CheckboxDefaults.colors(
+                                        checkedColor = if (isAnswerRevealed && isCorrect) {
+                                            if (isDarkMode) Color(0xFF81C784) else Color(0xFF4CAF50)
+                                        } else MaterialTheme.colorScheme.primary
+                                    )
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "${option.optionLetter}. ${option.optionText}",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+                
+                // Per-option explanation
+                AnimatedVisibility(visible = isAnswerRevealed && !option.optionExplanation.isNullOrBlank()) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                    ) {
+                        Row(modifier = Modifier.padding(8.dp)) {
+                            Icon(
+                                Icons.Default.Info, 
+                                contentDescription = null, 
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.secondary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = option.optionExplanation ?: "",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontStyle = FontStyle.Italic
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "${option.optionLetter}. ${option.optionText}",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
                 }
             }
         }
@@ -241,15 +305,29 @@ fun QuestionViewer(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Explanation",
+                        text = "General Explanation",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = explanation ?: "No explanation available.",
+                        text = explanation ?: "No general explanation available.",
                         style = MaterialTheme.typography.bodyMedium
                     )
+                    
+                    if (!references.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "References",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = references,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
                 }
             }
         }

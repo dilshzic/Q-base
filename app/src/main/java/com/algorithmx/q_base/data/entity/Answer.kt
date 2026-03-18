@@ -12,5 +12,7 @@ data class Answer(
     @ColumnInfo(name = "correct_answer_string")
     val correctAnswerString: String?,
     @ColumnInfo(name = "general_explanation")
-    val generalExplanation: String?
+    val generalExplanation: String?,
+    @ColumnInfo(name = "references")
+    val references: String? = null
 )
