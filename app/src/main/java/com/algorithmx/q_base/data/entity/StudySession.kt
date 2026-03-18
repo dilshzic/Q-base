@@ -1,0 +1,16 @@
+package com.algorithmx.q_base.data.entity
+
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "Study_Sessions")
+data class StudySession(
+    @PrimaryKey
+    @ColumnInfo(name = "session_id")
+    val sessionId: String,
+    @ColumnInfo(name = "time_limit_seconds")
+    val timeLimitSeconds: Int?,
+    @ColumnInfo(name = "score_achieved")
+    val scoreAchieved: Float
+)
