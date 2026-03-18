@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,6 +29,7 @@ import androidx.navigation.navArgument
 import com.algorithmx.q_base.data.AppDatabase
 import com.algorithmx.q_base.data.DatabaseSeeder
 import com.algorithmx.q_base.ui.explore.ExploreViewModel
+import com.algorithmx.q_base.ui.home.HomeScreen
 import com.algorithmx.q_base.ui.navigation.ExploreNavGraph
 import com.algorithmx.q_base.ui.sessions.*
 import com.algorithmx.q_base.ui.theme.QbaseTheme
@@ -103,6 +105,20 @@ fun MainScreen() {
             if (!isSessionActive && !isResultsView) {
                 NavigationBar {
                     NavigationBarItem(
+                        icon = { Icon(Icons.Rounded.Home, contentDescription = null) },
+                        label = { Text("Home") },
+                        selected = currentDestination?.hierarchy?.any { it.route == "home_route" } == true,
+                        onClick = {
+                            navController.navigate("home_route") {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    )
+                    NavigationBarItem(
                         icon = { Icon(Icons.Rounded.Explore, contentDescription = null) },
                         label = { Text("Explore") },
                         selected = currentDestination?.hierarchy?.any { it.route == "explore_route" } == true,
@@ -136,9 +152,16 @@ fun MainScreen() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "explore_route",
+            startDestination = "home_route",
             modifier = Modifier.padding(innerPadding)
         ) {
+            composable("home_route") {
+                HomeScreen(
+                    onNavigateToExplore = { navController.navigate("explore_route") },
+                    onNavigateToSession = { sessionId -> navController.navigate("active_session/$sessionId") },
+                    onNavigateToCollections = { /* TODO */ }
+                )
+            }
             composable("explore_route") {
                 ExploreNavGraph(navController = exploreNavController, viewModel = exploreViewModel)
             }
@@ -187,8 +210,8 @@ fun MainScreen() {
             ) {
                 SessionResultsScreen(
                     onBackToHome = {
-                        navController.navigate("sessions_route") {
-                            popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
+                        navController.navigate("home_route") {
+                            popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                         }
                     }
                 )

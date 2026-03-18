@@ -16,6 +16,7 @@ data class StudySession(
     @ColumnInfo(name = "score_achieved")
     val scoreAchieved: Float = 0f,
     @ColumnInfo(name = "created_timestamp")
-    val createdTimestamp: Long = System.currentTimeMillis()
+    val createdTimestamp: Long = System.currentTimeMillis(),
+    @ColumnInfo(name = "is_completed")
+    val isCompleted: Boolean = false
 )
-

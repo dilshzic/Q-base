@@ -2,17 +2,19 @@ package com.algorithmx.q_base.ui.explore
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.algorithmx.q_base.data.entity.MasterCategory
 import com.algorithmx.q_base.ui.components.QuestionViewer
@@ -28,16 +30,38 @@ fun CategoryListScreen(
             TopAppBar(title = { Text("Medical Categories") })
         }
     ) { padding ->
-        LazyColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 160.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
             items(categories) { category ->
-                ListItem(
-                    headlineContent = { Text(category.name) },
-                    trailingContent = {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null)
-                    },
-                    modifier = Modifier.clickable { onCategoryClick(category.name) }
-                )
-                HorizontalDivider()
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .clickable { onCategoryClick(category.name) },
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = category.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
         }
     }
@@ -95,6 +119,7 @@ fun ExploreQuestionPagerScreen(
                         isAnswerRevealed = state.isAnswerRevealed,
                         correctAnswers = state.answer?.correctAnswerString?.split(",") ?: emptyList(),
                         explanation = state.answer?.generalExplanation,
+                        references = state.answer?.references,
                         onCheckAnswer = { onCheckAnswer(page) }
                     )
                 }

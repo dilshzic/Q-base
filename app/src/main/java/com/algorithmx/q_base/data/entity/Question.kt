@@ -26,5 +26,8 @@ data class Question(
     val subject: String?,
     
     @ColumnInfo(name = "batch")
-    val batch: String?
+    val batch: String?,
+
+    @ColumnInfo(name = "is_pinned")
+    val isPinned: Boolean = false
 )
