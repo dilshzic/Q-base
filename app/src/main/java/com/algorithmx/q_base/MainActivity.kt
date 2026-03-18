@@ -14,9 +14,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -27,29 +27,25 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.algorithmx.q_base.data.AppDatabase
 import com.algorithmx.q_base.data.DatabaseSeeder
-import com.algorithmx.q_base.data.repository.ExploreRepository
-import com.algorithmx.q_base.data.repository.SessionRepository
 import com.algorithmx.q_base.ui.explore.ExploreViewModel
-import com.algorithmx.q_base.ui.explore.ExploreViewModelFactory
 import com.algorithmx.q_base.ui.navigation.ExploreNavGraph
 import com.algorithmx.q_base.ui.sessions.*
 import com.algorithmx.q_base.ui.theme.QbaseTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val isSeeded = MutableStateFlow(false)
+
+    @Inject
+    lateinit var database: AppDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        val database = AppDatabase.getDatabase(this)
-        val exploreRepository = ExploreRepository(database.categoryDao(), database.questionDao())
-        val exploreViewModelFactory = ExploreViewModelFactory(exploreRepository)
-
-        val sessionRepository = SessionRepository(database.sessionDao(), database.categoryDao(), database.questionDao())
-        val sessionsViewModelFactory = SessionsViewModelFactory(sessionRepository)
 
         // Seed database BEFORE showing the UI to avoid race conditions
         lifecycleScope.launch {
@@ -61,7 +57,7 @@ class MainActivity : ComponentActivity() {
             QbaseTheme {
                 val seeded by isSeeded.collectAsStateWithLifecycle()
                 if (seeded) {
-                    MainScreen(exploreViewModelFactory, sessionsViewModelFactory, sessionRepository)
+                    MainScreen()
                 } else {
                     LoadingScreen()
                 }
@@ -89,15 +85,11 @@ fun LoadingScreen() {
 }
 
 @Composable
-fun MainScreen(
-    exploreViewModelFactory: ExploreViewModelFactory,
-    sessionsViewModelFactory: SessionsViewModelFactory,
-    sessionRepository: SessionRepository
-) {
+fun MainScreen() {
     val navController = rememberNavController()
     val exploreNavController = rememberNavController()
-    val exploreViewModel: ExploreViewModel = viewModel(factory = exploreViewModelFactory)
-    val sessionsViewModel: SessionsViewModel = viewModel(factory = sessionsViewModelFactory)
+    val exploreViewModel: ExploreViewModel = hiltViewModel()
+    val sessionsViewModel: SessionsViewModel = hiltViewModel()
     
     var showCreateSessionSheet by remember { mutableStateOf(false) }
 
@@ -177,15 +169,12 @@ fun MainScreen(
             composable(
                 route = "active_session/{sessionId}",
                 arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
-            ) { backStackEntry ->
-                val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
-                val activeSessionViewModel: ActiveSessionViewModel = viewModel(
-                    factory = ActiveSessionViewModelFactory(sessionRepository, sessionId)
-                )
+            ) {
+                val activeSessionViewModel: ActiveSessionViewModel = hiltViewModel()
                 ActiveSessionScreen(
                     viewModel = activeSessionViewModel,
                     onNavigateBack = { navController.popBackStack() },
-                    onViewResults = {
+                    onViewResults = { sessionId ->
                         navController.navigate("session_results/$sessionId") {
                             popUpTo("active_session/$sessionId") { inclusive = true }
                         }
@@ -195,11 +184,8 @@ fun MainScreen(
             composable(
                 route = "session_results/{sessionId}",
                 arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
-            ) { backStackEntry ->
-                val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+            ) {
                 SessionResultsScreen(
-                    sessionId = sessionId,
-                    sessionRepository = sessionRepository,
                     onBackToHome = {
                         navController.navigate("sessions_route") {
                             popUpTo(navController.graph.findStartDestination().id) { inclusive = false }

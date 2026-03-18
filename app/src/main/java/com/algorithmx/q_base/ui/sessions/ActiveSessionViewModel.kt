@@ -1,16 +1,19 @@
 package com.algorithmx.q_base.ui.sessions
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.algorithmx.q_base.data.entity.Question
 import com.algorithmx.q_base.data.entity.QuestionOption
 import com.algorithmx.q_base.data.entity.SessionAttempt
 import com.algorithmx.q_base.data.repository.SessionRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Locale
+import javax.inject.Inject
 
 data class NavigatorDot(
     val index: Int,
@@ -18,10 +21,13 @@ data class NavigatorDot(
     val isSelected: Boolean
 )
 
-class ActiveSessionViewModel(
+@HiltViewModel
+class ActiveSessionViewModel @Inject constructor(
     private val repository: SessionRepository,
-    private val sessionId: String
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val sessionId: String = checkNotNull(savedStateHandle["sessionId"])
 
     private val _attempts = MutableStateFlow<List<SessionAttempt>>(emptyList())
     val attempts: StateFlow<List<SessionAttempt>> = _attempts.asStateFlow()
@@ -71,11 +77,13 @@ class ActiveSessionViewModel(
         startTimer()
     }
 
+    fun getSessionId(): String = sessionId
+
     private fun loadSessionData() {
         viewModelScope.launch {
-            // We'll need to add getSessionById to repository if not there, 
-            // but for now we'll assume we can get it or just use a default.
-            // repository.getSessionById(sessionId)?.let { _timeLimitSeconds.value = it.timeLimitSeconds }
+            repository.getSessionById(sessionId)?.let { 
+                _timeLimitSeconds.value = it.timeLimitSeconds 
+            }
         }
     }
 
@@ -126,16 +134,34 @@ class ActiveSessionViewModel(
         val currentAttempt = _attempts.value.getOrNull(_currentQuestionIndex.value) ?: return
         val question = _currentQuestion.value ?: return
         
-        val newUserAnswers = if (question.questionType == "SBA") {
-            optionLetter
-        } else {
-            val currentSelected = currentAttempt.userSelectedAnswers.split(",").filter { it.isNotEmpty() }.toMutableList()
-            if (currentSelected.contains(optionLetter)) {
-                currentSelected.remove(optionLetter)
-            } else {
-                currentSelected.add(optionLetter)
+        val newUserAnswers = when (question.questionType) {
+            "SBA" -> optionLetter
+            "MTF" -> {
+                val currentSelected = currentAttempt.userSelectedAnswers.split(",").filter { it.isNotEmpty() }.toMutableList()
+                val (letter, _) = if (optionLetter.contains("_")) {
+                    optionLetter.split("_")
+                } else {
+                    listOf(optionLetter, "")
+                }
+                
+                // Remove existing T/F for this specific option
+                currentSelected.removeAll { it.startsWith("${letter}_") }
+                
+                // If it wasn't already the same selection, add it (toggle off if same)
+                if (!currentAttempt.userSelectedAnswers.contains(optionLetter)) {
+                    currentSelected.add(optionLetter)
+                }
+                currentSelected.sorted().joinToString(",")
             }
-            currentSelected.sorted().joinToString(",")
+            else -> {
+                val currentSelected = currentAttempt.userSelectedAnswers.split(",").filter { it.isNotEmpty() }.toMutableList()
+                if (currentSelected.contains(optionLetter)) {
+                    currentSelected.remove(optionLetter)
+                } else {
+                    currentSelected.add(optionLetter)
+                }
+                currentSelected.sorted().joinToString(",")
+            }
         }
 
         updateAttempt(currentAttempt.copy(

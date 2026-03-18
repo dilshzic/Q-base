@@ -12,8 +12,11 @@ import com.algorithmx.q_base.data.entity.StudySession
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class SessionRepository(
+@Singleton
+class SessionRepository @Inject constructor(
     private val sessionDao: SessionDao,
     private val categoryDao: CategoryDao,
     private val questionDao: QuestionDao
@@ -33,8 +36,9 @@ class SessionRepository(
     ): String {
         val sessionId = UUID.randomUUID().toString()
         
-        // Find questions by category name (stemming from the 'category' field in Question entity)
-        val allQuestions = questionDao.getQuestionsByCategory(categoryName).first()
+        // Use getQuestionsByMasterCategory instead of getQuestionsByCategory 
+        // because categoryName passed from UI is the MasterCategory name.
+        val allQuestions = questionDao.getQuestionsByMasterCategory(categoryName).first()
         val selectedQuestions = allQuestions.shuffled().take(questionCount)
 
         val session = StudySession(

@@ -5,76 +5,114 @@ import androidx.lifecycle.viewModelScope
 import com.algorithmx.q_base.data.entity.Answer
 import com.algorithmx.q_base.data.entity.MasterCategory
 import com.algorithmx.q_base.data.entity.Question
-import com.algorithmx.q_base.data.entity.QuestionCollection
 import com.algorithmx.q_base.data.entity.QuestionOption
 import com.algorithmx.q_base.data.repository.ExploreRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ExploreViewModel(private val repository: ExploreRepository) : ViewModel() {
+data class ExploreQuestionState(
+    val question: Question,
+    val options: List<QuestionOption> = emptyList(),
+    val answer: Answer? = null,
+    val selectedOption: String? = null,
+    val isAnswerRevealed: Boolean = false
+)
 
-    val categories: StateFlow<List<MasterCategory>> = repository.getAllCategories()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+@HiltViewModel
+class ExploreViewModel @Inject constructor(
+    private val repository: ExploreRepository
+) : ViewModel() {
 
-    private val _collections = MutableStateFlow<List<QuestionCollection>>(emptyList())
-    val collections: StateFlow<List<QuestionCollection>> = _collections.asStateFlow()
+    private val _categories = MutableStateFlow<List<MasterCategory>>(emptyList())
+    val categories: StateFlow<List<MasterCategory>> = _categories.asStateFlow()
 
-    // Distinct subjects inside the selected collection
-    private val _subjects = MutableStateFlow<List<String>>(emptyList())
-    val subjects: StateFlow<List<String>> = _subjects.asStateFlow()
+    private val _questionStates = MutableStateFlow<List<ExploreQuestionState>>(emptyList())
+    val questionStates: StateFlow<List<ExploreQuestionState>> = _questionStates.asStateFlow()
 
-    private val _questions = MutableStateFlow<List<Question>>(emptyList())
-    val questions: StateFlow<List<Question>> = _questions.asStateFlow()
+    init {
+        loadCategories()
+    }
 
-    private val _currentOptions = MutableStateFlow<List<QuestionOption>>(emptyList())
-    val currentOptions: StateFlow<List<QuestionOption>> = _currentOptions.asStateFlow()
-
-    private val _currentAnswer = MutableStateFlow<Answer?>(null)
-    val currentAnswer: StateFlow<Answer?> = _currentAnswer.asStateFlow()
-
-    /** Called with the UUID of the clicked Master Category. */
-    fun selectCategory(masterCategoryId: String) {
+    private fun loadCategories() {
         viewModelScope.launch {
-            repository.getCollectionsByMasterCategoryId(masterCategoryId).collect {
-                _collections.value = it
+            repository.getAllCategories().collect { _categories.value = it }
+        }
+    }
+
+    fun loadQuestionsByMasterCategory(categoryName: String) {
+        viewModelScope.launch {
+            repository.getQuestionsByMasterCategory(categoryName).collect { questions ->
+                val states = questions.map { ExploreQuestionState(it) }
+                _questionStates.value = states
+                
+                if (states.isNotEmpty()) {
+                    loadQuestionDetails(0)
+                }
             }
         }
     }
 
-    /** Called with the UUID of the clicked Collection. Loads subjects via crossref join. */
-    fun selectCollection(collectionId: String) {
+    fun loadQuestionDetails(index: Int) {
+        val states = _questionStates.value
+        if (index !in states.indices) return
+        val state = states[index]
+        if (state.options.isNotEmpty()) return
+
         viewModelScope.launch {
-            repository.getQuestionsForCollection(collectionId).collect { questions ->
-                _subjects.value = questions
-                    .mapNotNull { it.subject?.trim() }
-                    .filter { it.isNotEmpty() }
-                    .distinct()
-                    .sorted()
+            val options = repository.getOptionsForQuestion(state.question.questionId).first()
+            val answer = repository.getAnswerForQuestion(state.question.questionId).first()
+            
+            _questionStates.update { current ->
+                current.mapIndexed { i, s ->
+                    if (i == index) s.copy(options = options, answer = answer) else s
+                }
             }
         }
     }
 
-    /**
-     * Called with the collection title (category) and subject name.
-     * Questions are still queried by the string fields on the Question entity.
-     */
-    fun selectSubject(category: String, subject: String) {
-        viewModelScope.launch {
-            repository.getQuestionsByCategoryAndSubject(category, subject).collect {
-                _questions.value = it
+    fun selectOption(index: Int, optionLetter: String) {
+        _questionStates.update { current ->
+            current.mapIndexed { i, s ->
+                if (i == index && !s.isAnswerRevealed) {
+                    val newSelection = when (s.question.questionType) {
+                        "SBA" -> optionLetter
+                        "MTF" -> {
+                            val currentSelected = s.selectedOption?.split(",")?.filter { it.isNotEmpty() }?.toMutableList() ?: mutableListOf()
+                            val (letter, _) = if (optionLetter.contains("_")) {
+                                optionLetter.split("_")
+                            } else {
+                                listOf(optionLetter, "")
+                            }
+                            
+                            currentSelected.removeAll { it.startsWith("${letter}_") }
+                            if (s.selectedOption?.contains(optionLetter) != true) {
+                                currentSelected.add(optionLetter)
+                            }
+                            currentSelected.sorted().joinToString(",")
+                        }
+                        else -> { // MCQ
+                            val currentSelected = s.selectedOption?.split(",")?.filter { it.isNotEmpty() }?.toMutableList() ?: mutableListOf()
+                            if (currentSelected.contains(optionLetter)) {
+                                currentSelected.remove(optionLetter)
+                            } else {
+                                currentSelected.add(optionLetter)
+                            }
+                            currentSelected.sorted().joinToString(",")
+                        }
+                    }
+                    s.copy(selectedOption = newSelection)
+                } else s
             }
         }
     }
 
-    fun selectQuestion(questionId: String) {
-        viewModelScope.launch {
-            repository.getOptionsForQuestion(questionId).collect {
-                _currentOptions.value = it
-            }
-            repository.getAnswerForQuestion(questionId).collect {
-                _currentAnswer.value = it
+    fun revealAnswer(index: Int) {
+        _questionStates.update { current ->
+            current.mapIndexed { i, s ->
+                if (i == index) s.copy(isAnswerRevealed = true) else s
             }
         }
     }
 }
-

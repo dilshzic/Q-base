@@ -1,6 +1,5 @@
 package com.algorithmx.q_base.ui.sessions
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,9 +9,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -26,13 +23,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.algorithmx.q_base.ui.components.QuestionViewer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActiveSessionScreen(
     viewModel: ActiveSessionViewModel,
     onNavigateBack: () -> Unit,
-    onViewResults: () -> Unit
+    onViewResults: (String) -> Unit
 ) {
     val currentQuestion by viewModel.currentQuestion.collectAsStateWithLifecycle()
     val options by viewModel.currentOptions.collectAsStateWithLifecycle()
@@ -61,7 +59,7 @@ fun ActiveSessionScreen(
                     actions = {
                         TextButton(onClick = { 
                             viewModel.submitSession()
-                            onViewResults()
+                            onViewResults(viewModel.getSessionId())
                         }) {
                             Text("[ Submit ]", fontWeight = FontWeight.Bold)
                         }
@@ -140,95 +138,21 @@ fun ActiveSessionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
         ) {
             currentQuestion?.let { question ->
                 Text(
                     text = "Question ${currentIndex + 1} of ${attempts.size}",
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Text(
-                    text = question.stem ?: "No question stem available",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Medium
-                )
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                options.forEach { option ->
-                    val isSelected = currentAttempt?.userSelectedAnswers?.split(",")?.contains(option.optionLetter ?: "") == true
-                    
-                    val surfaceColor = if (isSelected) {
-                        if (question.questionType == "SBA") Color(0xFFE3F2FD) // Soft blue for SBA selection
-                        else MaterialTheme.colorScheme.primaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.surface
-                    }
 
-                    Surface(
-                        onClick = { viewModel.onAnswerSelected(option.optionLetter ?: "") },
-                        shape = MaterialTheme.shapes.medium,
-                        color = surfaceColor,
-                        border = BorderStroke(
-                            1.dp, 
-                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            if (question.questionType == "SBA") {
-                                RadioButton(
-                                    selected = isSelected,
-                                    onClick = null
-                                )
-                            } else {
-                                Checkbox(
-                                    checked = isSelected,
-                                    onCheckedChange = null
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(text = "${option.optionLetter}. ${option.optionText}")
-                        }
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(32.dp))
-                
-                // Flag for Review Button
-                OutlinedButton(
-                    onClick = { viewModel.toggleFlag() },
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    colors = if (currentAttempt?.attemptStatus == "FLAGGED") {
-                        ButtonDefaults.outlinedButtonColors(
-                            containerColor = Color(0xFFFFF3E0),
-                            contentColor = Color(0xFFE65100)
-                        )
-                    } else {
-                        ButtonDefaults.outlinedButtonColors()
-                    },
-                    border = BorderStroke(
-                        1.dp,
-                        if (currentAttempt?.attemptStatus == "FLAGGED") Color(0xFFFFB74D) else MaterialTheme.colorScheme.outline
-                    )
-                ) {
-                    Icon(
-                        imageVector = if (currentAttempt?.attemptStatus == "FLAGGED") Icons.Default.Flag else Icons.Default.OutlinedFlag,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = if (currentAttempt?.attemptStatus == "FLAGGED") "Flagged (🟠)" else "Flag for Review")
-                }
+                QuestionViewer(
+                    question = question,
+                    options = options,
+                    selectedAnswers = currentAttempt?.userSelectedAnswers?.split(",")?.filter { it.isNotEmpty() } ?: emptyList(),
+                    onOptionToggled = { viewModel.onAnswerSelected(it) }
+                )
             }
         }
     }
