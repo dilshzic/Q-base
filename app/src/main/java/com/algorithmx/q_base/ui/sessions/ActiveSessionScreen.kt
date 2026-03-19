@@ -38,9 +38,12 @@ fun ActiveSessionScreen(
     val currentIndex by viewModel.currentQuestionIndex.collectAsStateWithLifecycle()
     val timerText by viewModel.timerDisplay.collectAsStateWithLifecycle()
     val navDots by viewModel.navigatorDots.collectAsStateWithLifecycle()
+    val session by viewModel.session.collectAsStateWithLifecycle()
+    val currentAnswer by viewModel.currentAnswer.collectAsStateWithLifecycle()
     
     var showNavigator by remember { mutableStateOf(false) }
     val currentAttempt = attempts.getOrNull(currentIndex)
+    val isCompleted = session?.isCompleted == true
 
     Scaffold(
         topBar = {
@@ -48,20 +51,29 @@ fun ActiveSessionScreen(
                 TopAppBar(
                     title = {
                         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            Text(text = "Time: $timerText", style = MaterialTheme.typography.titleMedium)
+                            if (isCompleted) {
+                                Text(text = "Review Mode", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                            } else {
+                                Text(text = "Time: $timerText", style = MaterialTheme.typography.titleMedium)
+                            }
                         }
                     },
                     navigationIcon = {
-                        TextButton(onClick = onNavigateBack) {
-                            Text("[X] Quit", color = MaterialTheme.colorScheme.error)
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         }
                     },
                     actions = {
-                        TextButton(onClick = { 
-                            viewModel.submitSession()
-                            onViewResults(viewModel.getSessionId())
-                        }) {
-                            Text("[ Submit ]", fontWeight = FontWeight.Bold)
+                        if (!isCompleted) {
+                            TextButton(onClick = { 
+                                viewModel.submitSession()
+                            }) {
+                                Text("[ Submit ]", fontWeight = FontWeight.Bold)
+                            }
+                        } else {
+                            IconButton(onClick = { onViewResults(viewModel.getSessionId()) }) {
+                                Icon(Icons.Default.Assessment, contentDescription = "View Results")
+                            }
                         }
                     }
                 )
@@ -120,13 +132,13 @@ fun ActiveSessionScreen(
                     ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Previous Question")
+                        Text("Previous")
                     }
                     TextButton(
                         onClick = { viewModel.navigateToQuestion(currentIndex + 1) },
                         enabled = currentIndex < attempts.size - 1
                     ) {
-                        Text("Next Question")
+                        Text("Next")
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
                     }
@@ -151,7 +163,11 @@ fun ActiveSessionScreen(
                     question = question,
                     options = options,
                     selectedAnswers = currentAttempt?.userSelectedAnswers?.split(",")?.filter { it.isNotEmpty() } ?: emptyList(),
-                    onOptionToggled = { viewModel.onAnswerSelected(it) }
+                    onOptionToggled = { viewModel.onAnswerSelected(it) },
+                    isAnswerRevealed = isCompleted,
+                    correctAnswers = currentAnswer?.correctAnswerString?.split(",") ?: emptyList(),
+                    explanation = currentAnswer?.generalExplanation,
+                    references = currentAnswer?.references
                 )
             }
         }
@@ -173,10 +189,10 @@ fun ActiveSessionScreen(
 @Composable
 fun StatusDot(status: String, isSelected: Boolean, onClick: () -> Unit) {
     val color = when (status) {
-        "ATTEMPTED" -> Color(0xFF2196F3) // Blue
-        "FLAGGED" -> Color(0xFFFFA500) // Orange
+        "ATTEMPTED" -> Color(0xFF2196F3)
+        "FLAGGED" -> Color(0xFFFFA500)
         "FINALIZED" -> Color.DarkGray
-        else -> Color(0xFFE0E0E0) // Gray
+        else -> Color(0xFFE0E0E0)
     }
     
     Box(

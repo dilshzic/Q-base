@@ -3,6 +3,7 @@ package com.algorithmx.q_base.data.di
 import android.content.Context
 import com.algorithmx.q_base.data.AppDatabase
 import com.algorithmx.q_base.data.dao.CategoryDao
+import com.algorithmx.q_base.data.dao.ProblemReportDao
 import com.algorithmx.q_base.data.dao.QuestionDao
 import com.algorithmx.q_base.data.dao.SessionDao
 import com.algorithmx.q_base.data.repository.ExploreRepository
@@ -34,12 +35,16 @@ object DatabaseModule {
     fun provideSessionDao(database: AppDatabase): SessionDao = database.sessionDao()
 
     @Provides
+    fun provideProblemReportDao(database: AppDatabase): ProblemReportDao = database.problemReportDao()
+
+    @Provides
     @Singleton
     fun provideExploreRepository(
         categoryDao: CategoryDao,
-        questionDao: QuestionDao
+        questionDao: QuestionDao,
+        problemReportDao: ProblemReportDao
     ): ExploreRepository {
-        return ExploreRepository(categoryDao, questionDao)
+        return ExploreRepository(categoryDao, questionDao, problemReportDao)
     }
 
     @Provides

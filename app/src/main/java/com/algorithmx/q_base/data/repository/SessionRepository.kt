@@ -3,12 +3,7 @@ package com.algorithmx.q_base.data.repository
 import com.algorithmx.q_base.data.dao.CategoryDao
 import com.algorithmx.q_base.data.dao.QuestionDao
 import com.algorithmx.q_base.data.dao.SessionDao
-import com.algorithmx.q_base.data.entity.MasterCategory
-import com.algorithmx.q_base.data.entity.Question
-import com.algorithmx.q_base.data.entity.QuestionCollection
-import com.algorithmx.q_base.data.entity.QuestionOption
-import com.algorithmx.q_base.data.entity.SessionAttempt
-import com.algorithmx.q_base.data.entity.StudySession
+import com.algorithmx.q_base.data.entity.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.util.UUID
@@ -36,8 +31,6 @@ class SessionRepository @Inject constructor(
     ): String {
         val sessionId = UUID.randomUUID().toString()
         
-        // Use getQuestionsByMasterCategory instead of getQuestionsByCategory 
-        // because categoryName passed from UI is the MasterCategory name.
         val allQuestions = questionDao.getQuestionsByMasterCategory(categoryName).first()
         val selectedQuestions = allQuestions.shuffled().take(questionCount)
 
@@ -72,7 +65,14 @@ class SessionRepository @Inject constructor(
     fun getOptionsForQuestion(questionId: String): Flow<List<QuestionOption>> =
         questionDao.getOptionsForQuestion(questionId)
 
+    suspend fun getAnswerForQuestion(questionId: String): Answer? =
+        questionDao.getAnswerForQuestion(questionId).first()
+
     suspend fun updateAttempt(attempt: SessionAttempt) {
         sessionDao.updateAttempt(attempt)
+    }
+
+    suspend fun updateSession(session: StudySession) {
+        sessionDao.updateSession(session)
     }
 }

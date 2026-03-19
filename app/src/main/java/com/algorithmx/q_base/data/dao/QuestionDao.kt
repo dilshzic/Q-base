@@ -32,6 +32,9 @@ interface QuestionDao {
     @Query("SELECT * FROM Questions WHERE question_id = :questionId")
     suspend fun getQuestionById(questionId: String): Question?
 
+    @Update
+    suspend fun updateQuestion(question: Question)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertQuestions(questions: List<Question>)
 

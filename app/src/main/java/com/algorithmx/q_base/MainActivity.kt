@@ -19,19 +19,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.algorithmx.q_base.data.AppDatabase
 import com.algorithmx.q_base.data.DatabaseSeeder
-import com.algorithmx.q_base.ui.explore.ExploreViewModel
-import com.algorithmx.q_base.ui.home.HomeScreen
-import com.algorithmx.q_base.ui.navigation.ExploreNavGraph
-import com.algorithmx.q_base.ui.sessions.*
+import com.algorithmx.q_base.ui.navigation.RootNavGraph
+import com.algorithmx.q_base.ui.navigation.Screen
 import com.algorithmx.q_base.ui.theme.QbaseTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,7 +42,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Seed database BEFORE showing the UI to avoid race conditions
         lifecycleScope.launch {
             DatabaseSeeder(this@MainActivity, database).seedDatabaseIfNeeded()
             isSeeded.value = true
@@ -89,30 +81,29 @@ fun LoadingScreen() {
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
-    val exploreNavController = rememberNavController()
-    val exploreViewModel: ExploreViewModel = hiltViewModel()
-    val sessionsViewModel: SessionsViewModel = hiltViewModel()
-    
-    var showCreateSessionSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry?.destination
-            val isSessionActive = currentDestination?.route?.startsWith("active_session") == true
-            val isResultsView = currentDestination?.route?.startsWith("session_results") == true
             
-            if (!isSessionActive && !isResultsView) {
+            // Check if we should show the bottom bar
+            val currentRoute = currentDestination?.route
+            val showBottomBar = currentRoute in listOf(
+                Screen.Home.route,
+                Screen.Explore.route,
+                Screen.Sessions.route
+            )
+            
+            if (showBottomBar) {
                 NavigationBar {
                     NavigationBarItem(
                         icon = { Icon(Icons.Rounded.Home, contentDescription = null) },
                         label = { Text("Home") },
-                        selected = currentDestination?.hierarchy?.any { it.route == "home_route" } == true,
+                        selected = currentDestination?.hierarchy?.any { it.route == Screen.Home.route } == true,
                         onClick = {
-                            navController.navigate("home_route") {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(navController.graph.startDestinationId) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
@@ -121,12 +112,10 @@ fun MainScreen() {
                     NavigationBarItem(
                         icon = { Icon(Icons.Rounded.Explore, contentDescription = null) },
                         label = { Text("Explore") },
-                        selected = currentDestination?.hierarchy?.any { it.route == "explore_route" } == true,
+                        selected = currentDestination?.hierarchy?.any { it.route == Screen.Explore.route } == true,
                         onClick = {
-                            navController.navigate("explore_route") {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
+                            navController.navigate(Screen.Explore.route) {
+                                popUpTo(navController.graph.startDestinationId) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
@@ -135,12 +124,10 @@ fun MainScreen() {
                     NavigationBarItem(
                         icon = { Icon(Icons.Rounded.History, contentDescription = null) },
                         label = { Text("Sessions") },
-                        selected = currentDestination?.hierarchy?.any { it.route == "sessions_route" } == true,
+                        selected = currentDestination?.hierarchy?.any { it.route == Screen.Sessions.route } == true,
                         onClick = {
-                            navController.navigate("sessions_route") {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
+                            navController.navigate(Screen.Sessions.route) {
+                                popUpTo(navController.graph.startDestinationId) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
@@ -150,78 +137,8 @@ fun MainScreen() {
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = "home_route",
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable("home_route") {
-                HomeScreen(
-                    onNavigateToExplore = { navController.navigate("explore_route") },
-                    onNavigateToSession = { sessionId -> navController.navigate("active_session/$sessionId") },
-                    onNavigateToCollections = { /* TODO */ }
-                )
-            }
-            composable("explore_route") {
-                ExploreNavGraph(navController = exploreNavController, viewModel = exploreViewModel)
-            }
-            composable("sessions_route") {
-                val sessions by sessionsViewModel.sessions.collectAsStateWithLifecycle()
-                val categories by sessionsViewModel.categories.collectAsStateWithLifecycle()
-                
-                SessionsListScreen(
-                    sessions = sessions,
-                    categories = categories,
-                    onSessionClick = { sessionId ->
-                        navController.navigate("active_session/$sessionId")
-                    },
-                    onFabClick = { showCreateSessionSheet = true }
-                )
-                
-                if (showCreateSessionSheet) {
-                    CreateSessionBottomSheet(
-                        categories = categories,
-                        onDismiss = { showCreateSessionSheet = false },
-                        onCreateSession = { catName, qCount, isTimed ->
-                            sessionsViewModel.createSession(catName, qCount, isTimed)
-                            showCreateSessionSheet = false
-                        }
-                    )
-                }
-            }
-            composable(
-                route = "active_session/{sessionId}",
-                arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
-            ) {
-                val activeSessionViewModel: ActiveSessionViewModel = hiltViewModel()
-                ActiveSessionScreen(
-                    viewModel = activeSessionViewModel,
-                    onNavigateBack = { navController.popBackStack() },
-                    onViewResults = { sessionId ->
-                        navController.navigate("session_results/$sessionId") {
-                            popUpTo("active_session/$sessionId") { inclusive = true }
-                        }
-                    }
-                )
-            }
-            composable(
-                route = "session_results/{sessionId}",
-                arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
-            ) {
-                SessionResultsScreen(
-                    onBackToHome = {
-                        navController.navigate("home_route") {
-                            popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
-                        }
-                    }
-                )
-            }
-        }
-        
-        LaunchedEffect(Unit) {
-            sessionsViewModel.sessionCreated.collect { sessionId ->
-                navController.navigate("active_session/$sessionId")
-            }
+        Box(modifier = Modifier.padding(innerPadding)) {
+            RootNavGraph(navController = navController)
         }
     }
 }

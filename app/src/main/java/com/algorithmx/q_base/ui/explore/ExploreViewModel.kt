@@ -2,10 +2,7 @@ package com.algorithmx.q_base.ui.explore
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.entity.Answer
-import com.algorithmx.q_base.data.entity.MasterCategory
-import com.algorithmx.q_base.data.entity.Question
-import com.algorithmx.q_base.data.entity.QuestionOption
+import com.algorithmx.q_base.data.entity.*
 import com.algorithmx.q_base.data.repository.ExploreRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -76,9 +73,10 @@ class ExploreViewModel @Inject constructor(
         _questionStates.update { current ->
             current.mapIndexed { i, s ->
                 if (i == index && !s.isAnswerRevealed) {
-                    val newSelection = when (s.question.questionType) {
+                    val type = s.question.questionType?.trim()?.uppercase()
+                    val newSelection = when (type) {
                         "SBA" -> optionLetter
-                        "MTF" -> {
+                        "MTF", "MCQ", "T/F", "MCQ1" -> {
                             val currentSelected = s.selectedOption?.split(",")?.filter { it.isNotEmpty() }?.toMutableList() ?: mutableListOf()
                             val (letter, _) = if (optionLetter.contains("_")) {
                                 optionLetter.split("_")
@@ -92,7 +90,7 @@ class ExploreViewModel @Inject constructor(
                             }
                             currentSelected.sorted().joinToString(",")
                         }
-                        else -> { // MCQ
+                        else -> { // Other multi-select
                             val currentSelected = s.selectedOption?.split(",")?.filter { it.isNotEmpty() }?.toMutableList() ?: mutableListOf()
                             if (currentSelected.contains(optionLetter)) {
                                 currentSelected.remove(optionLetter)
@@ -113,6 +111,32 @@ class ExploreViewModel @Inject constructor(
             current.mapIndexed { i, s ->
                 if (i == index) s.copy(isAnswerRevealed = true) else s
             }
+        }
+    }
+
+    fun togglePin(index: Int) {
+        val state = _questionStates.value.getOrNull(index) ?: return
+        val updatedQuestion = state.question.copy(isPinned = !state.question.isPinned)
+        
+        viewModelScope.launch {
+            repository.updateQuestion(updatedQuestion)
+            _questionStates.update { current ->
+                current.mapIndexed { i, s ->
+                    if (i == index) s.copy(question = updatedQuestion) else s
+                }
+            }
+        }
+    }
+
+    fun reportProblem(index: Int, explanation: String) {
+        val state = _questionStates.value.getOrNull(index) ?: return
+        viewModelScope.launch {
+            repository.reportProblem(
+                ProblemReport(
+                    questionId = state.question.questionId,
+                    explanation = explanation
+                )
+            )
         }
     }
 }

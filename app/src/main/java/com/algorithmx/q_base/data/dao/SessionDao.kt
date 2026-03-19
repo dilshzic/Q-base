@@ -12,6 +12,9 @@ interface SessionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSession(session: StudySession)
 
+    @Update
+    suspend fun updateSession(session: StudySession)
+
     @Query("SELECT * FROM Study_Sessions ORDER BY created_timestamp DESC")
     fun getAllSessions(): Flow<List<StudySession>>
 

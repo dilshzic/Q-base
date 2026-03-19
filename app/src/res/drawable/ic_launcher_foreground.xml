@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Minimalist 'Q' with a geometric tail -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,32c-12.15,0 -22,9.85 -22,22s9.85,22 22,22c4.8,0 9.3,-1.5 13,-4.2l8.1,8.1c0.8,0.8 2.1,0.8 2.9,0s0.8,-2.1 0,-2.9l-8.1,-8.1C71.5,63.3 73,58.8 73,54C73,41.85 63.15,32 54,32z M54,68c-7.7,0 -14,-6.3 -14,-14s6.3,-14 14,-14s14,6.3 14,14S61.7,68 54,68z" />
+
+    <!-- A simple, rounded medical cross positioned in the center of the Q -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M52,46h4c0.55,0 1,0.45 1,1v5h5c0.55,0 1,0.45 1,1v4c0,0.55 -0.45,1 -1,1h-5v5c0,0.55 -0.45,1 -1,1h-4c-0.55,0 -1,-0.45 -1,-1v-5h-5c-0.55,0 -1,-0.45 -1,-1v-4c0,-0.55 0.45,-1 1,-1h5v-5C51,46.45 51.45,46 52,46z" />
+</vector>

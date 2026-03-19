@@ -14,12 +14,15 @@ class DatabaseSeeder(
     private val context: Context,
     private val database: AppDatabase
 ) {
+    private fun getColumnString(cursor: android.database.Cursor, columnName: String): String? {
+        val index = cursor.getColumnIndex(columnName)
+        return if (index != -1 && !cursor.isNull(index)) cursor.getString(index) else null
+    }
+
     suspend fun seedDatabaseIfNeeded() = withContext(Dispatchers.IO) {
         val questionDao = database.questionDao()
         val categoryDao = database.categoryDao()
 
-        // Use Master_Categories as the sentinel — it is wiped during v1→v2 migration
-        // so it will be empty even if Questions are still present.
         if (categoryDao.getMasterCategoryCount() > 0) {
             Log.d("DatabaseSeeder", "Database already seeded.")
             return@withContext
@@ -42,47 +45,56 @@ class DatabaseSeeder(
             try {
                 val batchSize = 100
 
-                // --- Step 1: Seed raw Questions (unchanged in v2) ---
+                // --- Step 1: Seed raw Questions ---
                 if (questionDao.getQuestionCount() == 0) {
                     sqliteDb.rawQuery("SELECT * FROM Questions", null).use { cursor ->
                         val batch = mutableListOf<Question>()
                         while (cursor.moveToNext()) {
                             batch.add(Question(
                                 questionId = cursor.getString(cursor.getColumnIndexOrThrow("question_id")),
-                                masterCategory = cursor.getString(cursor.getColumnIndexOrThrow("master_category")),
-                                category = cursor.getString(cursor.getColumnIndexOrThrow("category")),
-                                questionType = cursor.getString(cursor.getColumnIndexOrThrow("question_type")),
+                                masterCategory = getColumnString(cursor, "master_category"),
+                                category = getColumnString(cursor, "category"),
+                                questionType = getColumnString(cursor, "question_type"),
                                 stem = cursor.getString(cursor.getColumnIndexOrThrow("stem")),
-                                subject = cursor.getString(cursor.getColumnIndexOrThrow("subject")),
-                                batch = cursor.getString(cursor.getColumnIndexOrThrow("batch"))
+                                subject = getColumnString(cursor, "subject"),
+                                batch = getColumnString(cursor, "batch"),
+                                isPinned = false
                             ))
                             if (batch.size >= batchSize) { questionDao.insertQuestions(batch); batch.clear() }
                         }
                         if (batch.isNotEmpty()) questionDao.insertQuestions(batch)
                     }
 
-                    // Seed Options in batches
-                    sqliteDb.rawQuery("SELECT * FROM Question_Options", null).use { cursor ->
+                    // Seed Options - JOIN with Option_Explanations table from asset DB
+                    val optionsQuery = """
+                        SELECT qo.*, oe.specific_explanation 
+                        FROM Question_Options qo 
+                        LEFT JOIN Option_Explanations oe ON qo.question_id = oe.question_id AND qo.option_letter = oe.option_letter
+                    """.trimIndent()
+
+                    sqliteDb.rawQuery(optionsQuery, null).use { cursor ->
                         val batch = mutableListOf<QuestionOption>()
                         while (cursor.moveToNext()) {
                             batch.add(QuestionOption(
                                 questionId = cursor.getString(cursor.getColumnIndexOrThrow("question_id")),
                                 optionLetter = cursor.getString(cursor.getColumnIndexOrThrow("option_letter")),
-                                optionText = cursor.getString(cursor.getColumnIndexOrThrow("option_text"))
+                                optionText = cursor.getString(cursor.getColumnIndexOrThrow("option_text")),
+                                optionExplanation = getColumnString(cursor, "specific_explanation")
                             ))
                             if (batch.size >= batchSize) { questionDao.insertOptions(batch); batch.clear() }
                         }
                         if (batch.isNotEmpty()) questionDao.insertOptions(batch)
                     }
 
-                    // Seed Answers in batches
+                    // Seed Answers - Asset DB uses "reference" (singular)
                     sqliteDb.rawQuery("SELECT * FROM Answers", null).use { cursor ->
                         val batch = mutableListOf<Answer>()
                         while (cursor.moveToNext()) {
                             batch.add(Answer(
                                 questionId = cursor.getString(cursor.getColumnIndexOrThrow("question_id")),
                                 correctAnswerString = cursor.getString(cursor.getColumnIndexOrThrow("correct_answer_string")),
-                                generalExplanation = cursor.getString(cursor.getColumnIndexOrThrow("general_explanation"))
+                                generalExplanation = cursor.getString(cursor.getColumnIndexOrThrow("general_explanation")),
+                                references = getColumnString(cursor, "reference")
                             ))
                             if (batch.size >= batchSize) { questionDao.insertAnswers(batch); batch.clear() }
                         }
@@ -90,8 +102,7 @@ class DatabaseSeeder(
                     }
                 }
 
-                // --- Step 2: Build UUID-keyed Master_Categories from distinct names ---
-                // Map: raw name string -> UUID
+                // Step 2-4: Metadata seeding
                 val masterCategoryMap = mutableMapOf<String, String>()
                 sqliteDb.rawQuery("SELECT DISTINCT master_category FROM Questions", null).use { cursor ->
                     while (cursor.moveToNext()) {
@@ -106,12 +117,8 @@ class DatabaseSeeder(
                 }
                 categoryDao.insertMasterCategories(masterCategories)
 
-                // --- Step 3: Build UUID-keyed Question_Collections (one per distinct category) ---
-                // Map: raw category string -> collectionId UUID
                 val collectionMap = mutableMapOf<String, String>()
-                sqliteDb.rawQuery(
-                    "SELECT DISTINCT category, master_category FROM Questions", null
-                ).use { cursor ->
+                sqliteDb.rawQuery("SELECT DISTINCT category, master_category FROM Questions", null).use { cursor ->
                     while (cursor.moveToNext()) {
                         val category = cursor.getString(cursor.getColumnIndexOrThrow("category"))
                         val masterName = cursor.getString(cursor.getColumnIndexOrThrow("master_category"))
@@ -119,7 +126,6 @@ class DatabaseSeeder(
                             val masterCategoryId = masterCategoryMap[masterName] ?: continue
                             val collectionId = UUID.randomUUID().toString()
                             collectionMap[category] = collectionId
-                            // Inserted individually; small table — fine without batching
                             categoryDao.insertCollections(listOf(
                                 QuestionCollection(
                                     collectionId = collectionId,
@@ -132,7 +138,6 @@ class DatabaseSeeder(
                     }
                 }
 
-                // --- Step 4: Seed Collection_Questions_CrossRef in batches ---
                 sqliteDb.rawQuery("SELECT question_id, category FROM Questions", null).use { cursor ->
                     val batch = mutableListOf<CollectionQuestionCrossRef>()
                     while (cursor.moveToNext()) {
@@ -145,7 +150,7 @@ class DatabaseSeeder(
                     if (batch.isNotEmpty()) categoryDao.insertCrossRefs(batch)
                 }
 
-                Log.d("DatabaseSeeder", "Seeding completed successfully.")
+                Log.d("DatabaseSeeder", "Seeding completed successfully with option explanations.")
             } finally {
                 sqliteDb.close()
             }
@@ -156,4 +161,3 @@ class DatabaseSeeder(
         }
     }
 }
-

@@ -3,9 +3,7 @@ package com.algorithmx.q_base.ui.sessions
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.entity.Question
-import com.algorithmx.q_base.data.entity.QuestionOption
-import com.algorithmx.q_base.data.entity.SessionAttempt
+import com.algorithmx.q_base.data.entity.*
 import com.algorithmx.q_base.data.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -40,6 +38,12 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val _currentOptions = MutableStateFlow<List<QuestionOption>>(emptyList())
     val currentOptions: StateFlow<List<QuestionOption>> = _currentOptions.asStateFlow()
+
+    private val _currentAnswer = MutableStateFlow<Answer?>(null)
+    val currentAnswer: StateFlow<Answer?> = _currentAnswer.asStateFlow()
+
+    private val _session = MutableStateFlow<StudySession?>(null)
+    val session: StateFlow<StudySession?> = _session.asStateFlow()
 
     private val _timeLimitSeconds = MutableStateFlow<Int?>(null)
     private val _elapsedSeconds = MutableStateFlow(0L)
@@ -82,6 +86,7 @@ class ActiveSessionViewModel @Inject constructor(
     private fun loadSessionData() {
         viewModelScope.launch {
             repository.getSessionById(sessionId)?.let { 
+                _session.value = it
                 _timeLimitSeconds.value = it.timeLimitSeconds 
             }
         }
@@ -127,16 +132,19 @@ class ActiveSessionViewModel @Inject constructor(
             repository.getOptionsForQuestion(questionId).collect { options ->
                 _currentOptions.value = options
             }
+            _currentAnswer.value = repository.getAnswerForQuestion(questionId)
         }
     }
 
     fun onAnswerSelected(optionLetter: String) {
         val currentAttempt = _attempts.value.getOrNull(_currentQuestionIndex.value) ?: return
+        if (_session.value?.isCompleted == true) return // Disable answering in completed sessions
+
         val question = _currentQuestion.value ?: return
         
-        val newUserAnswers = when (question.questionType) {
+        val newUserAnswers = when (question.questionType?.trim()?.uppercase()) {
             "SBA" -> optionLetter
-            "MTF" -> {
+            "MTF", "MCQ", "T/F", "MCQ1" -> {
                 val currentSelected = currentAttempt.userSelectedAnswers.split(",").filter { it.isNotEmpty() }.toMutableList()
                 val (letter, _) = if (optionLetter.contains("_")) {
                     optionLetter.split("_")
@@ -144,10 +152,8 @@ class ActiveSessionViewModel @Inject constructor(
                     listOf(optionLetter, "")
                 }
                 
-                // Remove existing T/F for this specific option
                 currentSelected.removeAll { it.startsWith("${letter}_") }
                 
-                // If it wasn't already the same selection, add it (toggle off if same)
                 if (!currentAttempt.userSelectedAnswers.contains(optionLetter)) {
                     currentSelected.add(optionLetter)
                 }
@@ -184,6 +190,11 @@ class ActiveSessionViewModel @Inject constructor(
 
     fun submitSession() {
         viewModelScope.launch {
+            val currentSession = _session.value ?: return@launch
+            val updatedSession = currentSession.copy(isCompleted = true)
+            repository.updateSession(updatedSession)
+            _session.value = updatedSession
+
             val finalAttempts = _attempts.value.map { it.copy(attemptStatus = "FINALIZED") }
             finalAttempts.forEach { repository.updateAttempt(it) }
             timerJob?.cancel()

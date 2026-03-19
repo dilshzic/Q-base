@@ -1,26 +1,19 @@
 package com.algorithmx.q_base.ui.home
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.algorithmx.q_base.data.entity.Question
-import com.algorithmx.q_base.data.entity.QuestionCollection
-import com.algorithmx.q_base.data.entity.StudySession
+import com.algorithmx.q_base.ui.components.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,58 +105,7 @@ fun HomeScreen(
 }
 
 @Composable
-fun SectionHeader(title: String, onActionClick: (() -> Unit)? = null) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        if (onActionClick != null) {
-            TextButton(onClick = onActionClick) {
-                Text("See All")
-            }
-        }
-    }
-}
-
-@Composable
-fun SessionCard(session: StudySession, onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.width(200.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Icon(Icons.Default.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = session.title,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = "Started: ${java.text.SimpleDateFormat("MMM dd", java.util.Locale.getDefault()).format(session.createdTimestamp)}",
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
-    }
-}
-
-@Composable
-fun CollectionItem(collection: QuestionCollection) {
-    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
-        ListItem(
-            headlineContent = { Text(collection.title) },
-            supportingContent = { Text(collection.description ?: "No description", maxLines = 1) },
-            leadingContent = { Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.secondary) }
-        )
-    }
-}
-
-@Composable
-fun PinnedQuestionItem(question: Question) {
+fun PinnedQuestionItem(question: com.algorithmx.q_base.data.entity.Question) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -173,7 +115,7 @@ fun PinnedQuestionItem(question: Question) {
                 text = question.stem ?: "",
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(

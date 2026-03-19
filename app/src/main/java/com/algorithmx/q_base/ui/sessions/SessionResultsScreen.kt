@@ -1,12 +1,14 @@
 package com.algorithmx.q_base.ui.sessions
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,46 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.entity.SessionAttempt
-import com.algorithmx.q_base.data.repository.SessionRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-@HiltViewModel
-class SessionResultsViewModel @Inject constructor(
-    private val repository: SessionRepository,
-    savedStateHandle: SavedStateHandle
-) : ViewModel() {
-    private val sessionId: String = checkNotNull(savedStateHandle["sessionId"])
-
-    private val _uiState = MutableStateFlow<ResultsUiState>(ResultsUiState.Loading)
-    val uiState: StateFlow<ResultsUiState> = _uiState.asStateFlow()
-
-    init {
-        loadResults()
-    }
-
-    private fun loadResults() {
-        viewModelScope.launch {
-            repository.getAttemptsForSession(sessionId).collect { attempts ->
-                val attemptedCount = attempts.count { it.attemptStatus == "ATTEMPTED" || it.attemptStatus == "FINALIZED" }
-                val score = if (attempts.isNotEmpty()) (attemptedCount.toFloat() / attempts.size) * 100 else 0f
-                _uiState.value = ResultsUiState.Success(attempts, score)
-            }
-        }
-    }
-}
-
-sealed class ResultsUiState {
-    object Loading : ResultsUiState()
-    data class Success(val attempts: List<SessionAttempt>, val score: Float) : ResultsUiState()
-}
+import com.algorithmx.q_base.ui.components.QuestionViewer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,6 +29,7 @@ fun SessionResultsScreen(
     onBackToHome: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val reviewState by viewModel.reviewQuestion.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -103,6 +68,12 @@ fun SessionResultsScreen(
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.align(Alignment.Start)
                     )
+                    Text(
+                        text = "Tap a number to review explanations",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.align(Alignment.Start),
+                        color = MaterialTheme.colorScheme.secondary
+                    )
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
@@ -113,16 +84,18 @@ fun SessionResultsScreen(
                         modifier = Modifier.weight(1f)
                     ) {
                         itemsIndexed(state.attempts) { index, attempt ->
-                            val color = when (attempt.attemptStatus) {
-                                "FINALIZED", "ATTEMPTED" -> Color(0xFF2E7D32) // Success green
-                                "FLAGGED" -> Color(0xFFFFA500) // Orange
-                                else -> Color.LightGray
+                            val color = when {
+                                attempt.marksObtained >= 3f -> Color(0xFF2E7D32)
+                                attempt.marksObtained > 0f -> Color(0xFFFFA500)
+                                attempt.attemptStatus == "UNATTEMPTED" -> Color.LightGray
+                                else -> Color(0xFFC62828)
                             }
                             Box(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(color),
+                                    .background(color)
+                                    .clickable { viewModel.selectQuestionForReview(attempt) },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -142,6 +115,44 @@ fun SessionResultsScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Return to Home")
                     }
+                }
+            }
+        }
+    }
+
+    if (reviewState != null) {
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.clearReview() },
+            dragHandle = { BottomSheetDefaults.DragHandle() },
+            modifier = Modifier.fillMaxHeight(0.9f)
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Question Review",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    IconButton(onClick = { viewModel.clearReview() }) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
+                    }
+                }
+                
+                reviewState?.let { review ->
+                    QuestionViewer(
+                        question = review.question,
+                        options = review.options,
+                        selectedAnswers = review.attempt.userSelectedAnswers.split(",").filter { it.isNotEmpty() },
+                        onOptionToggled = { /* Read only in review */ },
+                        isAnswerRevealed = true,
+                        correctAnswers = review.answer?.correctAnswerString?.split(",") ?: emptyList(),
+                        explanation = review.answer?.generalExplanation,
+                        references = review.answer?.references
+                    )
                 }
             }
         }
