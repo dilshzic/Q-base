@@ -3,6 +3,7 @@ package com.algorithmx.q_base.data
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
+import androidx.room.withTransaction
 import com.algorithmx.q_base.data.entity.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,14 +15,13 @@ class DatabaseSeeder(
     private val context: Context,
     private val database: AppDatabase
 ) {
-    private fun getColumnString(cursor: android.database.Cursor, columnName: String): String? {
-        val index = cursor.getColumnIndex(columnName)
+    private fun getColumnString(cursor: android.database.Cursor, index: Int): String? {
         return if (index != -1 && !cursor.isNull(index)) cursor.getString(index) else null
     }
 
     suspend fun seedDatabaseIfNeeded() = withContext(Dispatchers.IO) {
-        val questionDao = database.questionDao()
         val categoryDao = database.categoryDao()
+        val questionDao = database.questionDao()
 
         if (categoryDao.getMasterCategoryCount() > 0) {
             Log.d("DatabaseSeeder", "Database already seeded.")
@@ -43,114 +43,153 @@ class DatabaseSeeder(
             )
 
             try {
-                val batchSize = 100
+                database.withTransaction {
+                    val batchSize = 500
 
-                // --- Step 1: Seed raw Questions ---
-                if (questionDao.getQuestionCount() == 0) {
+                    // --- Step 1: Seed raw Questions ---
                     sqliteDb.rawQuery("SELECT * FROM Questions", null).use { cursor ->
+                        val idIdx = cursor.getColumnIndexOrThrow("question_id")
+                        val mcIdx = cursor.getColumnIndex("master_category")
+                        val catIdx = cursor.getColumnIndex("category")
+                        val qtIdx = cursor.getColumnIndex("question_type")
+                        val stemIdx = cursor.getColumnIndexOrThrow("stem")
+                        val subIdx = cursor.getColumnIndex("subject")
+                        val batchIdx = cursor.getColumnIndex("batch")
+
                         val batch = mutableListOf<Question>()
                         while (cursor.moveToNext()) {
                             batch.add(Question(
-                                questionId = cursor.getString(cursor.getColumnIndexOrThrow("question_id")),
-                                masterCategory = getColumnString(cursor, "master_category"),
-                                category = getColumnString(cursor, "category"),
-                                questionType = getColumnString(cursor, "question_type"),
-                                stem = cursor.getString(cursor.getColumnIndexOrThrow("stem")),
-                                subject = getColumnString(cursor, "subject"),
-                                batch = getColumnString(cursor, "batch"),
+                                questionId = cursor.getString(idIdx),
+                                masterCategory = getColumnString(cursor, mcIdx),
+                                category = getColumnString(cursor, catIdx),
+                                questionType = getColumnString(cursor, qtIdx),
+                                stem = cursor.getString(stemIdx),
+                                subject = getColumnString(cursor, subIdx),
+                                batch = getColumnString(cursor, batchIdx),
                                 isPinned = false
                             ))
-                            if (batch.size >= batchSize) { questionDao.insertQuestions(batch); batch.clear() }
+                            if (batch.size >= batchSize) {
+                                questionDao.insertQuestions(batch)
+                                batch.clear()
+                            }
                         }
                         if (batch.isNotEmpty()) questionDao.insertQuestions(batch)
                     }
 
-                    // Seed Options - JOIN with Option_Explanations table from asset DB
+                    // Seed Options
                     val optionsQuery = """
-                        SELECT qo.*, oe.specific_explanation 
+                        SELECT qo.question_id, qo.option_letter, qo.option_text, oe.specific_explanation 
                         FROM Question_Options qo 
                         LEFT JOIN Option_Explanations oe ON qo.question_id = oe.question_id AND qo.option_letter = oe.option_letter
                     """.trimIndent()
 
                     sqliteDb.rawQuery(optionsQuery, null).use { cursor ->
+                        val idIdx = cursor.getColumnIndexOrThrow("question_id")
+                        val letIdx = cursor.getColumnIndexOrThrow("option_letter")
+                        val txtIdx = cursor.getColumnIndexOrThrow("option_text")
+                        val expIdx = cursor.getColumnIndex("specific_explanation")
+
                         val batch = mutableListOf<QuestionOption>()
                         while (cursor.moveToNext()) {
                             batch.add(QuestionOption(
-                                questionId = cursor.getString(cursor.getColumnIndexOrThrow("question_id")),
-                                optionLetter = cursor.getString(cursor.getColumnIndexOrThrow("option_letter")),
-                                optionText = cursor.getString(cursor.getColumnIndexOrThrow("option_text")),
-                                optionExplanation = getColumnString(cursor, "specific_explanation")
+                                questionId = cursor.getString(idIdx),
+                                optionLetter = cursor.getString(letIdx),
+                                optionText = cursor.getString(txtIdx),
+                                optionExplanation = getColumnString(cursor, expIdx)
                             ))
-                            if (batch.size >= batchSize) { questionDao.insertOptions(batch); batch.clear() }
+                            if (batch.size >= batchSize) {
+                                questionDao.insertOptions(batch)
+                                batch.clear()
+                            }
                         }
                         if (batch.isNotEmpty()) questionDao.insertOptions(batch)
                     }
 
-                    // Seed Answers - Asset DB uses "reference" (singular)
+                    // Seed Answers
                     sqliteDb.rawQuery("SELECT * FROM Answers", null).use { cursor ->
+                        val idIdx = cursor.getColumnIndexOrThrow("question_id")
+                        val ansIdx = cursor.getColumnIndexOrThrow("correct_answer_string")
+                        val genIdx = cursor.getColumnIndexOrThrow("general_explanation")
+                        val refIdx = cursor.getColumnIndex("reference")
+
                         val batch = mutableListOf<Answer>()
                         while (cursor.moveToNext()) {
                             batch.add(Answer(
-                                questionId = cursor.getString(cursor.getColumnIndexOrThrow("question_id")),
-                                correctAnswerString = cursor.getString(cursor.getColumnIndexOrThrow("correct_answer_string")),
-                                generalExplanation = cursor.getString(cursor.getColumnIndexOrThrow("general_explanation")),
-                                references = getColumnString(cursor, "reference")
+                                questionId = cursor.getString(idIdx),
+                                correctAnswerString = cursor.getString(ansIdx),
+                                generalExplanation = cursor.getString(genIdx),
+                                references = getColumnString(cursor, refIdx)
                             ))
-                            if (batch.size >= batchSize) { questionDao.insertAnswers(batch); batch.clear() }
+                            if (batch.size >= batchSize) {
+                                questionDao.insertAnswers(batch)
+                                batch.clear()
+                            }
                         }
                         if (batch.isNotEmpty()) questionDao.insertAnswers(batch)
                     }
-                }
 
-                // Step 2-4: Metadata seeding
-                val masterCategoryMap = mutableMapOf<String, String>()
-                sqliteDb.rawQuery("SELECT DISTINCT master_category FROM Questions", null).use { cursor ->
-                    while (cursor.moveToNext()) {
-                        val name = cursor.getString(cursor.getColumnIndexOrThrow("master_category"))
-                        if (!name.isNullOrEmpty()) {
-                            masterCategoryMap[name] = UUID.randomUUID().toString()
+                    // Step 2-4: Metadata seeding
+                    val masterCategoryMap = mutableMapOf<String, String>()
+                    sqliteDb.rawQuery("SELECT DISTINCT master_category FROM Questions", null).use { cursor ->
+                        val mcIdx = cursor.getColumnIndexOrThrow("master_category")
+                        while (cursor.moveToNext()) {
+                            val name = cursor.getString(mcIdx)
+                            if (!name.isNullOrEmpty()) {
+                                masterCategoryMap[name] = UUID.randomUUID().toString()
+                            }
                         }
                     }
-                }
-                val masterCategories = masterCategoryMap.map { (name, id) ->
-                    MasterCategory(masterCategoryId = id, name = name)
-                }
-                categoryDao.insertMasterCategories(masterCategories)
+                    
+                    val masterCategories = masterCategoryMap.map { (name, id) ->
+                        MasterCategory(masterCategoryId = id, name = name)
+                    }
+                    categoryDao.insertMasterCategories(masterCategories)
 
-                val collectionMap = mutableMapOf<String, String>()
-                sqliteDb.rawQuery("SELECT DISTINCT category, master_category FROM Questions", null).use { cursor ->
-                    while (cursor.moveToNext()) {
-                        val category = cursor.getString(cursor.getColumnIndexOrThrow("category"))
-                        val masterName = cursor.getString(cursor.getColumnIndexOrThrow("master_category"))
-                        if (!category.isNullOrEmpty() && !masterName.isNullOrEmpty()) {
-                            val masterCategoryId = masterCategoryMap[masterName] ?: continue
-                            val collectionId = UUID.randomUUID().toString()
-                            collectionMap[category] = collectionId
-                            categoryDao.insertCollections(listOf(
-                                QuestionCollection(
-                                    collectionId = collectionId,
-                                    title = category,
-                                    masterCategoryId = masterCategoryId,
-                                    createdTimestamp = System.currentTimeMillis()
-                                )
-                            ))
+                    val collectionMap = mutableMapOf<String, String>()
+                    sqliteDb.rawQuery("SELECT DISTINCT category, master_category FROM Questions", null).use { cursor ->
+                        val catIdx = cursor.getColumnIndexOrThrow("category")
+                        val mcIdx = cursor.getColumnIndexOrThrow("master_category")
+                        
+                        while (cursor.moveToNext()) {
+                            val category = cursor.getString(catIdx)
+                            val masterName = cursor.getString(mcIdx)
+                            if (!category.isNullOrEmpty() && !masterName.isNullOrEmpty()) {
+                                val masterCategoryId = masterCategoryMap[masterName] ?: continue
+                                if (!collectionMap.containsKey(category)) {
+                                    val collectionId = UUID.randomUUID().toString()
+                                    collectionMap[category] = collectionId
+                                    categoryDao.insertCollections(listOf(
+                                        QuestionCollection(
+                                            collectionId = collectionId,
+                                            title = category,
+                                            masterCategoryId = masterCategoryId,
+                                            createdTimestamp = System.currentTimeMillis()
+                                        )
+                                    ))
+                                }
+                            }
                         }
                     }
-                }
 
-                sqliteDb.rawQuery("SELECT question_id, category FROM Questions", null).use { cursor ->
-                    val batch = mutableListOf<CollectionQuestionCrossRef>()
-                    while (cursor.moveToNext()) {
-                        val questionId = cursor.getString(cursor.getColumnIndexOrThrow("question_id"))
-                        val category = cursor.getString(cursor.getColumnIndexOrThrow("category"))
-                        val collectionId = collectionMap[category] ?: continue
-                        batch.add(CollectionQuestionCrossRef(collectionId = collectionId, questionId = questionId))
-                        if (batch.size >= batchSize) { categoryDao.insertCrossRefs(batch); batch.clear() }
+                    sqliteDb.rawQuery("SELECT question_id, category FROM Questions", null).use { cursor ->
+                        val idIdx = cursor.getColumnIndexOrThrow("question_id")
+                        val catIdx = cursor.getColumnIndexOrThrow("category")
+                        
+                        val batch = mutableListOf<CollectionQuestionCrossRef>()
+                        while (cursor.moveToNext()) {
+                            val questionId = cursor.getString(idIdx)
+                            val category = cursor.getString(catIdx)
+                            val collectionId = collectionMap[category] ?: continue
+                            batch.add(CollectionQuestionCrossRef(collectionId = collectionId, questionId = questionId))
+                            if (batch.size >= batchSize) {
+                                categoryDao.insertCrossRefs(batch)
+                                batch.clear()
+                            }
+                        }
+                        if (batch.isNotEmpty()) categoryDao.insertCrossRefs(batch)
                     }
-                    if (batch.isNotEmpty()) categoryDao.insertCrossRefs(batch)
                 }
-
-                Log.d("DatabaseSeeder", "Seeding completed successfully with option explanations.")
+                Log.d("DatabaseSeeder", "Seeding completed successfully.")
             } finally {
                 sqliteDb.close()
             }

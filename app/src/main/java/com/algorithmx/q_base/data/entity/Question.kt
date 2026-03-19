@@ -2,11 +2,19 @@ package com.algorithmx.q_base.data.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
 @Serializable
-@Entity(tableName = "Questions")
+@Entity(
+    tableName = "Questions",
+    indices = [
+        Index(value = ["master_category"]),
+        Index(value = ["category"]),
+        Index(value = ["subject"])
+    ]
+)
 data class Question(
     @PrimaryKey
     @ColumnInfo(name = "question_id")

@@ -1,5 +1,7 @@
 package com.algorithmx.q_base.ui.sessions
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -7,20 +9,26 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.ui.components.QuestionViewer
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,90 +39,48 @@ fun SessionResultsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val reviewState by viewModel.reviewQuestion.collectAsStateWithLifecycle()
 
+    val scrollState = rememberTopAppBarState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(scrollState)
+
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Session Results") })
+            LargeTopAppBar(
+                title = { 
+                    Column {
+                        Text(
+                            "Report Card", 
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Text(
+                            "Analysis of Your Performance",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            letterSpacing = 1.sp
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.largeTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+                )
+            )
         }
     ) { padding ->
-        when (val state = uiState) {
-            is ResultsUiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+            when (val state = uiState) {
+                is ResultsUiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(strokeCap = androidx.compose.ui.graphics.StrokeCap.Round)
+                    }
                 }
-            }
-            is ResultsUiState.Success -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Your Score",
-                        style = MaterialTheme.typography.titleMedium
+                is ResultsUiState.Success -> {
+                    ResultsContent(
+                        state = state,
+                        onReviewQuestion = { viewModel.selectQuestionForReview(it) },
+                        onBackToHome = onBackToHome
                     )
-                    Text(
-                        text = "${state.score.toInt()}%",
-                        style = MaterialTheme.typography.displayLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    
-                    Spacer(modifier = Modifier.height(32.dp))
-                    
-                    Text(
-                        text = "Question Breakdown",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.align(Alignment.Start)
-                    )
-                    Text(
-                        text = "Tap a number to review explanations",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.align(Alignment.Start),
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    LazyVerticalGrid(
-                        columns = GridCells.Adaptive(40.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        itemsIndexed(state.attempts) { index, attempt ->
-                            val color = when {
-                                attempt.marksObtained >= 3f -> Color(0xFF2E7D32)
-                                attempt.marksObtained > 0f -> Color(0xFFFFA500)
-                                attempt.attemptStatus == "UNATTEMPTED" -> Color.LightGray
-                                else -> Color(0xFFC62828)
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(color)
-                                    .clickable { viewModel.selectQuestionForReview(attempt) },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = (index + 1).toString(),
-                                    color = Color.White,
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
-                        }
-                    }
-                    
-                    Button(
-                        onClick = onBackToHome,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
-                    ) {
-                        Icon(Icons.Default.Home, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Return to Home")
-                    }
                 }
             }
         }
@@ -124,36 +90,181 @@ fun SessionResultsScreen(
         ModalBottomSheet(
             onDismissRequest = { viewModel.clearReview() },
             dragHandle = { BottomSheetDefaults.DragHandle() },
-            modifier = Modifier.fillMaxHeight(0.9f)
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+            tonalElevation = 8.dp
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize().navigationBarsPadding()) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Question Review",
+                        text = "Explanatory Review",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.ExtraBold
                     )
-                    IconButton(onClick = { viewModel.clearReview() }) {
+                    IconButton(
+                        onClick = { viewModel.clearReview() },
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        )
+                    ) {
                         Icon(Icons.Default.Close, contentDescription = "Close")
                     }
                 }
                 
-                reviewState?.let { review ->
-                    QuestionViewer(
-                        question = review.question,
-                        options = review.options,
-                        selectedAnswers = review.attempt.userSelectedAnswers.split(",").filter { it.isNotEmpty() },
-                        onOptionToggled = { /* Read only in review */ },
-                        isAnswerRevealed = true,
-                        correctAnswers = review.answer?.correctAnswerString?.split(",") ?: emptyList(),
-                        explanation = review.answer?.generalExplanation,
-                        references = review.answer?.references
-                    )
+                HorizontalDivider(modifier = Modifier.padding(bottom = 16.dp))
+                
+                Box(modifier = Modifier.weight(1f)) {
+                    reviewState?.let { review ->
+                        QuestionViewer(
+                            question = review.question,
+                            options = review.options,
+                            selectedAnswers = review.attempt.userSelectedAnswers.split(",").filter { it.isNotEmpty() },
+                            onOptionToggled = { /* Read only in review */ },
+                            isAnswerRevealed = true,
+                            correctAnswers = review.answer?.correctAnswerString?.split(",") ?: emptyList(),
+                            explanation = review.answer?.generalExplanation,
+                            references = review.answer?.references
+                        )
+                    }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun ResultsContent(
+    state: ResultsUiState.Success,
+    onReviewQuestion: (com.algorithmx.q_base.data.entity.SessionAttempt) -> Unit,
+    onBackToHome: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Expressive Score Section
+        var scoreVisible by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) { scoreVisible = true }
+        
+        AnimatedVisibility(
+            visible = scoreVisible,
+            enter = scaleIn(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)) + fadeIn()
+        ) {
+            Surface(
+                modifier = Modifier.size(200.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                border = androidx.compose.foundation.BorderStroke(8.dp, MaterialTheme.colorScheme.primaryContainer)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "${state.score.toInt()}%",
+                            style = MaterialTheme.typography.displayLarge.copy(fontSize = 64.sp),
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = if (state.score >= 50) "SUCCESS" else "PRACTICE MORE",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 2.sp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(40.dp))
+        
+        Text(
+            text = "Question Breakdown",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.ExtraBold,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Text(
+            text = "Tap any item to review key concepts.",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.align(Alignment.Start),
+            color = MaterialTheme.colorScheme.secondary
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Expressive Staggered Grid
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(48.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.weight(1f)
+        ) {
+            itemsIndexed(state.attempts) { index, attempt ->
+                AnimatedAttemptDot(index, attempt, onReviewQuestion)
+            }
+        }
+        
+        Button(
+            onClick = onBackToHome,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .padding(bottom = 8.dp),
+            shape = MaterialTheme.shapes.large,
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+        ) {
+            Icon(Icons.Default.Home, contentDescription = null)
+            Spacer(modifier = Modifier.width(12.dp))
+            Text("Done Reviewing", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+fun AnimatedAttemptDot(
+    index: Int,
+    attempt: com.algorithmx.q_base.data.entity.SessionAttempt,
+    onClick: (com.algorithmx.q_base.data.entity.SessionAttempt) -> Unit
+) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(index * 30L)
+        visible = true
+    }
+    
+    val color = when {
+        attempt.marksObtained >= 3f -> Color(0xFF4CAF50)
+        attempt.marksObtained > 0f -> Color(0xFFFF9800)
+        attempt.attemptStatus == "UNATTEMPTED" -> Color.LightGray
+        else -> Color(0xFFF44336)
+    }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = scaleIn(initialScale = 0.5f) + fadeIn(),
+    ) {
+        Surface(
+            modifier = Modifier
+                .size(48.dp)
+                .clickable { onClick(attempt) },
+            shape = CircleShape,
+            color = color.copy(alpha = 0.15f),
+            border = androidx.compose.foundation.BorderStroke(2.dp, color)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    text = (index + 1).toString(),
+                    color = color,
+                    fontWeight = FontWeight.ExtraBold,
+                    style = MaterialTheme.typography.labelMedium
+                )
             }
         }
     }

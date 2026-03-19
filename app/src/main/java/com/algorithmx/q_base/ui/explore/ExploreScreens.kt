@@ -1,16 +1,19 @@
 package com.algorithmx.q_base.ui.explore
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -26,8 +29,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.algorithmx.q_base.data.entity.MasterCategory
 import com.algorithmx.q_base.ui.components.QuestionViewer
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,9 +41,33 @@ fun CategoryListScreen(
     categories: List<MasterCategory>,
     onCategoryClick: (String) -> Unit
 ) {
+    val scrollState = rememberTopAppBarState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(scrollState)
+
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Medical Categories") })
+            LargeTopAppBar(
+                title = { 
+                    Column {
+                        Text(
+                            "Categories", 
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Text(
+                            "Select Your Specialty",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            letterSpacing = 1.sp
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.largeTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+                )
+            )
         }
     ) { padding ->
         LazyVerticalGrid(
@@ -50,31 +79,51 @@ fun CategoryListScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(categories) { category ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                        .clickable { onCategoryClick(category.name) },
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize().padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = category.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
+            itemsIndexed(categories) { index, category ->
+                AnimatedCategoryItem(index) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .clickable { onCategoryClick(category.name) },
+                        shape = MaterialTheme.shapes.extraLarge,
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
                         )
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize().padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = category.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun AnimatedCategoryItem(index: Int, content: @Composable () -> Unit) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(index * 40L)
+        visible = true
+    }
+    AnimatedVisibility(
+        visible = visible,
+        enter = scaleIn(initialScale = 0.8f) + fadeIn(),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        content()
     }
 }
 
@@ -122,8 +171,14 @@ fun ExploreQuestionPagerScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(categoryName) },
+            CenterAlignedTopAppBar(
+                title = { 
+                    Text(
+                        categoryName, 
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
@@ -143,19 +198,26 @@ fun ExploreQuestionPagerScreen(
                             Icon(Icons.Default.Report, contentDescription = "Report Problem")
                         }
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { padding ->
         if (questionStates.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("No questions found.")
+                CircularProgressIndicator()
             }
         } else {
             Column(modifier = Modifier.padding(padding)) {
+                // Expressive Progress Bar
                 LinearProgressIndicator(
                     progress = { (pagerState.currentPage + 1).toFloat() / questionStates.size },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp),
+                    strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
                 )
 
                 if (subCategories.size > 1) {
@@ -163,38 +225,37 @@ fun ExploreQuestionPagerScreen(
                         state = listState,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                            .padding(vertical = 12.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         itemsIndexed(subCategories) { index, (name, firstIndex) ->
                             val isSelected = currentSubCategoryIndex == index
-                            Surface(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .clickable {
-                                        coroutineScope.launch {
-                                            pagerState.animateScrollToPage(firstIndex)
-                                        }
-                                    },
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                                contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                            ) {
-                                Text(
-                                    text = name,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    coroutineScope.launch {
+                                        pagerState.animateScrollToPage(firstIndex)
+                                    }
+                                },
+                                label = { Text(name) },
+                                shape = CircleShape,
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                                 )
-                            }
+                            )
                         }
                     }
+                } else {
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
 
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier.fillMaxSize(),
-                    verticalAlignment = Alignment.Top
+                    verticalAlignment = Alignment.Top,
+                    pageSpacing = 16.dp
                 ) { page ->
                     val state = questionStates[page]
                     QuestionViewer(
@@ -216,22 +277,24 @@ fun ExploreQuestionPagerScreen(
     if (showReportDialog) {
         AlertDialog(
             onDismissRequest = { showReportDialog = false },
-            title = { Text("Report a Problem") },
+            shape = MaterialTheme.shapes.extraLarge,
+            title = { Text("Report a Problem", fontWeight = FontWeight.Bold) },
             text = {
                 Column {
-                    Text("Please describe the issue with this question:")
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Found an error? Let us know the details.")
+                    Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
                         value = reportText,
                         onValueChange = { reportText = it },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 3,
-                        placeholder = { Text("Issue details...") }
+                        shape = MaterialTheme.shapes.large,
+                        placeholder = { Text("Describe the issue...") }
                     )
                 }
             },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         if (reportText.isNotBlank()) {
                             onReportSubmitted(pagerState.currentPage, reportText)
@@ -240,7 +303,7 @@ fun ExploreQuestionPagerScreen(
                         }
                     }
                 ) {
-                    Text("Submit")
+                    Text("Submit Report")
                 }
             },
             dismissButton = {

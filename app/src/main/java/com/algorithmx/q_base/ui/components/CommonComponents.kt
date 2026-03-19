@@ -2,6 +2,7 @@ package com.algorithmx.q_base.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
@@ -10,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -56,20 +58,39 @@ fun SessionCard(
     Card(
         onClick = onClick,
         modifier = Modifier.width(200.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+        )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Icon(Icons.Default.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(8.dp))
+        Column(modifier = Modifier.padding(20.dp)) {
+            Surface(
+                color = MaterialTheme.colorScheme.primary,
+                shape = CircleShape,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Default.PlayArrow, 
+                        contentDescription = null, 
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = session.title,
+                text = session.title.ifEmpty { "Practice Session" },
                 style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Started: ${java.text.SimpleDateFormat("MMM dd", Locale.getDefault()).format(session.createdTimestamp)}",
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
             )
         }
     }
@@ -110,26 +131,65 @@ fun SessionListItem(
 
 @Composable
 fun CollectionItem(collection: QuestionCollection) {
-    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp))
+    ) {
         ListItem(
-            headlineContent = { Text(collection.title) },
-            supportingContent = { Text(collection.description ?: "No description", maxLines = 1) },
-            leadingContent = { Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.secondary) }
+            headlineContent = { Text(collection.title, fontWeight = FontWeight.SemiBold) },
+            supportingContent = { Text(collection.description ?: "No description", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            leadingContent = { 
+                Surface(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = CircleShape,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                    }
+                }
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
         )
     }
 }
 
 @Composable
-fun SectionHeader(title: String, onActionClick: (() -> Unit)? = null) {
+fun SectionHeader(
+    title: String, 
+    modifier: Modifier = Modifier,
+    onActionClick: (() -> Unit)? = null,
+    icon: ImageVector? = null
+) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+            }
+            Text(
+                text = title, 
+                style = MaterialTheme.typography.titleLarge, 
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
         if (onActionClick != null) {
-            TextButton(onClick = onActionClick) {
-                Text("See All")
+            TextButton(
+                onClick = onActionClick,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+            ) {
+                Text("See All", fontWeight = FontWeight.SemiBold)
             }
         }
     }

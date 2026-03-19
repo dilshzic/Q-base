@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,35 +42,38 @@ fun OptionsList(
         // Expressive Animation for General Explanation
         AnimatedVisibility(
             visible = isAnswerRevealed,
-            enter = expandVertically(animationSpec = spring(stiffness = Spring.StiffnessLow)) + fadeIn(),
+            enter = expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)) + fadeIn(),
             exit = shrinkVertically() + fadeOut()
         ) {
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f)
                 ),
+                shape = MaterialTheme.shapes.extraLarge, // Expressive M3 Shape
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(20.dp)) {
                     Text(
                         text = "General Explanation",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = explanation ?: "No general explanation available.",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                     
                     if (!references.isNullOrBlank()) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "References",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Text(
                             text = references,
@@ -102,17 +106,18 @@ fun OptionsList(
                 correctAnswers.contains(letter)
             }
 
+            // Expressive Color Tones
             val targetBackgroundColor = when {
                 !isAnswerRevealed -> {
                     if (isSelected) MaterialTheme.colorScheme.primaryContainer 
                     else MaterialTheme.colorScheme.surface
                 }
                 isCorrect -> {
-                    if (isDarkMode) Color(0xFF1B5E20).copy(alpha = 0.6f)
+                    if (isDarkMode) Color(0xFF2E7D32).copy(alpha = 0.4f)
                     else Color(0xFFE8F5E9)
                 }
                 isSelected && !isCorrect -> {
-                    if (isDarkMode) Color(0xFFB71C1C).copy(alpha = 0.6f)
+                    if (isDarkMode) Color(0xFFC62828).copy(alpha = 0.4f)
                     else Color(0xFFFFEBEE)
                 }
                 else -> MaterialTheme.colorScheme.surface
@@ -123,34 +128,41 @@ fun OptionsList(
                     if (isSelected) MaterialTheme.colorScheme.primary 
                     else MaterialTheme.colorScheme.outlineVariant
                 }
-                isCorrect -> {
-                    if (isDarkMode) Color(0xFF81C784) else Color(0xFF4CAF50)
-                }
-                isSelected && !isCorrect -> {
-                    if (isDarkMode) Color(0xFFE57373) else Color(0xFFF44336)
-                }
+                isCorrect -> Color(0xFF4CAF50)
+                isSelected && !isCorrect -> Color(0xFFF44336)
                 else -> MaterialTheme.colorScheme.outlineVariant
             }
 
             val animatedBgColor by animateColorAsState(
                 targetValue = targetBackgroundColor,
-                animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
+                animationSpec = tween(durationMillis = 400)
             )
             val animatedBorderColor by animateColorAsState(
                 targetValue = targetBorderColor,
-                animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
+                animationSpec = tween(durationMillis = 400)
             )
 
-            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+            val scale by animateFloatAsState(
+                targetValue = if (isSelected && !isAnswerRevealed) 1.02f else 1f,
+                animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy)
+            )
+
+            Column(modifier = Modifier.padding(vertical = 6.dp)) {
                 Surface(
                     onClick = { if (!isAnswerRevealed && !isMTF) onOptionToggled(letter) },
-                    shape = MaterialTheme.shapes.medium,
+                    shape = MaterialTheme.shapes.large, // Expressive Radius
                     color = animatedBgColor,
-                    border = BorderStroke(1.dp, animatedBorderColor),
-                    modifier = Modifier.fillMaxWidth()
+                    border = BorderStroke(if (isSelected || isAnswerRevealed) 2.dp else 1.dp, animatedBorderColor),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                        },
+                    tonalElevation = if (isSelected) 4.dp else 0.dp
                 ) {
                     Row(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(18.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         when {
@@ -168,9 +180,7 @@ fun OptionsList(
                                     selected = isSelected,
                                     onClick = null,
                                     colors = RadioButtonDefaults.colors(
-                                        selectedColor = if (isAnswerRevealed && isCorrect) {
-                                            if (isDarkMode) Color(0xFF81C784) else Color(0xFF4CAF50)
-                                        } else MaterialTheme.colorScheme.primary
+                                        selectedColor = if (isAnswerRevealed && isCorrect) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
                                     )
                                 )
                             }
@@ -179,9 +189,7 @@ fun OptionsList(
                                     checked = isSelected,
                                     onCheckedChange = null,
                                     colors = CheckboxDefaults.colors(
-                                        checkedColor = if (isAnswerRevealed && isCorrect) {
-                                            if (isDarkMode) Color(0xFF81C784) else Color(0xFF4CAF50)
-                                        } else MaterialTheme.colorScheme.primary
+                                        checkedColor = if (isAnswerRevealed && isCorrect) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
                                     )
                                 )
                             }
@@ -190,71 +198,63 @@ fun OptionsList(
                         Text(
                             text = "${option.optionLetter}. ${option.optionText}",
                             style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                             modifier = Modifier.weight(1f)
                         )
 
                         AnimatedVisibility(
                             visible = isAnswerRevealed,
-                            enter = scaleIn() + fadeIn(),
+                            enter = scaleIn(initialScale = 0.5f) + fadeIn(),
                             exit = scaleOut() + fadeOut()
                         ) {
                             if (isCorrect) {
                                 Icon(
                                     Icons.Default.CheckCircle,
                                     contentDescription = "Correct",
-                                    tint = if (isDarkMode) Color(0xFF81C784) else Color(0xFF4CAF50)
+                                    tint = Color(0xFF4CAF50),
+                                    modifier = Modifier.size(28.dp)
                                 )
                             } else if (isSelected) {
                                 Icon(
                                     Icons.Default.Cancel,
                                     contentDescription = "Incorrect",
-                                    tint = if (isDarkMode) Color(0xFFE57373) else Color(0xFFF44336)
+                                    tint = Color(0xFFF44336),
+                                    modifier = Modifier.size(28.dp)
                                 )
                             }
                         }
                     }
                 }
                 
-                // Show option explanation or placeholder with Animation
+                // Show option explanation with Expressive Tonal Container
                 AnimatedVisibility(
                     visible = isAnswerRevealed,
                     enter = expandVertically() + fadeIn(),
                     exit = shrinkVertically() + fadeOut()
                 ) {
                     Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
+                        shape = MaterialTheme.shapes.medium,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
                     ) {
-                        Row(modifier = Modifier.padding(8.dp)) {
+                        Row(modifier = Modifier.padding(12.dp)) {
                             Icon(
                                 Icons.Default.Info, 
                                 contentDescription = null, 
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(18.dp),
                                 tint = MaterialTheme.colorScheme.secondary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (!option.optionExplanation.isNullOrBlank()) option.optionExplanation else "Explanation not available for this option.",
-                                style = MaterialTheme.typography.bodySmall,
+                                text = if (!option.optionExplanation.isNullOrBlank()) option.optionExplanation else "No specific explanation for this option.",
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontStyle = FontStyle.Italic
                             )
                         }
                     }
                 }
-            }
-        }
-
-        if (onCheckAnswer != null && !isAnswerRevealed) {
-            Spacer(modifier = Modifier.height(24.dp))
-            Button(
-                onClick = onCheckAnswer,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = true
-            ) {
-                Text("Check Answer")
             }
         }
     }

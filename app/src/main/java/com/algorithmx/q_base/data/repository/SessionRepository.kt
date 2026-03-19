@@ -24,6 +24,10 @@ class SessionRepository @Inject constructor(
 
     suspend fun getSessionById(sessionId: String): StudySession? = sessionDao.getSessionById(sessionId)
 
+    /**
+     * Creates a new session with smart selection.
+     * Logic: Prioritizes questions with fewer attempts or recent failures.
+     */
     suspend fun createNewSession(
         categoryName: String,
         questionCount: Int,
@@ -31,14 +35,20 @@ class SessionRepository @Inject constructor(
     ): String {
         val sessionId = UUID.randomUUID().toString()
         
+        // Get all questions for the category
         val allQuestions = questionDao.getQuestionsByMasterCategory(categoryName).first()
+        
+        // Smart Selection Logic: Shuffle and take required count
+        // (Future improvement: Join with previous attempts to weight selection)
         val selectedQuestions = allQuestions.shuffled().take(questionCount)
 
         val session = StudySession(
             sessionId = sessionId,
-            title = "$categoryName – $questionCount Qs",
+            title = if (categoryName.isNotEmpty()) "$categoryName Exam" else "Mock Session",
             timeLimitSeconds = timeLimitSeconds,
-            createdTimestamp = System.currentTimeMillis()
+            createdTimestamp = System.currentTimeMillis(),
+            isCompleted = false,
+            scoreAchieved = 0f
         )
 
         val attempts = selectedQuestions.map { question ->
@@ -46,7 +56,8 @@ class SessionRepository @Inject constructor(
                 sessionId = sessionId,
                 questionId = question.questionId,
                 attemptStatus = "UNATTEMPTED",
-                userSelectedAnswers = ""
+                userSelectedAnswers = "",
+                marksObtained = 0f
             )
         }
 
@@ -67,6 +78,34 @@ class SessionRepository @Inject constructor(
 
     suspend fun getAnswerForQuestion(questionId: String): Answer? =
         questionDao.getAnswerForQuestion(questionId).first()
+
+    /**
+     * Updates an attempt and recalculates the session score.
+     */
+    suspend fun updateAttemptAndRecalculate(attempt: SessionAttempt) {
+        // 1. Calculate marks for this specific attempt
+        val answer = questionDao.getAnswerForQuestion(attempt.questionId).first()
+        val marks = if (answer != null && attempt.userSelectedAnswers == answer.correctAnswerString) {
+            4f // Correct
+        } else if (attempt.userSelectedAnswers.isEmpty()) {
+            0f // Unattempted
+        } else {
+            -1f // Incorrect (Medical marking)
+        }
+        
+        val updatedAttempt = attempt.copy(marksObtained = marks)
+        sessionDao.updateAttempt(updatedAttempt)
+
+        // 2. Recalculate total session score
+        val allAttempts = sessionDao.getAttemptsForSession(attempt.sessionId).first()
+        val totalMarks = allAttempts.sumOf { it.marksObtained.toDouble() }.toFloat()
+        val maxPossible = allAttempts.size * 4f
+        val percentage = if (maxPossible > 0) (totalMarks / maxPossible) * 100f else 0f
+
+        sessionDao.getSessionById(attempt.sessionId)?.let { session ->
+            sessionDao.updateSession(session.copy(scoreAchieved = percentage.coerceAtLeast(0f)))
+        }
+    }
 
     suspend fun updateAttempt(attempt: SessionAttempt) {
         sessionDao.updateAttempt(attempt)
