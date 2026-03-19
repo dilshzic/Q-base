@@ -19,10 +19,12 @@ import com.algorithmx.q_base.ui.explore.*
 import com.algorithmx.q_base.ui.home.HomeScreen
 import com.algorithmx.q_base.ui.sessions.*
 import com.algorithmx.q_base.ui.auth.*
+import com.algorithmx.q_base.ui.chat.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Chat
 import com.google.firebase.auth.FirebaseAuth
 
 sealed class Screen(val route: String) {
@@ -30,6 +32,10 @@ sealed class Screen(val route: String) {
     object Home : Screen("home_route")
     object Explore : Screen("explore_route")
     object Sessions : Screen("sessions_route")
+    object Inbox : Screen("inbox_route")
+    object ChatDetail : Screen("chat_detail/{chatId}") {
+        fun createRoute(chatId: String) = "chat_detail/$chatId"
+    }
     object ActiveSession : Screen("active_session/{sessionId}") {
         fun createRoute(sessionId: String) = "active_session/$sessionId"
     }
@@ -105,6 +111,23 @@ fun RootNavGraph(navController: NavHostController) {
                     }
                 )
             }
+        }
+
+        composable(Screen.Inbox.route) {
+            ChatListScreen(
+                onChatClick = { chatId ->
+                    navController.navigate(Screen.ChatDetail.createRoute(chatId))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.ChatDetail.route,
+            arguments = listOf(navArgument("chatId") { type = NavType.StringType })
+        ) {
+            ChatDetailScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable(

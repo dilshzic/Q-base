@@ -21,6 +21,7 @@ data class QuestionWithContent(
 data class CollectionWithQuestions(
     @Embedded val collection: QuestionCollection,
     @Relation(
+        entity = Question::class,
         parentColumn = "collection_id",
         entityColumn = "question_id",
         associateBy = Junction(CollectionQuestionCrossRef::class)

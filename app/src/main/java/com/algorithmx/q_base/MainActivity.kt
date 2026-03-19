@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Chat
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Home
@@ -92,7 +93,8 @@ fun MainScreen() {
             val showBottomBar = currentRoute in listOf(
                 Screen.Home.route,
                 Screen.Explore.route,
-                Screen.Sessions.route
+                Screen.Sessions.route,
+                Screen.Inbox.route
             )
             
             if (showBottomBar) {
@@ -115,6 +117,18 @@ fun MainScreen() {
                         selected = currentDestination?.hierarchy?.any { it.route == Screen.Explore.route } == true,
                         onClick = {
                             navController.navigate(Screen.Explore.route) {
+                                popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Rounded.Chat, contentDescription = null) },
+                        label = { Text("Inbox") },
+                        selected = currentDestination?.hierarchy?.any { it.route == Screen.Inbox.route } == true,
+                        onClick = {
+                            navController.navigate(Screen.Inbox.route) {
                                 popUpTo(navController.graph.startDestinationId) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true

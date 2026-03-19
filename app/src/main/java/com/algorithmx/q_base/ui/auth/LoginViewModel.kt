@@ -3,6 +3,7 @@ package com.algorithmx.q_base.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.algorithmx.q_base.data.repository.AuthRepository
+import com.algorithmx.q_base.data.repository.ProfileRepository
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,12 +16,14 @@ data class AuthState(
     val user: FirebaseUser? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
-    val isSuccess: Boolean = false
+    val isSuccess: Boolean = false,
+    val isProfileCreated: Boolean = false
 )
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val repository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val profileRepository: ProfileRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AuthState())
@@ -28,20 +31,30 @@ class LoginViewModel @Inject constructor(
 
     fun signIn(email: String, pass: String) {
         _state.value = AuthState(isLoading = true)
-        repository.signInWithEmail(email, pass) { result ->
+        authRepository.signInWithEmail(email, pass) { result ->
             result.onSuccess { user ->
-                _state.value = AuthState(user = user, isSuccess = true)
+                viewModelScope.launch {
+                    profileRepository.syncUserProfile(user.uid)
+                    _state.value = AuthState(user = user, isSuccess = true, isProfileCreated = true)
+                }
             }.onFailure { error ->
                 _state.value = AuthState(error = error.message)
             }
         }
     }
 
-    fun signUp(email: String, pass: String) {
+    fun signUp(email: String, pass: String, displayName: String) {
         _state.value = AuthState(isLoading = true)
-        repository.signUpWithEmail(email, pass) { result ->
+        authRepository.signUpWithEmail(email, pass) { result ->
             result.onSuccess { user ->
-                _state.value = AuthState(user = user, isSuccess = true)
+                viewModelScope.launch {
+                    val profileResult = profileRepository.createProfile(user.uid, displayName)
+                    profileResult.onSuccess {
+                        _state.value = AuthState(user = user, isSuccess = true, isProfileCreated = true)
+                    }.onFailure { error ->
+                        _state.value = AuthState(error = "User created but profile failed: ${error.message}")
+                    }
+                }
             }.onFailure { error ->
                 _state.value = AuthState(error = error.message)
             }
