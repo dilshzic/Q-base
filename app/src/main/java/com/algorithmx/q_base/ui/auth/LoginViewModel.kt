@@ -34,7 +34,12 @@ class LoginViewModel @Inject constructor(
         authRepository.signInWithEmail(email, pass) { result ->
             result.onSuccess { user ->
                 viewModelScope.launch {
-                    profileRepository.syncUserProfile(user.uid)
+                    // Sync profile on login
+                    profileRepository.createOrUpdateProfile(
+                        userId = user.uid,
+                        email = user.email ?: "",
+                        displayName = user.displayName ?: "User"
+                    )
                     _state.value = AuthState(user = user, isSuccess = true, isProfileCreated = true)
                 }
             }.onFailure { error ->
@@ -43,12 +48,16 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    fun signUp(email: String, pass: String, displayName: String) {
+    fun signUp(email: String, pass: String) {
         _state.value = AuthState(isLoading = true)
         authRepository.signUpWithEmail(email, pass) { result ->
             result.onSuccess { user ->
                 viewModelScope.launch {
-                    val profileResult = profileRepository.createProfile(user.uid, displayName)
+                    val profileResult = profileRepository.createOrUpdateProfile(
+                        userId = user.uid,
+                        email = user.email ?: "",
+                        displayName = "New User" // Can be updated later
+                    )
                     profileResult.onSuccess {
                         _state.value = AuthState(user = user, isSuccess = true, isProfileCreated = true)
                     }.onFailure { error ->

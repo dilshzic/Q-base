@@ -2,6 +2,7 @@ package com.algorithmx.q_base.data.repository
 
 import com.algorithmx.q_base.data.dao.UserDao
 import com.algorithmx.q_base.data.entity.UserEntity
+import com.algorithmx.q_base.data.model.UserProfile
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -13,24 +14,46 @@ class ProfileRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val userDao: UserDao
 ) {
-    suspend fun createProfile(userId: String, displayName: String): Result<UserEntity> {
+    /**
+     * Creates or updates a user profile in Firestore and caches it locally.
+     * Used during first login or sign up.
+     */
+    suspend fun createOrUpdateProfile(userId: String, email: String, displayName: String): Result<UserProfile> {
         return try {
-            val friendCode = generateFriendCode()
-            val user = UserEntity(userId, displayName, friendCode)
+            val docRef = firestore.collection("users").document(userId)
+            val existingDoc = docRef.get().await()
+            
+            val profile = if (existingDoc.exists()) {
+                existingDoc.toObject(UserProfile::class.java)!!.copy(
+                    email = email,
+                    displayName = displayName
+                )
+            } else {
+                UserProfile(
+                    userId = userId,
+                    email = email,
+                    displayName = displayName,
+                    friendCode = generateFriendCode()
+                )
+            }
             
             // Save to Firestore
-            firestore.collection("users").document(userId).set(user).await()
+            docRef.set(profile).await()
             
-            // Cache locally
-            userDao.insertUser(user)
+            // Cache locally in Room
+            userDao.insertUser(UserEntity(
+                userId = profile.userId,
+                displayName = profile.displayName,
+                friendCode = profile.friendCode
+            ))
             
-            Result.success(user)
+            Result.success(profile)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun findUserByFriendCode(friendCode: String): Result<UserEntity?> {
+    suspend fun findUserByFriendCode(friendCode: String): Result<UserProfile?> {
         return try {
             val query = firestore.collection("users")
                 .whereEqualTo("friendCode", friendCode.uppercase())
@@ -40,14 +63,14 @@ class ProfileRepository @Inject constructor(
             
             val doc = query.documents.firstOrNull()
             if (doc != null) {
-                val user = UserEntity(
-                    userId = doc.id,
-                    displayName = doc.getString("displayName") ?: "Unknown",
-                    friendCode = doc.getString("friendCode") ?: ""
-                )
-                // Cache the found user
-                userDao.insertUser(user)
-                Result.success(user)
+                val profile = doc.toObject(UserProfile::class.java)!!
+                // Cache the found user locally
+                userDao.insertUser(UserEntity(
+                    userId = profile.userId,
+                    displayName = profile.displayName,
+                    friendCode = profile.friendCode
+                ))
+                Result.success(profile)
             } else {
                 Result.success(null)
             }
@@ -60,12 +83,12 @@ class ProfileRepository @Inject constructor(
         try {
             val doc = firestore.collection("users").document(userId).get().await()
             if (doc.exists()) {
-                val user = UserEntity(
-                    userId = doc.id,
-                    displayName = doc.getString("displayName") ?: "Unknown",
-                    friendCode = doc.getString("friendCode") ?: ""
-                )
-                userDao.insertUser(user)
+                val profile = doc.toObject(UserProfile::class.java)!!
+                userDao.insertUser(UserEntity(
+                    userId = profile.userId,
+                    displayName = profile.displayName,
+                    friendCode = profile.friendCode
+                ))
             }
         } catch (e: Exception) {
             // Log error

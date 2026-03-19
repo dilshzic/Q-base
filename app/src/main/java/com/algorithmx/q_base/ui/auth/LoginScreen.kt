@@ -31,9 +31,8 @@ import com.algorithmx.q_base.R
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -49,6 +48,7 @@ fun LoginScreen(
     
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val auth = remember { FirebaseAuth.getInstance() }
 
     // 1. Configure Google Sign In
     val gso = remember {
@@ -73,7 +73,7 @@ fun LoginScreen(
                     coroutineScope.launch {
                         try {
                             val credential = GoogleAuthProvider.getCredential(idToken, null)
-                            Firebase.auth.signInWithCredential(credential).await()
+                            auth.signInWithCredential(credential).await()
                             onLoginSuccess()
                         } catch (e: Exception) {
                             // Handle Firebase Auth failure
