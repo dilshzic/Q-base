@@ -15,14 +15,37 @@ class SessionsViewModel @Inject constructor(
     private val repository: SessionRepository
 ) : ViewModel() {
 
-    val sessions: StateFlow<List<StudySession>> = repository.getAllSessions()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
 
-    val categories: StateFlow<List<MasterCategory>> = repository.getAllCategories()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val sessions: StateFlow<List<StudySession>> = combine(
+        repository.getAllSessions(),
+        _searchQuery
+    ) { sessions, query ->
+        if (query.isBlank()) {
+            sessions
+        } else {
+            sessions.filter { it.title.contains(query, ignoreCase = true) }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val categories: StateFlow<List<MasterCategory>> = combine(
+        repository.getAllCategories(),
+        _searchQuery
+    ) { categories, query ->
+        if (query.isBlank()) {
+            categories
+        } else {
+            categories.filter { it.name.contains(query, ignoreCase = true) }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _sessionCreated = MutableSharedFlow<String>()
     val sessionCreated = _sessionCreated.asSharedFlow()
+
+    fun onSearchQueryChange(query: String) {
+        _searchQuery.value = query
+    }
 
     fun createSession(categoryName: String, questionCount: Int, isTimed: Boolean) {
         viewModelScope.launch {
