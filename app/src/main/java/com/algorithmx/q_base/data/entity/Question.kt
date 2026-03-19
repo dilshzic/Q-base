@@ -3,7 +3,9 @@ package com.algorithmx.q_base.data.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Entity(tableName = "Questions")
 data class Question(
     @PrimaryKey

@@ -1,9 +1,7 @@
 package com.algorithmx.q_base.data.dao
 
 import androidx.room.*
-import com.algorithmx.q_base.data.entity.Answer
-import com.algorithmx.q_base.data.entity.Question
-import com.algorithmx.q_base.data.entity.QuestionOption
+import com.algorithmx.q_base.data.entity.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -46,4 +44,8 @@ interface QuestionDao {
 
     @Query("SELECT COUNT(*) FROM Questions")
     suspend fun getQuestionCount(): Int
+
+    @Transaction
+    @Query("SELECT * FROM Question_Collections WHERE collection_id = :collectionId")
+    suspend fun getCollectionWithContent(collectionId: String): CollectionWithQuestions?
 }

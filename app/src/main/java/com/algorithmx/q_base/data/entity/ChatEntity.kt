@@ -1,0 +1,12 @@
+package com.algorithmx.q_base.data.entity
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "chats")
+data class ChatEntity(
+    @PrimaryKey val chatId: String,
+    val chatName: String?, // Null for 1-on-1 chats
+    val isGroup: Boolean,
+    val participantIds: String // e.g., "uid1,uid2,uid3"
+)

@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -76,6 +77,9 @@ dependencies {
     implementation(libs.moshi.kotlin)
     ksp(libs.moshi.kotlin.codegen)
 
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
+
     // Image Loading
     implementation(libs.coil.compose)
 
@@ -90,6 +94,10 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+
+    // AWS (Cloudflare R2)
+    implementation(libs.aws.sdk.s3)
 
     // Testing
     testImplementation(libs.junit)

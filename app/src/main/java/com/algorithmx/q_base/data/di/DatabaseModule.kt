@@ -2,10 +2,7 @@ package com.algorithmx.q_base.data.di
 
 import android.content.Context
 import com.algorithmx.q_base.data.AppDatabase
-import com.algorithmx.q_base.data.dao.CategoryDao
-import com.algorithmx.q_base.data.dao.ProblemReportDao
-import com.algorithmx.q_base.data.dao.QuestionDao
-import com.algorithmx.q_base.data.dao.SessionDao
+import com.algorithmx.q_base.data.dao.*
 import com.algorithmx.q_base.data.repository.ExploreRepository
 import com.algorithmx.q_base.data.repository.SessionRepository
 import dagger.Module
@@ -36,6 +33,15 @@ object DatabaseModule {
 
     @Provides
     fun provideProblemReportDao(database: AppDatabase): ProblemReportDao = database.problemReportDao()
+
+    @Provides
+    fun provideUserDao(database: AppDatabase): UserDao = database.userDao()
+
+    @Provides
+    fun provideChatDao(database: AppDatabase): ChatDao = database.chatDao()
+
+    @Provides
+    fun provideMessageDao(database: AppDatabase): MessageDao = database.messageDao()
 
     @Provides
     @Singleton
