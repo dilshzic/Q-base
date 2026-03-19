@@ -27,6 +27,7 @@ datastorePreferences = "1.1.7"
 retrofit = "2.12.0"
 okhttp = "4.10.0"
 moshi = "1.15.2"
+appwrite = "4.0.1"
 
 # Coroutines
 kotlinxCoroutines = "1.10.2"
@@ -37,9 +38,6 @@ kotlinxSerializationJson = "1.7.3"
 # Firebase
 firebaseBom = "34.10.0"
 googleServices = "4.4.4"
-
-# AWS
-awsSdk = "1.3.93"
 
 # Testing
 junit = "4.13.2"
@@ -102,15 +100,13 @@ okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhtt
 logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
 moshi-kotlin-codegen = { group = "com.squareup.moshi", name = "moshi-kotlin-codegen", version.ref = "moshi" }
+appwrite-sdk = { group = "io.appwrite", name = "sdk-for-android", version.ref = "appwrite" }
 
 # Firebase
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
-
-# AWS (Cloudflare R2)
-aws-sdk-s3 = { group = "aws.sdk.kotlin", name = "s3", version.ref = "awsSdk" }
 
 # Other Libraries
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coilCompose" }

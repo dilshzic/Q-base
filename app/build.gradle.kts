@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -6,6 +8,15 @@ plugins {
     // alias(libs.plugins.google.services) // Commented out to fix missing google-services.json error
     alias(libs.plugins.kotlin.serialization)
 }
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+
+val appwriteProjectId = localProperties.getProperty("APPWRITE_PROJECT_ID") ?: ""
+val appwriteBucketId = localProperties.getProperty("APPWRITE_BUCKET_ID") ?: ""
 
 android {
     namespace = "com.algorithmx.q_base"
@@ -19,6 +30,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "APPWRITE_PROJECT_ID", "\"$appwriteProjectId\"")
+        buildConfigField("String", "APPWRITE_BUCKET_ID", "\"$appwriteBucketId\"")
     }
 
     buildTypes {
@@ -98,8 +112,8 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
 
-    // AWS (Cloudflare R2)
-    implementation(libs.aws.sdk.s3)
+    // Appwrite
+    implementation(libs.appwrite.sdk)
 
     // Testing
     testImplementation(libs.junit)
