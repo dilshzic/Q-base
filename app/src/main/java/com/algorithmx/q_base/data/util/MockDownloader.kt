@@ -19,7 +19,7 @@ import javax.inject.Singleton
 
 @Singleton
 class MockDownloader @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val okHttpClient: OkHttpClient,
     private val questionDao: QuestionDao,
     private val categoryDao: CategoryDao
@@ -34,7 +34,7 @@ class MockDownloader @Inject constructor(
             val request = Request.Builder().url(url).build()
             val response = okHttpClient.newCall(request).execute()
             
-            if (!response.isSuccessful) return@withContext Result.failure(Exception("Download failed: ${response.code}"))
+            if (!response.isSuccessful) return@withContext Result.failure(Exception("Download failed: \${response.code}"))
             
             val body = response.body ?: return@withContext Result.failure(Exception("Empty response body"))
             

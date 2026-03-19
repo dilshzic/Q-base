@@ -12,6 +12,7 @@ import com.algorithmx.q_base.data.repository.AuthRepository
 import com.algorithmx.q_base.data.repository.SyncRepository
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -54,6 +55,7 @@ class ChatViewModel @Inject constructor(
     // State for a specific Chat Detail
     private val _currentChatId = MutableStateFlow<String?>(null)
     
+    @OptIn(ExperimentalCoroutinesApi::class)
     val chatDetailState: StateFlow<ChatDetailState> = _currentChatId.flatMapLatest { chatId ->
         if (chatId == null) flowOf(ChatDetailState())
         else {

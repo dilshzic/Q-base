@@ -8,7 +8,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Chat
+import androidx.compose.material.icons.automirrored.rounded.Chat
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Home
@@ -132,7 +132,7 @@ fun MainScreen() {
                     onClick = { navController.navigate(Screen.Explore.route) { launchSingleTop = true } }
                 )
                 NavigationRailItem(
-                    icon = { Icon(Icons.Rounded.Chat, contentDescription = null) },
+                    icon = { Icon(Icons.AutoMirrored.Rounded.Chat, contentDescription = null) },
                     label = { Text("Inbox") },
                     selected = currentDestination?.hierarchy?.any { it.route == Screen.Inbox.route } == true,
                     onClick = { navController.navigate(Screen.Inbox.route) { launchSingleTop = true } }
@@ -156,7 +156,7 @@ fun MainScreen() {
                         val items = listOf(
                             Triple(Screen.Home.route, "Home", Icons.Rounded.Home),
                             Triple(Screen.Explore.route, "Explore", Icons.Rounded.Explore),
-                            Triple(Screen.Inbox.route, "Inbox", Icons.Rounded.Chat),
+                            Triple(Screen.Inbox.route, "Inbox", Icons.AutoMirrored.Rounded.Chat),
                             Triple(Screen.Sessions.route, "Sessions", Icons.Rounded.History)
                         )
                         
