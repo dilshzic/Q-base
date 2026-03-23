@@ -1,7 +1,6 @@
 package com.algorithmx.q_base.data.entity
 
 import androidx.room.Embedded
-import androidx.room.Junction
 import androidx.room.Relation
 
 data class QuestionWithContent(
@@ -16,15 +15,4 @@ data class QuestionWithContent(
         entityColumn = "question_id"
     )
     val answer: Answer?
-)
-
-data class CollectionWithQuestions(
-    @Embedded val collection: QuestionCollection,
-    @Relation(
-        entity = Question::class,
-        parentColumn = "collection_id",
-        entityColumn = "question_id",
-        associateBy = Junction(CollectionQuestionCrossRef::class)
-    )
-    val questions: List<QuestionWithContent>
 )

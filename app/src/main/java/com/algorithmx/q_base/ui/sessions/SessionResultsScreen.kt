@@ -11,10 +11,8 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,7 +26,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.ui.components.QuestionViewer
+import com.algorithmx.q_base.ui.components.ReportDialog
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,11 +38,16 @@ fun SessionResultsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val reviewState by viewModel.reviewQuestion.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    var showReportDialog by remember { mutableStateOf(false) }
 
     val scrollState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(scrollState)
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             LargeTopAppBar(
                 title = { 
@@ -59,6 +64,12 @@ fun SessionResultsScreen(
                             letterSpacing = 1.sp
                         )
                     }
+                },
+                actions = {
+                    com.algorithmx.q_base.ui.components.ProfileIconButton(
+                        user = currentUser,
+                        onClick = { onBackToHome() } // Or direct to profile
+                    )
                 },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.largeTopAppBarColors(
@@ -79,6 +90,9 @@ fun SessionResultsScreen(
                     ResultsContent(
                         state = state,
                         onReviewQuestion = { viewModel.selectQuestionForReview(it) },
+                        onReportSession = {
+                            showReportDialog = true
+                        },
                         onBackToHome = onBackToHome
                     )
                 }
@@ -125,7 +139,7 @@ fun SessionResultsScreen(
                             selectedAnswers = review.attempt.userSelectedAnswers.split(",").filter { it.isNotEmpty() },
                             onOptionToggled = { /* Read only in review */ },
                             isAnswerRevealed = true,
-                            correctAnswers = review.answer?.correctAnswerString?.split(",") ?: emptyList(),
+                            correctAnswers = review.answer?.correctAnswerString?.split(",")?.map { it.trim() } ?: emptyList(),
                             explanation = review.answer?.generalExplanation,
                             references = review.answer?.references
                         )
@@ -134,12 +148,28 @@ fun SessionResultsScreen(
             }
         }
     }
+
+    if (showReportDialog) {
+        ReportDialog(
+            itemType = "Session",
+            itemName = "Session Analysis",
+            onDismiss = { showReportDialog = false },
+            onConfirm = { reason ->
+                viewModel.reportCurrentSession(reason)
+                showReportDialog = false
+                scope.launch {
+                    snackbarHostState.showSnackbar("Session report sent successfully")
+                }
+            }
+        )
+    }
 }
 
 @Composable
 fun ResultsContent(
     state: ResultsUiState.Success,
     onReviewQuestion: (com.algorithmx.q_base.data.entity.SessionAttempt) -> Unit,
+    onReportSession: () -> Unit,
     onBackToHome: () -> Unit
 ) {
     Column(
@@ -223,6 +253,21 @@ fun ResultsContent(
             Icon(Icons.Default.Home, contentDescription = null)
             Spacer(modifier = Modifier.width(12.dp))
             Text("Done Reviewing", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        }
+
+        OutlinedButton(
+            onClick = onReportSession,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = MaterialTheme.shapes.large,
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.error
+            )
+        ) {
+            Icon(Icons.Default.Warning, contentDescription = null)
+            Spacer(modifier = Modifier.width(12.dp))
+            Text("Report Session Discrepancies", style = MaterialTheme.typography.titleMedium)
         }
     }
 }

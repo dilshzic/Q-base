@@ -3,6 +3,7 @@ package com.algorithmx.q_base.data.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
@@ -16,7 +17,8 @@ import kotlinx.serialization.Serializable
             childColumns = ["question_id"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index(value = ["question_id"])]
 )
 data class QuestionOption(
     @PrimaryKey(autoGenerate = true)

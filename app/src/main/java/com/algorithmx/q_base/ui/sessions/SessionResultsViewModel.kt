@@ -1,10 +1,13 @@
 package com.algorithmx.q_base.ui.sessions
+ 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.algorithmx.q_base.data.entity.*
 import com.algorithmx.q_base.data.repository.SessionRepository
+import com.algorithmx.q_base.data.repository.SyncRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -25,9 +28,20 @@ sealed class ResultsUiState {
 @HiltViewModel
 class SessionResultsViewModel @Inject constructor(
     private val repository: SessionRepository,
-    savedStateHandle: SavedStateHandle
+    private val syncRepository: SyncRepository,
+    private val authRepository: com.algorithmx.q_base.data.repository.AuthRepository
 ) : ViewModel() {
-    private val sessionId: String = checkNotNull(savedStateHandle["sessionId"])
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val currentUser: StateFlow<UserEntity?> = authRepository.currentUser
+        .flatMapLatest { firebaseUser ->
+            if (firebaseUser != null) {
+                repository.getCurrentUser(firebaseUser.uid)
+            } else {
+                flowOf<UserEntity?>(null)
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    private var _sessionId: String = ""
 
     private val _attempts = MutableStateFlow<List<SessionAttempt>>(emptyList())
     private val _score = MutableStateFlow(0f)
@@ -41,15 +55,17 @@ class SessionResultsViewModel @Inject constructor(
         else ResultsUiState.Success(attempts, score)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ResultsUiState.Loading)
 
-    init {
+    fun initSession(id: String) {
+        if (_sessionId == id) return
+        _sessionId = id
         loadResults()
     }
 
     private fun loadResults() {
         viewModelScope.launch {
-            repository.getAttemptsForSession(sessionId).collect { attempts ->
+            repository.getAttemptsForSession(_sessionId).collect { attempts ->
                 val totalMarks = attempts.sumOf { it.marksObtained.toDouble() }.toFloat()
-                val maxPossibleMarks = attempts.size * 5f 
+                val maxPossibleMarks = attempts.size * 4f 
                 val scorePercentage = if (maxPossibleMarks > 0) (totalMarks / maxPossibleMarks) * 100 else 0f
                 
                 _attempts.value = attempts
@@ -76,5 +92,17 @@ class SessionResultsViewModel @Inject constructor(
 
     fun clearReview() {
         _reviewQuestion.value = null
+    }
+
+    fun reportCurrentSession(reason: String) {
+        viewModelScope.launch {
+            if (_sessionId.isNotEmpty()) {
+                try {
+                    syncRepository.reportSession(_sessionId, reason)
+                } catch (e: Exception) {
+                    // Log or show error
+                }
+            }
+        }
     }
 }

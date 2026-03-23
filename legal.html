@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q-base | Legal Documents</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-glow: rgba(79, 70, 229, 0.4);
+            --secondary: #10B981;
+            --background: #0F172A;
+            --surface: rgba(30, 41, 59, 0.7);
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --border: rgba(255, 255, 255, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --accent: #F43F5E;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%);
+        }
+
+        h1, h2, h3 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 80px 24px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 80px;
+            position: relative;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            height: 400px;
+            background: var(--primary-glow);
+            filter: blur(120px);
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 30%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 60px;
+            position: sticky;
+            top: 24px;
+            z-index: 100;
+        }
+
+        .nav-link {
+            padding: 12px 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-link:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow);
+            transform: translateY(-2px);
+        }
+
+        .content-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            padding: 60px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(8px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-card section {
+            margin-bottom: 48px;
+        }
+
+        .content-card h1 {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            background: linear-gradient(to right, #fff, var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .last-updated {
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 40px;
+            display: block;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin: 40px 0 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h2::before {
+            content: '';
+            width: 24px;
+            height: 2px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            margin: 24px 0 12px;
+            color: var(--text-primary);
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        ul {
+            list-style: none;
+            margin-bottom: 24px;
+        }
+
+        li {
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            padding-left: 24px;
+            position: relative;
+        }
+
+        li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: 800;
+        }
+
+        .important-box {
+            background: rgba(79, 70, 229, 0.05);
+            border-left: 4px solid var(--primary);
+            padding: 24px;
+            border-radius: 8px;
+            margin: 32px 0;
+        }
+
+        .important-box p {
+            color: var(--text-primary);
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 80px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            padding-top: 40px;
+            border-top: 1px solid var(--border);
+        }
+
+        .highlight {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .content-card {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 40px 16px; }
+            .content-card { padding: 32px 20px; border-radius: 24px; }
+            .logo { font-size: 2.2rem; }
+            h1 { font-size: 1.8rem; }
+            nav { flex-direction: column; align-items: stretch; }
+            .nav-link { text-align: center; }
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">Q-base</div>
+            <p class="subtitle">Medical Intelligence & Secure Communication</p>
+        </header>
+
+        <nav>
+            <a href="#privacy" class="nav-link">Privacy Policy</a>
+            <a href="#tos" class="nav-link">Terms of Service</a>
+            <a href="#security" class="nav-link">Security Standards</a>
+        </nav>
+
+        <main>
+            <!-- Privacy Policy -->
+            <article id="privacy" class="content-card">
+                <span class="last-updated">Last Updated: March 22, 2026</span>
+                <h1>Privacy Policy</h1>
+                <p>This Privacy Policy explains how Q-base ("we", "us", or "our") collects, uses, and discloses your information when you use our mobile application.</p>
+
+                <section>
+                    <h2>1. Information We Collect</h2>
+                    <h3>A. Information You Provide</h3>
+                    <ul>
+                        <li><span class="highlight">Account Information:</span> Email and identity verification via Firebase Authentication.</li>
+                        <li><span class="highlight">User-Generated Content:</span> Encrypted clinical questions, shared collections, and AI prompts.</li>
+                    </ul>
+                    <h3>B. Automatic Data Collection</h3>
+                    <ul>
+                        <li><span class="highlight">Usage Analytics:</span> Interaction metrics for AI performance and token quota management.</li>
+                        <li><span class="highlight">System Logs:</span> Crash reporting for application stability.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>2. End-to-End Encryption (E2EE)</h2>
+                    <div class="important-box">
+                        <p>Q-base implements a zero-knowledge architecture. Neither our staff nor our cloud providers possess the keys required to decrypt your private messages or medical data.</p>
+                    </div>
+                    <p>All interpersonal communication is encrypted locally using <span class="highlight">AES-GCM-256</span>. Symmetric keys are protected via the hardware-backed <span class="highlight">Android Keystore</span>.</p>
+                </section>
+
+                <section>
+                    <h2>3. Data Storage & Infrastructure</h2>
+                    <p>We leverage world-class infrastructure to ensure data integrity and privacy:</p>
+                    <ul>
+                        <li><span class="highlight">Firebase (Google Cloud):</span> Global real-time synchronization for metadata and identity.</li>
+                        <li><span class="highlight">Appwrite (Sydney Region):</span> Specialized regional blob storage for high-performance ZIP collection sharing (syd.cloud.appwrite.io).</li>
+                        <li><span class="highlight">AI Core (Gemini & Groq):</span> Intelligence provided by Google Gemini and GroqCloud. Your data is transmitted over TLS and never used for training third-party models.</li>
+                    </ul>
+                </section>
+            </article>
+
+            <!-- Terms of Service -->
+            <article id="tos" class="content-card">
+                <span class="last-updated">Last Updated: March 22, 2026</span>
+                <h1>Terms of Service</h1>
+                
+                <section>
+                    <h2>1. Moderation & Safety</h2>
+                    <p>While we value absolute privacy, we maintain a strict policy against abuse and harassment.</p>
+                    <h3>The "Report and Forward" Mechanism</h3>
+                    <p>Because of our E2EE architecture, we cannot proactively scan messages. We rely on user-initiated reporting:</p>
+                    <ul>
+                        <li>Users can report specific messages for moderation.</li>
+                        <li>The reporting device generates a decrypted fragment of the conversation for manual review.</li>
+                        <li>This fragment is sent with cryptographic signatures to verify the origin of the content.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>2. Account Enforcement</h2>
+                    <p>Violations of our safety policies result in account-level actions:</p>
+                    <ul>
+                        <li><span class="highlight">Banning:</span> Banned accounts are flagged globally across the network.</li>
+                        <li><span class="highlight">Local Hiding:</span> Your app automatically filters out communication from accounts flagged with an <code style="color:var(--accent);">isBanned</code> status to maintain a safe environment.</li>
+                    </ul>
+                </section>
+
+                <section id="security">
+                    <h2>3. Intellectual Property</h2>
+                    <p>Users retain ownership of their medical collections but must ensure they have legal rights to share any copyrighted diagrams or texts. Q-base complies with valid DMCA requests by restricting access at the account level.</p>
+                </section>
+            </article>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 Q-base Intelligence. All Rights Reserved.</p>
+            <p style="margin-top: 10px; opacity: 0.5;">HIPAA-Ready Architecture | AES-256 Military Grade Encryption</p>
+        </footer>
+    </div>
+</body>
+</html>

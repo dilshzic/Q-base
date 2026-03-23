@@ -10,9 +10,9 @@ import kotlinx.serialization.Serializable
 @Entity(
     tableName = "Questions",
     indices = [
-        Index(value = ["master_category"]),
+        Index(value = ["collection"]),
         Index(value = ["category"]),
-        Index(value = ["subject"])
+        Index(value = ["tags"])
     ]
 )
 data class Question(
@@ -20,11 +20,14 @@ data class Question(
     @ColumnInfo(name = "question_id")
     val questionId: String,
     
-    @ColumnInfo(name = "master_category")
-    val masterCategory: String?,
+    @ColumnInfo(name = "collection")
+    val collection: String?,
     
     @ColumnInfo(name = "category")
     val category: String?,
+    
+    @ColumnInfo(name = "tags")
+    val tags: String?,
     
     @ColumnInfo(name = "question_type")
     val questionType: String?,
@@ -32,12 +35,6 @@ data class Question(
     @ColumnInfo(name = "stem")
     val stem: String?,
     
-    @ColumnInfo(name = "subject")
-    val subject: String?,
-    
-    @ColumnInfo(name = "batch")
-    val batch: String?,
-
     @ColumnInfo(name = "is_pinned")
     val isPinned: Boolean = false
 )

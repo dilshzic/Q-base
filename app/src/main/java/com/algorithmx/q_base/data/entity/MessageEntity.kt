@@ -23,5 +23,7 @@ data class MessageEntity(
     val senderId: String, // You will use this to look up the name in UserEntity
     val payload: String, // Text, or the Cloudflare .zip URL
     val type: String, // "TEXT", "FILE_TRANSFER", etc.
-    val timestamp: Long
+    val timestamp: Long,
+    val decryptionStatus: String = "SUCCESS", // SUCCESS, FAILED, NOT_ENCRYPTED
+    val keyFingerprint: String? = null
 )

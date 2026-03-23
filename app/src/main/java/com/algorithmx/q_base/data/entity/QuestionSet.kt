@@ -3,31 +3,33 @@ package com.algorithmx.q_base.data.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
 @Serializable
 @Entity(
-    tableName = "Question_Collections",
+    tableName = "Question_Sets",
     foreignKeys = [
         ForeignKey(
-            entity = MasterCategory::class,
-            parentColumns = ["master_category_id"],
-            childColumns = ["master_category_id"],
+            entity = Collection::class,
+            parentColumns = ["collection_id"],
+            childColumns = ["parent_collection_id"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index(value = ["parent_collection_id"])]
 )
-data class QuestionCollection(
+data class QuestionSet(
     @PrimaryKey
-    @ColumnInfo(name = "collection_id")
-    val collectionId: String, // UUID
+    @ColumnInfo(name = "set_id")
+    val setId: String, // UUID
 
     @ColumnInfo(name = "title")
     val title: String,
 
-    @ColumnInfo(name = "master_category_id")
-    val masterCategoryId: String, // FK to Master_Categories
+    @ColumnInfo(name = "parent_collection_id")
+    val parentCollectionId: String, // FK to Collections
 
     @ColumnInfo(name = "description")
     val description: String? = null,

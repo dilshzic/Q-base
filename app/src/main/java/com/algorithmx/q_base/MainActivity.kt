@@ -1,33 +1,33 @@
 package com.algorithmx.q_base
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Chat
-import androidx.compose.material.icons.rounded.Explore
-import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.ui.NavDisplay
+import com.google.firebase.auth.FirebaseAuth
 import com.algorithmx.q_base.data.AppDatabase
 import com.algorithmx.q_base.data.DatabaseSeeder
-import com.algorithmx.q_base.ui.navigation.RootNavGraph
-import com.algorithmx.q_base.ui.navigation.Screen
+import com.algorithmx.q_base.ui.navigation.*
 import com.algorithmx.q_base.ui.theme.QbaseTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,15 +38,59 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     private val isSeeded = MutableStateFlow(false)
 
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permission granted
+        } else {
+            // Permission denied
+        }
+    }
+
+    private fun checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
     @Inject
     lateinit var database: AppDatabase
 
+    @Inject
+    lateinit var syncRepository: com.algorithmx.q_base.data.repository.SyncRepository
+
+    @Inject
+    lateinit var notificationHelper: com.algorithmx.q_base.util.NotificationHelper
+
+    @Inject
+    lateinit var auth: FirebaseAuth
+
+    @Inject
+    lateinit var dataStoreManager: com.algorithmx.q_base.brain.BrainDataStoreManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        checkNotificationPermission()
         enableEdgeToEdge()
 
+        // Start global sync for notifications reactively
         lifecycleScope.launch {
-            DatabaseSeeder(this@MainActivity, database).seedDatabaseIfNeeded()
+            com.algorithmx.q_base.data.repository.AuthRepository(auth).currentUser.collect { user ->
+                if (user != null) {
+                    syncRepository.observeAllIncomingEvents(notificationHelper).collect {}
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            DatabaseSeeder(this@MainActivity, database, dataStoreManager).seedDatabaseIfNeeded()
             isSeeded.value = true
         }
 
@@ -54,9 +98,29 @@ class MainActivity : ComponentActivity() {
             QbaseTheme {
                 val seeded by isSeeded.collectAsStateWithLifecycle()
                 
+                // Define navigation state at the top level to ensure it has the same lifetime as the Activity.
+                // This prevents the "NavController has been destroyed" error when switching from LoadingScreen.
+                val startRoute = if (auth.currentUser == null) Screen.Login else Screen.Home
+                val navigationState = rememberNavigationState(
+                    startRoute = startRoute,
+                    topLevelRoutes = setOf(Screen.Home, Screen.Explore, Screen.Connect, Screen.Sessions())
+                )
+                val navigator = remember(navigationState) { Navigator(navigationState) }
+
+                LaunchedEffect(seeded) {
+                    if (seeded) {
+                        intent?.getStringExtra("CHAT_ID")?.let { chatId ->
+                            navigator.navigate(Screen.ChatDetail(chatId))
+                        }
+                        intent?.getStringExtra("SESSION_ID")?.let { sessionId ->
+                            navigator.navigate(Screen.ActiveSession(sessionId))
+                        }
+                    }
+                }
+
                 Crossfade(targetState = seeded, label = "loading_transition") { isReady ->
                     if (isReady) {
-                        MainScreen()
+                        MainScreen(navigationState, navigator)
                     } else {
                         LoadingScreen()
                     }
@@ -81,7 +145,7 @@ fun LoadingScreen() {
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = "Preparing Database",
-                style = MaterialTheme.typography.displaySmall, // Expressive Typography
+                style = MaterialTheme.typography.displaySmall,
                 color = MaterialTheme.colorScheme.primary
             )
         }
@@ -89,89 +153,74 @@ fun LoadingScreen() {
 }
 
 @Composable
-fun MainScreen() {
-    val navController = rememberNavController()
+fun MainScreen(navigationState: NavigationState, navigator: Navigator) {
     val config = LocalConfiguration.current
-    val isExpanded = config.screenWidthDp > 600 // Simple adaptive check
+    val isExpanded = config.screenWidthDp > 600
 
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
-    val currentRoute = currentDestination?.route
-    
-    val showNav = currentRoute in listOf(
-        Screen.Home.route,
-        Screen.Explore.route,
-        Screen.Sessions.route,
-        Screen.Inbox.route
+    val currentStack = navigationState.backStacks[navigationState.topLevelRoute]
+    val isAtRoot = (currentStack?.size ?: 0) <= 1
+
+    val showNav = isAtRoot && (
+        navigationState.topLevelRoute is Screen.Home ||
+        navigationState.topLevelRoute is Screen.Explore ||
+        navigationState.topLevelRoute is Screen.Sessions ||
+        navigationState.topLevelRoute is Screen.Connect
     )
 
     Row(modifier = Modifier.fillMaxSize()) {
-        // Expressive Navigation Rail for Large Screens
         if (isExpanded && showNav) {
             NavigationRail(
                 containerColor = MaterialTheme.colorScheme.surface,
-                header = {
-                    Icon(
-                        Icons.Rounded.Home, 
-                        contentDescription = null, 
-                        modifier = Modifier.size(32.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
+                header = null
             ) {
                 NavigationRailItem(
                     icon = { Icon(Icons.Rounded.Home, contentDescription = null) },
                     label = { Text("Home") },
-                    selected = currentDestination?.hierarchy?.any { it.route == Screen.Home.route } == true,
-                    onClick = { navController.navigate(Screen.Home.route) { launchSingleTop = true } }
+                    selected = navigationState.topLevelRoute == Screen.Home,
+                    onClick = { navigator.navigate(Screen.Home) }
                 )
                 NavigationRailItem(
                     icon = { Icon(Icons.Rounded.Explore, contentDescription = null) },
                     label = { Text("Explore") },
-                    selected = currentDestination?.hierarchy?.any { it.route == Screen.Explore.route } == true,
-                    onClick = { navController.navigate(Screen.Explore.route) { launchSingleTop = true } }
+                    selected = navigationState.topLevelRoute == Screen.Explore,
+                    onClick = { navigator.navigate(Screen.Explore) }
                 )
                 NavigationRailItem(
-                    icon = { Icon(Icons.AutoMirrored.Rounded.Chat, contentDescription = null) },
-                    label = { Text("Inbox") },
-                    selected = currentDestination?.hierarchy?.any { it.route == Screen.Inbox.route } == true,
-                    onClick = { navController.navigate(Screen.Inbox.route) { launchSingleTop = true } }
+                    icon = { Icon(Icons.Rounded.Hub, contentDescription = null) },
+                    label = { Text("Connect") },
+                    selected = navigationState.topLevelRoute == Screen.Connect,
+                    onClick = { navigator.navigate(Screen.Connect) }
                 )
                 NavigationRailItem(
-                    icon = { Icon(Icons.Rounded.History, contentDescription = null) },
+                    icon = { Icon(Icons.Rounded.Assessment, contentDescription = null) },
                     label = { Text("Sessions") },
-                    selected = currentDestination?.hierarchy?.any { it.route == Screen.Sessions.route } == true,
-                    onClick = { navController.navigate(Screen.Sessions.route) { launchSingleTop = true } }
+                    selected = navigationState.topLevelRoute is Screen.Sessions,
+                    onClick = { navigator.navigate(Screen.Sessions()) }
                 )
             }
         }
 
         Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
                 if (!isExpanded && showNav) {
                     NavigationBar(
                         tonalElevation = 8.dp,
                         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
                     ) {
-                        val items = listOf(
-                            Triple(Screen.Home.route, "Home", Icons.Rounded.Home),
-                            Triple(Screen.Explore.route, "Explore", Icons.Rounded.Explore),
-                            Triple(Screen.Inbox.route, "Inbox", Icons.AutoMirrored.Rounded.Chat),
-                            Triple(Screen.Sessions.route, "Sessions", Icons.Rounded.History)
+                        val navItems = listOf(
+                            Triple(Screen.Home, "Home", Icons.Rounded.Home),
+                            Triple(Screen.Explore, "Explore", Icons.Rounded.Explore),
+                            Triple(Screen.Connect, "Connect", Icons.Rounded.Hub),
+                            Triple(Screen.Sessions(), "Sessions", Icons.Rounded.History)
                         )
                         
-                        items.forEach { (route, label, icon) ->
+                        navItems.forEach { (screen, label, icon) ->
                             NavigationBarItem(
                                 icon = { Icon(icon, contentDescription = null) },
                                 label = { Text(label) },
-                                selected = currentDestination?.hierarchy?.any { it.route == route } == true,
-                                onClick = {
-                                    navController.navigate(route) {
-                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
+                                selected = navigationState.topLevelRoute == screen || (screen is Screen.Sessions && navigationState.topLevelRoute is Screen.Sessions),
+                                onClick = { navigator.navigate(screen) }
                             )
                         }
                     }
@@ -179,8 +228,19 @@ fun MainScreen() {
             }
         ) { innerPadding ->
             Box(modifier = Modifier.padding(if (isExpanded && showNav) PaddingValues(0.dp) else innerPadding)) {
-                RootNavGraph(navController = navController)
+                AppNavDisplay(navigationState, navigator)
             }
         }
     }
+}
+
+@Composable
+fun AppNavDisplay(navigationState: NavigationState, navigator: Navigator) {
+    val entryProvider = rememberAppEntryProvider(navigator)
+    
+    NavDisplay(
+        backStack = navigationState.backStacks[navigationState.topLevelRoute]!!,
+        entryProvider = entryProvider,
+        onBack = { navigator.goBack() }
+    )
 }

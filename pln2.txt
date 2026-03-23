@@ -1,0 +1,16 @@
+E2EE Implementation Overview
+As requested, here is how End-to-End Encryption works in Q-base:
+
+Person-to-Person (P2P) Chats
+Algorithm: ECIES (using Google Tink).
+Process: Each user has a unique private key in their Android Keystore. When you send a message, the app encrypts it using the recipient's public key. Only the recipient's device can decrypt it.
+Group Chats
+Algorithm: ECIES (Multi-recipient).
+Process: The app uses "Client-Side Fan-out". Instead of one group key, your device encrypts the message individually for every member of the group. This ensures that even if one member is removed, future messages remain secure for the remaining group.
+Collection Sharing
+Algorithm: AES256-GCM (Symmetric) + E2EE Chat.
+Process:
+The collection is zipped and encrypted with a random, one-time Symmetric Key.
+The encrypted zip is uploaded to storage.
+The Symmetric Key is sent to the recipient via an E2EE chat message.
+The recipient decrypts the key with their private key and then decrypts the downloaded collection.

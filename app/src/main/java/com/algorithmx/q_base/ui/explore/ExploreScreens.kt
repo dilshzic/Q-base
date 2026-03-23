@@ -10,139 +10,83 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.algorithmx.q_base.ui.components.ProfileIconButton
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.filled.PushPin
-import androidx.compose.material.icons.outlined.PushPin
-import androidx.compose.material.icons.filled.Report
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.rounded.ContentCopy
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.automirrored.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.algorithmx.q_base.data.entity.MasterCategory
+import com.algorithmx.q_base.data.entity.Collection
+import com.algorithmx.q_base.data.entity.CollectionWithCount
+import com.algorithmx.q_base.data.entity.QuestionSet
 import com.algorithmx.q_base.ui.components.QuestionViewer
+import com.algorithmx.q_base.ui.components.ReportDialog
+import com.algorithmx.q_base.ui.components.ProfileIconButton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CategoryListScreen(
-    categories: List<MasterCategory>,
-    onCategoryClick: (String) -> Unit
-) {
-    val scrollState = rememberTopAppBarState()
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(scrollState)
-
-    Scaffold(
-        topBar = {
-            LargeTopAppBar(
-                title = { 
-                    Column {
-                        Text(
-                            "Categories", 
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                        Text(
-                            "Select Your Specialty",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            letterSpacing = 1.sp
-                        )
-                    }
-                },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
-                )
-            )
-        }
-    ) { padding ->
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 160.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            itemsIndexed(categories) { index, category ->
-                AnimatedCategoryItem(index) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(1f)
-                            .clickable { onCategoryClick(category.name) },
-                        shape = MaterialTheme.shapes.extraLarge,
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
-                        )
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize().padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = category.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun AnimatedCategoryItem(index: Int, content: @Composable () -> Unit) {
-    var visible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        delay(index * 40L)
-        visible = true
-    }
-    AnimatedVisibility(
-        visible = visible,
-        enter = scaleIn(initialScale = 0.8f) + fadeIn(),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        content()
-    }
-}
+import java.text.SimpleDateFormat
+import java.util.*
+import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExploreQuestionPagerScreen(
     categoryName: String,
     questionStates: List<ExploreQuestionState>,
+    collections: List<com.algorithmx.q_base.data.entity.QuestionSet> = emptyList(),
+    sessions: List<com.algorithmx.q_base.data.entity.StudySession> = emptyList(),
     onOptionSelected: (Int, String) -> Unit,
     onCheckAnswer: (Int) -> Unit,
-    onPageChanged: (Int) -> Unit,
     onPinToggled: (Int) -> Unit,
+    onAddToCollection: (Int, String) -> Unit,
+    onAddToSession: (Int, String) -> Unit,
     onReportSubmitted: (Int, String) -> Unit,
-    onBack: () -> Unit
+    onAskAi: (Int, String, String) -> Unit,
+    onSaveAiAsOfficial: (Int) -> Unit,
+    onClearAiResponse: (Int) -> Unit,
+    onDeleteQuestion: (Int) -> Unit,
+    onPageChanged: (Int) -> Unit,
+    onProfileClick: () -> Unit,
+    onBack: () -> Unit,
+    currentUser: com.algorithmx.q_base.data.entity.UserEntity? = null,
+    viewModel: ExploreViewModel? = null
 ) {
-    val pagerState = rememberPagerState(pageCount = { questionStates.size })
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { questionStates.size })
     val coroutineScope = rememberCoroutineScope()
     var showReportDialog by remember { mutableStateOf(false) }
-    var reportText by remember { mutableStateOf("") }
+    var showCollectionDialog by remember { mutableStateOf(false) }
+    var showSessionDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(viewModel) {
+        viewModel?.actionFeedback?.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     val subCategories = remember(questionStates) {
         questionStates.mapNotNull { it.question.category }
@@ -170,6 +114,7 @@ fun ExploreQuestionPagerScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { 
@@ -186,17 +131,49 @@ fun ExploreQuestionPagerScreen(
                 },
                 actions = {
                     if (questionStates.isNotEmpty()) {
-                        val currentQuestion = questionStates[pagerState.currentPage].question
-                        IconButton(onClick = { onPinToggled(pagerState.currentPage) }) {
-                            Icon(
-                                imageVector = if (currentQuestion.isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                                contentDescription = "Pin Question",
-                                tint = if (currentQuestion.isPinned) MaterialTheme.colorScheme.primary else LocalContentColor.current
+                        val currentQuestionState = questionStates[pagerState.currentPage]
+                        val currentQuestion = currentQuestionState.question
+                        val clipboardManager = LocalClipboardManager.current
+                        
+                        IconButton(onClick = {
+                            val content = buildString {
+                                appendLine("Q: ${currentQuestion.stem}")
+                                appendLine("\nOptions:")
+                                currentQuestionState.options.forEachIndexed { i, opt ->
+                                    appendLine("${(i + 'A'.toInt()).toChar()}. ${opt.optionText}")
+                                }
+                            }
+                            clipboardManager.setText(AnnotatedString(content))
+                        }) {
+                            Icon(Icons.Rounded.ContentCopy, contentDescription = "Copy Content")
+                        }
+
+                        IconButton(onClick = { onDeleteQuestion(pagerState.currentPage) }) {
+                            Icon(Icons.Rounded.Delete, contentDescription = "Delete Question")
+                        }
+
+                        var showMoreMenu by remember { mutableStateOf(false) }
+                        IconButton(onClick = { showMoreMenu = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "More Options")
+                        }
+                        DropdownMenu(
+                            expanded = showMoreMenu,
+                            onDismissRequest = { showMoreMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Report Problem") },
+                                leadingIcon = { Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                                onClick = {
+                                    showMoreMenu = false
+                                    showReportDialog = true
+                                }
                             )
                         }
-                        IconButton(onClick = { showReportDialog = true }) {
-                            Icon(Icons.Default.Report, contentDescription = "Report Problem")
-                        }
+
+                        ProfileIconButton(
+                            user = currentUser,
+                            onClick = onProfileClick
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -211,7 +188,6 @@ fun ExploreQuestionPagerScreen(
             }
         } else {
             Column(modifier = Modifier.padding(padding)) {
-                // Expressive Progress Bar
                 LinearProgressIndicator(
                     progress = { (pagerState.currentPage + 1).toFloat() / questionStates.size },
                     modifier = Modifier
@@ -264,10 +240,14 @@ fun ExploreQuestionPagerScreen(
                         selectedAnswers = state.selectedOption?.split(",")?.filter { it.isNotEmpty() } ?: emptyList(),
                         onOptionToggled = { onOptionSelected(page, it) },
                         isAnswerRevealed = state.isAnswerRevealed,
-                        correctAnswers = state.answer?.correctAnswerString?.split(",") ?: emptyList(),
+                        correctAnswers = state.answer?.correctAnswerString?.split(",")?.map { it.trim() } ?: emptyList(),
                         explanation = state.answer?.generalExplanation,
                         references = state.answer?.references,
-                        onCheckAnswer = { onCheckAnswer(page) }
+                        onCheckAnswer = { onCheckAnswer(page) },
+                        onPinToggled = { onPinToggled(page) },
+                        onAddToSet = { showCollectionDialog = true },
+                        onAddToSession = { showSessionDialog = true },
+                        onAskAi = { onAskAi(page, "EXPLAIN", "") }
                     )
                 }
             }
@@ -275,41 +255,130 @@ fun ExploreQuestionPagerScreen(
     }
 
     if (showReportDialog) {
+        val currentQuestion = questionStates.getOrNull(pagerState.currentPage)?.question
+        ReportDialog(
+            itemType = "Question",
+            itemName = currentQuestion?.stem?.take(30) + "..." ?: "this question",
+            onDismiss = { showReportDialog = false },
+            onConfirm = { reason ->
+                onReportSubmitted(pagerState.currentPage, reason)
+                showReportDialog = false
+            }
+        )
+    }
+
+    // AI Response Content Dialog
+    val currentQuestionState = questionStates.getOrNull(pagerState.currentPage)
+    if (currentQuestionState?.aiResponse != null) {
         AlertDialog(
-            onDismissRequest = { showReportDialog = false },
-            shape = MaterialTheme.shapes.extraLarge,
-            title = { Text("Report a Problem", fontWeight = FontWeight.Bold) },
-            text = {
-                Column {
-                    Text("Found an error? Let us know the details.")
-                    Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = reportText,
-                        onValueChange = { reportText = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3,
-                        shape = MaterialTheme.shapes.large,
-                        placeholder = { Text("Describe the issue...") }
+            onDismissRequest = { onClearAiResponse(pagerState.currentPage) },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val infiniteTransition = rememberInfiniteTransition(label = "ai_pulse")
+                    val scale by infiniteTransition.animateFloat(
+                        initialValue = 1f,
+                        targetValue = if (currentQuestionState.isAiLoading) 1.3f else 1f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(800, easing = LinearEasing),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "pulse_scale"
                     )
+                    Icon(
+                        Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp).graphicsLayer(scaleX = scale, scaleY = scale)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("AI Assistance", style = MaterialTheme.typography.titleLarge)
+                }
+            },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    if (currentQuestionState.isAiLoading) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                    } else {
+                        MarkdownText(
+                            markdown = currentQuestionState.aiResponse!!,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        )
+                    }
                 }
             },
             confirmButton = {
                 Button(
-                    onClick = {
-                        if (reportText.isNotBlank()) {
-                            onReportSubmitted(pagerState.currentPage, reportText)
-                            reportText = ""
-                            showReportDialog = false
-                        }
-                    }
+                    onClick = { 
+                        onSaveAiAsOfficial(pagerState.currentPage)
+                    },
+                    enabled = false // Temporarily disabled per user request
                 ) {
-                    Text("Submit Report")
+                    Text("Save as Official Explanation")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showReportDialog = false }) {
-                    Text("Cancel")
+                TextButton(onClick = { onClearAiResponse(pagerState.currentPage) }) {
+                    Text("Close")
                 }
+            }
+        )
+    }
+
+    if (showCollectionDialog) {
+        AlertDialog(
+            onDismissRequest = { showCollectionDialog = false },
+            title = { Text("Add to Set", fontWeight = FontWeight.Bold) },
+            text = {
+                if (collections.isEmpty()) {
+                    Text("No sets found.")
+                } else {
+                    LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp)) {
+                        itemsIndexed(collections) { _, set ->
+                            ListItem(
+                                headlineContent = { Text(set.title) },
+                                modifier = Modifier.clickable {
+                                    onAddToCollection(pagerState.currentPage, set.setId)
+                                    showCollectionDialog = false
+                                }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showCollectionDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    if (showSessionDialog) {
+        AlertDialog(
+            onDismissRequest = { showSessionDialog = false },
+            title = { Text("Add to Session", fontWeight = FontWeight.Bold) },
+            text = {
+                if (sessions.isEmpty()) {
+                    Text("No active sessions found.")
+                } else {
+                    LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp)) {
+                        itemsIndexed(sessions) { _, session ->
+                            ListItem(
+                                headlineContent = { Text(session.title) },
+                                supportingContent = { Text("Created ${SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(Date(session.createdTimestamp))}") },
+                                modifier = Modifier.clickable {
+                                    onAddToSession(pagerState.currentPage, session.sessionId)
+                                    showSessionDialog = false
+                                }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showSessionDialog = false }) { Text("Cancel") }
             }
         )
     }

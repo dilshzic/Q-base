@@ -39,7 +39,7 @@ object NetworkModule {
     @Singleton
     fun provideAppwriteClient(@ApplicationContext context: Context): Client {
         return Client(context)
-            .setEndpoint("https://cloud.appwrite.io/v1") // Standard Appwrite Cloud endpoint
+            .setEndpoint("https://syd.cloud.appwrite.io/v1") // Sydney Appwrite Cloud endpoint
             .setProject(BuildConfig.APPWRITE_PROJECT_ID)
     }
 

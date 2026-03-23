@@ -18,5 +18,13 @@ data class StudySession(
     @ColumnInfo(name = "created_timestamp")
     val createdTimestamp: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "is_completed")
-    val isCompleted: Boolean = false
+    val isCompleted: Boolean = false,
+    @ColumnInfo(name = "timing_type")
+    val timingType: String = "NONE", // "TOTAL", "PER_QUESTION", "NONE"
+    @ColumnInfo(name = "is_random")
+    val isRandom: Boolean = false,
+    @ColumnInfo(name = "collection_id")
+    val collectionId: String? = null,
+    @ColumnInfo(name = "last_question_index")
+    val lastQuestionIndex: Int = 0
 )

@@ -7,5 +7,11 @@ import androidx.room.PrimaryKey
 data class UserEntity(
     @PrimaryKey val userId: String, // Matches Firebase Auth UID
     val displayName: String,
-    val friendCode: String // e.g., "UOK-9A2B"
+    val email: String? = null,
+    val intro: String? = null,
+    val profilePictureUrl: String?,
+    val friendCode: String, // e.g., "UOK-9A2B"
+    val publicKey: String? = null,
+    val isBanned: Boolean = false,
+    val isPhotoVisible: Boolean = true
 )

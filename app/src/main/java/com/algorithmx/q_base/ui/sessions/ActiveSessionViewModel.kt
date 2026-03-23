@@ -1,4 +1,6 @@
 package com.algorithmx.q_base.ui.sessions
+ 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -11,6 +13,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Locale
+import com.algorithmx.q_base.data.repository.AiRepository
+import com.algorithmx.q_base.data.repository.SyncRepository
+import android.util.Log
 import javax.inject.Inject
 
 data class NavigatorDot(
@@ -22,10 +27,25 @@ data class NavigatorDot(
 @HiltViewModel
 class ActiveSessionViewModel @Inject constructor(
     private val repository: SessionRepository,
-    savedStateHandle: SavedStateHandle
+    private val aiRepository: AiRepository,
+    private val authRepository: com.algorithmx.q_base.data.repository.AuthRepository,
+    private val syncRepository: SyncRepository
 ) : ViewModel() {
 
-    private val sessionId: String = checkNotNull(savedStateHandle["sessionId"])
+    private val _actionFeedback = MutableSharedFlow<String>()
+    val actionFeedback = _actionFeedback.asSharedFlow()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val currentUser: StateFlow<UserEntity?> = authRepository.currentUser
+        .flatMapLatest { firebaseUser ->
+            if (firebaseUser != null) {
+                repository.getCurrentUser(firebaseUser.uid)
+            } else {
+                flowOf<UserEntity?>(null)
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    private var _sessionId: String = ""
 
     private val _attempts = MutableStateFlow<List<SessionAttempt>>(emptyList())
     val attempts: StateFlow<List<SessionAttempt>> = _attempts.asStateFlow()
@@ -44,6 +64,12 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val _session = MutableStateFlow<StudySession?>(null)
     val session: StateFlow<StudySession?> = _session.asStateFlow()
+
+    private val _aiResponse = MutableStateFlow<String?>(null)
+    val aiResponse: StateFlow<String?> = _aiResponse.asStateFlow()
+
+    private val _isAiLoading = MutableStateFlow(false)
+    val isAiLoading: StateFlow<Boolean> = _isAiLoading.asStateFlow()
 
     private val _timeLimitSeconds = MutableStateFlow<Int?>(null)
     private val _elapsedSeconds = MutableStateFlow(0L)
@@ -75,17 +101,19 @@ class ActiveSessionViewModel @Inject constructor(
 
     private var timerJob: Job? = null
 
-    init {
+    fun setSessionId(id: String) {
+        if (_sessionId == id) return
+        _sessionId = id
         loadSessionData()
         loadAttempts()
         startTimer()
     }
 
-    fun getSessionId(): String = sessionId
+    fun getSessionId(): String = _sessionId
 
     private fun loadSessionData() {
         viewModelScope.launch {
-            repository.getSessionById(sessionId)?.let { 
+            repository.getSessionById(_sessionId)?.let { 
                 _session.value = it
                 _timeLimitSeconds.value = it.timeLimitSeconds 
             }
@@ -99,9 +127,22 @@ class ActiveSessionViewModel @Inject constructor(
                 delay(1000)
                 _elapsedSeconds.value++
                 val limit = _timeLimitSeconds.value
+                val session = _session.value
+                
                 if (limit != null && _elapsedSeconds.value >= limit) {
-                    submitSession()
-                    break
+                    if (session?.timingType == "PER_QUESTION") {
+                        // Auto-advance or submit
+                        if (_currentQuestionIndex.value < _attempts.value.size - 1) {
+                            navigateToQuestion(_currentQuestionIndex.value + 1)
+                        } else {
+                            submitSession()
+                            break
+                        }
+                    } else {
+                        // TOTAL time reached
+                        submitSession()
+                        break
+                    }
                 }
             }
         }
@@ -109,7 +150,7 @@ class ActiveSessionViewModel @Inject constructor(
 
     private fun loadAttempts() {
         viewModelScope.launch {
-            repository.getAttemptsForSession(sessionId).collect { attemptsList ->
+            repository.getAttemptsForSession(_sessionId).collect { attemptsList ->
                 _attempts.value = attemptsList
                 if (_currentQuestion.value == null && attemptsList.isNotEmpty()) {
                     loadQuestion(attemptsList[_currentQuestionIndex.value].questionId)
@@ -121,6 +162,9 @@ class ActiveSessionViewModel @Inject constructor(
     fun navigateToQuestion(index: Int) {
         if (index in _attempts.value.indices) {
             _currentQuestionIndex.value = index
+            if (_session.value?.timingType == "PER_QUESTION") {
+                _elapsedSeconds.value = 0
+            }
             loadQuestion(_attempts.value[index].questionId)
         }
     }
@@ -184,7 +228,48 @@ class ActiveSessionViewModel @Inject constructor(
 
     private fun updateAttempt(attempt: SessionAttempt) {
         viewModelScope.launch {
-            repository.updateAttempt(attempt)
+            repository.updateAttemptAndRecalculate(attempt)
+        }
+    }
+
+    fun askAi(mode: String = "EXPLAIN") {
+        val question = _currentQuestion.value ?: return
+        val options = _currentOptions.value
+        
+        viewModelScope.launch {
+            _isAiLoading.value = true
+            
+            val prompt = when(mode) {
+                "HINT" -> "Give me a subtle hint for this question without revealing the answer: ${question.stem}"
+                "SUMMARY" -> "Provide a detailed summary related to this question: ${question.stem}"
+                else -> "Explain this question and why the options are correct or incorrect: ${question.stem}. Options: ${options.joinToString { "${it.optionLetter}: ${it.optionText}" }}"
+            }
+            
+            val result = aiRepository.getAiAssistance(prompt)
+            _aiResponse.value = result.getOrNull() ?: "Failed to get AI assistance: ${result.exceptionOrNull()?.message}"
+            _isAiLoading.value = false
+        }
+    }
+
+    fun clearAiResponse() {
+        _aiResponse.value = null
+    }
+
+    fun saveAiResponseToQuestion() {
+        val question = _currentQuestion.value ?: return
+        val aiExp = _aiResponse.value ?: return
+        val currentAnswer = _currentAnswer.value
+        
+        viewModelScope.launch {
+            val answerToSave = currentAnswer?.copy(generalExplanation = aiExp) ?: Answer(
+                questionId = question.questionId,
+                correctAnswerString = "A",
+                generalExplanation = aiExp,
+                references = ""
+            )
+            repository.saveAnswer(answerToSave)
+            _currentAnswer.value = answerToSave
+            _aiResponse.value = null
         }
     }
 
@@ -198,6 +283,36 @@ class ActiveSessionViewModel @Inject constructor(
             val finalAttempts = _attempts.value.map { it.copy(attemptStatus = "FINALIZED") }
             finalAttempts.forEach { repository.updateAttempt(it) }
             timerJob?.cancel()
+        }
+    }
+
+    fun reportSession(reason: String) {
+        viewModelScope.launch {
+            try {
+                if (_sessionId.isNotEmpty()) {
+                    syncRepository.reportSession(_sessionId, reason)
+                    _actionFeedback.emit("Session reported successfully.")
+                }
+            } catch (e: Exception) {
+                Log.e("ActiveSessionViewModel", "Failed to report session", e)
+                _actionFeedback.emit("Failed to report session: ${e.message}")
+            }
+        }
+    }
+
+    fun reportQuestion(reason: String) {
+        val question = _currentQuestion.value ?: return
+        val options = _currentOptions.value
+        val answer = _currentAnswer.value
+        
+        viewModelScope.launch {
+            try {
+                syncRepository.reportQuestion(question, options, answer, reason)
+                _actionFeedback.emit("Question reported successfully.")
+            } catch (e: Exception) {
+                Log.e("ActiveSessionViewModel", "Failed to report question", e)
+                _actionFeedback.emit("Failed to report question: ${e.message}")
+            }
         }
     }
 

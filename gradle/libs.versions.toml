@@ -6,11 +6,17 @@ coreKtx = "1.10.1"
 googleDevtoolsKsp = "2.3.5"
 
 # UI & Compose
-composeBom = "2024.09.00"
+composeBom = "2024.12.01"
 activityCompose = "1.10.1"
 navigationCompose = "2.8.9"
 material = "1.13.0"
 coilCompose = "2.7.0"
+
+# Navigation 3
+nav3 = "1.0.1"
+lifecycleViewmodelNav3 = "2.10.0"
+material3AdaptiveNav3 = "1.0.0-alpha03"
+savedstateCompose = "1.5.0-alpha01"
 
 # Lifecycle
 lifecycle = "2.8.7"
@@ -53,6 +59,10 @@ runner = "1.6.2"
 accompanistPermissions = "0.37.3"
 playServicesLocation = "21.3.0"
 camera = "1.5.0"
+mlkitTextRecognition = "19.0.1"
+pdfbox = "2.0.27.0"
+generativeai = "0.9.0"
+composeMarkdown = "0.5.4"
 
 [libraries]
 # AndroidX Core
@@ -71,6 +81,13 @@ androidx-compose-material-icons-core = { group = "androidx.compose.material", na
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+
+# Navigation 3
+androidx-navigation3-runtime = { group = "androidx.navigation3", name = "navigation3-runtime", version.ref = "nav3" }
+androidx-navigation3-ui = { group = "androidx.navigation3", name = "navigation3-ui", version.ref = "nav3" }
+androidx-lifecycle-viewmodel-navigation3 = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodelNav3" }
+androidx-material3-adaptive-navigation3 = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation3", version.ref = "material3AdaptiveNav3" }
+androidx-savedstate-compose = { group = "androidx.savedstate", name = "savedstate-compose", version.ref = "savedstateCompose" }
 
 # Lifecycle
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
@@ -126,6 +143,10 @@ androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", 
 androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camera" }
 androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camera" }
 androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "camera" }
+mlkit-text-recognition = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition", version.ref = "mlkitTextRecognition" }
+pdfbox-android = { group = "com.tom-roush", name = "pdfbox-android", version.ref = "pdfbox" }
+google-generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
+compose-markdown = { group = "com.github.jeziellago", name = "compose-markdown", version.ref = "composeMarkdown" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }

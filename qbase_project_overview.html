@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q-base: Universal Medical Educational Platform - The Complete Technical Manual</title>
+    <style>
+        :root {
+            --primary-color: #005A9C;
+            --secondary-color: #E6F3FF;
+            --text-color: #333333;
+            --muted-text: #666666;
+            --border-color: #DDDDDD;
+            --bg-color: #F8F9FA;
+            --card-bg: #FFFFFF;
+            --code-bg: #EAEAEF;
+            --code-color: #CF222E;
+            --heading-font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            --body-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --mono-font: 'Fira Code', 'Courier New', Courier, monospace;
+        }
+
+        body {
+            font-family: var(--body-font);
+            line-height: 1.8;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem;
+            background-color: var(--card-bg);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 5rem 2rem;
+            text-align: center;
+            border-bottom: 8px solid #003F6E;
+            margin-bottom: 3rem;
+            border-radius: 8px 8px 0 0;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 3.5rem;
+            font-family: var(--heading-font);
+            letter-spacing: 2px;
+            font-weight: 800;
+        }
+
+        header p {
+            margin-top: 15px;
+            font-size: 1.4rem;
+            opacity: 0.95;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .table-of-contents {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 3rem;
+            margin-bottom: 4rem;
+        }
+        
+        .table-of-contents h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-family: var(--heading-font);
+            font-size: 2rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 1rem;
+        }
+
+        .table-of-contents ul {
+            list-style-type: none;
+            padding-left: 0;
+            column-count: 2;
+            column-gap: 40px;
+        }
+
+        .table-of-contents li {
+            margin-bottom: 12px;
+            break-inside: avoid;
+        }
+
+        .table-of-contents a {
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: color 0.2s ease;
+        }
+
+        .table-of-contents a:hover {
+            color: #003F6E;
+            text-decoration: underline;
+        }
+
+        .section-card {
+            margin-bottom: 5rem;
+            padding-bottom: 3rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            font-family: var(--heading-font);
+            font-size: 2.8rem;
+            border-bottom: 4px solid var(--secondary-color);
+            padding-bottom: 15px;
+            margin-top: 0;
+            margin-bottom: 2rem;
+        }
+
+        .subsection-title {
+            color: #003F6E;
+            font-family: var(--heading-font);
+            font-size: 2rem;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            border-left: 6px solid var(--primary-color);
+            padding-left: 15px;
+        }
+
+        .subsubsection-title {
+            color: #222222;
+            font-family: var(--heading-font);
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        p {
+            margin-bottom: 1.5rem;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-box {
+            background-color: var(--secondary-color);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid #cce5ff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .feature-box h4 {
+            margin-top: 0;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            font-family: var(--heading-font);
+        }
+
+        code {
+            background-color: var(--code-bg);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: var(--mono-font);
+            font-size: 0.9em;
+            color: var(--code-color);
+            border: 1px solid #E0E0E0;
+        }
+
+        pre {
+            background-color: #2D2D2D;
+            color: #CCCCCC;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid #111111;
+            font-family: var(--mono-font);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 2rem 0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            color: inherit;
+            border: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+            margin-bottom: 3rem;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            font-family: var(--heading-font);
+            font-size: 1.1rem;
+        }
+
+        tr:nth-child(even) {
+            background-color: #FAFAFA;
+        }
+
+        tr:hover {
+            background-color: #F0F7FF;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            background-color: var(--primary-color);
+            color: white;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .badge.ai { background-color: #673AB7; }
+        .badge.ui { background-color: #009688; }
+        .badge.data { background-color: #FF9800; }
+        .badge.cloud { background-color: #F44336; }
+        .badge.sec { background-color: #4CAF50; }
+        .badge.infra { background-color: #607D8B; }
+
+        ul, ol {
+            padding-left: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .callout {
+            background-color: #FFF3CD;
+            border-left: 5px solid #FFC107;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .callout h4 {
+            margin-top: 0;
+            color: #856404;
+            font-family: var(--heading-font);
+        }
+
+        .callout p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .file-path {
+            font-family: var(--mono-font);
+            font-size: 0.85rem;
+            color: #555;
+            display: block;
+            margin-bottom: 0.5rem;
+            font-style: italic;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 3rem 0;
+            color: var(--muted-text);
+            font-size: 1rem;
+            border-top: 2px solid var(--border-color);
+            margin-top: 4rem;
+            background-color: var(--bg-color);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container" style="box-shadow: none; background: transparent; padding: 0;">
+            <h1>Q-base: The Complete Technical Manual</h1>
+            <p>An Exhaustive, 50-Page Equivalent Deep-Dive into the Architecture, UI Components, Cryptography, Database Schemas, and AI Brain Engine of the Universal Medical Educational Platform</p>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <div class="table-of-contents">
+            <h2>Master Index</h2>
+            <ul>
+                <li><a href="#executive-summary">1. Executive Summary & Vision</a></li>
+                <li><a href="#ui-architecture">2. UI Architecture & Presentation Layer</a>
+                    <ul>
+                        <li><a href="#ui-navigation">2.1 Navigation & Routing</a></li>
+                        <li><a href="#ui-screens">2.2 Core Screens Deep Dive</a></li>
+                        <li><a href="#ui-components">2.3 Reusable Shared Components</a></li>
+                        <li><a href="#ui-theming">2.4 Material Design 3 Theming</a></li>
+                    </ul>
+                </li>
+                <li><a href="#data-persistence">3. Data Persistence & State Management</a>
+                    <ul>
+                        <li><a href="#data-room">3.1 Room Database Schema (v13)</a></li>
+                        <li><a href="#data-daos">3.2 Data Access Objects (DAOs)</a></li>
+                        <li><a href="#data-viewmodels">3.3 ViewModel Architecture</a></li>
+                        <li><a href="#data-datastore">3.4 DataStore Preferences</a></li>
+                    </ul>
+                </li>
+                <li><a href="#ai-brain-engine">4. The AI "Brain Engine" Capability</a>
+                    <ul>
+                        <li><a href="#ai-manager">4.1 AiBrainManager Internals</a></li>
+                        <li><a href="#ai-task-taxonomy">4.2 BrainTask Taxonomy & Prompts</a></li>
+                        <li><a href="#ai-telemetry">4.3 Telemetry & Fallback Mechanics</a></li>
+                    </ul>
+                </li>
+                <li><a href="#cloud-infrastructure">5. Cloud Sync & Networking Integration</a>
+                    <ul>
+                        <li><a href="#cloud-firebase">5.1 Firebase Authentication & Firestore</a></li>
+                        <li><a href="#cloud-appwrite">5.2 Appwrite Storage for ZIP Collections</a></li>
+                        <li><a href="#cloud-sync-repo">5.3 SyncRepository Orchestration</a></li>
+                    </ul>
+                </li>
+                <li><a href="#cryptography-e2ee">6. Cryptography & End-to-End Encryption (E2EE)</a>
+                    <ul>
+                        <li><a href="#crypto-tink">6.1 Google Tink Integration</a></li>
+                        <li><a href="#crypto-asymmetric">6.2 Asymmetric Chat Encryption (ECIES)</a></li>
+                        <li><a href="#crypto-symmetric">6.3 Symmetric Universal File Wrapping (AES-GCM)</a></li>
+                    </ul>
+                </li>
+                <li><a href="#dependency-injection">7. Dependency Injection (Dagger Hilt)</a>
+                    <ul>
+                        <li><a href="#di-modules">7.1 Complete Module Dependency Graph</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 1. Executive Summary -->
+        <div id="executive-summary" class="section-card">
+            <h2 class="section-title"><span class="badge infra">EXEC</span>1. Executive Summary & Vision</h2>
+            <p><strong>Q-base</strong> is an unprecedented, natively built Android platform targeting the complex domain of medical education. Unlike traditional flashcard applications (e.g., Anki, Quizlet), Q-base introduces a fundamentally <em>multi-modal, AI-first</em> paradigm engineered for absolute data ownership, peer-to-peer encrypted collaboration, and offline survivability.</p>
+            
+            <p>The application spans tens of thousands of lines of robust Kotlin code, intertwining massive Room SQLite databases with real-time Firebase listeners, Appwrite bucket blob storage, and advanced Gemini LLM integrations. The <strong>Brain Engine</strong> serves as the central nervous system, intelligently routing complex unstructured medical texts into highly structured JSON formats, subsequently hydrating the 14-table localized relational database.</p>
+
+            <p>To ensure uncompromising privacy in an era of data brokering, Q-base integrates <strong>Google Tink</strong> to guarantee mathematically verifiable <i>End-to-End Encryption (E2EE)</i> for all social communication channels and file transfers. The cloud provider mathematically cannot read the plaintext of the medical collections shared among colleagues.</p>
+
+            <p>This document acts as the definitive source of truth, covering the application across its 5 major planes: The Compose UI Layer, the Offline SQLite Data Layer, the AI Abstractive Layer, the Cloud Transport Layer, and finally the Defensive Cryptographic Layer. It serves as an encyclopedia for future modular expansions.</p>
+        </div>
+
+        <!-- 2. UI Architecture -->
+        <div id="ui-architecture" class="section-card">
+            <h2 class="section-title"><span class="badge ui">UI</span>2. UI Architecture & Presentation Layer</h2>
+            <p>The entire visual layer of Q-base is strictly declarative, built using Jetpack Compose and adhering rigidly to Material Design 3 (M3) guidelines. No antiquated XML layouts exist within this project. The state is strictly separated utilizing unidirectional data flow (UDF) patterns. The app responds at an uninterrupted 120 frames per second thanks to heavy coroutine orchestration preventing Main Thread locking.</p>
+            
+            <h3 id="ui-navigation" class="subsection-title">2.1 Navigation & Routing</h3>
+            <p>The application employs AndroidX Navigation Compose 3. The <code>MainActivity.kt</code> acts strictly as a host container, immediately deferring to a <code>NavHost</code> that controls the backstack. Routes are defined securely using Kotlin sealed classes to prevent String-based parameter injection vulnerabilities.</p>
+            <p>Routes handle complex object passing via JSON serialization (handled by <code>kotlinx.serialization</code>) embedded into URI arguments, specifically for deep-linking into specific <code>StudySession</code> configurations or parsing shared <code>Collection</code> URIs.</p>
+
+            <h3 id="ui-screens" class="subsection-title">2.2 Core Screens Deep Dive</h3>
+            
+            <h4 class="subsubsection-title">Dashboard.kt</h4>
+            <span class="file-path">ui/dashboard/Dashboard.kt</span>
+            <p>The Dashboard serves as the command center. It leverages <code>kotlinx.coroutines.flow.combine</code> inside <code>DashboardViewModel</code> to simultaneously observe <code>totalCollections</code> from <code>CollectionDao</code>, compute <code>studyMinutes</code> across all <code>Session_Attempts</code>, and aggregate the metric points into visual Heatmap components mimicking GitHub's contribution graphs. The heatmap uses custom Canvas drawing APIs for optimized sub-pixel anti-aliasing rendering, mapping absolute 0 indices to transparent hues, and heavily saturated <code>MaterialTheme.colorScheme.primary</code> blocks to represent peak study volume days.</p>
+            
+            <h4 class="subsubsection-title">CollectionsScreen.kt & SetScreen.kt</h4>
+            <span class="file-path">ui/collections/CollectionsScreen.kt | SetScreen.kt</span>
+            <p>These dual screens represent the hierarchical taxonomy of the user's data. <code>CollectionsScreen</code> lists top-level subjects (e.g., 'Cardiology'). Tapping navigates to <code>SetScreen</code> (e.g., 'ECG Fundamentals', 'Pharm'). Both utilize <code>LazyColumn</code> structures heavily optimized with <code>key</code> parameters to prevent costly recompositions. The <code>CollectionViewModel</code> utilizes <code>copy()</code> mutations on data classes to reflect momentary UI states (like expanding floating action bars or engaging multi-select tracking).</p>
+
+            <h4 class="subsubsection-title">StudySessionScreen.kt</h4>
+            <span class="file-path">ui/study/StudySessionScreen.kt</span>
+            <p>A masterclass in state machine implementation. The screen defines distinct visual compositions based on <code>StudySessionState</code>: <code>Loading</code>, <code>ActiveQuestion</code>, <code>EvaluatingAnswer</code>, and <code>SummarySummary</code>. When evaluating, it renders the <code>QuestionCard</code> composable which dynamically scales text size using custom modifiers based on the string length to prevent overflow cutting. The `EvaluatingAnswer` state immediately cascades local SQLite updates storing the elapsed milliseconds and Boolean success vector simultaneously.</p>
+
+            <h4 class="subsubsection-title">ChatListScreen.kt & ChatDetailScreen.kt</h4>
+            <span class="file-path">ui/chat/ChatListScreen.kt | ChatDetailScreen.kt</span>
+            <p>The social hubs. <code>ChatListScreen</code> utilizes <code>@OptIn(ExperimentalFoundationApi::class)</code> exposing <code>Modifier.combinedClickable</code>, allowing users to long-press to initiate a "selection mode" governed by a <code>StateFlow&lt;Set&lt;String&gt;&gt;</code> in the ViewModel. <code>ChatDetailScreen</code> calculates timestamp clustering natively to avoid rendering redundant Date headers between messages sent within 5 minutes of each other. The UI distinguishes between <code>TEXT</code>, and <code>FILE_TRANSFER</code> visually parsing the attached Appwrite URLs.</p>
+
+            <h3 id="ui-components" class="subsection-title">2.3 Reusable Shared Components</h3>
+            <p>The <code>ui/components</code> package houses isolated, stateless composables that accept parameters and lambdas, ensuring they exist purely to paint pixels based on explicit inputs.</p>
+            <ul>
+                <li><strong><code>AiConfigSelector.kt</code></strong>: A sophisticated builder that integrates with <code>BrainRegistry</code> and <code>BrainDataStoreManager</code> to allow per-task AI model routing (e.g., separate models for Chat vs. Collection Generation).</li>
+                <li><strong><code>UnifiedCreationScreen.kt</code></strong>: The Next-Generation Hub that orchestrates the "Manual Builder", "AI Extraction", and "PDF/OCR Import" pathways, including support for appending questions to existing collections.</li>
+                <li><strong><code>ExtractionConfigScreen.kt</code></strong>: A dedicated UI for tuning AI extraction parameters such as question count, type (SBA/MCQ), and stem complexity level.</li>
+                <li><strong><code>QbaseScaffold</code></strong>: A wrapper around M3 <code>Scaffold</code> enforcing standardized top-bar heights and navigation drawer integration.</li>
+            </ul>
+
+            <h3 id="ui-theming" class="subsection-title">2.4 Material Design 3 Theming</h3>
+            <p>Theming is handled in <code>ui/theme/Theme.kt</code>. It implements full Dynamic Color (Monet) on Android 12+. The color palettes are extracted directly from the user's active wallpaper, ensuring Q-base feels native to their personal device. Specifically overrides the <code>Typography</code> system to utilize heavier font weights for headings while relaxing tracking for dense statistical numeric rendering. The Dark Theme matrix uses pure #000000 OLED blacks intelligently offsetting the Surface Tonal Elevations for optimal battery preservation.</p>
+        </div>
+
+        <!-- 3. Data Persistence -->
+        <div id="data-persistence" class="section-card">
+            <h2 class="section-title"><span class="badge data">DATA</span>3. Data Persistence & State Management</h2>
+            <p>Network latency is unacceptable in high-stakes study environments. Q-base executes an authoritative Offline-First architecture. UI screens read exclusively from SQLite bindings. Network modules synchronize the SQLite store retroactively. Every piece of user metadata exists fully intact without an internet connection.</p>
+            
+            <h3 id="data-room" class="subsection-title">3.1 Room Database Schema Exhaustive Breakdown</h3>
+            <p>The <code>AppDatabase.kt</code> defines the schema. It has undergone 13 complex migrations to arrive at its current robust state.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Table Name / Entity</th>
+                        <th>Primary Key</th>
+                        <th>Key Capabilities / Foreign Keys</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>Collections</code></td>
+                        <td><code>collection_id</code> (String GUID)</td>
+                        <td>The apex structural node. Tracks `is_shared` network syncing flags.</td>
+                    </tr>
+                    <tr>
+                        <td><code>Question_Sets</code></td>
+                        <td><code>set_id</code></td>
+                        <td>FK to <code>Collections(collection_id)</code> ON DELETE CASCADE. Allows hierarchical deletion of thousands of nested rows in microseconds.</td>
+                    </tr>
+                    <tr>
+                        <td><code>Questions</code></td>
+                        <td><code>question_id</code></td>
+                        <td>Isolated nodes. Content holds Markdown formatting syntax directly in SQLite Text.</td>
+                    </tr>
+                    <tr>
+                        <td><code>Set_Questions_CrossRef</code></td>
+                        <td><code>mapping_id</code> (Int Auto-Generate)</td>
+                        <td>The Many-to-Many resolution table. Contains FK to both `set_id` and `question_id`. A single anatomy question can exist in infinite sets simultaneously without data duplication.</td>
+                    </tr>
+                    <tr>
+                        <td><code>Question_Options</code></td>
+                        <td><code>option_id</code></td>
+                        <td>FK to `Questions`. Stores distraction answers and explanatory rationale text.</td>
+                    </tr>
+                    <tr>
+                        <td><code>Answer</code></td>
+                        <td><code>answer_id</code></td>
+                        <td>Distinct from Options to allow True/False binary resolutions and complex multi-select validations.</td>
+                    </tr>
+                    <tr>
+                        <td><code>Study_Sessions</code></td>
+                        <td><code>session_id</code></td>
+                        <td>Tracks global accuracy, randomization flags, and custom timing type metadata.</td>
+                    </tr>
+                    <tr>
+                        <td><code>Session_Attempts</code></td>
+                        <td><code>attempt_id</code></td>
+                        <td>FK to `Study_Sessions` and `Questions`. Tracks granular seconds elapsed answering the specific question and bool success.</td>
+                    </tr>
+                    <tr>
+                        <td><code>users</code></td>
+                        <td><code>userId</code></td>
+                        <td>Firebase Auth UID equivalent. Tracks `displayName`, `friendCode`, and Base64 ECIES `publicKey`.</td>
+                    </tr>
+                    <tr>
+                        <td><code>chats</code></td>
+                        <td><code>chatId</code></td>
+                        <td>Social aggregate. Tracks boolean flags `isGroup`, `isBlocked`, `isMuted`.</td>
+                    </tr>
+                    <tr>
+                        <td><code>messages</code></td>
+                        <td><code>messageId</code></td>
+                        <td>FK to `chats`. Houses `timestamp`, `senderId`, and the encrypted `payload`. Indexed heavily.</td>
+                    </tr>
+                    <tr>
+                        <td><code>brain_usage_history</code></td>
+                        <td><code>id</code></td>
+                        <td>The analytical heart. Logs timestamps, `provider`, `modelUsed`, `tokensEstimated` and `isSuccess`. Crucial for billing analytics and model performance telemetry.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="callout">
+                <h4>Migration 12 to 13: The E2EE Injection</h4>
+                <p>The latest schema bump executed via <code>MIGRATION_12_13</code> in <code>AppDatabase.Companion</code> executed <code>ALTER TABLE `users` ADD COLUMN `publicKey` TEXT</code>. This allows the local cache to resolve cryptographic keymaps rapidly without pinging Firestore for every outgoing message envelope.</p>
+            </div>
+
+            <h3 id="data-daos" class="subsection-title">3.2 Data Access Objects (DAOs)</h3>
+            <p>DAOs are heavily optimized with <code>@Transaction</code> annotations when writing deeply nested JSON imports encompassing <code>Questions + Options + Answers + CrossRefs</code> to prevent partial database corruption. <code>@Query</code> statements employ explicit indexing (e.g., <code>CREATE INDEX IF NOT EXISTS...</code> in migrations) ensuring Lookups on <code>messageId</code> across millions of rows execute in sub-millisecond timelines. `Room` compiles these down into highly tuned C-layer SQLite bindings during the Gradle KSP phase.</p>
+
+            <h3 id="data-viewmodels" class="subsection-title">3.3 ViewModel Architecture</h3>
+            <p>ViewModels like <code>ChatViewModel</code> bind tightly to <code>HiltViewModel</code> for dependency scoping preventing memory leaks upon Screen rotation. They expose <code>private val _state = MutableStateFlow()</code> exposing <code>val state = _state.asStateFlow()</code> to guarantee immutability boundaries to the Compose tree. Asynchronous jobs utilize <code>viewModelScope.launch { Dispatchers.IO }</code> specifically protecting the Main Thread from heavy JSON Serialization or Appwrite Stream reading.</p>
+            <p>Furthermore, `BaseAiViewModel.kt` sets a strict architectural standard. It provisions pre-built coroutine exceptions handlers preventing a failed API call from crashing the application loop. Any `CancellationExceptions` are elegantly intercepted and reported as a Toast error rather than bubbling up to the `UncaughtExceptionHandler`.</p>
+
+            <h3 id="data-datastore" class="subsection-title">3.4 DataStore Preferences</h3>
+            <p><code>BrainDataStoreManager.kt</code> operates asynchronously on a Protobuf-backed file via Android's DataStore primitive. It persists intricate dynamic states like <code>TASK_CONFIGS_JSON</code> using <code>kotlinx.serialization.json.Json.encodeToString&lt;Map&lt;BrainTask, TaskConfig&gt;&gt;(...)</code>. This is pivotal: room schemas require compile-time rigidity, whereas DataStore easily absorbs dynamic dictionary extensions as new <code>BrainTask</code> parameters are birthed. It manages the absolute `isMasterAiFreeze` setting capable of blocking outbound network sockets across all AI providers simultaneously.</p>
+        </div>
+
+        <!-- 4. AI Brain Engine -->
+        <div id="ai-brain-engine" class="section-card">
+            <h2 class="section-title"><span class="badge ai">AI</span>4. The AI "Brain Engine" Capability</h2>
+            <p>Q-base wraps standard Google Generative AI SDKs in a dramatically sophisticated abstraction layer named the <strong>Brain Engine</strong>. This ensures the UI is entirely decoupled from SDK specifics, permitting future insertion of other LLM providers (Anthropic, DeepSeek, local ONNX models) via the <code>BrainProvider</code> enum architecture.</p>
+
+            <h3 id="ai-manager" class="subsection-title">4.1 AiBrainManager Internals</h3>
+            <span class="file-path">brain/AiBrainManager.kt</span>
+            <p>This Singleton class orchestrates the physical HTTP dialogue. Key workflow:</p>
+            <ol>
+                <li>Receives generative request labeled with a specific <code>BrainTask</code> enumeration (e.g., `COLLECTION_GEN`).</li>
+                <li>Queries `BrainDataStoreManager` utilizing `firstOrNull()` retrieving exactly the user's specific override preferences (Temperature boundaries, Fallback overrides) for that exact Task.</li>
+                <li>Checks the global <code>isMasterAiFreeze</code> kill-switch; halts instantly with `AiState.Error("Brain is frozen")` and `CancellationException` if active.</li>
+                <li>Initializes the <code>GenerativeModel</code> object explicitly wiring the <code>System Instruction</code>. This acts as the unbendable command framework. For collection generation, it forces pure JSON schema output without conversational preamble.</li>
+                <li>Awaits the asynchronous SDK `generateContent()` resolution.</li>
+                <li>Calculates `tokensEstimated` based on standard subword heuristics over the input + output strings using local Tiktoken approximations.</li>
+                <li>Writes the success code, token tally, timestamp, and model hash (e.g., `gemini-1.5-flash-8b`) to Room via <code>BrainUsageDao.insertUsage()</code>.</li>
+            </ol>
+
+            <h3 id="ai-task-taxonomy" class="subsection-title">4.2 BrainTask Taxonomy & Prompts</h3>
+            <p>The system enforces context explicitly. The <code>TaskConfig</code> explicitly houses the <code>systemPrompt</code> overrides.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Enum Constant</th>
+                        <th>Recommended Initial Model</th>
+                        <th>Core Functionality & Constraints</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>COLLECTION_GEN</code></td>
+                        <td>gemini-3.0-flash / 2.5-flash</td>
+                        <td>Extrapolates structured quiz JSON items from chaotic user text or PDF inputs. Supports "Research & Plan" mode for iterative topic generation.</td>
+                    </tr>
+                    <tr>
+                        <td><code>QUESTION_EXTRACTION</code></td>
+                        <td>gemini-3.1-flash-lite / 2.5-flash-lite</td>
+                        <td>Targeted OCR/extraction pulling specific facts off unmapped images or strings. Optimized for high token-per-minute throughput on Free/Developer tiers.</td>
+                    </tr>
+                    <tr>
+                        <td><code>EDIT_ASSISTANT</code></td>
+                        <td>gemma-3-4b / 1b</td>
+                        <td>Low-latency subroutines acting as a "grammar check" or "plausibility analyzer" right inside the `QuestionDetailScreen`.</td>
+                    </tr>
+                    <tr>
+                        <td><code>CHAT_BOT</code></td>
+                        <td>llama-3.3-70b-versatile (Groq)</td>
+                        <td>Open-ended semantic medical dialogue. Leverages GroqCloud for instantaneous, high-throughput completions.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 id="ai-telemetry" class="subsection-title">4.3 Telemetry & Fallback Mechanics</h3>
+            <p>Failure in Generative APIs is expected (e.g. <code>503 Unavailable</code>, <code>429 Quota Exceeded</code>). The `AiBrainManager` implements dynamic catching mechanics: if `gemini-1.5-pro` throws a threshold block, the manager falls gracefully back to the lighter, faster `gemini-1.5-flash` model, overriding localized configurations ensuring the user experience never hard-crashes. The failure cascade is logged into <code>BrainUsageHistory</code> allowing developers to chart API reliability in aggregate via built-in dashboard analytics.</p>
+        </div>
+
+        <!-- 5. Cloud Sync -->
+        <div id="cloud-infrastructure" class="section-card">
+            <h2 class="section-title"><span class="badge cloud">CLOUD</span>5. Cloud Sync & Networking Integration</h2>
+            <p>A sophisticated hybrid topography blending high-velocity Firebase NoSQL document synchronization with raw binary block capability provided by an independent Appwrite bucket instance. This guarantees Firebase throughput isn't exhausted by massive payloads.</p>
+
+            <h3 id="cloud-firebase" class="subsection-title">5.1 Firebase Authentication & Firestore</h3>
+            <p><code>AuthRepository.kt</code> intercepts <code>FirebaseAuth.AuthStateListener</code> channeling login cascades into Kotlin Flows. Successful logins trigger <code>ProfileRepository.syncUserProfile(userId)</code> which calculates Friend Codes (`QBS-ABCD-1234`) resolving identity collisions mathematically using securely hashed UIDs appended to pseudo-random alphabetic arrays.</p>
+            <p>Firestore houses the <code>chats</code> collection. <code>SyncRepository.observeAndSyncMessages</code> binds a <code>addSnapshotListener</code> to <code>chats/{id}/messages</code>. This keeps the Local Room `MessageEntity` pool precisely equivalent to Cloud State natively in the IO dispatcher pool without starving the UI thread. Snapshot listener cancellation handles are diligently managed overriding memory leak probabilities entirely.</p>
+
+            <h3 id="cloud-appwrite" class="subsection-title">5.2 Appwrite Storage for ZIP Collections</h3>
+            <p>To bypass massive string serialization lag inside Firestore documents, Universal Collections are processed by <code>MockExporter.kt</code> into discrete physical Java <code>.zip</code> Archive Files containing <code>data.json</code> manifests alongside any multimedia attachments. These are shipped to <code>storage.createFile()</code> using the Appwrite endpoint bound by <code>APPWRITE_PROJECT_ID</code>. Appwrite replies with a permanent Download URL referencing the specific chunk location. No database state rests on Appwrite, acting cleanly as a pure stateless block store.</p>
+
+            <h3 id="cloud-sync-repo" class="subsection-title">5.3 SyncRepository Orchestration</h3>
+            <span class="file-path">data/repository/SyncRepository.kt</span>
+            <p>The ultimate aggregator logic controlling inbound and outbound state. When sending a message, it doesn't just hit an API. The exact execution chain entails:</p>
+            <ol>
+                <li>Filters target `participants` from `ChatDao`.</li>
+                <li>Resolves target public keys actively queried against the `UserDao` or `Firestore`.</li>
+                <li>Calls `CryptoManager` passing the message plaintext, producing an `encryptedPayloads` mutable map representing $N$ individually encrypted texts (where $N = $ number of users in the chat).</li>
+                <li>Replaces the base `message.payload` with the stub string `"ENCRYPTED_MESSAGE"`, blinding the visual layer.</li>
+                <li>Uploads the multi-keyed map to the Firestore <code>chats/messages</code> document payload.</li>
+                <li>Firestore triggers <code>SnapshotListener</code> callbacks. Target devices read the multi-mapped payloads, matching their Local <code>userId</code> to the dictionary key mapping to their specifically wrapped ECIES ciphertext.</li>
+            </ol>
+            
+            <div class="callout">
+                <h4>Firestore Rules Hierarchy (Authorization & Masking)</h4>
+                <pre><code>match /chats/{chatId}/messages/{msgId} {
+  allow read: if request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds;
+  allow write: if request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds;
+}</code></pre>
+                <p>These rigid boundaries guarantee absolute backend security isolating message reads STRICTLY to explicitly enumerated participant list strings. Even if an adversary extracts a valid JWT Firebase Bearer Token, they cannot execute Document Lookups unless their UID operates explicitly inside the `participantIds` array.</p>
+            </div>
+        </div>
+
+        <!-- 6. Cryptography & E2EE -->
+        <div id="cryptography-e2ee" class="section-card">
+            <h2 class="section-title"><span class="badge sec">SECURITY</span>6. Cryptography & End-to-End Encryption (E2EE)</h2>
+            <p>Zero-trust architecture implemented aggressively across the communication transport layers. Q-base guarantees that even root server admins accessing Firebase/Appwrite consoles physically cannot read internal medical discussions, ensuring full HIPAA-ready compatibility regarding shared patient contexts.</p>
+
+            <h3 id="crypto-tink" class="subsection-title">6.1 Google Tink Integration</h3>
+            <span class="file-path">data/util/CryptoManager.kt</span>
+            <p>Implemented natively over <code>com.google.crypto.tink:tink-android:1.8.0</code>. Bypassing the raw, error-prone complexities of ancient <code>javax.crypto</code>, Tink provides safe, robust primitives actively resisting nonce collisions, repeated Initialization Vectors (IV reuse attacks), and notoriously lethal improper padding oracles. Using Tink forces the application to adopt perfectly randomized algorithmic setups.</p>
+
+            <h3 id="crypto-asymmetric" class="subsection-title">6.2 Asymmetric Chat Encryption (ECIES)</h3>
+            <p><strong>The Elliptic Curve Integrated Encryption Scheme (ECIES).</strong> The absolute standard for multi-party chat architecture.</p>
+            <ul>
+                <li><strong>Initialization Phase:</strong> Upon a user registering (via <code>ProfileRepository.createOrUpdateProfile</code>), the device requests Android's Hardware Keystore (`android-keystore://qbase_master_key`) to generate a new <code>ECIES-P256-HKDF-HMAC-SHA256-AES128-GCM</code> template string. This constructs a physical key pair deeply tied to the physical silicon (TrustZone environment) of the device.</li>
+                <li><strong>Key Transmission:</strong> The Private Key absolutely NEVER leaves the hardware layer. Any attempt to serialize it fails. The Public Key, however, is deliberately serialized to a Base64 string and pushed transparently to Firestore under the globally accessible <code>users/{uid}.publicKey</code> field.</li>
+                <li><strong>Execution Pipeline:</strong> When User A texts User B: User A pulls B's stored `publicKey`. The device leverages a `CleartextKeysetHandle` transforming the string back into a `HybridEncrypt` interface. The `HybridEncrypt` primitive natively generates an ephemeral Elliptic Curve key, mixes it mathematically via a Hash-based Key Derivation Function (HKDF), encrypts the exact payload using standard AES-GCM, and attaches the ephemeral public key directly into the ciphertext header.</li>
+                <li><strong>Decryption Flow:</strong> User B receives the Ciphertext chunk. B invokes `HybridDecrypt`. The Tink library detects the ephemeral key in the header, passes B's silicon-bound Private Key alongside it returning the underlying bytes.</li>
+            </ul>
+
+            <h3 id="crypto-symmetric" class="subsection-title">6.3 Symmetric Universal File Wrapping (AES-GCM)</h3>
+            <p>Tink's Asymmetric Hybrid primitives possess severe payload size limitations structurally unsuited for handling megabytes of compressed JSON assets representing thousands of Medical flashcards inside the Appwrite system.</p>
+            <ul>
+                <li><strong>File Sealing Protocol:</strong> `CryptoManager.encryptFileContent(ByteArray)` bypasses Hybrid keys completely. Instead, it forcefully requests a standalone, perfectly random `AES256_GCM` Keysethandle. Using the resulting <code>Aead</code> class, it encrypts the full zip byte array instantly. This handles massive byte blobs flawlessly avoiding heap overflow exceptions by utilizing internal Stream chunking where appropriate.</li>
+                <li><strong>Key Delimitation Transmission:</strong> The raw, absolutely random ciphertext is pushed directly into Appwrite buckets. The highly secret, one-time transient Symmetric Key is serialized independently into Base64. It is dynamically appended to the Appwrite Download URL string utilizing a precise delimiter architecture: <code>$downloadUrl|E2EE_KEY|$symmetricKey</code>.</li>
+                <li><strong>Ultimate Network Protection:</strong> Because the delimiter string ITSELF is passed recursively as the "TEXT" payload into the Asymmetric ECIES pipeline described in Section 6.2, the Symmetric Vault Key is flawlessly veiled in transit. The Appwrite bucket acts entirely deaf to the contents it hosts. Firebase holds an encrypted pointer holding an encrypted AES key pointing to an encrypted Appwrite bucket. It represents a flawless cryptographic barrier.</li>
+                <li><strong>Decryption Target Action:</strong> `MockDownloader.downloadAndImportMock()` parses the `|E2EE_KEY|` delimiter. It requests the raw bytes via OkHttp. It passes the raw ZIP byte stream alongside the split Key directly into `CryptoManager.decryptFileContent()`, instantly returning the pristine ZIP archive into local application memory. The ciphertext never touches unencrypted local flash storage cache directories! Total obfuscation from physical forensics.</li>
+            </ul>
+        </div>
+
+        <!-- 7. Dependency Injection -->
+        <div id="dependency-injection" class="section-card">
+            <h2 class="section-title"><span class="badge infra">DI / INJECT</span>7. Dependency Injection (Dagger Hilt)</h2>
+            <p>Hilt fundamentally organizes the application, ensuring Singletons behave accurately across the Android application namespace timeline, decoupling classes for flawless testability.</p>
+
+            <h3 id="di-modules" class="subsection-title">7.1 Complete Module Dependency Graph</h3>
+            
+            <div class="grid-container">
+                <div class="feature-box">
+                    <h4><code>DatabaseModule.kt</code></h4>
+                    <pre><code>@Provides @Singleton
+fun provideAppDatabase(...) = Room.databaseBuilder(...)
+    .addMigrations(..., MIGRATION_12_13) 
+    
+@Provides fun provideChatDao(db) = db.chatDao()
+@Provides fun provideUserDao(db) = db.userDao()
+@Provides fun provideBrainUsageDao(db) = db.brainUsageDao()</code></pre>
+                    <p>Isolates the absolute SQLite source of truth, provisioning specific scoped Data Access Objects mapped inherently down into the application avoiding `Context` leakings commonly encountered with Room DB implementations.</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><code>NetworkModule.kt</code></h4>
+                    <pre><code>@Provides @Singleton
+fun provideFirestore() = Firebase.firestore
+
+@Provides @Singleton
+fun provideAppwriteClient(...) = Client().setEndpoint(...)
+
+@Provides @Singleton
+fun provideOkHttpClient() = OkHttpClient.Builder()...</code></pre>
+                    <p>Secures global generic instances of heavy network topology objects. By holding them as strictly defined Singletons, underlying connection pools within OkHttp remain alive drastically increasing subsequent download velocities bypassing TLS handshakes redundantly.</p>
+                </div>
+
+                <div class="feature-box">
+                    <h4><code>BrainModule.kt</code></h4>
+                    <pre><code>@Provides @Singleton
+fun provideAiBrainManager(
+    brainDataStoreManager: BrainDataStoreManager,
+    brainUsageDao: BrainUsageDao
+) = AiBrainManager(...)</code></pre>
+                    <p>Wires the `AiBrainManager` expressly into the Local Room tracking databases enforcing complete integration.</p>
+                </div>
+            </div>
+
+            <p>Ultimately, components like <code>SyncRepository</code>, annotated purely with <code>@Inject constructor(private val firestore: FirebaseFirestore, private val cryptoManager: CryptoManager, ...)</code>, are seamlessly resolved by Hilt, traversing this enormous dependency tree simultaneously behind the scenes resulting in flawless class lifecycles and incredibly thin Controller classes.</p>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2026 Q-base Architecture Specification. Prepared via the Antigravity Brain Engine Framework.</p>
+            <p><small>Revision: v13 Schema Target • Status: Complete Deployment Sequence Initiated</small></p>
+        </div>
+    </div>
+</body>
+</html>

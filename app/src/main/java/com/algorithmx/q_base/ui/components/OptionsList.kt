@@ -98,29 +98,49 @@ fun OptionsList(
             
             val isSelected = if (isMTF) isTrueSelected != null else selectedAnswers.contains(letter)
             
-            val isCorrect = if (isMTF) {
-                val correctIsT = correctAnswers.contains("${letter}_T")
-                val correctIsF = correctAnswers.contains("${letter}_F")
-                (isTrueSelected == true && correctIsT) || (isTrueSelected == false && correctIsF)
-            } else {
-                correctAnswers.contains(letter)
-            }
+            // The database stores correct letters (e.g., "A", "C"). 
+            // For MTF: presence in correctAnswers means TRUE, absence means FALSE.
+            val isActuallyCorrect = correctAnswers.contains(letter)
+            val isActuallyIncorrect = !isActuallyCorrect
 
-            // Expressive Color Tones
+            // Expressive Color Tones based on User Requirements
             val targetBackgroundColor = when {
                 !isAnswerRevealed -> {
                     if (isSelected) MaterialTheme.colorScheme.primaryContainer 
                     else MaterialTheme.colorScheme.surface
                 }
-                isCorrect -> {
-                    if (isDarkMode) Color(0xFF2E7D32).copy(alpha = 0.4f)
-                    else Color(0xFFE8F5E9)
+                isMTF -> {
+                    when {
+                        // T answer user T OR F answer user F -> Green
+                        (isTrueSelected == true && isActuallyCorrect) || 
+                        (isTrueSelected == false && isActuallyIncorrect) -> {
+                            if (isDarkMode) Color(0xFF1B5E20).copy(alpha = 0.2f) else Color(0xFFF1F8E9)
+                        }
+                        // Difference (T answer user F OR F answer user T) -> Red
+                        (isTrueSelected != null && ((isTrueSelected == true && isActuallyIncorrect) || (isTrueSelected == false && isActuallyCorrect))) -> {
+                            if (isDarkMode) Color(0xFFB71C1C).copy(alpha = 0.2f) else Color(0xFFFFEBEE)
+                        }
+                        // Any decision missed (T or F) -> Yellow
+                        (isTrueSelected == null) -> {
+                            if (isDarkMode) Color(0xFFF9A825).copy(alpha = 0.2f) else Color(0xFFFFFDE7)
+                        }
+                        else -> MaterialTheme.colorScheme.surface
+                    }
                 }
-                isSelected && !isCorrect -> {
-                    if (isDarkMode) Color(0xFFC62828).copy(alpha = 0.4f)
-                    else Color(0xFFFFEBEE)
+                else -> { // SBA / MCQ
+                    when {
+                        isSelected && isActuallyCorrect -> {
+                            if (isDarkMode) Color(0xFF1B5E20).copy(alpha = 0.2f) else Color(0xFFF1F8E9)
+                        }
+                        isSelected && !isActuallyCorrect -> {
+                            if (isDarkMode) Color(0xFFB71C1C).copy(alpha = 0.2f) else Color(0xFFFFEBEE)
+                        }
+                        !isSelected && isActuallyCorrect -> {
+                            if (isDarkMode) Color(0xFFF9A825).copy(alpha = 0.2f) else Color(0xFFFFFDE7)
+                        }
+                        else -> MaterialTheme.colorScheme.surface
+                    }
                 }
-                else -> MaterialTheme.colorScheme.surface
             }
 
             val targetBorderColor = when {
@@ -128,9 +148,22 @@ fun OptionsList(
                     if (isSelected) MaterialTheme.colorScheme.primary 
                     else MaterialTheme.colorScheme.outlineVariant
                 }
-                isCorrect -> Color(0xFF4CAF50)
-                isSelected && !isCorrect -> Color(0xFFF44336)
-                else -> MaterialTheme.colorScheme.outlineVariant
+                isMTF -> {
+                    when {
+                        (isTrueSelected == true && isActuallyCorrect) || (isTrueSelected == false && isActuallyIncorrect) -> Color(0xFF388E3C)
+                        (isTrueSelected != null && ((isTrueSelected == true && isActuallyIncorrect) || (isTrueSelected == false && isActuallyCorrect))) -> Color(0xFFD32F2F)
+                        (isTrueSelected == null) -> Color(0xFFFBC02D)
+                        else -> MaterialTheme.colorScheme.outlineVariant
+                    }
+                }
+                else -> {
+                    when {
+                        isSelected && isActuallyCorrect -> Color(0xFF388E3C)
+                        isSelected && !isActuallyCorrect -> Color(0xFFD32F2F)
+                        !isSelected && isActuallyCorrect -> Color(0xFFFBC02D)
+                        else -> MaterialTheme.colorScheme.outlineVariant
+                    }
+                }
             }
 
             val animatedBgColor by animateColorAsState(
@@ -172,7 +205,9 @@ fun OptionsList(
                                     onSelectionChange = { selected -> 
                                         onOptionToggled("${letter}_${if (selected) "T" else "F"}") 
                                     },
-                                    enabled = !isAnswerRevealed
+                                    enabled = !isAnswerRevealed,
+                                    isAnswerRevealed = isAnswerRevealed,
+                                    correctAnswer = isActuallyCorrect // if isActuallyCorrect is true, then T is correct.
                                 )
                             }
                             isSBA -> {
@@ -180,7 +215,7 @@ fun OptionsList(
                                     selected = isSelected,
                                     onClick = null,
                                     colors = RadioButtonDefaults.colors(
-                                        selectedColor = if (isAnswerRevealed && isCorrect) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
+                                        selectedColor = if (isAnswerRevealed && isActuallyCorrect) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
                                     )
                                 )
                             }
@@ -189,7 +224,7 @@ fun OptionsList(
                                     checked = isSelected,
                                     onCheckedChange = null,
                                     colors = CheckboxDefaults.colors(
-                                        checkedColor = if (isAnswerRevealed && isCorrect) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
+                                        checkedColor = if (isAnswerRevealed && isActuallyCorrect) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
                                     )
                                 )
                             }
@@ -207,18 +242,43 @@ fun OptionsList(
                             enter = scaleIn(initialScale = 0.5f) + fadeIn(),
                             exit = scaleOut() + fadeOut()
                         ) {
-                            if (isCorrect) {
+                            val userPickedCorrect = if (isMTF) {
+                                (isTrueSelected == true && isActuallyCorrect) || (isTrueSelected == false && isActuallyIncorrect)
+                            } else {
+                                isSelected && isActuallyCorrect
+                            }
+
+                            val userPickedIncorrect = if (isMTF) {
+                                (isTrueSelected == true && isActuallyIncorrect) || (isTrueSelected == false && isActuallyCorrect)
+                            } else {
+                                isSelected && !isActuallyCorrect
+                            }
+
+                            val userMissedCorrect = if (isMTF) {
+                                isTrueSelected == null && isActuallyCorrect
+                            } else {
+                                !isSelected && isActuallyCorrect
+                            }
+
+                            if (userPickedCorrect) {
                                 Icon(
                                     Icons.Default.CheckCircle,
                                     contentDescription = "Correct",
                                     tint = Color(0xFF4CAF50),
                                     modifier = Modifier.size(28.dp)
                                 )
-                            } else if (isSelected) {
+                            } else if (userPickedIncorrect) {
                                 Icon(
                                     Icons.Default.Cancel,
                                     contentDescription = "Incorrect",
                                     tint = Color(0xFFF44336),
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            } else if (userMissedCorrect) {
+                                Icon(
+                                    Icons.Default.Info,
+                                    contentDescription = "Missed",
+                                    tint = Color(0xFFFFEB3B),
                                     modifier = Modifier.size(28.dp)
                                 )
                             }

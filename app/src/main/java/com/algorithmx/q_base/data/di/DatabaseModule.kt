@@ -26,7 +26,7 @@ object DatabaseModule {
     fun provideQuestionDao(database: AppDatabase): QuestionDao = database.questionDao()
 
     @Provides
-    fun provideCategoryDao(database: AppDatabase): CategoryDao = database.categoryDao()
+    fun provideCollectionDao(database: AppDatabase): CollectionDao = database.collectionDao()
 
     @Provides
     fun provideSessionDao(database: AppDatabase): SessionDao = database.sessionDao()
@@ -44,22 +44,31 @@ object DatabaseModule {
     fun provideMessageDao(database: AppDatabase): MessageDao = database.messageDao()
 
     @Provides
+    fun provideAiResponseDao(database: AppDatabase): AiResponseDao = database.aiResponseDao()
+
+    @Provides
+    fun provideBrainUsageDao(database: AppDatabase): BrainUsageDao = database.brainUsageDao()
+
+    @Provides
     @Singleton
     fun provideExploreRepository(
-        categoryDao: CategoryDao,
+        collectionDao: CollectionDao,
         questionDao: QuestionDao,
-        problemReportDao: ProblemReportDao
+        sessionDao: com.algorithmx.q_base.data.dao.SessionDao,
+        problemReportDao: ProblemReportDao,
+        userDao: UserDao
     ): ExploreRepository {
-        return ExploreRepository(categoryDao, questionDao, problemReportDao)
+        return ExploreRepository(collectionDao, questionDao, sessionDao, problemReportDao, userDao)
     }
 
     @Provides
     @Singleton
     fun provideSessionRepository(
         sessionDao: SessionDao,
-        categoryDao: CategoryDao,
-        questionDao: QuestionDao
+        collectionDao: CollectionDao,
+        questionDao: QuestionDao,
+        userDao: UserDao
     ): SessionRepository {
-        return SessionRepository(sessionDao, categoryDao, questionDao)
+        return SessionRepository(sessionDao, collectionDao, questionDao, userDao)
     }
 }

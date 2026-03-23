@@ -1,0 +1,50 @@
+lOGIN IN FIRST LAUNCH-google signin is enough
+
+Home
+remove double home bttns appear
+remove hello llisttener
+adjust sizze of New Session New Collection
+
+
+Navigation Problem associasted with History fragment
+
+
+Collection
+Real question count or user craeted or Shared to grop opr Individuals
+
+Profile screen 
+Profile Image
+Profile name
+Intro
+email
+User code- properly implement
+to be unique
+Remove top field and success Rate
+
+Explorer screen
+-3 PER ROW IN LARGE SCREENS
+iNDICATION OF INDIVIUAl OR sHARED COLLECTION
+
+cOLLECTION oVERVIEW
+ADD EXPLORE WHWERE LEFTT OFF BTN 
+cOUNT QUESION COUNT - properly count
+
+Question viewer
+ Bring quck action tns toline same as tags
+ Revise Maeking logic mcq
+ revise highlighting
+ +1 for correct answer 
+ -1 for wrong answer
+ minimum 0
+ max option count
+
+Connenct Screen
+    - Attach collections to chats
+    - Attach sessions to chats
+    - Start implementing databse chage notifications as a different message type 
+    - Add Admin feature to groupp - specific permisiions like collection editing, adding memebers
+    - Verify firebase logic to Start chats
+
+
+cOLLECTION cREATION
+sESSION cREATION

@@ -1,7 +1,7 @@
 package com.algorithmx.q_base.data.util
 
 import android.content.Context
-import com.algorithmx.q_base.data.entity.CollectionWithQuestions
+import com.algorithmx.q_base.data.entity.SetWithQuestions
 import com.algorithmx.q_base.data.model.MockExport
 import com.algorithmx.q_base.data.model.QuestionExport
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,16 +25,16 @@ class ExportUtils @Inject constructor(
         encodeDefaults = true
     }
 
-    suspend fun prepareZip(collectionWithQuestions: CollectionWithQuestions): File = withContext(Dispatchers.IO) {
+    suspend fun prepareZip(setWithQuestions: SetWithQuestions): File = withContext(Dispatchers.IO) {
         val exportData = MockExport(
-            collection = collectionWithQuestions.collection,
-            questions = collectionWithQuestions.questions.map { 
+            collection = setWithQuestions.set,
+            questions = setWithQuestions.questions.map { 
                 QuestionExport(it.question, it.options, it.answer)
             }
         )
 
         val jsonString = json.encodeToString(exportData)
-        val zipFile = File(context.cacheDir, "${collectionWithQuestions.collection.collectionId}.zip")
+        val zipFile = File(context.cacheDir, "${setWithQuestions.set.setId}.zip")
         
         ZipOutputStream(FileOutputStream(zipFile)).use { zos ->
             val entry = ZipEntry("data.json")

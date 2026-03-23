@@ -12,6 +12,6 @@ data class QuestionExport(
 
 @Serializable
 data class MockExport(
-    val collection: QuestionCollection,
+    val collection: QuestionSet,
     val questions: List<QuestionExport>
 )

@@ -39,18 +39,17 @@ import kotlinx.coroutines.tasks.await
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
-    viewModel: LoginViewModel = hiltViewModel()
+    onNavigateToSignup: () -> Unit,
+    viewModel: AuthViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var isSignUp by remember { mutableStateOf(false) }
     
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val auth = remember { FirebaseAuth.getInstance() }
 
-    // 1. Configure Google Sign In
     val gso = remember {
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(context.getString(R.string.default_web_client_id))
@@ -60,7 +59,6 @@ fun LoginScreen(
 
     val googleSignInClient = remember { GoogleSignIn.getClient(context, gso) }
 
-    // 2. Setup the Compose Activity Launcher
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -69,19 +67,18 @@ fun LoginScreen(
             try {
                 val account = task.getResult(ApiException::class.java)
                 account.idToken?.let { idToken ->
-                    // 3. Authenticate with Firebase using the Google Token
                     coroutineScope.launch {
                         try {
                             val credential = GoogleAuthProvider.getCredential(idToken, null)
                             auth.signInWithCredential(credential).await()
                             onLoginSuccess()
                         } catch (e: Exception) {
-                            // Handle Firebase Auth failure
+                            // Handle failure
                         }
                     }
                 }
             } catch (e: ApiException) {
-                // Handle Google Sign-In failure
+                // Handle failure
             }
         }
     }
@@ -104,7 +101,6 @@ fun LoginScreen(
                 )
             )
     ) {
-        // Expressive Background Element
         Surface(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -123,7 +119,6 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Expressive Logo Area
             Surface(
                 modifier = Modifier.size(80.dp),
                 shape = RoundedCornerShape(24.dp),
@@ -142,26 +137,18 @@ fun LoginScreen(
             
             Spacer(modifier = Modifier.height(32.dp))
 
-            AnimatedContent(
-                targetState = isSignUp,
-                transitionSpec = {
-                    (slideInHorizontally { it } + fadeIn()).togetherWith(slideOutHorizontally { -it } + fadeOut())
-                },
-                label = "auth_title"
-            ) { targetIsSignUp ->
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = if (targetIsSignUp) "Join Q-Base" else "Welcome Back",
-                        style = MaterialTheme.typography.displaySmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = if (targetIsSignUp) "Create your medical profile" else "Continue your learning journey",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Welcome Back",
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Continue your learning journey",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.outline
+                )
             }
             
             Spacer(modifier = Modifier.height(48.dp))
@@ -219,13 +206,7 @@ fun LoginScreen(
             )
 
             Button(
-                onClick = {
-                    if (isSignUp) {
-                        viewModel.signUp(email, password)
-                    } else {
-                        viewModel.signIn(email, password)
-                    }
-                },
+                onClick = { viewModel.signIn(email, password) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -246,7 +227,7 @@ fun LoginScreen(
                     )
                 } else {
                     Text(
-                        if (isSignUp) "CREATE ACCOUNT" else "LOGIN",
+                        "LOGIN",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.25.sp
@@ -256,7 +237,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Google Sign In Button
             OutlinedButton(
                 onClick = {
                     launcher.launch(googleSignInClient.signInIntent)
@@ -281,7 +261,6 @@ fun LoginScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    // Note: You might need a google logo resource here
                     Text(
                         "Sign in with Google",
                         style = MaterialTheme.typography.titleMedium,
@@ -293,12 +272,11 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             TextButton(
-                onClick = { isSignUp = !isSignUp },
+                onClick = onNavigateToSignup,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    if (isSignUp) "Already have an account? Log In" 
-                    else "Don't have an account? Sign Up",
+                    "Don't have an account? Sign Up",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )

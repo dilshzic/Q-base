@@ -7,7 +7,12 @@ data class UserProfile(
     val userId: String = "",
     val email: String = "",
     val displayName: String = "",
-    val friendCode: String = ""
+    val profilePictureUrl: String? = null,
+    val friendCode: String = "",
+    val intro: String = "",
+    val publicKey: String? = null,
+    val isBanned: Boolean = false,
+    val isPhotoVisible: Boolean = true
 )
 
 data class SyncRequest(

@@ -2,7 +2,7 @@ package com.algorithmx.q_base.data.dao
 
 import androidx.room.*
 import com.algorithmx.q_base.data.entity.Question
-import com.algorithmx.q_base.data.entity.QuestionCollection
+import com.algorithmx.q_base.data.entity.QuestionSet
 import com.algorithmx.q_base.data.entity.SessionAttempt
 import com.algorithmx.q_base.data.entity.StudySession
 import kotlinx.coroutines.flow.Flow
@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.Flow
 interface SessionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSession(session: StudySession)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSet(set: QuestionSet)
 
     @Update
     suspend fun updateSession(session: StudySession)
@@ -24,11 +27,11 @@ interface SessionDao {
     @Query("SELECT * FROM Study_Sessions WHERE session_id = :sessionId")
     suspend fun getSessionById(sessionId: String): StudySession?
 
-    @Query("SELECT * FROM Question_Collections ORDER BY created_timestamp DESC")
-    fun getAllCollections(): Flow<List<QuestionCollection>>
+    @Query("SELECT * FROM Question_Sets ORDER BY created_timestamp DESC")
+    fun getAllSets(): Flow<List<QuestionSet>>
 
-    @Query("SELECT * FROM Question_Collections ORDER BY created_timestamp DESC LIMIT 5")
-    fun getRecentCollections(): Flow<List<QuestionCollection>>
+    @Query("SELECT * FROM Question_Sets ORDER BY created_timestamp DESC LIMIT 5")
+    fun getRecentSets(): Flow<List<QuestionSet>>
 
     @Query("SELECT * FROM Questions WHERE is_pinned = 1")
     fun getPinnedQuestions(): Flow<List<Question>>
@@ -44,4 +47,22 @@ interface SessionDao {
 
     @Query("SELECT * FROM Session_Attempts WHERE session_id = :sessionId AND question_id = :questionId")
     suspend fun getAttempt(sessionId: String, questionId: String): SessionAttempt?
+
+    @Query("SELECT * FROM Study_Sessions WHERE collection_id = :collectionId AND is_completed = 0 ORDER BY created_timestamp DESC LIMIT 1")
+    fun getLastSessionForCollection(collectionId: String): Flow<StudySession?>
+
+    @Query("DELETE FROM Study_Sessions WHERE session_id IN (:sessionIds)")
+    suspend fun deleteSessionsByIds(sessionIds: List<String>)
+
+    @Query("DELETE FROM Session_Attempts WHERE session_id IN (:sessionIds)")
+    suspend fun deleteAttemptsForSessions(sessionIds: List<String>)
+
+    @Query("DELETE FROM Study_Sessions")
+    suspend fun deleteAllSessions()
+
+    @Query("DELETE FROM Session_Attempts")
+    suspend fun deleteAllAttempts()
+
+    @Query("DELETE FROM Question_Sets")
+    suspend fun deleteAllSets()
 }

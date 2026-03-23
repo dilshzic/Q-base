@@ -1,24 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <!-- Medical Blue Background for the foreground layer to match overall theme if needed, but usually foreground is the icon itself -->
-    <!-- Centered Q shape combined with a stethoscope motif within the 66x66 safe zone (21,21 to 87,87) -->
+    <!-- Stylized Q Logo with Gradient -->
 
-    <!-- Outer Circle of the Q / Stethoscope head -->
+    <!-- Stylized Q Logo with Gradient -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,30c-13.25,0 -24,10.75 -24,24s10.75,24 24,24c4.64,0 8.97,-1.32 12.63,-3.59l7.37,7.59l4.24,-4.24l-7.14,-7.36c4.34,-4.53 6.9,-10.66 6.9,-16.4c0,-13.25 -10.75,-24 -24,-24zM54,72c-9.94,0 -18,-8.06 -18,-18s8.06,-18 18,-18s18,8.06 18,18s-8.06,18 -18,18z" />
+        android:pathData="M40,24 h28 c14,0 22,8 22,22 v16 c0,14 -8,22 -22,22 h-28 c-14,0 -22,-8 -22,-22 v-16 c0,-14 8,-22 22,-22 Z M40,38 h28 c6,0 10,4 10,10 v16 c0,6 -4,10 -10,10 h-28 c-6,0 -10,-4 -10,-10 v-16 c0,-6 4,-10 10,-10 Z"
+        android:strokeWidth="1">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="20"
+                android:startY="20"
+                android:endX="88"
+                android:endY="88"
+                android:type="linear">
+                <item android:offset="0" android:color="#7C3AED" />
+                <item android:offset="1" android:color="#F472B6" />
+            </gradient>
+        </aapt:attr>
+    </path>
 
-    <!-- Stethoscope earpieces / top of the Q detail -->
+    <!-- Q Tail -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,42c-2.21,0 -4,1.79 -4,4s1.79,4 4,4s4,-1.79 4,-4S56.21,42 54,42z" />
-
-    <!-- A small '+' sign inside to represent medical/health -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M52,50h4v8h-4zM48,54h12v4h-12z" />
+        android:pathData="M65,65 l20,20 c3,3 8,3 11,0 c3,-3 3,-8 0,-11 l-20,-20 Z"
+        android:strokeWidth="1">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="65"
+                android:startY="65"
+                android:endX="96"
+                android:endY="96"
+                android:type="linear">
+                <item android:offset="0" android:color="#7C3AED" />
+                <item android:offset="1" android:color="#F472B6" />
+            </gradient>
+        </aapt:attr>
+    </path>
 </vector>

@@ -5,6 +5,8 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -31,6 +33,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.algorithmx.q_base.ui.components.QuestionViewer
+import dev.jeziellago.compose.markdowntext.MarkdownText
+import androidx.compose.material.icons.rounded.AutoAwesome
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,12 +51,25 @@ fun ActiveSessionScreen(
     val navDots by viewModel.navigatorDots.collectAsStateWithLifecycle()
     val session by viewModel.session.collectAsStateWithLifecycle()
     val currentAnswer by viewModel.currentAnswer.collectAsStateWithLifecycle()
-    
+    val aiResponse by viewModel.aiResponse.collectAsStateWithLifecycle()
+    val isAiLoading by viewModel.isAiLoading.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     var showNavigator by remember { mutableStateOf(false) }
+    var showReportSessionDialog by remember { mutableStateOf(false) }
+    var showReportQuestionDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.actionFeedback.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+    
     val currentAttempt = attempts.getOrNull(currentIndex)
     val isCompleted = session?.isCompleted == true
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
                 CenterAlignedTopAppBar(
@@ -101,6 +118,36 @@ fun ActiveSessionScreen(
                                 Icon(Icons.Default.Assessment, contentDescription = "View Results")
                             }
                         }
+                        var showMenu by remember { mutableStateOf(false) }
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "Options")
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Report Session") },
+                                leadingIcon = { Icon(Icons.Rounded.Flag, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                                onClick = {
+                                    showMenu = false
+                                    showReportSessionDialog = true
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Report Question") },
+                                leadingIcon = { Icon(Icons.Rounded.Flag, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                                onClick = {
+                                    showMenu = false
+                                    showReportQuestionDialog = true
+                                }
+                            )
+                        }
+
+                        com.algorithmx.q_base.ui.components.ProfileIconButton(
+                            user = currentUser,
+                            onClick = { /* Navigate to profile */ }
+                        )
                     }
                 )
                 
@@ -201,13 +248,90 @@ fun ActiveSessionScreen(
                         selectedAnswers = currentAttempt?.userSelectedAnswers?.split(",")?.filter { it.isNotEmpty() } ?: emptyList(),
                         onOptionToggled = { viewModel.onAnswerSelected(it) },
                         isAnswerRevealed = isCompleted,
-                        correctAnswers = currentAnswer?.correctAnswerString?.split(",") ?: emptyList(),
+                        correctAnswers = currentAnswer?.correctAnswerString?.split(",")?.map { it.trim() } ?: emptyList(),
                         explanation = currentAnswer?.generalExplanation,
-                        references = currentAnswer?.references
+                        references = currentAnswer?.references,
+                        onAskAi = { viewModel.askAi() }
                     )
                 }
             }
         }
+    }
+
+    if (aiResponse != null) {
+        AlertDialog(
+            onDismissRequest = { viewModel.clearAiResponse() },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val infiniteTransition = rememberInfiniteTransition(label = "ai_pulse")
+                    val scale by infiniteTransition.animateFloat(
+                        initialValue = 1f,
+                        targetValue = if (isAiLoading) 1.3f else 1f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(800, easing = LinearEasing),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "pulse_scale"
+                    )
+                    Icon(
+                        Icons.Rounded.AutoAwesome,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp).graphicsLayer(scaleX = scale, scaleY = scale)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("AI Assistance", style = MaterialTheme.typography.titleLarge)
+                }
+            },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    if (isAiLoading) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                    } else {
+                        MarkdownText(
+                            markdown = aiResponse!!,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = { viewModel.saveAiResponseToQuestion() }) {
+                    Text("Save as Official Explanation")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.clearAiResponse() }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
+    if (showReportSessionDialog) {
+        com.algorithmx.q_base.ui.components.ReportDialog(
+            itemType = "Session",
+            itemName = session?.title ?: "current session",
+            onDismiss = { showReportSessionDialog = false },
+            onConfirm = { reason ->
+                viewModel.reportSession(reason)
+                showReportSessionDialog = false
+            }
+        )
+    }
+
+    if (showReportQuestionDialog) {
+        com.algorithmx.q_base.ui.components.ReportDialog(
+            itemType = "Question",
+            itemName = currentQuestion?.stem?.take(30) + "..." ?: "this question",
+            onDismiss = { showReportQuestionDialog = false },
+            onConfirm = { reason ->
+                viewModel.reportQuestion(reason)
+                showReportQuestionDialog = false
+            }
+        )
     }
 
     if (showNavigator) {

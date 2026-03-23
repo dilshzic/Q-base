@@ -1,0 +1,67 @@
+Qbase Privacy Policy
+Effective March 23, 2026
+
+At Qbase, our mission is to empower learners through collective intelligence and AI-driven study tools. This Privacy Policy explains how we collect, use, and share your personal information when you use our mobile application and services (collectively, "Services").
+
+1. Information We Collect
+
+We receive or collect information to provide, support, and improve our Services, including when you install, access, or use our Services.
+
+Information You Provide:
+- Account Information: You provide your mobile phone number and a profile name to create a Qbase account. You may also add a profile picture and "about" information.
+- User Content: We collect the prompts you send to AI models, the questions you create, and the study collections you build and share.
+- Messages: We facilitate messaging between users. Messages are stored on your device and temporarily on our servers to ensure delivery and synchronization across your devices.
+- Contacts: With your permission, we may access your device's address book to help you connect with other learners on Qbase.
+- Customer Support: When you contact us, you may provide information related to app performance or other issues.
+
+Automatically Collected Information:
+- Usage and Log Information: We collect information about your activity on our Services, such as diagnostic, crash, and performance logs.
+- Device and Connection Information: We collect hardware model, operating system information, battery level, app version, and identifiers unique to your device.
+- Location Information: We use IP addresses to estimate your general location (e.g., city and country) for security and localized content.
+
+2. Encryption & Security (E2EE)
+
+Qbase implements End-to-End Encryption (E2EE) to ensure your private communications and shared knowledge remain secure:
+
+- Person-to-Person (P2P) Chats: Algorithm: ECIES (using Google Tink). Process: Each user has a unique private key in their Android Keystore. When you send a message, the app encrypts it using the recipient's public key. Only the recipient's device can decrypt it.
+- Group Chats: Algorithm: ECIES (Multi-recipient). Process: The app uses "Client-Side Fan-out". Instead of one group key, your device encrypts the message individually for every member of the group. This ensures that even if one member is removed, future messages remain secure for the remaining group.
+- Collection Sharing: Algorithm: AES256-GCM (Symmetric) + E2EE Chat. Process: The collection is zipped and encrypted with a random, one-time Symmetric Key. The encrypted zip is uploaded to storage. The Symmetric Key is sent to the recipient via an E2EE chat message. The recipient decrypts the key with their private key and then decrypts the downloaded collection.
+
+3. How We Use Information
+
+We use the information we have to:
+- Operate and provide our Services, including study sessions and shared collections.
+- Improve, research, and develop new features like AI-powered assistance.
+- Ensure safety, security, and integrity by verifying accounts and combating harmful conduct.
+- Communicate with you about updates and important notices.
+
+3. AI Interactions
+
+When you interact with AI features in Qbase:
+- Your prompts and AI-generated answers are processed to provide educational assistance.
+- We may use anonymized content to improve our AI models and learning experiences, subject to your privacy controls.
+- We partner with trusted AI providers (e.g., Google, OpenAI) and ensure your data is handled securely during processing.
+
+4. Information Sharing
+
+You share your information as you use and communicate through our Services:
+- Others on Qbase: Your profile information and shared collections are visible to users you interact with.
+- Third-Party Service Providers: We work with providers like Firebase and Appwrite for infrastructure, storage, and analytics. They access your information only to perform tasks on our behalf.
+- Legal Obligations: We may share information if required by law or to protect the rights and safety of our users.
+
+5. Managing Your Information
+
+- Account Settings: You can update your profile name, photo, and "about" information at any time.
+- Data Portability: You can request an export of your collections and history.
+- Deletion: You can delete your Qbase account through the in-app settings. This will remove your account info, messages, and collections from our primary servers.
+
+6. Security
+
+We implement commercially reasonable technical and organizational measures to protect your data from unauthorized access or disclosure. However, no data transmission over the internet is fully secure.
+
+7. Updates to Our Policy
+
+We may update this Privacy Policy from time to time. We will notify you of any significant changes by updating the "Effective Date" and providing notice within the app.
+
+Contact Us
+If you have questions about this Privacy Policy, please contact our support team at support@algorithmx.com.

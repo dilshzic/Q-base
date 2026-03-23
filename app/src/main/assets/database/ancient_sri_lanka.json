@@ -1,0 +1,44 @@
+[
+  {
+    "questionId": "asl_001",
+    "stem": "Which ancient Sri Lankan king is credited with the construction of the Sigiriya rock fortress?",
+    "questionType": "SBA",
+    "collection": "Ancient Sri Lanka",
+    "explanation": "King Kashyapa (477 – 495 CE) built Sigiriya as his capital and fortress after seizing the throne.",
+    "options": [
+      { "optionLetter": "A", "optionText": "King Dutugemunu" },
+      { "optionLetter": "B", "optionText": "King Kashyapa" },
+      { "optionLetter": "C", "optionText": "King Parakramabahu I" },
+      { "optionLetter": "D", "optionText": "King Devanampiya Tissa" }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "questionId": "asl_002",
+    "stem": "The irrigation work known as 'Parakrama Samudra' was built by which monarch?",
+    "questionType": "SBA",
+    "collection": "Ancient Sri Lanka",
+    "explanation": "The Parakrama Samudra (Sea of Parakrama) is a shallow reservoir built by King Parakramabahu the Great.",
+    "options": [
+      { "optionLetter": "A", "optionText": "King Mahasen" },
+      { "optionLetter": "B", "optionText": "King Vasabha" },
+      { "optionLetter": "C", "optionText": "King Parakramabahu I" },
+      { "optionLetter": "D", "optionText": "King Vijayabahu I" }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "questionId": "asl_003",
+    "stem": "What was the first capital of ancient Sri Lanka?",
+    "questionType": "SBA",
+    "collection": "Ancient Sri Lanka",
+    "explanation": "Anuradhapura served as the first capital of Sri Lanka from the 4th century BCE until the beginning of the 11th century CE.",
+    "options": [
+      { "optionLetter": "A", "optionText": "Polonnaruwa" },
+      { "optionLetter": "B", "optionText": "Kandy" },
+      { "optionLetter": "C", "optionText": "Anuradhapura" },
+      { "optionLetter": "D", "optionText": "Sigiriya" }
+    ],
+    "correctAnswer": "C"
+  }
+]

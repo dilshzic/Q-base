@@ -17,15 +17,18 @@ if (localPropertiesFile.exists()) {
 
 val appwriteProjectId = localProperties.getProperty("APPWRITE_PROJECT_ID") ?: ""
 val appwriteBucketId = localProperties.getProperty("APPWRITE_BUCKET_ID") ?: ""
+val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY") ?: ""
+val groqApiKey = localProperties.getProperty("GROQ_API_KEY") ?: ""
+val deepseekApiKey = localProperties.getProperty("DEEPSEEK_API_KEY") ?: ""
 
 android {
     namespace = "com.algorithmx.q_base"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.algorithmx.q_base"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -33,6 +36,9 @@ android {
 
         buildConfigField("String", "APPWRITE_PROJECT_ID", "\"$appwriteProjectId\"")
         buildConfigField("String", "APPWRITE_BUCKET_ID", "\"$appwriteBucketId\"")
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
+        buildConfigField("String", "GROQ_API_KEY", "\"$groqApiKey\"")
+        buildConfigField("String", "DEEPSEEK_API_KEY", "\"$deepseekApiKey\"")
     }
 
     buildTypes {
@@ -72,8 +78,14 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.androidx.navigation.compose)
-
+    
+    // Navigation 3
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.androidx.material3.adaptive.navigation3)
+    implementation(libs.androidx.savedstate.compose)
+    
     // Dependency Injection (Hilt)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
@@ -118,6 +130,9 @@ dependencies {
     // Google Play Services
     implementation(libs.play.services.auth)
 
+    // Security & Cryptography
+    implementation("com.google.crypto.tink:tink-android:1.8.0")
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
@@ -129,6 +144,17 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.runner)
+    
+    // ML Kit & Image/Doc Processing
+    implementation(libs.mlkit.text.recognition)
+    implementation(libs.pdfbox.android)
+    implementation(libs.google.generativeai)
+    implementation(libs.compose.markdown)
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.accompanist.permissions)
     
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qbase Privacy Policy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #334155;
+            --accent: #38bdf8;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 40px;
+            background: linear-gradient(135deg, var(--surface) 0%, #172554 100%);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            margin: 0;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .effective-date {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        section {
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+            transition: transform 0.3s ease;
+        }
+
+        section:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-light);
+        }
+
+        h2 {
+            font-family: 'Outfit', sans-serif;
+            color: var(--accent);
+            font-size: 1.6rem;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        h2::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--primary);
+            margin-right: 15px;
+            border-radius: 2px;
+        }
+
+        h3 {
+            color: var(--primary-light);
+            font-size: 1.2rem;
+            margin-top: 20px;
+        }
+
+        p, li {
+            color: var(--text-dim);
+            font-size: 1rem;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        .contact-card {
+            background: rgba(99, 102, 241, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+            margin-top: 20px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Qbase Privacy Policy</h1>
+            <p class="effective-date">Effective Date: March 23, 2026</p>
+        </header>
+
+        <section id="mission">
+            <h2>Our Mission</h2>
+            <p>At Qbase, we empower learners through collective intelligence and AI-driven study tools. Privacy is at the core of our platform architecture, designed to give you control over your educational journey.</p>
+        </section>
+
+        <section id="collection">
+            <h2>1. Information We Collect</h2>
+            <p>We collect information to operate, provide, and improve our services.</p>
+            
+            <h3>Information You Provide</h3>
+            <ul>
+                <li><strong>Account Data:</strong> Mobile phone number and profile identifiers.</li>
+                <li><strong>Educational Content:</strong> Questions, collections, and AI prompts created by you.</li>
+                <li><strong>Communications:</strong> Messages exchanged with peers to foster collaborative learning.</li>
+                <li><strong>Connected Contacts:</strong> Optional address book access to find and connect with fellow students.</li>
+            </ul>
+
+            <h3>Automatically Collected Data</h3>
+            <ul>
+                <li><strong>Usage Logs:</strong> Service-related diagnostic and performance reports.</li>
+                <li><strong>Device Metrics:</strong> Hardware model, OS version, and app-specific identifiers.</li>
+                <li><strong>General Location:</strong> IP-based city/country estimation for security and context.</li>
+            </ul>
+        </section>
+
+        <section id="encryption">
+            <h2>2. Encryption & Security (E2EE)</h2>
+            <p>Q-base implements state-of-the-art End-to-End Encryption to ensure your private data remains yours alone.</p>
+            <ul>
+                <li><strong>Person-to-Person Chats:</strong> Powered by <strong>ECIES</strong> (Google Tink). Your messages are encrypted with the recipient's public key; only their private key, stored securely in the Android Keystore, can decrypt them.</li>
+                <li><strong>Group Chats:</strong> We utilize <strong>Client-Side Fan-out</strong> encryption. Every message is individually encrypted for each group member, ensuring perfect forward secrecy even as group membership evolves.</li>
+                <li><strong>Collection Sharing:</strong> A hybrid <strong>AES256-GCM</strong> and 25519-based encryption model. Shared study materials are encrypted with a unique symmetric key, which is itself transmitted via an E2EE channel.</li>
+            </ul>
+        </section>
+
+        <section id="usage">
+            <h2>3. How We Use Information</h2>
+            <p>Subject to your choices and applicable law, we use information to:</p>
+            <ul>
+                <li>Personalize your study sessions and collective knowledge flows.</li>
+                <li>Research and develop new AI features to assist your learning.</li>
+                <li>Maintain the safety and integrity of the Qbase ecosystem.</li>
+                <li>Ensure technical reliability and respond to support requests.</li>
+            </ul>
+        </section>
+
+        <section id="ai">
+            <h2>4. AI Interactions & Data</h2>
+            <p>When you utilize AI assistance within Qbase, your prompts are processed to generate highly relevant educational content. We partner with state-of-the-art AI providers including Google Gemini and Groq, ensuring that all data processing adheres to enterprise-grade security standards.</p>
+            <p><em>Note: You can always manage your data sharing preferences in the app settings.</em></p>
+        </section>
+
+        <section id="sharing">
+            <h2>5. Information Sharing</h2>
+            <p>Knowledge is meant to be shared, but your privacy remains protected.</p>
+            <ul>
+                <li><strong>Public/Shared Profile:</strong> Your name and shared collections are visible to your chosen learning circles.</li>
+                <li><strong>Infrastructure Partners:</strong> We utilize Google Firebase and Appwrite for secure data hosting and synchronization.</li>
+                <li><strong>Legal Disclosures:</strong> Information may be shared if required to comply with a legal obligation or to prevent harm.</li>
+            </ul>
+        </section>
+
+        <section id="control">
+            <h2>6. Your Controls</h2>
+            <p>You have full authority over your data on Qbase:</p>
+            <ul>
+                <li><strong>Manage Profile:</strong> Update your identity and "about" section at any time.</li>
+                <li><strong>Data Portability:</strong> Export your knowledge base and session history.</li>
+                <li><strong>Account Deletion:</strong> Permanently remove your presence from our primary infrastructure.</li>
+            </ul>
+        </section>
+
+        <section id="contact">
+            <h2>7. Contact Us</h2>
+            <div class="contact-card">
+                <p>If you have any questions or feedback regarding this Privacy Policy, please reach out directly:</p>
+                <p><strong>Email:</strong> support@algorithmx.com</p>
+                <p><strong>Address:</strong> AlgorithmX Labs, Global Educational Hub</p>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2026 Qbase by AlgorithmX. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

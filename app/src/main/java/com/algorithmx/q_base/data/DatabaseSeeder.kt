@@ -5,34 +5,39 @@ import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import androidx.room.withTransaction
 import com.algorithmx.q_base.data.entity.*
+import com.algorithmx.q_base.data.entity.Collection as AppCollection
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 
 class DatabaseSeeder(
     private val context: Context,
-    private val database: AppDatabase
+    private val database: AppDatabase,
+    private val dataStoreManager: com.algorithmx.q_base.brain.BrainDataStoreManager
 ) {
     private fun getColumnString(cursor: android.database.Cursor, index: Int): String? {
         return if (index != -1 && !cursor.isNull(index)) cursor.getString(index) else null
     }
 
     suspend fun seedDatabaseIfNeeded() = withContext(Dispatchers.IO) {
-        val categoryDao = database.categoryDao()
+        val collectionDao = database.collectionDao()
         val questionDao = database.questionDao()
 
-        if (categoryDao.getMasterCategoryCount() > 0) {
-            Log.d("DatabaseSeeder", "Database already seeded.")
+        if (dataStoreManager.isSeedAppliedFlow.first()) {
+            Log.d("DatabaseSeeder", "Seed already applied according to DataStore.")
             return@withContext
         }
 
-        Log.d("DatabaseSeeder", "Seeding database...")
+        Log.d("DatabaseSeeder", "Seeding database from assets...")
 
         val tempDbFile = File(context.cacheDir, "seed_temp.db")
         try {
-            context.assets.open("database/MedicalQuiz.db").use { input ->
+            context.assets.open("database/q base.db").use { input ->
                 FileOutputStream(tempDbFile).use { output ->
                     input.copyTo(output)
                 }
@@ -51,21 +56,19 @@ class DatabaseSeeder(
                         val idIdx = cursor.getColumnIndexOrThrow("question_id")
                         val mcIdx = cursor.getColumnIndex("master_category")
                         val catIdx = cursor.getColumnIndex("category")
+                        val tagIdx = cursor.getColumnIndex("tags")
                         val qtIdx = cursor.getColumnIndex("question_type")
                         val stemIdx = cursor.getColumnIndexOrThrow("stem")
-                        val subIdx = cursor.getColumnIndex("subject")
-                        val batchIdx = cursor.getColumnIndex("batch")
 
                         val batch = mutableListOf<Question>()
                         while (cursor.moveToNext()) {
                             batch.add(Question(
                                 questionId = cursor.getString(idIdx),
-                                masterCategory = getColumnString(cursor, mcIdx),
+                                collection = getColumnString(cursor, mcIdx),
                                 category = getColumnString(cursor, catIdx),
+                                tags = getColumnString(cursor, tagIdx),
                                 questionType = getColumnString(cursor, qtIdx),
                                 stem = cursor.getString(stemIdx),
-                                subject = getColumnString(cursor, subIdx),
-                                batch = getColumnString(cursor, batchIdx),
                                 isPinned = false
                             ))
                             if (batch.size >= batchSize) {
@@ -140,10 +143,10 @@ class DatabaseSeeder(
                         }
                     }
                     
-                    val masterCategories = masterCategoryMap.map { (name, id) ->
-                        MasterCategory(masterCategoryId = id, name = name)
+                    val collections = masterCategoryMap.map { (name, id) ->
+                        AppCollection(collectionId = id, name = name)
                     }
-                    categoryDao.insertMasterCategories(masterCategories)
+                    collectionDao.insertCollections(collections)
 
                     val collectionMap = mutableMapOf<String, String>()
                     sqliteDb.rawQuery("SELECT DISTINCT category, master_category FROM Questions", null).use { cursor ->
@@ -156,13 +159,13 @@ class DatabaseSeeder(
                             if (!category.isNullOrEmpty() && !masterName.isNullOrEmpty()) {
                                 val masterCategoryId = masterCategoryMap[masterName] ?: continue
                                 if (!collectionMap.containsKey(category)) {
-                                    val collectionId = UUID.randomUUID().toString()
-                                    collectionMap[category] = collectionId
-                                    categoryDao.insertCollections(listOf(
-                                        QuestionCollection(
-                                            collectionId = collectionId,
+                                    val setId = UUID.randomUUID().toString()
+                                    collectionMap[category] = setId
+                                    collectionDao.insertSets(listOf(
+                                        QuestionSet(
+                                            setId = setId,
                                             title = category,
-                                            masterCategoryId = masterCategoryId,
+                                            parentCollectionId = masterCategoryId,
                                             createdTimestamp = System.currentTimeMillis()
                                         )
                                     ))
@@ -175,19 +178,24 @@ class DatabaseSeeder(
                         val idIdx = cursor.getColumnIndexOrThrow("question_id")
                         val catIdx = cursor.getColumnIndexOrThrow("category")
                         
-                        val batch = mutableListOf<CollectionQuestionCrossRef>()
+                        val batch = mutableListOf<SetQuestionCrossRef>()
                         while (cursor.moveToNext()) {
                             val questionId = cursor.getString(idIdx)
                             val category = cursor.getString(catIdx)
-                            val collectionId = collectionMap[category] ?: continue
-                            batch.add(CollectionQuestionCrossRef(collectionId = collectionId, questionId = questionId))
+                            val setId = collectionMap[category] ?: continue
+                            batch.add(SetQuestionCrossRef(setId = setId, questionId = questionId))
                             if (batch.size >= batchSize) {
-                                categoryDao.insertCrossRefs(batch)
+                                collectionDao.insertCrossRefs(batch)
                                 batch.clear()
                             }
                         }
-                        if (batch.isNotEmpty()) categoryDao.insertCrossRefs(batch)
+                        if (batch.isNotEmpty()) collectionDao.insertCrossRefs(batch)
                     }
+
+                    // --- Step 5: Seed Sample Chats ---
+                    seedSampleChats()
+                    
+                    dataStoreManager.markSeedAsApplied()
                 }
                 Log.d("DatabaseSeeder", "Seeding completed successfully.")
             } finally {
@@ -196,7 +204,181 @@ class DatabaseSeeder(
         } catch (e: Exception) {
             Log.e("DatabaseSeeder", "Error seeding database", e)
         } finally {
-            tempDbFile.delete()
+            if (tempDbFile.exists()) tempDbFile.delete()
+        }
+    }
+
+    private suspend fun seedSampleChats() {
+        val chatDao = database.chatDao()
+        val messageDao = database.messageDao()
+        val userDao = database.userDao()
+        val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "current_user"
+
+        try {
+            database.withTransaction {
+                val sampleUsers = listOf(
+                    UserEntity(userId = "mentor_1", displayName = "Dr. Alice (Mentor)", profilePictureUrl = null, friendCode = "DR-ALICE"),
+                    UserEntity(userId = "peer_1", displayName = "John Doe", profilePictureUrl = null, friendCode = "JD-1234"),
+                    UserEntity(userId = "peer_2", displayName = "Sarah Miller", profilePictureUrl = null, friendCode = "SM-5678")
+                )
+                sampleUsers.forEach { userDao.insertUser(it) }
+
+                // P2P Chat
+                val p2pChat = ChatEntity(
+                    chatId = "sample_p2p",
+                    chatName = "Dr. Alice (Mentor)",
+                    isGroup = false,
+                    participantIds = "mentor_1,$currentUserId"
+                )
+                chatDao.insertChat(p2pChat)
+                
+                messageDao.insertMessage(MessageEntity(
+                    messageId = "m1", chatId = "sample_p2p", senderId = "mentor_1",
+                    payload = "Hello! I saw your recent progress on Cardiology. Great work!",
+                    type = "TEXT", timestamp = System.currentTimeMillis() - 3600000
+                ))
+
+                // Group Chat
+                val groupChat = ChatEntity(
+                    chatId = "sample_group",
+                    chatName = "Global Knowledge Exchange",
+                    isGroup = true,
+                    participantIds = "mentor_1,peer_1,peer_2,$currentUserId"
+                )
+                chatDao.insertChat(groupChat)
+
+                messageDao.insertMessage(MessageEntity(
+                    messageId = "m2", chatId = "sample_group", senderId = "peer_1",
+                    payload = "Has anyone read the latest paper on CRISPR applications in oncology?",
+                    type = "TEXT", timestamp = System.currentTimeMillis() - 7200000
+                ))
+                messageDao.insertMessage(MessageEntity(
+                    messageId = "m3", chatId = "sample_group", senderId = "peer_2",
+                    payload = "Yes! It's fascinating. Especially the section on base editing.",
+                    type = "TEXT", timestamp = System.currentTimeMillis() - 3600000
+                ))
+
+                // Shared Collection Message
+                val cardioCollectionJson = """
+                    {
+                      "collectionTitle": "Cardiology Basics",
+                      "collectionDescription": "A collection of essential foundational questions for multi-disciplinary study covering core principles and advanced concepts.",
+                      "questions": [
+                        {
+                          "id": "cardio_1",
+                          "stem": "What is the primary pacemaker of the heart responsible for initiating the electrical impulse under normal physiological conditions?",
+                          "type": "SBA",
+                          "options": [
+                            {"letter": "A", "text": "Atrioventricular (AV) Node"},
+                            {"letter": "B", "text": "Sinoatrial (SA) Node"},
+                            {"letter": "C", "text": "Purkinje Fibers"},
+                            {"letter": "D", "text": "Bundle of His"}
+                          ],
+                          "answer": {
+                            "correctLetter": "B",
+                            "explanation": "The Sinoatrial (SA) node is the heart's natural pacemaker because it has the fastest intrinsic rate of spontaneous depolarization.",
+                            "references": "General Educational Resources"
+                          }
+                        },
+                        {
+                          "id": "cardio_2",
+                          "stem": "Which heart sound is associated with rapid ventricular filling and is often heard in physiological states in children or pathological states like heart failure in adults?",
+                          "type": "SBA",
+                          "options": [
+                            {"letter": "A", "text": "S1 (First heart sound)"},
+                            {"letter": "B", "text": "S2 (Second heart sound)"},
+                            {"letter": "C", "text": "S3 (Third heart sound)"},
+                            {"letter": "D", "text": "S4 (Fourth heart sound)"}
+                          ],
+                          "answer": {
+                            "correctLetter": "C",
+                            "explanation": "S3 occurs during the early part of diastole and is caused by blood rushing into a non-compliant or overly loaded ventricle.",
+                            "references": "Lilly, Pathophysiology of Heart Disease"
+                          }
+                        }
+                      ]
+                    }
+                """.trimIndent()
+
+                messageDao.insertMessage(MessageEntity(
+                    messageId = "m_col_1", chatId = "sample_p2p", senderId = "mentor_1",
+                    payload = cardioCollectionJson,
+                    type = "COLLECTION", timestamp = System.currentTimeMillis()
+                ))
+
+                // Seed Ancient Sri Lanka from Assets
+                seedAncientSriLanka()
+                
+                Log.d("DatabaseSeeder", "Seeding complete successfully.")
+            }
+        } catch (e: Exception) {
+            Log.e("DatabaseSeeder", "Critical seeding failure: ${e.message}", e)
+        }
+    }
+
+    private suspend fun seedAncientSriLanka() {
+        try {
+            val jsonString = context.assets.open("database/ancient_sri_lanka.json").bufferedReader().readText()
+            val questions = kotlinx.serialization.json.Json.decodeFromString<List<kotlinx.serialization.json.JsonObject>>(jsonString)
+            
+            val collectionId = UUID.randomUUID().toString()
+            val collectionName = "Ancient Sri Lanka"
+            
+            database.collectionDao().insertCollections(listOf(
+                AppCollection(collectionId = collectionId, name = collectionName, description = "History of Ancient Sri Lanka", isUserCreated = false)
+            ))
+            
+            val setId = UUID.randomUUID().toString()
+            database.collectionDao().insertSets(listOf(
+                QuestionSet(setId = setId, title = "Kings and Fortresses", parentCollectionId = collectionId, isUserCreated = false)
+            ))
+            
+            val questionDao = database.questionDao()
+            
+            questions.forEach { qJson ->
+                val qId = qJson["questionId"]?.toString()?.removeSurrounding("\"") ?: UUID.randomUUID().toString()
+                val stem = qJson["stem"]?.toString()?.removeSurrounding("\"") ?: ""
+                val qType = qJson["questionType"]?.toString()?.removeSurrounding("\"") ?: "SBA"
+                
+                questionDao.insertQuestion(Question(
+                    questionId = qId,
+                    collection = collectionName,
+                    category = "History",
+                    tags = "History, Sample",
+                    questionType = qType,
+                    stem = stem,
+                    isPinned = false
+                ))
+
+                // Insert Options
+                val optionsArray = qJson["options"]?.jsonArray?.map { it.jsonObject } ?: emptyList()
+                
+                optionsArray.forEach { optJson ->
+                    val letter = optJson["optionLetter"]?.toString()?.removeSurrounding("\"") ?: ""
+                    val text = optJson["optionText"]?.toString()?.removeSurrounding("\"") ?: ""
+                    questionDao.insertOption(QuestionOption(
+                        questionId = qId,
+                        optionLetter = letter,
+                        optionText = text
+                    ))
+                }
+
+                // Insert Answer
+                val correctAnswer = qJson["correctAnswer"]?.toString()?.removeSurrounding("\"") ?: ""
+                val explanation = qJson["explanation"]?.toString()?.removeSurrounding("\"") ?: ""
+                questionDao.insertAnswer(Answer(
+                    questionId = qId,
+                    correctAnswerString = correctAnswer,
+                    generalExplanation = explanation
+                ))
+
+                // Cross Ref
+                database.collectionDao().insertCrossRefs(listOf(
+                    SetQuestionCrossRef(setId = setId, questionId = qId)
+                ))
+            }
+        } catch (e: Exception) {
+            Log.e("DatabaseSeeder", "Failed to seed Ancient Sri Lanka", e)
         }
     }
 }
