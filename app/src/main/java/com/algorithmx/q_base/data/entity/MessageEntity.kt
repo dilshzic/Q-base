@@ -24,6 +24,7 @@ data class MessageEntity(
     val payload: String, // Text, or the Cloudflare .zip URL
     val type: String, // "TEXT", "FILE_TRANSFER", etc.
     val timestamp: Long,
-    val decryptionStatus: String = "SUCCESS", // SUCCESS, FAILED, NOT_ENCRYPTED
-    val keyFingerprint: String? = null
+    val decryptionStatus: String = "SUCCESS", // SUCCESS, FAILED, NOT_ENCRYPTED, DECRYPTION_ERROR
+    val keyFingerprint: String? = null,
+    val wrappedKey: String? = null
 )

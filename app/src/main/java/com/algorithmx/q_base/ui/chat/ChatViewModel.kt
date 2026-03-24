@@ -64,12 +64,49 @@ class ChatViewModel @Inject constructor(
     
     private val _actionFeedback = MutableSharedFlow<String>()
     val actionFeedback = _actionFeedback.asSharedFlow()
+    
+    private val _accessRequests = MutableStateFlow<List<Map<String, Any>>>(emptyList())
+    val accessRequests = _accessRequests.asStateFlow()
+
+    fun requestAccess(collectionId: String) {
+        val chatId = _currentChatId.value ?: return
+        viewModelScope.launch {
+            try {
+                syncRepository.requestCollectionAccess(chatId, collectionId)
+                _actionFeedback.emit("Access request sent to group admins")
+            } catch (e: Exception) {
+                _actionFeedback.emit("Failed to send request: ${e.message}")
+            }
+        }
+    }
+
+    fun grantAccess(collectionId: String, requesterId: String) {
+        val chatId = _currentChatId.value ?: return
+        viewModelScope.launch {
+            try {
+                syncRepository.grantCollectionAccess(chatId, collectionId, requesterId)
+                _actionFeedback.emit("Access granted!")
+            } catch (e: Exception) {
+                _actionFeedback.emit("Failed to grant access: ${e.message}")
+            }
+        }
+    }
 
     private val _isSharing = MutableStateFlow(false)
     val isSharing = _isSharing.asStateFlow()
 
     private val _isAiLoading = MutableStateFlow(false)
     val isAiLoading = _isAiLoading.asStateFlow()
+
+    private val _sharedCollections = MutableStateFlow<List<Map<String, Any>>>(emptyList())
+    val sharedCollections = _sharedCollections.asStateFlow()
+
+    private val _isLibraryMode = MutableStateFlow(false)
+    val isLibraryMode = _isLibraryMode.asStateFlow()
+
+    fun toggleLibraryMode(enabled: Boolean) {
+        _isLibraryMode.value = enabled
+    }
 
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
@@ -337,9 +374,27 @@ class ChatViewModel @Inject constructor(
         _currentChatId.value = chatId
         viewModelScope.launch {
             chatDao.clearUnreadCount(chatId)
-            syncRepository.observeAndSyncMessages(chatId)
+            
+            // Observe messages
+            val syncJob = syncRepository.observeAndSyncMessages(chatId)
                 .catch { e -> Log.e("ChatViewModel", "Error syncing messages for $chatId: ${e.message}") }
-                .collect()
+                .launchIn(viewModelScope)
+                
+            // Observe group library and access requests if applicable
+            val chat = chatDao.getChatById(chatId)
+            if (chat?.isGroup == true) {
+                viewModelScope.launch {
+                    syncRepository.observeGroupLibrary(chatId)
+                        .collect { _sharedCollections.value = it }
+                }
+                viewModelScope.launch {
+                    syncRepository.observeAccessRequests(chatId)
+                        .collect { _accessRequests.value = it }
+                }
+            } else {
+                _sharedCollections.value = emptyList()
+                _accessRequests.value = emptyList()
+            }
         }
     }
 
@@ -409,6 +464,7 @@ class ChatViewModel @Inject constructor(
 
     fun shareCollection(chatId: String, collectionId: String) {
         viewModelScope.launch {
+            val chat = chatDao.getChatById(chatId) ?: return@launch
             _isSharing.value = true
             try {
                 val collection = collectionDao.getCollectionByIdOnce(collectionId) ?: throw Exception("Collection not found")
@@ -416,10 +472,29 @@ class ChatViewModel @Inject constructor(
                 
                 val (downloadUrl, symmetricKey) = syncRepository.uploadQuestionBankZip(zipFile)
                 val updatedAt = collection.updatedAt
-                sendMessage(chatId, "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId", type = "FILE_TRANSFER")
+                
+                if (chat.isGroup) {
+                    // DIFFERENT MECHANISM FOR GROUPS: Persistent Library
+                    val metadata = hashMapOf(
+                        "collectionId" to collectionId,
+                        "name" to collection.name,
+                        "description" to (collection.description ?: ""),
+                        "downloadUrl" to downloadUrl,
+                        "symmetricKey" to symmetricKey, // This is already encrypted via encryptFileContent logic? No, symmetricKey is the key to decrypt the ZIP.
+                        // Actually, in the current app, the ZIP symmetric key IS the E2EE key for that file.
+                        "updatedAt" to updatedAt,
+                        "sharedBy" to currentUserId,
+                        "timestamp" to System.currentTimeMillis()
+                    )
+                    syncRepository.shareCollectionToGroup(chatId, metadata)
+                    sendMessage(chatId, "shared a collection to the group library: ${collection.name}", type = "DB_CHANGE")
+                } else {
+                    // P2P: Message-based (Ephemeral)
+                    sendMessage(chatId, "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId", type = "FILE_TRANSFER")
+                }
                 
                 mockExporter.cleanup(zipFile)
-                _actionFeedback.emit("Collection shared successfully via Cloud Sync")
+                _actionFeedback.emit("Collection shared successfully")
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Sharing failed", e)
                 _actionFeedback.emit("Sharing failed: ${e.message}")

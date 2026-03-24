@@ -63,22 +63,33 @@ class CryptoManager @Inject constructor(
 
     /**
      * Encrypts a plaintext message for a specific receiver using their public key.
+     * Throws an exception if encryption fails.
      */
     fun encryptMessage(plaintext: String, receiverPublicKeyBase64: String): String {
-        try {
-            val publicBytes = Base64.decode(receiverPublicKeyBase64, Base64.NO_WRAP)
-            val publicHandle = com.google.crypto.tink.CleartextKeysetHandle.read(
-                com.google.crypto.tink.BinaryKeysetReader.withBytes(publicBytes)
-            )
-            
-            val hybridEncrypt = publicHandle.getPrimitive(HybridEncrypt::class.java)
-            val ciphertext = hybridEncrypt.encrypt(plaintext.toByteArray(Charsets.UTF_8), null)
-            
-            return Base64.encodeToString(ciphertext, Base64.NO_WRAP)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return plaintext // Fallback to plaintext if encryption fails (for MVP/testing)
-        }
+        val publicBytes = Base64.decode(receiverPublicKeyBase64, Base64.NO_WRAP)
+        val publicHandle = com.google.crypto.tink.CleartextKeysetHandle.read(
+            com.google.crypto.tink.BinaryKeysetReader.withBytes(publicBytes)
+        )
+        
+        val hybridEncrypt = publicHandle.getPrimitive(HybridEncrypt::class.java)
+        val ciphertext = hybridEncrypt.encrypt(plaintext.toByteArray(Charsets.UTF_8), null)
+        
+        return Base64.encodeToString(ciphertext, Base64.NO_WRAP)
+    }
+
+    /**
+     * Encrypts a symmetric session key for a specific receiver using their public key.
+     */
+    fun encryptSessionKey(sessionKey: ByteArray, receiverPublicKeyBase64: String): String {
+        val publicBytes = Base64.decode(receiverPublicKeyBase64, Base64.NO_WRAP)
+        val publicHandle = com.google.crypto.tink.CleartextKeysetHandle.read(
+            com.google.crypto.tink.BinaryKeysetReader.withBytes(publicBytes)
+        )
+        
+        val hybridEncrypt = publicHandle.getPrimitive(HybridEncrypt::class.java)
+        val ciphertext = hybridEncrypt.encrypt(sessionKey, null)
+        
+        return Base64.encodeToString(ciphertext, Base64.NO_WRAP)
     }
 
     /**
@@ -87,26 +98,40 @@ class CryptoManager @Inject constructor(
      */
     fun decryptMessage(ciphertextBase64: String): Result<String> {
         return try {
-            if (privateKeysetHandle == null) {
-                // Attempt to load
-                val keysetManager = AndroidKeysetManager.Builder()
-                    .withSharedPref(context, KEYSET_NAME, PREF_FILE_NAME)
-                    .withMasterKeyUri(MASTER_KEY_URI)
-                    .build()
-                privateKeysetHandle = keysetManager.keysetHandle
-            }
-            
-            val hybridDecrypt = privateKeysetHandle?.getPrimitive(HybridDecrypt::class.java)
-                ?: return Result.failure(Exception("Privacy keyset not available"))
-                
-            val cipherBytes = Base64.decode(ciphertextBase64, Base64.NO_WRAP)
-            val plaintextBytes = hybridDecrypt.decrypt(cipherBytes, null)
-            
+            val plaintextBytes = decryptRaw(ciphertextBase64)
             Result.success(String(plaintextBytes, Charsets.UTF_8))
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)
         }
+    }
+
+    /**
+     * Decrypts a wrapped session key using the local private key.
+     */
+    fun decryptSessionKey(wrappedKeyBase64: String): Result<ByteArray> {
+        return try {
+            Result.success(decryptRaw(wrappedKeyBase64))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    private fun decryptRaw(ciphertextBase64: String): ByteArray {
+        if (privateKeysetHandle == null) {
+            val keysetManager = AndroidKeysetManager.Builder()
+                .withSharedPref(context, KEYSET_NAME, PREF_FILE_NAME)
+                .withMasterKeyUri(MASTER_KEY_URI)
+                .build()
+            privateKeysetHandle = keysetManager.keysetHandle
+        }
+        
+        val hybridDecrypt = privateKeysetHandle?.getPrimitive(HybridDecrypt::class.java)
+            ?: throw IllegalStateException("Privacy keyset not available")
+            
+        val cipherBytes = Base64.decode(ciphertextBase64, Base64.NO_WRAP)
+        return hybridDecrypt.decrypt(cipherBytes, null)
     }
 
     /**
@@ -139,26 +164,59 @@ class CryptoManager @Inject constructor(
     /**
      * Generates a dynamic symmetric key and encrypts the file's byte contents.
      * Returns a Pair containing the ciphertext bytes and the base64 encoded symmetric key.
+     * Throws an exception if encryption fails.
      */
     fun encryptFileContent(plaintext: ByteArray): Pair<ByteArray, String> {
+        val handle = KeysetHandle.generateNew(KeyTemplates.get("AES256_GCM"))
+        val aead = handle.getPrimitive(Aead::class.java)
+        
+        val ciphertext = aead.encrypt(plaintext, null)
+        
+        val keyOut = java.io.ByteArrayOutputStream()
+        com.google.crypto.tink.CleartextKeysetHandle.write(
+            handle,
+            com.google.crypto.tink.BinaryKeysetWriter.withOutputStream(keyOut)
+        )
+        val keyBase64 = Base64.encodeToString(keyOut.toByteArray(), Base64.NO_WRAP)
+        
+        return Pair(ciphertext, keyBase64)
+    }
+
+    /**
+     * Generates a new ephemeral AES-GCM session key and encrypts the plaintext.
+     * Returns a Pair: <Ciphertext, Base64EncodedSessionKeyHandle>
+     */
+    fun encryptWithSessionKey(plaintext: String): Pair<String, String> {
+        val handle = KeysetHandle.generateNew(KeyTemplates.get("AES256_GCM"))
+        val aead = handle.getPrimitive(Aead::class.java)
+        
+        val ciphertext = aead.encrypt(plaintext.toByteArray(Charsets.UTF_8), null)
+        
+        val keyOut = java.io.ByteArrayOutputStream()
+        com.google.crypto.tink.CleartextKeysetHandle.write(
+            handle,
+            com.google.crypto.tink.BinaryKeysetWriter.withOutputStream(keyOut)
+        )
+        val keyBase64 = Base64.encodeToString(keyOut.toByteArray(), Base64.NO_WRAP)
+        
+        return Pair(Base64.encodeToString(ciphertext, Base64.NO_WRAP), keyBase64)
+    }
+
+    /**
+     * Decrypts plaintext using a Base64-encoded session key handle.
+     */
+    fun decryptWithSessionKey(ciphertextBase64: String, keyHandleBase64: String): Result<String> {
         return try {
-            val handle = KeysetHandle.generateNew(KeyTemplates.get("AES256_GCM"))
-            val aead = handle.getPrimitive(Aead::class.java)
-            
-            val ciphertext = aead.encrypt(plaintext, null)
-            
-            val keyOut = java.io.ByteArrayOutputStream()
-            com.google.crypto.tink.CleartextKeysetHandle.write(
-                handle,
-                com.google.crypto.tink.BinaryKeysetWriter.withOutputStream(keyOut)
+            val keyBytes = Base64.decode(keyHandleBase64, Base64.NO_WRAP)
+            val handle = com.google.crypto.tink.CleartextKeysetHandle.read(
+                com.google.crypto.tink.BinaryKeysetReader.withBytes(keyBytes)
             )
-            val keyBase64 = Base64.encodeToString(keyOut.toByteArray(), Base64.NO_WRAP)
-            
-            Pair(ciphertext, keyBase64)
+            val aead = handle.getPrimitive(Aead::class.java)
+            val cipherBytes = Base64.decode(ciphertextBase64, Base64.NO_WRAP)
+            val plaintext = aead.decrypt(cipherBytes, null)
+            Result.success(String(plaintext, Charsets.UTF_8))
         } catch (e: Exception) {
-            e.printStackTrace()
-            // In case of error, just return plaintext without a key to avoid breaking functionality completely during MVP
-            Pair(plaintext, "")
+            Result.failure(e)
         }
     }
 

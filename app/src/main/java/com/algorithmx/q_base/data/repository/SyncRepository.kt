@@ -12,6 +12,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ListenerRegistration
 import android.util.Log
+import android.util.Base64
 import io.appwrite.ID
 import io.appwrite.models.InputFile
 import io.appwrite.services.Storage
@@ -22,11 +23,16 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.emptyFlow
+import org.json.JSONObject
+import com.algorithmx.q_base.data.entity.Question
+import com.algorithmx.q_base.data.entity.QuestionOption
+import com.algorithmx.q_base.data.entity.Answer
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -41,7 +47,9 @@ class SyncRepository @Inject constructor(
     private val mockDownloader: MockDownloader,
     private val storage: Storage,
     private val sessionDao: com.algorithmx.q_base.data.dao.SessionDao,
-    private val problemReportDao: com.algorithmx.q_base.data.dao.ProblemReportDao
+    private val problemReportDao: com.algorithmx.q_base.data.dao.ProblemReportDao,
+    private val collectionDao: com.algorithmx.q_base.data.dao.CollectionDao,
+    private val questionDao: com.algorithmx.q_base.data.dao.QuestionDao
 ) {
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val bucketId = BuildConfig.APPWRITE_BUCKET_ID
@@ -69,26 +77,31 @@ class SyncRepository @Inject constructor(
                         var decryptionStatus = "NOT_ENCRYPTED"
                         val keyFingerprint = doc.getString("keyFingerprint")
                         
-                        val encryptedPayloads = doc.get("encryptedPayloads") as? Map<String, String>
-                        if (encryptedPayloads != null && currentUserId != null) {
-                            val myCiphertext = encryptedPayloads[currentUserId]
-                            if (myCiphertext != null) {
-                                val result = cryptoManager.decryptMessage(myCiphertext)
-                                if (result.isSuccess) {
-                                    payload = result.getOrNull() ?: ""
-                                    decryptionStatus = "SUCCESS"
+                        val wrappedKeyMap = doc.get("wrappedKeys") as? Map<String, String>
+                        val ciphertextPayload = doc.getString("ciphertextPayload")
+                        
+                        if (wrappedKeyMap != null && ciphertextPayload != null && currentUserId != null) {
+                            val myWrappedKey = wrappedKeyMap[currentUserId]
+                            if (myWrappedKey != null) {
+                                val unwrapResult = cryptoManager.decryptSessionKey(myWrappedKey)
+                                if (unwrapResult.isSuccess) {
+                                    val sessionKeyHandle = Base64.encodeToString(unwrapResult.getOrThrow(), Base64.NO_WRAP)
+                                    val decryptResult = cryptoManager.decryptWithSessionKey(ciphertextPayload, sessionKeyHandle)
+                                    if (decryptResult.isSuccess) {
+                                        payload = decryptResult.getOrNull() ?: ""
+                                        decryptionStatus = "SUCCESS"
+                                    } else {
+                                        payload = ciphertextPayload
+                                        decryptionStatus = "DECRYPTION_ERROR"
+                                    }
                                 } else {
-                                    // Don't overwrite payload with error text, keep ciphertext to allow retry later if needed
-                                    payload = myCiphertext 
-                                    
-                                    // Check if it's truly a previous session by comparing fingerprints
+                                    payload = ciphertextPayload
+                                    // If fingerprint matches but can't unwrap -> error
                                     val myCurrentFingerprint = cryptoManager.getPublicKeyFingerprint()
                                     decryptionStatus = if (keyFingerprint != null && keyFingerprint == myCurrentFingerprint) {
-                                        // This SHOULD have worked, maybe key isn't loaded yet? 
                                         "DECRYPTION_ERROR"
                                     } else {
-                                        // Fingerprint mismatch or missing -> confirmed previous session
-                                        "FAILED"
+                                        "FAILED" // Session mismatch
                                     }
                                 }
                             }
@@ -106,13 +119,54 @@ class SyncRepository @Inject constructor(
                         )
                         
                         repositoryScope.launch {
+                            // SKIP if already in local DB
+                            if (messageDao.getMessageById(doc.id) != null) {
+                                return@launch
+                            }
+                            
                             messageDao.insertMessage(message)
                             
-                            // Update chat's last used key fingerprint if it's a success
+                            // 2. Handle COLLECTION_PATCH: Apply minor updates to local DB
+                            if (type == "COLLECTION_PATCH" && decryptionStatus == "SUCCESS") {
+                                applyCollectionPatch(payload)
+                            }
+                            
+                            // 3. Update chat's last used key fingerprint if it's a success
                             if (decryptionStatus == "SUCCESS" && keyFingerprint != null) {
                                 chatDao.getChatById(chatId)?.let { chat ->
                                     if (chat.lastUsedKeyFingerprint != keyFingerprint) {
                                         chatDao.insertChat(chat.copy(lastUsedKeyFingerprint = keyFingerprint))
+                                    }
+                                }
+                            }
+
+                            // EPHEMERAL MAPPING: Delete after delivery
+                            val chat = chatDao.getChatById(chatId)
+                            if (chat != null) {
+                                if (!chat.isGroup) {
+                                    // 1-on-1: Delete immediately (sender already has it locally)
+                                    if (message.senderId != currentUserId) {
+                                        try {
+                                            doc.reference.delete().await()
+                                        } catch (e: Exception) {
+                                            Log.e("SyncRepository", "Failed to delete 1-1 ephemeral message", e)
+                                        }
+                                    }
+                                } else {
+                                    // Group: Add ourselves to deliveredTo
+                                    try {
+                                        doc.reference.update("deliveredTo", FieldValue.arrayUnion(currentUserId)).await()
+                                        
+                                        // Check if we are the last one. Wait a bit for Firestore sync or fetch fresh doc
+                                        val freshDoc = doc.reference.get().await()
+                                        val deliveredTo = freshDoc.get("deliveredTo") as? List<String> ?: emptyList()
+                                        val participantIds = freshDoc.get("participantIds") as? List<String> ?: emptyList()
+                                        
+                                        if (participantIds.isNotEmpty() && deliveredTo.containsAll(participantIds)) {
+                                            doc.reference.delete().await()
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e("SyncRepository", "Failed to update delivery status in group", e)
                                     }
                                 }
                             }
@@ -130,7 +184,16 @@ class SyncRepository @Inject constructor(
         val chat = chatDao.getChatById(message.chatId)
         val participants = chat?.participantIds?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
 
-        val encryptedPayloads = mutableMapOf<String, String>()
+        if (participants.isEmpty()) {
+            throw IllegalStateException("Cannot send message: No participants in chat.")
+        }
+
+        // 1. Generate a single session key and encrypt the payload once
+        val (ciphertextPayload, sessionKeyHandle) = cryptoManager.encryptWithSessionKey(message.payload)
+        val sessionKeyBytes = Base64.decode(sessionKeyHandle, Base64.NO_WRAP)
+
+        // 2. Wrap the session key for each participant
+        val wrappedKeys = mutableMapOf<String, String>()
         val myFingerprint = cryptoManager.getPublicKeyFingerprint()
         
         participants.forEach { targetId ->
@@ -152,7 +215,6 @@ class SyncRepository @Inject constructor(
                                 publicKey = p.publicKey,
                                 intro = p.intro
                             )
-                            // Cache locally for next time
                             userDao.insertUser(targetProfile!!)
                         }
                     }
@@ -162,14 +224,25 @@ class SyncRepository @Inject constructor(
             }
 
             if (targetProfile?.publicKey != null) {
-                encryptedPayloads[targetId] = cryptoManager.encryptMessage(message.payload, targetProfile!!.publicKey!!)
+                try {
+                    wrappedKeys[targetId] = cryptoManager.encryptSessionKey(sessionKeyBytes, targetProfile!!.publicKey!!)
+                } catch (e: Exception) {
+                    Log.e("SyncRepository", "Failed to wrap key for $targetId", e)
+                }
             }
+        }
+
+        // 3. SECURE CHECK: Must have at least ourselves plus someone else if it's a 1-1 chat
+        // Actually, just ensure it's not empty, but we SHOULD have everyone.
+        if (wrappedKeys.isEmpty()) {
+            throw IllegalStateException("Security Abort: Failed to encrypt message for any participant.")
         }
 
         val messageMap = hashMapOf(
             "senderId" to message.senderId,
-            "encryptedPayloads" to encryptedPayloads,
-            "payload" to if (encryptedPayloads.isEmpty()) message.payload else "ENCRYPTED_MESSAGE",
+            "ciphertextPayload" to ciphertextPayload,
+            "wrappedKeys" to wrappedKeys,
+            "payload" to "ENCRYPTED_MESSAGE",
             "type" to message.type,
             "timestamp" to message.timestamp,
             "participantIds" to participants,
@@ -184,11 +257,12 @@ class SyncRepository @Inject constructor(
                 .set(messageMap)
                 .await()
 
-            // Update local message with the fingerprint we used
+            // Update local message with the fingerprint and wrapped key we used
             repositoryScope.launch {
                 messageDao.insertMessage(message.copy(
                     keyFingerprint = myFingerprint,
-                    decryptionStatus = if (encryptedPayloads.isNotEmpty()) "SUCCESS" else "NOT_ENCRYPTED"
+                    wrappedKey = wrappedKeys[message.senderId],
+                    decryptionStatus = "SUCCESS"
                 ))
             }
 
@@ -662,6 +736,338 @@ class SyncRepository @Inject constructor(
             Log.d("SyncRepository", "Message report submitted successfully: ${reportRef.id}")
         } catch (e: Exception) {
             Log.e("SyncRepository", "Failed to submit reported message ${message.messageId}", e)
+        }
+    }
+
+    suspend fun shareCollectionToGroup(chatId: String, collectionMetadata: Map<String, Any>) {
+        try {
+            val collectionId = collectionMetadata["collectionId"] as String
+            
+            // 1. Check if a newer version exists in Firestore to clean up old storage
+            val existingDoc = firestore.collection("chats")
+                .document(chatId)
+                .collection("shared_collections")
+                .document(collectionId)
+                .get()
+                .await()
+
+            if (existingDoc.exists()) {
+                val oldUrl = existingDoc.getString("downloadUrl")
+                if (oldUrl != null) {
+                    val oldFileId = extractFileIdFromUrl(oldUrl)
+                    if (oldFileId != null) {
+                        try {
+                            deleteQuestionBankZip(oldFileId)
+                            Log.d("SyncRepository", "Deleted old collection version: $oldFileId")
+                        } catch (de: Exception) {
+                            Log.w("SyncRepository", "Failed to delete old version file", de)
+                        }
+                    }
+                }
+            }
+
+            // 2. Encrypt Metadata (Name, Description, and ZIP Key) - Zero Knowledge for Firestore
+            val rawName = collectionMetadata["name"] as String
+            val rawDesc = collectionMetadata["description"] as? String ?: ""
+            val zipKey = collectionMetadata["symmetricKey"] as String
+            val metadataPayload = "$rawName|$rawDesc|$zipKey"
+            
+            val (encryptedPayload, sessionKeyHandle) = cryptoManager.encryptWithSessionKey(metadataPayload)
+            val sessionKeyBytes = Base64.decode(sessionKeyHandle, Base64.NO_WRAP)
+
+            // 3. Wrap metadata session key for participants
+            val wrappedMetadataKeys = mutableMapOf<String, String>()
+            val chat = chatDao.getChatById(chatId)
+            val participants = chat?.participantIds?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+
+            participants.forEach { targetId ->
+                var targetProfile = userDao.getUserById(targetId)
+                if (targetProfile?.publicKey == null) {
+                    try {
+                        val doc = firestore.collection("users").document(targetId).get().await()
+                        if (doc.exists()) {
+                            val p = doc.toObject(com.algorithmx.q_base.data.model.UserProfile::class.java)
+                            if (p?.publicKey != null) {
+                                targetProfile = UserEntity(
+                                    userId = targetId,
+                                    displayName = p.displayName,
+                                    email = p.email ?: "",
+                                    profilePictureUrl = p.profilePictureUrl,
+                                    friendCode = p.friendCode,
+                                    publicKey = p.publicKey,
+                                    intro = p.intro
+                                )
+                                userDao.insertUser(targetProfile!!)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("SyncRepository", "Failed to fetch public key for metadata encryption: $targetId", e)
+                    }
+                }
+
+                if (targetProfile?.publicKey != null) {
+                    try {
+                        wrappedMetadataKeys[targetId] = cryptoManager.encryptSessionKey(sessionKeyBytes, targetProfile!!.publicKey!!)
+                    } catch (e: Exception) {
+                        Log.e("SyncRepository", "Failed to wrap metadata key for $targetId", e)
+                    }
+                }
+            }
+
+            // 4. Update Firestore with Secure Metadata & TTL
+            val secureMetadata = hashMapOf(
+                "collectionId" to collectionId,
+                "encryptedMetadataPayload" to encryptedPayload,
+                "wrappedMetadataKeys" to wrappedMetadataKeys,
+                "downloadUrl" to (collectionMetadata["downloadUrl"] as String),
+                "updatedAt" to (collectionMetadata["updatedAt"] as Long),
+                "sharedBy" to (collectionMetadata["sharedBy"] as String),
+                "timestamp" to System.currentTimeMillis(),
+                "expiresAt" to (System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000)) // 30 Day TTL
+            )
+
+            firestore.collection("chats")
+                .document(chatId)
+                .collection("shared_collections")
+                .document(collectionId)
+                .set(secureMetadata)
+                .await()
+        } catch (e: Exception) {
+            Log.e("SyncRepository", "Failed to share collection to group with encryption", e)
+            throw e
+        }
+    }
+
+    private fun extractFileIdFromUrl(url: String): String? {
+        return try {
+            val pattern = "files/([^/]+)/download".toRegex()
+            val matchResult = pattern.find(url)
+            matchResult?.groupValues?.get(1)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun observeGroupLibrary(chatId: String): Flow<List<Map<String, Any>>> {
+        return callbackFlow {
+            val listenerRegistration = firestore.collection("chats")
+                .document(chatId)
+                .collection("shared_collections")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        Log.e("SyncRepository", "Observe group library error: ${error.message}")
+                        return@addSnapshotListener
+                    }
+
+                    val items = snapshot?.documents?.map { doc ->
+                        val data = doc.data?.toMutableMap() ?: mutableMapOf<String, Any>()
+                        
+                        // 1. Check TTL Expiry
+                        val expiresAt = data["expiresAt"] as? Long ?: 0L
+                        if (expiresAt > 0 && System.currentTimeMillis() > expiresAt) {
+                            data["isExpired"] = true
+                        } else {
+                            data["isExpired"] = false
+                        }
+
+                        // 2. Decrypt Metadata (Zero Knowledge for Firestore, Plaintext for Local)
+                        val encryptedPayload = data["encryptedMetadataPayload"] as? String
+                        val wrappedMetadataKeys = data["wrappedMetadataKeys"] as? Map<String, String>
+                        
+                        if (encryptedPayload != null && wrappedMetadataKeys != null && currentUserId != null) {
+                            val myWrappedKey = wrappedMetadataKeys[currentUserId]
+                            if (myWrappedKey != null) {
+                                val unwrapResult = cryptoManager.decryptSessionKey(myWrappedKey)
+                                if (unwrapResult.isSuccess) {
+                                    val sessionKeyHandle = Base64.encodeToString(unwrapResult.getOrThrow(), Base64.NO_WRAP)
+                                    val decryptResult = cryptoManager.decryptWithSessionKey(encryptedPayload, sessionKeyHandle)
+                                    if (decryptResult.isSuccess) {
+                                        val decryptedPayload = decryptResult.getOrNull() ?: ""
+                                        val parts = decryptedPayload.split("|")
+                                        if (parts.size >= 3) {
+                                            data["name"] = parts[0]
+                                            data["description"] = parts[1]
+                                            data["symmetricKey"] = parts[2]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if (data["name"] == null) {
+                            data["name"] = "Encrypted Collection"
+                            data["description"] = "Metadata decryption failed or restricted."
+                        }
+                        data
+                    } ?: emptyList()
+                    
+                    trySend(items).isSuccess
+                }
+
+            awaitClose { listenerRegistration.remove() }
+        }
+    }
+    suspend fun sendCollectionPatch(chatId: String, collectionId: String, op: String, data: JSONObject) {
+        val patchObj = JSONObject()
+        patchObj.put("collectionId", collectionId)
+        patchObj.put("op", op)
+        patchObj.put("data", data)
+        
+        val message = MessageEntity(
+            messageId = UUID.randomUUID().toString(),
+            chatId = chatId,
+            senderId = currentUserId ?: "",
+            payload = patchObj.toString(),
+            type = "COLLECTION_PATCH",
+            timestamp = System.currentTimeMillis()
+        )
+        sendMessage(message)
+    }
+
+    private suspend fun applyCollectionPatch(jsonString: String) {
+        try {
+            val patch = JSONObject(jsonString)
+            val op = patch.getString("op")
+            val collectionId = patch.getString("collectionId")
+            val data = patch.getJSONObject("data")
+
+            when (op) {
+                "UPSERT_QUESTION" -> {
+                    val qId = data.getString("id")
+                    val collectionName = data.getString("collectionName")
+                    val qText = data.getString("text")
+                    val category = data.optString("category", "General")
+                    val tags = data.optString("tags", "")
+
+                    val question = Question(
+                        questionId = qId,
+                        collection = collectionName,
+                        category = category,
+                        tags = tags,
+                        questionType = "Multiple Choice",
+                        stem = qText,
+                        isPinned = false
+                    )
+                    questionDao.insertQuestion(question)
+
+                    // Options
+                    questionDao.deleteOptionsForQuestion(qId)
+                    val optionsArray = data.getJSONArray("options")
+                    val letters = listOf("A", "B", "C", "D", "E", "F")
+                    for (i in 0 until optionsArray.length()) {
+                        val optText = optionsArray.getString(i)
+                        questionDao.insertOption(QuestionOption(
+                            questionId = qId,
+                            optionLetter = letters.getOrNull(i) ?: "?",
+                            optionText = optText,
+                            optionExplanation = null
+                        ))
+                    }
+
+                    // Answer
+                    val correctAns = data.getString("correctAnswer")
+                    questionDao.insertAnswer(Answer(
+                        questionId = qId,
+                        correctAnswerString = correctAns,
+                        generalExplanation = ""
+                    ))
+                    
+                    collectionDao.updateCollectionTimestamp(collectionId, System.currentTimeMillis())
+                }
+                "DELETE_QUESTION" -> {
+                    val qId = data.getString("id")
+                    questionDao.deleteQuestionById(qId)
+                    collectionDao.updateCollectionTimestamp(collectionId, System.currentTimeMillis())
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("SyncRepository", "Failed to apply collection patch", e)
+        }
+    }
+
+    suspend fun requestCollectionAccess(chatId: String, collectionId: String) {
+        val requestId = "${currentUserId}_$collectionId"
+        val requestData = hashMapOf(
+            "collectionId" to collectionId,
+            "requesterId" to currentUserId,
+            "requesterName" to (auth.currentUser?.displayName ?: "Unknown User"),
+            "timestamp" to System.currentTimeMillis(),
+            "status" to "PENDING"
+        )
+        
+        firestore.collection("chats")
+            .document(chatId)
+            .collection("access_requests")
+            .document(requestId)
+            .set(requestData)
+            .await()
+    }
+
+    fun observeAccessRequests(chatId: String): Flow<List<Map<String, Any>>> {
+        return callbackFlow {
+            val listenerRegistration = firestore.collection("chats")
+                .document(chatId)
+                .collection("access_requests")
+                .whereEqualTo("status", "PENDING")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        Log.e("SyncRepository", "Observe access requests error: ${error.message}")
+                        return@addSnapshotListener
+                    }
+                    val items = snapshot?.documents?.map { it.data ?: emptyMap() } ?: emptyList()
+                    trySend(items).isSuccess
+                }
+            awaitClose { listenerRegistration.remove() }
+        }
+    }
+
+    suspend fun grantCollectionAccess(chatId: String, collectionId: String, requesterId: String) {
+        try {
+            // 1. Get the shared collection metadata
+            val collDoc = firestore.collection("chats")
+                .document(chatId)
+                .collection("shared_collections")
+                .document(collectionId)
+                .get()
+                .await()
+
+            if (!collDoc.exists()) throw Exception("Collection record missing")
+
+            val wrappedMetadataKeys = (collDoc.get("wrappedMetadataKeys") as? Map<String, String>)?.toMutableMap() ?: mutableMapOf()
+            
+            // 2. We need the symmetric key for the metadata to re-wrap it for the requester.
+            val myWrappedKey = wrappedMetadataKeys[currentUserId] ?: throw Exception("Admin access missing")
+            val unwrapResult = cryptoManager.decryptSessionKey(myWrappedKey)
+            val sessionKeyBytes = unwrapResult.getOrThrow()
+
+            // 3. Fetch requester public key
+            val requesterDoc = firestore.collection("users").document(requesterId).get().await()
+            val requesterPublicKey = requesterDoc.getString("publicKey") ?: throw Exception("Requester public key missing")
+
+            // 4. Wrap the key for the requester
+            val newWrappedKey = cryptoManager.encryptSessionKey(sessionKeyBytes, requesterPublicKey)
+            wrappedMetadataKeys[requesterId] = newWrappedKey
+
+            // 5. Update Firestore record with the new wrapped key
+            firestore.collection("chats")
+                .document(chatId)
+                .collection("shared_collections")
+                .document(collectionId)
+                .update("wrappedMetadataKeys", wrappedMetadataKeys)
+                .await()
+
+            // 6. Mark request as APPROVED
+            firestore.collection("chats")
+                .document(chatId)
+                .collection("access_requests")
+                .document("${requesterId}_$collectionId")
+                .update("status", "APPROVED")
+                .await()
+                
+            Log.d("SyncRepository", "Access granted to $requesterId for $collectionId")
+        } catch (e: Exception) {
+            Log.e("SyncRepository", "Failed to grant access", e)
+            throw e
         }
     }
 }

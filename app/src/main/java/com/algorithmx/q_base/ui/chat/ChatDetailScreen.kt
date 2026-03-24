@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -22,11 +23,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.rounded.ChatBubble
+import androidx.compose.material.icons.rounded.FolderOff
+import androidx.compose.material.icons.rounded.FolderZip
+import androidx.compose.material.icons.rounded.CloudDownload
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Update
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.data.entity.MessageEntity
@@ -44,12 +56,10 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.RocketLaunch
 import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.FolderZip
-import androidx.compose.material.icons.rounded.CloudDownload
-import androidx.compose.material.icons.rounded.Update
+import androidx.compose.material.icons.rounded.PersonPin
+import androidx.compose.material.icons.rounded.LockOpen
 import com.algorithmx.q_base.ui.components.ReportDialog
 import com.algorithmx.q_base.ui.components.ProfileIconButton
 import kotlinx.coroutines.launch
@@ -125,6 +135,18 @@ fun ChatDetailScreen(
                     }
                 },
                 actions = {
+                    if (state.chat?.isGroup == true) {
+                        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.primary) {
+                            val isLibraryMode by viewModel.isLibraryMode.collectAsStateWithLifecycle()
+                            IconButton(onClick = { viewModel.toggleLibraryMode(!isLibraryMode) }) {
+                                Icon(
+                                    if (isLibraryMode) Icons.Rounded.ChatBubble else Icons.Rounded.FolderZip,
+                                    contentDescription = if (isLibraryMode) "Show Messages" else "Open Shared Library"
+                                )
+                            }
+                        }
+                    }
+
                     var showMenu by remember { mutableStateOf(false) }
                     IconButton(onClick = { showMenu = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Options")
@@ -177,6 +199,7 @@ fun ChatDetailScreen(
             )
         },
         bottomBar = {
+            val isLibraryMode by viewModel.isLibraryMode.collectAsStateWithLifecycle()
             if (state.chat?.isBlocked == true) {
                 Surface(
                     color = MaterialTheme.colorScheme.errorContainer,
@@ -192,7 +215,7 @@ fun ChatDetailScreen(
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
                 }
-            } else {
+            } else if (!isLibraryMode) {
                 Surface(
                     tonalElevation = 6.dp,
                     shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) // Expressive Shape
@@ -276,43 +299,59 @@ fun ChatDetailScreen(
                 }
             }
         }
-    )
- { padding ->
+    ) { padding ->
+        val isLibraryMode by viewModel.isLibraryMode.collectAsStateWithLifecycle()
+        val sharedCollections by viewModel.sharedCollections.collectAsStateWithLifecycle()
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                itemsIndexed(state.messages) { index, message ->
-                    if (message.type == "DB_CHANGE") {
-                        SystemMessageItem(message.payload)
-                    } else {
-                        val isMine = message.senderId == state.currentUserId
-                        val showSenderName = !isMine && (index == 0 || state.messages[index - 1].senderId != message.senderId)
-
-                        AnimatedMessageItem(
-                            message = message,
-                            isMine = message.senderId == state.currentUserId,
-                            senderName = state.participants[message.senderId]?.displayName,
-                            isSaved = savedCollections.value.contains(message.payload),
-                            localCollections = localCollections,
-                            onSaveCollection = { payload ->
-                                viewModel.addSharedCollection(payload)
-                                savedCollections.value = savedCollections.value + payload
-                            },
-                            onJoinSession = { sessionId -> viewModel.shareSession(state.chat!!.chatId, sessionId) },
-                            onReportMessage = {
-                                reportingMessage = message
-                            },
-                            isAiLoading = isAiLoading && index == state.messages.size - 1 && message.senderId == ChatViewModel.QBASE_AI_BOT_ID
-                        )
+            if (isLibraryMode && state.chat?.isGroup == true) {
+                val accessRequests by viewModel.accessRequests.collectAsStateWithLifecycle()
+                val isAdmin = state.chat?.adminId == state.currentUserId
+                
+                SharedLibraryView(
+                    collections = sharedCollections,
+                    onImport = { payload -> viewModel.importSharedCollection(payload) },
+                    localCollections = localCollections,
+                    isAdmin = isAdmin,
+                    accessRequests = accessRequests,
+                    onRequestAccess = { viewModel.requestAccess(it) },
+                    onGrantAccess = { collId, reqId -> viewModel.grantAccess(collId, reqId) }
+                )
+            } else {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    itemsIndexed(state.messages) { index, message ->
+                        if (message.type == "DB_CHANGE") {
+                            SystemMessageItem(message.payload)
+                        } else {
+                            val isMine = message.senderId == state.currentUserId
+                            
+                            AnimatedMessageItem(
+                                message = message,
+                                isMine = isMine,
+                                senderName = state.participants[message.senderId]?.displayName,
+                                isSaved = savedCollections.value.contains(message.payload),
+                                localCollections = localCollections,
+                                onSaveCollection = { payload ->
+                                    viewModel.addSharedCollection(payload)
+                                    savedCollections.value = savedCollections.value + payload
+                                },
+                                onJoinSession = { sessionId -> viewModel.shareSession(state.chat!!.chatId, sessionId) },
+                                onReportMessage = {
+                                    reportingMessage = message
+                                },
+                                isAiLoading = isAiLoading && index == state.messages.size - 1 && message.senderId == ChatViewModel.QBASE_AI_BOT_ID
+                            )
+                        }
                     }
                 }
             }
@@ -889,6 +928,238 @@ fun SystemMessageItem(text: String) {
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+fun SharedLibraryView(
+    collections: List<Map<String, Any>>,
+    onImport: (String) -> Unit,
+    localCollections: List<com.algorithmx.q_base.data.entity.Collection>,
+    isAdmin: Boolean,
+    accessRequests: List<Map<String, Any>>,
+    onRequestAccess: (String) -> Unit,
+    onGrantAccess: (String, String) -> Unit
+) {
+    if (collections.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    Icons.Rounded.FolderOff, 
+                    contentDescription = null, 
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "No collections shared in this group yet.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                Text(
+                    "Group Shared Library",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    "This is a persistent drive for all collections shared within the group. Collections here remain accessible even after chat messages are cleared.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                if (isAdmin && accessRequests.isNotEmpty()) {
+                    Text(
+                        "Pending Access Requests",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    accessRequests.forEach { request ->
+                        val collectionId = request["collectionId"] as? String ?: ""
+                        val requesterId = request["requesterId"] as? String ?: ""
+                        val requesterName = request["requesterName"] as? String ?: "Someone"
+                        
+                        AccessRequestItem(
+                            requesterName = requesterName,
+                            onApprove = { onGrantAccess(collectionId, requesterId) }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            
+            items(collections) { data ->
+                val name = data["name"] as? String ?: "Untitled Collection"
+                val description = data["description"] as? String ?: ""
+                val downloadUrl = data["downloadUrl"] as? String ?: ""
+                val symmetricKey = data["symmetricKey"] as? String ?: ""
+                val updatedAt = data["updatedAt"] as? Long ?: 0L
+                val collectionId = data["collectionId"] as? String ?: ""
+                val isExpired = data["isExpired"] as? Boolean ?: false
+
+                val payload = "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId"
+                
+                SharedCollectionCard(
+                    name = name,
+                    description = description,
+                    isExpired = isExpired,
+                    onImport = { onImport(payload) },
+                    onRequestAccess = { onRequestAccess(collectionId) },
+                    localCollections = localCollections
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SharedCollectionCard(
+    name: String,
+    description: String,
+    isExpired: Boolean,
+    onImport: () -> Unit,
+    onRequestAccess: () -> Unit,
+    localCollections: List<com.algorithmx.q_base.data.entity.Collection>
+) {
+    val localCopy = localCollections.find { it.name == name }
+    val isImported = localCopy != null
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Rounded.FolderZip, 
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                    if (description.isNotEmpty()) {
+                        Text(
+                            description, 
+                            style = MaterialTheme.typography.bodySmall, 
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+            
+            if (isExpired) {
+                Text(
+                    "Link Expired (30-day limit reached). Request access from members to refresh.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Button(
+                onClick = if (isExpired) onRequestAccess else onImport,
+                enabled = !isImported,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = when {
+                    isImported -> ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    isExpired -> ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    else -> ButtonDefaults.buttonColors()
+                }
+            ) {
+                Icon(
+                    when {
+                        isImported -> Icons.Rounded.CheckCircle
+                        isExpired -> Icons.Rounded.LockOpen
+                        else -> Icons.Rounded.CloudDownload
+                    }, 
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    when {
+                        isImported -> "Imported to Library"
+                        isExpired -> "Request Access"
+                        else -> "Import to Library"
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AccessRequestItem(
+    requesterName: String,
+    onApprove: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Rounded.PersonPin, 
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "$requesterName requested access",
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            TextButton(onClick = onApprove) {
+                Text("Approve")
+            }
         }
     }
 }
