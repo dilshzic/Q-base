@@ -2,9 +2,22 @@ package com.algorithmx.q_base.data.di
 
 import android.content.Context
 import com.algorithmx.q_base.data.AppDatabase
-import com.algorithmx.q_base.data.dao.*
-import com.algorithmx.q_base.data.repository.ExploreRepository
-import com.algorithmx.q_base.data.repository.SessionRepository
+import com.algorithmx.q_base.data.ai.AiResponseDao
+import com.algorithmx.q_base.data.ai.BrainUsageDao
+import com.algorithmx.q_base.data.chat.ChatDao
+import com.algorithmx.q_base.data.chat.MessageDao
+import com.algorithmx.q_base.data.collections.CollectionDao
+import com.algorithmx.q_base.data.collections.ProblemReportDao
+import com.algorithmx.q_base.data.collections.QuestionDao
+import com.algorithmx.q_base.data.core.UserDao
+import com.algorithmx.q_base.data.collections.ExploreRepository
+import com.algorithmx.q_base.data.sessions.SessionDao
+import com.algorithmx.q_base.data.sessions.SessionRepository
+import com.algorithmx.q_base.data.auth.ProfileRepository
+import com.algorithmx.q_base.data.core.HomeRepository
+import com.algorithmx.q_base.data.collections.ImportRepository
+import com.algorithmx.q_base.data.core.DataClearingRepository
+import com.algorithmx.q_base.data.util.CryptoManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -54,7 +67,7 @@ object DatabaseModule {
     fun provideExploreRepository(
         collectionDao: CollectionDao,
         questionDao: QuestionDao,
-        sessionDao: com.algorithmx.q_base.data.dao.SessionDao,
+        sessionDao: SessionDao,
         problemReportDao: ProblemReportDao,
         userDao: UserDao
     ): ExploreRepository {
@@ -70,5 +83,42 @@ object DatabaseModule {
         userDao: UserDao
     ): SessionRepository {
         return SessionRepository(sessionDao, collectionDao, questionDao, userDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideHomeRepository(
+        sessionDao: SessionDao,
+        questionDao: QuestionDao,
+        collectionDao: CollectionDao,
+        userDao: UserDao,
+        chatDao: ChatDao
+    ): HomeRepository {
+        return HomeRepository(sessionDao, questionDao, collectionDao, userDao, chatDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideImportRepository(@ApplicationContext context: Context): ImportRepository {
+        return ImportRepository(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDataClearingRepository(
+        chatDao: ChatDao,
+        messageDao: MessageDao,
+        sessionDao: SessionDao,
+        questionDao: QuestionDao,
+        userDao: UserDao,
+        aiResponseDao: AiResponseDao,
+        brainUsageDao: BrainUsageDao,
+        collectionDao: CollectionDao,
+        cryptoManager: CryptoManager
+    ): DataClearingRepository {
+        return DataClearingRepository(
+            chatDao, messageDao, sessionDao, questionDao, userDao,
+            aiResponseDao, brainUsageDao, collectionDao, cryptoManager
+        )
     }
 }

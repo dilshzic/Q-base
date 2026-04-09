@@ -2,11 +2,11 @@ package com.algorithmx.q_base.ui.content_import
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.dao.CollectionDao
-import com.algorithmx.q_base.data.dao.QuestionDao
-import com.algorithmx.q_base.data.entity.Collection as AppCollection
-import com.algorithmx.q_base.data.entity.Question
-import com.algorithmx.q_base.data.entity.QuestionSet
+import com.algorithmx.q_base.data.collections.CollectionDao
+import com.algorithmx.q_base.data.collections.QuestionDao
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.Question
+import com.algorithmx.q_base.data.collections.QuestionSet
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -43,7 +43,7 @@ class ManualBuilderViewModel @Inject constructor(
 
                 // 2. Check if it's a Collection
                 _targetCollectionId.value = targetId
-                val collection = collectionDao.getCollectionByIdOnce(targetId)
+                val collection = collectionDao.getStudyCollectionByIdOnce(targetId)
                 if (collection != null) {
                     _targetName.value = collection.name
                     // Create a new set for this manual session
@@ -63,12 +63,12 @@ class ManualBuilderViewModel @Inject constructor(
         val colName = name ?: "Manual Collection ${getCurrentDate()}"
         _targetName.value = colName
         
-        val collection = AppCollection(
+        val collection = StudyCollection(
             collectionId = colId,
             name = colName,
             isUserCreated = true
         )
-        collectionDao.insertCollections(listOf(collection))
+        collectionDao.insertStudyCollections(listOf(collection))
         _targetCollectionId.value = colId
         
         createNewSet(colId, "Initial Set")

@@ -21,8 +21,8 @@ import androidx.compose.material.icons.rounded.PlaylistAdd
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.rounded.PushPin
-import com.algorithmx.q_base.data.entity.Question
-import com.algorithmx.q_base.data.entity.QuestionOption
+import com.algorithmx.q_base.data.collections.Question
+import com.algorithmx.q_base.data.collections.QuestionOption
 
 @Composable
 fun QuestionHeader(

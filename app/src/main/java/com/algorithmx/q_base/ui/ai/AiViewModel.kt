@@ -2,14 +2,14 @@ package com.algorithmx.q_base.ui.ai
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.repository.AiRepository
+import com.algorithmx.q_base.data.ai.AiRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import com.algorithmx.q_base.brain.models.AiCollectionResponse
-import com.algorithmx.q_base.data.entity.AiResponseEntity
+import com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse
+import com.algorithmx.q_base.data.ai.AiResponseEntity
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 

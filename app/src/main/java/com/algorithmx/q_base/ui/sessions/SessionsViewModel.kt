@@ -4,23 +4,24 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.entity.Collection as AppCollection
-import com.algorithmx.q_base.data.entity.StudySession
-import com.algorithmx.q_base.data.repository.SessionRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
-import com.algorithmx.q_base.data.repository.AuthRepository
-import com.algorithmx.q_base.data.dao.UserDao
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.sessions.StudySession
+import com.algorithmx.q_base.data.sessions.SessionRepository
+import com.algorithmx.q_base.data.auth.AuthRepository
+import com.algorithmx.q_base.data.core.UserDao
+import com.algorithmx.q_base.data.sync.SyncRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.algorithmx.q_base.data.entity.UserEntity
+import dagger.hilt.android.lifecycle.HiltViewModel
+import com.algorithmx.q_base.data.core.UserEntity
 
 @HiltViewModel
 class SessionsViewModel @Inject constructor(
     private val repository: SessionRepository,
     private val authRepository: AuthRepository,
     private val userDao: UserDao,
-    private val syncRepository: com.algorithmx.q_base.data.repository.SyncRepository
+    private val syncRepository: SyncRepository
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -53,10 +54,10 @@ class SessionsViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val collections: StateFlow<List<AppCollection>> = combine(
-        repository.getAllCollections(),
+    val collections: StateFlow<List<StudyCollection>> = combine(
+        repository.getAllStudyCollections(),
         _searchQuery
-    ) { collectionsList: List<AppCollection>, query: String ->
+    ) { collectionsList: List<StudyCollection>, query: String ->
         if (query.isBlank()) {
             collectionsList
         } else {
@@ -74,7 +75,7 @@ class SessionsViewModel @Inject constructor(
     private val _selectedCollection = MutableStateFlow<String?>(null)
     val selectedCollection = _selectedCollection.asStateFlow()
 
-    private val _availableQuestions = MutableStateFlow<List<com.algorithmx.q_base.data.entity.Question>>(emptyList())
+    private val _availableQuestions = MutableStateFlow<List<com.algorithmx.q_base.data.collections.Question>>(emptyList())
     val availableQuestions = _availableQuestions.asStateFlow()
 
     private val _selectedQuestionIds = MutableStateFlow<Set<String>>(emptySet())
@@ -103,7 +104,7 @@ class SessionsViewModel @Inject constructor(
     fun selectCollection(name: String) {
         _selectedCollection.value = name
         viewModelScope.launch {
-            repository.getQuestionsByCollection(name).collect { questions ->
+            repository.getQuestionsByStudyCollection(name).take(1).collect { questions ->
                 _availableQuestions.value = questions
             }
         }

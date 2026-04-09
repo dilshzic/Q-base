@@ -36,9 +36,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.layout.Layout
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import com.algorithmx.q_base.data.entity.Collection as AppCollection
-import com.algorithmx.q_base.data.entity.StudySession
-import com.algorithmx.q_base.data.entity.UserEntity
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.Question
+import com.algorithmx.q_base.data.sessions.StudySession
+import com.algorithmx.q_base.data.core.UserEntity
 import com.algorithmx.q_base.ui.components.SectionHeader
 import com.algorithmx.q_base.ui.components.ReportDialog
 import kotlinx.coroutines.delay
@@ -48,7 +49,7 @@ import java.util.Locale
 @Composable
 fun SessionsListScreen(
     sessions: List<StudySession>,
-    collections: List<AppCollection>,
+    collections: List<StudyCollection>,
     onSessionClick: (String) -> Unit,
     onFabClick: () -> Unit,
     viewModel: SessionsViewModel,
@@ -400,7 +401,7 @@ fun EmptySessionsView() {
 @Composable
 fun NewSessionWizard(
     viewModel: SessionsViewModel,
-    collections: List<AppCollection>,
+    collections: List<StudyCollection>,
     onDismiss: () -> Unit
 ) {
     val step by viewModel.wizardStep.collectAsState()
@@ -490,7 +491,7 @@ fun NewSessionWizard(
 
 @Composable
 fun CategoryStep(
-    categories: List<AppCollection>,
+    categories: List<StudyCollection>,
     onSelect: (String) -> Unit
 ) {
     LazyColumn(
@@ -538,7 +539,7 @@ fun CategoryStep(
 
 @Composable
 fun QuestionSelectionStep(
-    questions: List<com.algorithmx.q_base.data.entity.Question>,
+    questions: List<com.algorithmx.q_base.data.collections.Question>,
     selectedIds: Set<String>,
     lastRandomCount: Int?,
     onToggle: (String) -> Unit,

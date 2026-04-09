@@ -28,6 +28,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.algorithmx.q_base.data.auth.UserProfile
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

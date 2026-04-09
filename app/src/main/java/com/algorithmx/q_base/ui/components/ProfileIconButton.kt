@@ -18,7 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.algorithmx.q_base.data.entity.UserEntity
+import com.algorithmx.q_base.data.core.UserEntity
 
 @Composable
 fun ProfileIconButton(

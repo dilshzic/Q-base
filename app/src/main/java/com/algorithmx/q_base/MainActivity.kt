@@ -27,6 +27,8 @@ import androidx.navigation3.ui.NavDisplay
 import com.google.firebase.auth.FirebaseAuth
 import com.algorithmx.q_base.data.AppDatabase
 import com.algorithmx.q_base.data.DatabaseSeeder
+import com.algorithmx.q_base.data.auth.AuthRepository
+import com.algorithmx.q_base.data.sync.SyncRepository
 import com.algorithmx.q_base.ui.navigation.*
 import com.algorithmx.q_base.ui.theme.QbaseTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -64,7 +66,7 @@ class MainActivity : ComponentActivity() {
     lateinit var database: AppDatabase
 
     @Inject
-    lateinit var syncRepository: com.algorithmx.q_base.data.repository.SyncRepository
+    lateinit var syncRepository: SyncRepository
 
     @Inject
     lateinit var notificationHelper: com.algorithmx.q_base.util.NotificationHelper
@@ -73,7 +75,7 @@ class MainActivity : ComponentActivity() {
     lateinit var auth: FirebaseAuth
 
     @Inject
-    lateinit var dataStoreManager: com.algorithmx.q_base.brain.BrainDataStoreManager
+    lateinit var dataStoreManager: com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,7 +84,7 @@ class MainActivity : ComponentActivity() {
 
         // Start global sync for notifications reactively
         lifecycleScope.launch {
-            com.algorithmx.q_base.data.repository.AuthRepository(auth).currentUser.collect { user ->
+            AuthRepository(auth).currentUser.collect { user ->
                 if (user != null) {
                     syncRepository.observeAllIncomingEvents(notificationHelper).collect {}
                 }
@@ -98,14 +100,37 @@ class MainActivity : ComponentActivity() {
             QbaseTheme {
                 val seeded by isSeeded.collectAsStateWithLifecycle()
                 
-                // Define navigation state at the top level to ensure it has the same lifetime as the Activity.
-                // This prevents the "NavController has been destroyed" error when switching from LoadingScreen.
-                val startRoute = if (auth.currentUser == null) Screen.Login else Screen.Home
+                // Observe authentication state reactively
+                val userFlow = remember { AuthRepository(auth).currentUser }
+                val user by userFlow.collectAsState(initial = auth.currentUser)
+                
+                // Use a derived state for the preferred start route based on current auth state.
+                // We use 'user' as a key for remember to ensure startRoute updates if the process is restored
+                // and the user state is eventually resolved.
+                val startRoute = remember(user == null) { 
+                    if (user == null) Screen.Login else Screen.Home 
+                }
+                
                 val navigationState = rememberNavigationState(
                     startRoute = startRoute,
-                    topLevelRoutes = setOf(Screen.Home, Screen.Explore, Screen.Connect, Screen.Sessions())
+                    topLevelRoutes = setOf(Screen.Home, Screen.Explore, Screen.Connect, Screen.Sessions(), Screen.Login)
                 )
                 val navigator = remember(navigationState) { Navigator(navigationState) }
+
+                // Sync navigation when user state changes
+                LaunchedEffect(user) {
+                    val uid = user?.uid
+                    val currentRoute = navigationState.topLevelRoute
+                    android.util.Log.d("MainActivity", "User state changed: $uid, current route: $currentRoute")
+                    
+                    if (user != null && currentRoute == Screen.Login) {
+                        android.util.Log.d("MainActivity", "Switching to Home after login")
+                        navigator.navigate(Screen.Home)
+                    } else if (user == null && currentRoute != Screen.Login) {
+                        android.util.Log.d("MainActivity", "Switching to Login after logout")
+                        navigator.navigate(Screen.Login)
+                    }
+                }
 
                 LaunchedEffect(seeded) {
                     if (seeded) {
@@ -239,8 +264,7 @@ fun AppNavDisplay(navigationState: NavigationState, navigator: Navigator) {
     val entryProvider = rememberAppEntryProvider(navigator)
     
     NavDisplay(
-        backStack = navigationState.backStacks[navigationState.topLevelRoute]!!,
-        entryProvider = entryProvider,
+        entries = navigationState.toEntries(entryProvider),
         onBack = { navigator.goBack() }
     )
 }

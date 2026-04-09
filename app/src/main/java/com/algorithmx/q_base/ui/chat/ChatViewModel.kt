@@ -2,20 +2,24 @@ package com.algorithmx.q_base.ui.chat
 
 import android.util.Log
 
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.brain.models.AiCollectionResponse
-import com.algorithmx.q_base.data.dao.ChatDao
-import com.algorithmx.q_base.data.dao.MessageDao
-import com.algorithmx.q_base.data.dao.UserDao
-import com.algorithmx.q_base.data.dao.CollectionDao
-import com.algorithmx.q_base.data.entity.ChatEntity
-import com.algorithmx.q_base.data.entity.MessageEntity
-import com.algorithmx.q_base.data.entity.Collection
-import com.algorithmx.q_base.data.entity.UserEntity
-import com.algorithmx.q_base.data.repository.AiRepository
-import com.algorithmx.q_base.data.repository.AuthRepository
-import com.algorithmx.q_base.data.repository.SyncRepository
+import com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse
+import com.algorithmx.q_base.data.chat.ChatDao
+import com.algorithmx.q_base.data.chat.ChatEntity
+import com.algorithmx.q_base.data.chat.MessageDao
+import com.algorithmx.q_base.data.chat.MessageEntity
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.CollectionDao
+import com.algorithmx.q_base.data.core.UserDao
+import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.data.ai.AiRepository
+import com.algorithmx.q_base.data.auth.AuthRepository
+import com.algorithmx.q_base.data.sessions.SessionDao
+import com.algorithmx.q_base.data.sessions.StudySession
+import com.algorithmx.q_base.data.sync.SyncRepository
 import com.algorithmx.q_base.data.util.MockExporter
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -47,6 +51,10 @@ data class ChatDetailState(
     val currentUserId: String = ""
 )
 
+sealed class ChatNavEvent {
+    data class NavigateToChatDetail(val chatId: String) : ChatNavEvent()
+}
+
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val chatDao: ChatDao,
@@ -56,6 +64,7 @@ class ChatViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val aiRepository: AiRepository,
     private val collectionDao: CollectionDao,
+    private val sessionDao: SessionDao,
     private val mockExporter: MockExporter,
     private val mockDownloader: MockDownloader
 ) : ViewModel() {
@@ -99,7 +108,10 @@ class ChatViewModel @Inject constructor(
     val isAiLoading = _isAiLoading.asStateFlow()
 
     private val _sharedCollections = MutableStateFlow<List<Map<String, Any>>>(emptyList())
-    val sharedCollections = _sharedCollections.asStateFlow()
+    val sharedCollections: StateFlow<List<Map<String, Any>>> = _sharedCollections.asStateFlow()
+
+    private val _sharedSessions = MutableStateFlow<List<Map<String, Any>>>(emptyList())
+    val sharedSessions: StateFlow<List<Map<String, Any>>> = _sharedSessions.asStateFlow()
 
     private val _isLibraryMode = MutableStateFlow(false)
     val isLibraryMode = _isLibraryMode.asStateFlow()
@@ -118,7 +130,10 @@ class ChatViewModel @Inject constructor(
     val allUsers: StateFlow<List<UserEntity>> = userDao.getAllUsers()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val localCollections: StateFlow<List<com.algorithmx.q_base.data.entity.Collection>> = collectionDao.getAllCollections()
+    val localStudyCollections: StateFlow<List<StudyCollection>> = collectionDao.getAllStudyCollections()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val allSessions: StateFlow<List<StudySession>> = sessionDao.getAllSessions()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -181,7 +196,7 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    val allCollections: StateFlow<List<com.algorithmx.q_base.data.entity.Collection>> = collectionDao.getAllCollections()
+    val allStudyCollections: StateFlow<List<StudyCollection>> = collectionDao.getAllStudyCollections()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // State for the Inbox/Chat List
@@ -252,6 +267,9 @@ class ChatViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _currentChatId = MutableStateFlow<String?>(null)
+    
+    private val _navigationEvents = MutableSharedFlow<ChatNavEvent>()
+    val navigationEvents = _navigationEvents.asSharedFlow()
     
     @OptIn(ExperimentalCoroutinesApi::class)
     val chatDetailState: StateFlow<ChatDetailState> = _currentChatId.flatMapLatest { chatId ->
@@ -388,11 +406,16 @@ class ChatViewModel @Inject constructor(
                         .collect { _sharedCollections.value = it }
                 }
                 viewModelScope.launch {
+                    syncRepository.observeSharedSessions(chatId)
+                        .collect { _sharedSessions.value = it }
+                }
+                viewModelScope.launch {
                     syncRepository.observeAccessRequests(chatId)
                         .collect { _accessRequests.value = it }
                 }
             } else {
                 _sharedCollections.value = emptyList()
+                _sharedSessions.value = emptyList()
                 _accessRequests.value = emptyList()
             }
         }
@@ -467,7 +490,7 @@ class ChatViewModel @Inject constructor(
             val chat = chatDao.getChatById(chatId) ?: return@launch
             _isSharing.value = true
             try {
-                val collection = collectionDao.getCollectionByIdOnce(collectionId) ?: throw Exception("Collection not found")
+                val collection = collectionDao.getStudyCollectionByIdOnce(collectionId) ?: throw Exception("Collection not found")
                 val zipFile = mockExporter.exportCollection(collectionId) ?: throw Exception("Failed to export collection")
                 
                 val (downloadUrl, symmetricKey) = syncRepository.uploadQuestionBankZip(zipFile)
@@ -506,8 +529,25 @@ class ChatViewModel @Inject constructor(
 
     fun shareSession(chatId: String, sessionId: String) {
         viewModelScope.launch {
-            syncRepository.sendSessionInvite(chatId, sessionId, "Join my study session")
-            _actionFeedback.emit("Session shared in chat")
+            try {
+                _isAiLoading.value = true // Show loading
+                val session = sessionDao.getSessionById(sessionId)
+                val sessionTitle = session?.title ?: "Study Session"
+                
+                val chat = chatDao.getChatById(chatId)
+                if (chat?.isGroup == true) {
+                    syncRepository.addSharedSessionToGroup(chatId, sessionId, sessionTitle)
+                    sendMessage(chatId, "shared a study session: $sessionTitle", type = "DB_CHANGE")
+                } else {
+                    syncRepository.sendSessionInvite(chatId, sessionId, sessionTitle)
+                }
+                _actionFeedback.emit("Session shared successfully")
+            } catch (e: Exception) {
+                Log.e("ChatViewModel", "Failed to share session", e)
+                _actionFeedback.emit("Failed to share session: ${e.message}")
+            } finally {
+                _isAiLoading.value = false
+            }
         }
     }
 
@@ -545,6 +585,7 @@ class ChatViewModel @Inject constructor(
             
             sendMessage(chatId, initialMessage, senderId = if (userId == QBASE_AI_BOT_ID) QBASE_AI_BOT_ID else currentUserId)
             _currentChatId.value = chatId
+            _navigationEvents.emit(ChatNavEvent.NavigateToChatDetail(chatId))
         }
     }
 
@@ -566,6 +607,7 @@ class ChatViewModel @Inject constructor(
             
             sendMessage(chatId, "created the group \"$groupName\"", type = "DB_CHANGE")
             _currentChatId.value = chatId
+            _navigationEvents.emit(ChatNavEvent.NavigateToChatDetail(chatId))
         }
     }
 
@@ -626,7 +668,13 @@ class ChatViewModel @Inject constructor(
             val isAiChat = chat?.participantIds?.contains(QBASE_AI_BOT_ID) == true
             
             if (!isAiChat) {
-                syncRepository.sendMessage(message)
+                try {
+                    syncRepository.sendMessage(message)
+                } catch (e: Exception) {
+                    // Remove the optimistic local message if encryption/sync fails
+                    messageDao.deleteMessage(message)
+                    _actionFeedback.emit("Message not sent: ${e.message ?: "Unknown error"}")
+                }
             } else if (senderId == currentUserId) {
                 // Trigger AI response if user sent a message to the bot
                 handleAiChatResponse(chatId, text)

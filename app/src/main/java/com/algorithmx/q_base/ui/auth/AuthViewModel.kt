@@ -2,8 +2,8 @@ package com.algorithmx.q_base.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.repository.AuthRepository
-import com.algorithmx.q_base.data.repository.ProfileRepository
+import com.algorithmx.q_base.data.auth.AuthRepository
+import com.algorithmx.q_base.data.auth.ProfileRepository
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -64,6 +64,18 @@ class AuthViewModel @Inject constructor(
                 }
             }.onFailure { error ->
                 _state.value = AuthState(error = error.message)
+            }
+        }
+    }
+
+    fun onGoogleSignInSuccess(user: FirebaseUser) {
+        _state.value = AuthState(isLoading = true)
+        viewModelScope.launch {
+            try {
+                profileRepository.syncUserProfile(user.uid)
+                _state.value = AuthState(user = user, isSuccess = true, isProfileCreated = true)
+            } catch (e: Exception) {
+                _state.value = AuthState(error = "Sync profile failed: ${e.message}")
             }
         }
     }

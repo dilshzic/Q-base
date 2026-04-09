@@ -2,10 +2,10 @@ package com.algorithmx.q_base.ui.content_import
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.dao.QuestionDao
-import com.algorithmx.q_base.data.dao.CollectionDao
-import com.algorithmx.q_base.data.entity.*
-import com.algorithmx.q_base.data.repository.AiRepository
+import com.algorithmx.q_base.data.collections.QuestionDao
+import com.algorithmx.q_base.data.collections.CollectionDao
+import com.algorithmx.q_base.data.collections.*
+import com.algorithmx.q_base.data.ai.AiRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -190,7 +190,7 @@ class QuestionEditorViewModel @Inject constructor(
             // Refresh collection timestamp for smart update logic
             val set = questionDao.getSetWithContent(sId)?.set
             set?.parentCollectionId?.let { colId ->
-                collectionDao.updateCollectionTimestamp(colId, System.currentTimeMillis())
+                collectionDao.updateStudyCollectionTimestamp(colId, System.currentTimeMillis())
                 android.util.Log.d("QuestionEditorViewModel", "Updated collection $colId timestamp")
             }
             

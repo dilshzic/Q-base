@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.algorithmx.q_base.data.entity.UserEntity
+import com.algorithmx.q_base.data.core.UserEntity
 import com.algorithmx.q_base.ui.components.ProfileIconButton
 import kotlinx.coroutines.launch
 

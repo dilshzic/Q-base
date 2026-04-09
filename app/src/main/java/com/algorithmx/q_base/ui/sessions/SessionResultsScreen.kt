@@ -168,7 +168,7 @@ fun SessionResultsScreen(
 @Composable
 fun ResultsContent(
     state: ResultsUiState.Success,
-    onReviewQuestion: (com.algorithmx.q_base.data.entity.SessionAttempt) -> Unit,
+    onReviewQuestion: (com.algorithmx.q_base.data.sessions.SessionAttempt) -> Unit,
     onReportSession: () -> Unit,
     onBackToHome: () -> Unit
 ) {
@@ -275,8 +275,8 @@ fun ResultsContent(
 @Composable
 fun AnimatedAttemptDot(
     index: Int,
-    attempt: com.algorithmx.q_base.data.entity.SessionAttempt,
-    onClick: (com.algorithmx.q_base.data.entity.SessionAttempt) -> Unit
+    attempt: com.algorithmx.q_base.data.sessions.SessionAttempt,
+    onClick: (com.algorithmx.q_base.data.sessions.SessionAttempt) -> Unit
 ) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {

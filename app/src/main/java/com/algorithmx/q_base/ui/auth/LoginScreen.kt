@@ -1,6 +1,7 @@
 package com.algorithmx.q_base.ui.auth
 
 import android.app.Activity
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -33,6 +34,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.algorithmx.q_base.data.auth.UserProfile
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -70,15 +72,19 @@ fun LoginScreen(
                     coroutineScope.launch {
                         try {
                             val credential = GoogleAuthProvider.getCredential(idToken, null)
-                            auth.signInWithCredential(credential).await()
-                            onLoginSuccess()
+                            val authResult = auth.signInWithCredential(credential).await()
+                            authResult.user?.let { user ->
+                                viewModel.onGoogleSignInSuccess(user)
+                            }
                         } catch (e: Exception) {
-                            // Handle failure
+                            android.util.Log.e("LoginScreen", "Firebase Google Auth failed", e)
+                            Toast.makeText(context, "Sign in failed: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             } catch (e: ApiException) {
-                // Handle failure
+                android.util.Log.e("LoginScreen", "Google Sign In failed", e)
+                Toast.makeText(context, "Google Sign In failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }

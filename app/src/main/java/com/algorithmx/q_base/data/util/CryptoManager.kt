@@ -122,6 +122,7 @@ class CryptoManager @Inject constructor(
         if (privateKeysetHandle == null) {
             val keysetManager = AndroidKeysetManager.Builder()
                 .withSharedPref(context, KEYSET_NAME, PREF_FILE_NAME)
+                .withKeyTemplate(HybridKeyTemplates.ECIES_P256_HKDF_HMAC_SHA256_AES128_GCM)
                 .withMasterKeyUri(MASTER_KEY_URI)
                 .build()
             privateKeysetHandle = keysetManager.keysetHandle

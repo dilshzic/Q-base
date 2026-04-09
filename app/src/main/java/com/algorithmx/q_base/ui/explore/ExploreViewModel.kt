@@ -4,10 +4,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.entity.*
-import com.algorithmx.q_base.data.entity.Collection as AppCollection
-import com.algorithmx.q_base.data.repository.ExploreRepository
-import com.algorithmx.q_base.data.dao.QuestionDao
+import com.algorithmx.q_base.data.collections.*
+import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.data.sessions.StudySession
+import com.algorithmx.q_base.data.sessions.SessionAttempt
+import com.algorithmx.q_base.data.ai.AiRepository
+import com.algorithmx.q_base.data.auth.AuthRepository
+import com.algorithmx.q_base.data.sync.SyncRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -17,7 +20,7 @@ import android.util.Log
 data class ExploreQuestionState(
     val question: Question,
     val options: List<QuestionOption> = emptyList(),
-    val answer: Answer? = null,
+    val answer: com.algorithmx.q_base.data.collections.Answer? = null,
     val selectedOption: String? = null,
     val isAnswerRevealed: Boolean = false,
     val aiResponse: String? = null,
@@ -27,10 +30,10 @@ data class ExploreQuestionState(
 @HiltViewModel
 class ExploreViewModel @Inject constructor(
     private val repository: ExploreRepository,
-    private val aiRepository: com.algorithmx.q_base.data.repository.AiRepository,
+    private val aiRepository: AiRepository,
     private val questionDao: QuestionDao,
-    private val syncRepository: com.algorithmx.q_base.data.repository.SyncRepository,
-    private val authRepository: com.algorithmx.q_base.data.repository.AuthRepository
+    private val syncRepository: SyncRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _actionFeedback = MutableSharedFlow<String>()
@@ -46,8 +49,8 @@ class ExploreViewModel @Inject constructor(
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    private val _collections = MutableStateFlow<List<com.algorithmx.q_base.data.entity.CollectionWithCount>>(emptyList())
-    val collections: StateFlow<List<com.algorithmx.q_base.data.entity.CollectionWithCount>> = _collections.asStateFlow()
+    private val _collections = MutableStateFlow<List<StudyCollectionWithCount>>(emptyList())
+    val collections: StateFlow<List<StudyCollectionWithCount>> = _collections.asStateFlow()
 
     private val _questionStates = MutableStateFlow<List<ExploreQuestionState>>(emptyList())
     val questionStates: StateFlow<List<ExploreQuestionState>> = _questionStates.asStateFlow()
@@ -55,8 +58,8 @@ class ExploreViewModel @Inject constructor(
     private val _sets = MutableStateFlow<List<QuestionSet>>(emptyList())
     val sets: StateFlow<List<QuestionSet>> = _sets.asStateFlow()
 
-    private val _selectedCollection = MutableStateFlow<AppCollection?>(null)
-    val selectedCollection: StateFlow<AppCollection?> = _selectedCollection.asStateFlow()
+    private val _selectedCollection = MutableStateFlow<StudyCollection?>(null)
+    val selectedCollection: StateFlow<StudyCollection?> = _selectedCollection.asStateFlow()
 
     private val _collectionSets = MutableStateFlow<List<QuestionSet>>(emptyList())
     val collectionSets: StateFlow<List<QuestionSet>> = _collectionSets.asStateFlow()
@@ -96,13 +99,13 @@ class ExploreViewModel @Inject constructor(
 
     private fun loadCollections() {
         viewModelScope.launch {
-            repository.getCollectionsWithCount().collect { _collections.value = it }
+            repository.getStudyCollectionsWithCount().collect { _collections.value = it }
         }
     }
 
-    fun loadQuestionsByCollection(collectionName: String) {
+    fun loadQuestionsByStudyCollection(collectionName: String) {
         viewModelScope.launch {
-            repository.getQuestionsByCollection(collectionName).collect { questions ->
+            repository.getQuestionsByStudyCollection(collectionName).collect { questions ->
                 val states = questions.map { ExploreQuestionState(it) }
                 _questionStates.value = states
                 if (states.isNotEmpty()) loadQuestionDetails(0)
@@ -122,18 +125,18 @@ class ExploreViewModel @Inject constructor(
 
     fun loadCollectionOverview(collectionId: String) {
         viewModelScope.launch {
-            repository.getCollectionById(collectionId).collect { _selectedCollection.value = it }
+            repository.getStudyCollectionById(collectionId).collect { _selectedCollection.value = it }
         }
         viewModelScope.launch {
-            repository.getSetsByCollectionId(collectionId).collect { _collectionSets.value = it }
+            repository.getSetsByStudyCollectionId(collectionId).collect { _collectionSets.value = it }
         }
         viewModelScope.launch {
-            repository.getLastSessionForCollection(collectionId).collect { _lastSession.value = it }
+            repository.getLastSessionForStudyCollection(collectionId).collect { _lastSession.value = it }
         }
         viewModelScope.launch {
-            repository.getCollectionById(collectionId).collect { col ->
+            repository.getStudyCollectionById(collectionId).collect { col ->
                 col?.name?.let { name ->
-                    repository.getQuestionCountByCollection(name).collect { _questionCount.value = it }
+                    repository.getQuestionCountByStudyCollection(name).collect { _questionCount.value = it }
                 }
             }
         }
@@ -291,7 +294,7 @@ class ExploreViewModel @Inject constructor(
         }
     }
 
-    fun reportCollection(collection: AppCollection, reason: String) {
+    fun reportCollection(collection: StudyCollection, reason: String) {
         viewModelScope.launch {
             try {
                 syncRepository.reportCollection(collection, reason)
@@ -308,10 +311,10 @@ class ExploreViewModel @Inject constructor(
         }
     }
 
-    fun deleteCollection(collectionId: String) {
+    fun deleteStudyCollection(collectionId: String) {
         viewModelScope.launch {
             try {
-                repository.deleteCollection(collectionId)
+                repository.deleteStudyCollection(collectionId)
                 _actionFeedback.emit("Collection deleted successfully.")
                 loadCollections()
             } catch (e: Exception) {
@@ -325,7 +328,7 @@ class ExploreViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _sets.value.find { it.setId == setId }?.let { set ->
-                    val collectionFromSet = AppCollection(
+                    val collectionFromSet = StudyCollection(
                         collectionId = set.setId,
                         name = "[SET] ${set.title}",
                         description = set.description

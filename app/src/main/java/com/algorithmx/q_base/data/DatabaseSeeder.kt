@@ -4,8 +4,10 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import androidx.room.withTransaction
-import com.algorithmx.q_base.data.entity.*
-import com.algorithmx.q_base.data.entity.Collection as AppCollection
+import com.algorithmx.q_base.data.collections.*
+import com.algorithmx.q_base.data.chat.*
+import com.algorithmx.q_base.data.core.*
+import com.algorithmx.q_base.data.collections.StudyCollection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -18,7 +20,7 @@ import kotlinx.serialization.json.jsonObject
 class DatabaseSeeder(
     private val context: Context,
     private val database: AppDatabase,
-    private val dataStoreManager: com.algorithmx.q_base.brain.BrainDataStoreManager
+    private val dataStoreManager: com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager
 ) {
     private fun getColumnString(cursor: android.database.Cursor, index: Int): String? {
         return if (index != -1 && !cursor.isNull(index)) cursor.getString(index) else null
@@ -144,9 +146,9 @@ class DatabaseSeeder(
                     }
                     
                     val collections = masterCategoryMap.map { (name, id) ->
-                        AppCollection(collectionId = id, name = name)
+                        StudyCollection(collectionId = id, name = name)
                     }
-                    collectionDao.insertCollections(collections)
+                    collectionDao.insertStudyCollections(collections)
 
                     val collectionMap = mutableMapOf<String, String>()
                     sqliteDb.rawQuery("SELECT DISTINCT category, master_category FROM Questions", null).use { cursor ->
@@ -324,8 +326,8 @@ class DatabaseSeeder(
             val collectionId = UUID.randomUUID().toString()
             val collectionName = "Ancient Sri Lanka"
             
-            database.collectionDao().insertCollections(listOf(
-                AppCollection(collectionId = collectionId, name = collectionName, description = "History of Ancient Sri Lanka", isUserCreated = false)
+            database.collectionDao().insertStudyCollections(listOf(
+                StudyCollection(collectionId = collectionId, name = collectionName, description = "History of Ancient Sri Lanka", isUserCreated = false)
             ))
             
             val setId = UUID.randomUUID().toString()

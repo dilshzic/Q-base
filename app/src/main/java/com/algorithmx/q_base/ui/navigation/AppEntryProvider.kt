@@ -17,9 +17,7 @@ import com.algorithmx.q_base.ui.explore.*
 import com.algorithmx.q_base.ui.home.HomeScreen
 import com.algorithmx.q_base.ui.sessions.*
 import com.algorithmx.q_base.ui.settings.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import com.algorithmx.q_base.data.entity.Collection as AppCollection
+import com.algorithmx.q_base.data.collections.StudyCollection
 
 @Composable
 fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
@@ -99,7 +97,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
             val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
             
             LaunchedEffect(key.categoryName) {
-                viewModel.loadQuestionsByCollection(key.categoryName)
+                viewModel.loadQuestionsByStudyCollection(key.categoryName)
             }
             
             ExploreQuestionPagerScreen(
@@ -192,7 +190,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                     collection?.let { viewModel.reportCollection(it, reason) }
                 },
                 onDeleteCollection = { col ->
-                    viewModel.deleteCollection(col.collectionId)
+                    viewModel.deleteStudyCollection(col.collectionId)
                     navigator.goBack()
                 },
                 onProfileClick = { navigator.navigate(Screen.Profile) },
@@ -481,17 +479,3 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
     }
 }
 
-@Composable
-fun ManualBuilderStub(setId: String?, onBack: () -> Unit) {
-    Column(
-        modifier = androidx.compose.ui.Modifier.fillMaxSize(),
-        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
-    ) {
-        androidx.compose.material3.Text("Manual Builder")
-        androidx.compose.material3.Text("Target setId: $setId", style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
-        androidx.compose.material3.Button(onClick = onBack) {
-            androidx.compose.material3.Text("Go Back")
-        }
-    }
-}

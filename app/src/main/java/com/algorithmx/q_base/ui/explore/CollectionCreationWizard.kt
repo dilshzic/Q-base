@@ -13,13 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.algorithmx.q_base.data.entity.Collection as AppCollection
+import com.algorithmx.q_base.data.collections.StudyCollection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionCreationWizard(
     onDismiss: () -> Unit,
-    categories: List<AppCollection>,
+    categories: List<StudyCollection>,
     viewModel: ExploreViewModel = hiltViewModel()
 ) {
     var step by remember { mutableIntStateOf(1) }
@@ -134,7 +134,7 @@ fun DetailsStep(
 
 @Composable
 fun CategoryPickerStep(
-    categories: List<AppCollection>,
+    categories: List<StudyCollection>,
     selected: String?,
     onSelect: (String) -> Unit,
     onFinish: () -> Unit

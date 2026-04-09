@@ -30,8 +30,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.algorithmx.q_base.data.entity.CollectionWithCount
-import com.algorithmx.q_base.data.entity.QuestionSet
+import com.algorithmx.q_base.data.collections.StudyCollectionWithCount
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.QuestionSet
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -229,7 +230,7 @@ fun SectionHeader(title: String, modifier: Modifier = Modifier) {
 
 @Composable
 fun MasterCollectionCard(
-    item: CollectionWithCount,
+    item: StudyCollectionWithCount,
     onClick: () -> Unit
 ) {
     Surface(

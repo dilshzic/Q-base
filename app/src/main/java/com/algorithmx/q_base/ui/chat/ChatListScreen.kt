@@ -26,8 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.algorithmx.q_base.data.entity.ChatEntity
-import com.algorithmx.q_base.data.entity.MessageEntity
+import com.algorithmx.q_base.data.chat.ChatEntity
+import com.algorithmx.q_base.data.chat.MessageEntity
 import com.algorithmx.q_base.ui.components.ProfileIconButton
 import java.text.SimpleDateFormat
 import java.util.*

@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.ui.components.ProfileIconButton
-import com.algorithmx.q_base.data.entity.UserEntity
+import com.algorithmx.q_base.data.core.UserEntity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +36,14 @@ fun NewChatScreen(
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
+    
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvents.collect { event ->
+            when (event) {
+                is ChatNavEvent.NavigateToChatDetail -> onChatStarted(event.chatId)
+            }
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -99,7 +107,7 @@ fun NewChatScreen(
                 modifier = Modifier.weight(1f),
                 onUserSelected = { user ->
                     viewModel.startNewChat(user.userId, user.displayName)
-                    onChatStarted(user.userId)
+                    // Navigation is handled via LaunchedEffect above
                 }
             )
         }

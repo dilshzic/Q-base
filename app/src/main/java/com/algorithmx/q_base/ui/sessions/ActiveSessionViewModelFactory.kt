@@ -3,14 +3,16 @@ package com.algorithmx.q_base.ui.sessions
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.algorithmx.q_base.data.repository.SessionRepository
-import com.algorithmx.q_base.data.repository.AiRepository
+import com.algorithmx.q_base.data.sessions.SessionRepository
+import com.algorithmx.q_base.data.ai.AiRepository
+import com.algorithmx.q_base.data.auth.AuthRepository
+import com.algorithmx.q_base.data.sync.SyncRepository
 
 class ActiveSessionViewModelFactory(
     private val repository: SessionRepository,
     private val aiRepository: AiRepository,
-    private val authRepository: com.algorithmx.q_base.data.repository.AuthRepository,
-    private val syncRepository: com.algorithmx.q_base.data.repository.SyncRepository,
+    private val authRepository: AuthRepository,
+    private val syncRepository: SyncRepository,
     private val sessionId: String
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {

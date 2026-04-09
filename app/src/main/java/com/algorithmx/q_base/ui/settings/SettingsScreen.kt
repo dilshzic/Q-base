@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.ui.components.AiConfigSelector
-import com.algorithmx.q_base.brain.models.BrainTask
+import com.algorithmx.q_base.core_ai.brain.models.BrainTask
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

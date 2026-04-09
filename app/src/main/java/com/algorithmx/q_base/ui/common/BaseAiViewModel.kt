@@ -2,8 +2,8 @@ package com.algorithmx.q_base.ui.common
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.brain.AiBrainManager
-import com.algorithmx.q_base.brain.models.BrainTask
+import com.algorithmx.q_base.core_ai.brain.AiBrainManager
+import com.algorithmx.q_base.core_ai.brain.models.BrainTask
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

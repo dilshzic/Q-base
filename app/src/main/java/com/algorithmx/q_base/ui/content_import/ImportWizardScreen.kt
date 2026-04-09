@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.animation.core.tween
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.ui.components.ProfileIconButton
-import com.algorithmx.q_base.data.entity.Collection as AppCollection
+import com.algorithmx.q_base.data.collections.StudyCollection
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -256,7 +256,7 @@ fun WelcomeView(
 
 @Composable
 fun MediaSelectionView(
-    collections: List<AppCollection>,
+    collections: List<StudyCollection>,
     text: String,
     categoryId: String?,
     onSelectCategory: (String?) -> Unit,

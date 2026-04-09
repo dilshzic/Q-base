@@ -2,10 +2,13 @@ package com.algorithmx.q_base.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.entity.Collection
-import com.algorithmx.q_base.data.entity.Question
-import com.algorithmx.q_base.data.entity.StudySession
-import com.algorithmx.q_base.data.repository.HomeRepository
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.StudyCollectionWithCount
+import com.algorithmx.q_base.data.collections.Question
+import com.algorithmx.q_base.data.sessions.StudySession
+import com.algorithmx.q_base.data.core.HomeRepository
+import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.data.auth.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,10 +19,10 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repository: HomeRepository,
-    private val authRepository: com.algorithmx.q_base.data.repository.AuthRepository
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
-    val currentUser: StateFlow<com.algorithmx.q_base.data.entity.UserEntity?> = authRepository.currentUser
+    val currentUser: StateFlow<UserEntity?> = authRepository.currentUser
         .flatMapLatest { firebaseUser ->
             if (firebaseUser != null) {
                 repository.getCurrentUser(firebaseUser.uid)
@@ -37,7 +40,7 @@ class HomeViewModel @Inject constructor(
     val recentSessions: StateFlow<List<StudySession>> = repository.getRecentSessions()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val collections: StateFlow<List<com.algorithmx.q_base.data.entity.CollectionWithCount>> = repository.getAllCollectionsWithCount()
+    val collections: StateFlow<List<StudyCollectionWithCount>> = repository.getAllStudyCollectionsWithCount()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val totalUnreadCount: StateFlow<Int> = repository.getTotalUnreadCount()

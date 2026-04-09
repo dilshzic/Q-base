@@ -5,9 +5,12 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.entity.*
-import com.algorithmx.q_base.data.repository.SessionRepository
-import com.algorithmx.q_base.data.repository.SyncRepository
+import com.algorithmx.q_base.data.collections.*
+import com.algorithmx.q_base.data.sessions.*
+import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.data.sessions.SessionRepository
+import com.algorithmx.q_base.data.sync.SyncRepository
+import com.algorithmx.q_base.data.auth.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -29,7 +32,7 @@ sealed class ResultsUiState {
 class SessionResultsViewModel @Inject constructor(
     private val repository: SessionRepository,
     private val syncRepository: SyncRepository,
-    private val authRepository: com.algorithmx.q_base.data.repository.AuthRepository
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)

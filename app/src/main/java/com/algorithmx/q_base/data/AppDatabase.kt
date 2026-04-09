@@ -7,27 +7,30 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.algorithmx.q_base.data.dao.*
-import com.algorithmx.q_base.data.entity.*
+import com.algorithmx.q_base.data.ai.*
+import com.algorithmx.q_base.data.chat.*
+import com.algorithmx.q_base.data.collections.*
+import com.algorithmx.q_base.data.core.*
+import com.algorithmx.q_base.data.sessions.*
 
 @Database(
     entities = [
-        com.algorithmx.q_base.data.entity.Collection::class,
-        Question::class,
-        QuestionOption::class,
-        Answer::class,
-        QuestionSet::class,
-        SetQuestionCrossRef::class,
-        StudySession::class,
-        SessionAttempt::class,
-        ProblemReport::class,
-        UserEntity::class,
-        ChatEntity::class,
-        MessageEntity::class,
-        AiResponseEntity::class,
-        BrainUsageEntity::class
+        com.algorithmx.q_base.data.collections.StudyCollection::class,
+        com.algorithmx.q_base.data.collections.Question::class,
+        com.algorithmx.q_base.data.collections.QuestionOption::class,
+        com.algorithmx.q_base.data.collections.Answer::class,
+        com.algorithmx.q_base.data.collections.QuestionSet::class,
+        com.algorithmx.q_base.data.collections.SetQuestionCrossRef::class,
+        com.algorithmx.q_base.data.sessions.StudySession::class,
+        com.algorithmx.q_base.data.sessions.SessionAttempt::class,
+        com.algorithmx.q_base.data.collections.ProblemReport::class,
+        com.algorithmx.q_base.data.core.UserEntity::class,
+        com.algorithmx.q_base.data.chat.ChatEntity::class,
+        com.algorithmx.q_base.data.chat.MessageEntity::class,
+        com.algorithmx.q_base.data.ai.AiResponseEntity::class,
+        com.algorithmx.q_base.data.ai.BrainUsageEntity::class
     ],
-    version = 20,
+    version = 21,
     exportSchema = false
 )
 @TypeConverters(com.algorithmx.q_base.data.util.TypeConverters::class)
@@ -298,6 +301,15 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_20_21 = object : Migration(20, 21) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `messages` ADD COLUMN `decryptionStatus` TEXT NOT NULL DEFAULT 'SUCCESS'")
+                db.execSQL("ALTER TABLE `messages` ADD COLUMN `status` TEXT NOT NULL DEFAULT 'SENT'")
+                db.execSQL("ALTER TABLE `messages` ADD COLUMN `keyFingerprint` TEXT")
+                db.execSQL("ALTER TABLE `chats` ADD COLUMN `lastUsedKeyFingerprint` TEXT")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 try {
@@ -306,7 +318,7 @@ abstract class AppDatabase : RoomDatabase() {
                         AppDatabase::class.java,
                         "Qbase.db"
                     )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21)
                     .fallbackToDestructiveMigration()
                     .build()
                     INSTANCE = instance

@@ -9,8 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.algorithmx.q_base.data.entity.Question
-import com.algorithmx.q_base.data.entity.QuestionOption
+import com.algorithmx.q_base.data.collections.Question
+import com.algorithmx.q_base.data.collections.QuestionOption
 
 @Composable
 fun QuestionViewer(

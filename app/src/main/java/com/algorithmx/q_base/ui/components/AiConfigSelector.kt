@@ -5,8 +5,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.algorithmx.q_base.brain.models.BrainTask
-import com.algorithmx.q_base.brain.models.TaskConfig
+import com.algorithmx.q_base.core_ai.brain.models.BrainTask
+import com.algorithmx.q_base.core_ai.brain.models.TaskConfig
 
 /**
  * A reusable UI component for selecting and configuring AI models for a specific BrainTask.

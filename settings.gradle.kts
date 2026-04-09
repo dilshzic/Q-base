@@ -25,4 +25,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Q-base"
 include(":app")
+include(":core-ai")
  

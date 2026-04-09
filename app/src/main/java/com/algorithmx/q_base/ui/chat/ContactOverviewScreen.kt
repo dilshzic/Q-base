@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 
 import androidx.compose.foundation.clickable
-import com.algorithmx.q_base.data.entity.UserEntity
+import com.algorithmx.q_base.data.core.UserEntity
 import com.algorithmx.q_base.ui.components.ProfileIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -32,16 +32,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.algorithmx.q_base.data.entity.Collection as AppCollection
-import com.algorithmx.q_base.data.entity.QuestionSet
-import com.algorithmx.q_base.data.entity.StudySession
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.QuestionSet
+import com.algorithmx.q_base.data.sessions.StudySession
 import com.algorithmx.q_base.ui.components.ReportDialog
 import com.algorithmx.q_base.ui.components.ProfileIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionOverviewScreen(
-    collection: AppCollection?,
+    collection: StudyCollection?,
     lastSession: StudySession?,
     sets: List<QuestionSet>,
     questionCount: Int = 0,
@@ -49,10 +49,10 @@ fun CollectionOverviewScreen(
     onExplore: (String) -> Unit,
     onStartSet: (String) -> Unit,
     onReportCollection: (String) -> Unit,
-    onDeleteCollection: (AppCollection) -> Unit = {},
+    onDeleteCollection: (StudyCollection) -> Unit = {},
     onProfileClick: () -> Unit,
     onBack: () -> Unit,
-    currentUser: com.algorithmx.q_base.data.entity.UserEntity? = null,
+    currentUser: com.algorithmx.q_base.data.core.UserEntity? = null,
     viewModel: ExploreViewModel? = null
 ) {
     if (collection == null) {

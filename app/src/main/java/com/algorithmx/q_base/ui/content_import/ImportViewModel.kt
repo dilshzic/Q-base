@@ -3,17 +3,17 @@ package com.algorithmx.q_base.ui.content_import
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.entity.Collection as AppCollection
-import com.algorithmx.q_base.data.repository.AiRepository
-import com.algorithmx.q_base.data.repository.ExploreRepository
-import com.algorithmx.q_base.data.repository.ImportRepository
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.ai.AiRepository
+import com.algorithmx.q_base.data.collections.ExploreRepository
+import com.algorithmx.q_base.data.collections.ImportRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import com.algorithmx.q_base.data.entity.UserEntity
-import com.algorithmx.q_base.data.repository.AuthRepository
+import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.data.auth.AuthRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
@@ -42,7 +42,7 @@ sealed class ImportStep {
     // Legacy/Internal states
     data class Editing(val extractedText: String) : ImportStep()
     data class Config(val extractedText: String, val targetId: String? = null) : ImportStep()
-    data class Preview(val responseId: String, val response: com.algorithmx.q_base.brain.models.AiCollectionResponse) : ImportStep()
+    data class Preview(val responseId: String, val response: com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse) : ImportStep()
     data class Complete(val message: String) : ImportStep()
     data class Error(val message: String) : ImportStep()
 }
@@ -58,7 +58,7 @@ class ImportViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<ImportStep>(ImportStep.Welcome)
     val uiState = _uiState.asStateFlow()
 
-    private val _collections = MutableStateFlow<List<AppCollection>>(emptyList())
+    private val _collections = MutableStateFlow<List<StudyCollection>>(emptyList())
     val collections = _collections.asStateFlow()
 
     private val _customInstructions = MutableStateFlow("")
@@ -104,7 +104,7 @@ class ImportViewModel @Inject constructor(
 
     private fun loadCollections() {
         viewModelScope.launch {
-            exploreRepository.getCollections().collect {
+            exploreRepository.getStudyCollections().collect {
                 _collections.value = it
             }
         }
@@ -201,7 +201,7 @@ class ImportViewModel @Inject constructor(
                 val entity = aiRepository.getAiResponseById(responseId)
                 val count = try {
                     Json { ignoreUnknownKeys = true }
-                        .decodeFromString<com.algorithmx.q_base.brain.models.AiCollectionResponse>(entity?.rawJson ?: "")
+                        .decodeFromString<com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse>(entity?.rawJson ?: "")
                         .questions.size
                 } catch (e: Exception) { 0 }
                 

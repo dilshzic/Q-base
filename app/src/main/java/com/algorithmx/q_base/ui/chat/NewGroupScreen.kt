@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.algorithmx.q_base.data.entity.UserEntity
+import com.algorithmx.q_base.data.core.UserEntity
 import com.algorithmx.q_base.ui.components.ProfileIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,6 +29,15 @@ fun NewGroupScreen(
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
+    
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvents.collect { event ->
+            when (event) {
+                is ChatNavEvent.NavigateToChatDetail -> onGroupCreated(event.chatId)
+            }
+        }
+    }
+
     var step by remember { mutableStateOf(1) } // 1: Select Participants, 2: Name Group
     var selectedParticipants by remember { mutableStateOf<List<UserEntity>>(emptyList()) }
     var groupName by remember { mutableStateOf("") }
@@ -126,16 +135,13 @@ fun NewGroupScreen(
                         )
                         
                         Spacer(modifier = Modifier.weight(1f))
-                        
                         Button(
                             onClick = {
                                 viewModel.startNewGroup(
                                     participantIds = selectedParticipants.map { it.userId },
                                     groupName = groupName
                                 )
-                                // We assume navigation happens after ViewModel updates currentChatId
-                                // In a real app, we might observe currentChatId or a completion event
-                                onBack() 
+                                // Navigation is handled via LaunchedEffect above
                             },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             enabled = groupName.isNotBlank(),

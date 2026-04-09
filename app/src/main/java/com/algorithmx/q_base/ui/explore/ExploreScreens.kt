@@ -40,9 +40,11 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.algorithmx.q_base.data.entity.Collection
-import com.algorithmx.q_base.data.entity.CollectionWithCount
-import com.algorithmx.q_base.data.entity.QuestionSet
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.StudyCollectionWithCount
+import com.algorithmx.q_base.data.collections.QuestionSet
+import com.algorithmx.q_base.data.sessions.StudySession
+import com.algorithmx.q_base.data.core.UserEntity
 import com.algorithmx.q_base.ui.components.QuestionViewer
 import com.algorithmx.q_base.ui.components.ReportDialog
 import com.algorithmx.q_base.ui.components.ProfileIconButton
@@ -57,8 +59,8 @@ import dev.jeziellago.compose.markdowntext.MarkdownText
 fun ExploreQuestionPagerScreen(
     categoryName: String,
     questionStates: List<ExploreQuestionState>,
-    collections: List<com.algorithmx.q_base.data.entity.QuestionSet> = emptyList(),
-    sessions: List<com.algorithmx.q_base.data.entity.StudySession> = emptyList(),
+    collections: List<com.algorithmx.q_base.data.collections.QuestionSet> = emptyList(),
+    sessions: List<com.algorithmx.q_base.data.sessions.StudySession> = emptyList(),
     onOptionSelected: (Int, String) -> Unit,
     onCheckAnswer: (Int) -> Unit,
     onPinToggled: (Int) -> Unit,
@@ -72,7 +74,7 @@ fun ExploreQuestionPagerScreen(
     onPageChanged: (Int) -> Unit,
     onProfileClick: () -> Unit,
     onBack: () -> Unit,
-    currentUser: com.algorithmx.q_base.data.entity.UserEntity? = null,
+    currentUser: com.algorithmx.q_base.data.core.UserEntity? = null,
     viewModel: ExploreViewModel? = null
 ) {
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { questionStates.size })

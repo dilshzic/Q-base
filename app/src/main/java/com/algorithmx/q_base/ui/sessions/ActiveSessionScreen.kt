@@ -32,6 +32,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.algorithmx.q_base.data.sessions.StudySession
+import com.algorithmx.q_base.data.collections.Question
+import com.algorithmx.q_base.data.collections.QuestionOption
+import com.algorithmx.q_base.data.collections.Answer
+import com.algorithmx.q_base.data.sessions.SessionAttempt
+import com.algorithmx.q_base.data.core.UserEntity
 import com.algorithmx.q_base.ui.components.QuestionViewer
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import androidx.compose.material.icons.rounded.AutoAwesome
@@ -62,6 +68,14 @@ fun ActiveSessionScreen(
     LaunchedEffect(Unit) {
         viewModel.actionFeedback.collect { message ->
             snackbarHostState.showSnackbar(message)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvents.collect { event ->
+            if (event is SessionNavEvent.NavigateToResults) {
+                onViewResults(event.sessionId)
+            }
         }
     }
     
@@ -240,12 +254,14 @@ fun ActiveSessionScreen(
             modifier = Modifier.padding(padding),
             label = "question_transition"
         ) { targetIndex ->
+            val attemptForIndex = attempts.getOrNull(targetIndex)
             Box(modifier = Modifier.fillMaxSize()) {
-                currentQuestion?.let { question ->
+                val question: Question? = currentQuestion
+                if (question != null) {
                     QuestionViewer(
                         question = question,
                         options = options,
-                        selectedAnswers = currentAttempt?.userSelectedAnswers?.split(",")?.filter { it.isNotEmpty() } ?: emptyList(),
+                        selectedAnswers = attemptForIndex?.userSelectedAnswers?.split(",")?.filter { it.isNotEmpty() } ?: emptyList(),
                         onOptionToggled = { viewModel.onAnswerSelected(it) },
                         isAnswerRevealed = isCompleted,
                         correctAnswers = currentAnswer?.correctAnswerString?.split(",")?.map { it.trim() } ?: emptyList(),

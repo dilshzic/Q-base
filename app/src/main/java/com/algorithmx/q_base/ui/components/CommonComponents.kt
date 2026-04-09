@@ -16,14 +16,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.algorithmx.q_base.data.entity.Collection
-import com.algorithmx.q_base.data.entity.QuestionSet
-import com.algorithmx.q_base.data.entity.StudySession
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.QuestionSet
+import com.algorithmx.q_base.data.sessions.StudySession
 import java.util.Locale
 
 @Composable
 fun CategoryCard(
-    category: Collection,
+    category: StudyCollection,
     onClick: () -> Unit
 ) {
     Card(
@@ -130,7 +130,7 @@ fun SessionListItem(
 }
 
 @Composable
-fun CollectionItem(collection: QuestionSet) {
+fun StudyCollectionItem(collection: QuestionSet) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,

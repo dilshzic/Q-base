@@ -41,13 +41,26 @@ import androidx.compose.material.icons.rounded.Update
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.algorithmx.q_base.data.entity.MessageEntity
-import com.algorithmx.q_base.data.entity.Collection as AppCollection
+import com.algorithmx.q_base.data.chat.MessageEntity
+import com.algorithmx.q_base.data.collections.StudyCollection
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.DeleteSweep
 import androidx.compose.material.icons.rounded.Report
+import coil.compose.AsyncImage
+import androidx.compose.foundation.ExperimentalFoundationApi
+import android.content.ClipboardManager
+import android.content.Context
+import com.algorithmx.q_base.R
+import java.util.Date
+import java.util.Locale
+import java.text.SimpleDateFormat
+import androidx.compose.material.icons.rounded.Done
+import androidx.compose.material.icons.rounded.DoneAll
+import androidx.compose.material.icons.rounded.ArrowDownward
+import androidx.compose.material.icons.rounded.Event
+import com.algorithmx.q_base.ui.chat.components.*
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.filled.Add
@@ -63,7 +76,6 @@ import androidx.compose.material.icons.rounded.LockOpen
 import com.algorithmx.q_base.ui.components.ReportDialog
 import com.algorithmx.q_base.ui.components.ProfileIconButton
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.*
 import dev.jeziellago.compose.markdowntext.MarkdownText
 
@@ -78,19 +90,21 @@ fun ChatDetailScreen(
     val state by viewModel.chatDetailState.collectAsState()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val totalUnreadCount by viewModel.totalUnreadCount.collectAsStateWithLifecycle()
-    val localCollections by viewModel.localCollections.collectAsStateWithLifecycle()
+    val localCollections by viewModel.localStudyCollections.collectAsStateWithLifecycle()
     val isSharing by viewModel.isSharing.collectAsState()
     val isAiLoading by viewModel.isAiLoading.collectAsState()
     var messageText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val savedCollections = remember { mutableStateOf(setOf<String>()) }
     var showCollectionPicker by remember { mutableStateOf(false) }
+    var showSessionPicker by remember { mutableStateOf(false) } // Added for Shared Sessions
     var showClearConfirm by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var reportingMessage by remember { mutableStateOf<MessageEntity?>(null) }
     var showReportGroupDialog by remember { mutableStateOf(false) }
-    val collections by viewModel.allCollections.collectAsStateWithLifecycle()
+    val collections by viewModel.allStudyCollections.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.actionFeedback.collect { message ->
@@ -224,22 +238,33 @@ fun ChatDetailScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 12.dp)
-                            .navigationBarsPadding()
-                            .imePadding(),
+                            .navigationBarsPadding(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(
                             onClick = { showCollectionPicker = true },
                             modifier = Modifier
-                                .size(48.dp)
+                                .size(40.dp)
                                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), CircleShape),
                             enabled = !isSharing
                         ) {
                             if (isSharing) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                             } else {
                                 Icon(Icons.Default.Add, contentDescription = "Share Collection", tint = MaterialTheme.colorScheme.primary)
                             }
+                        }
+                        
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // Added for Shared Sessions
+                        IconButton(
+                            onClick = { showSessionPicker = true },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), CircleShape)
+                        ) {
+                            Icon(Icons.Rounded.Event, contentDescription = "Share Session", tint = MaterialTheme.colorScheme.primary)
                         }
                         
                         Spacer(modifier = Modifier.width(8.dp))
@@ -313,9 +338,13 @@ fun ChatDetailScreen(
                 val accessRequests by viewModel.accessRequests.collectAsStateWithLifecycle()
                 val isAdmin = state.chat?.adminId == state.currentUserId
                 
+                val sharedSessions by viewModel.sharedSessions.collectAsStateWithLifecycle()
+                
                 SharedLibraryView(
                     collections = sharedCollections,
+                    sessions = sharedSessions,
                     onImport = { payload -> viewModel.importSharedCollection(payload) },
+                    onJoinSession = { sessionId -> viewModel.shareSession(state.chat!!.chatId, sessionId) },
                     localCollections = localCollections,
                     isAdmin = isAdmin,
                     accessRequests = accessRequests,
@@ -323,41 +352,144 @@ fun ChatDetailScreen(
                     onGrantAccess = { collId, reqId -> viewModel.grantAccess(collId, reqId) }
                 )
             } else {
+                val scrollState = listState
+                val messagesByDate = remember(state.messages) {
+                    state.messages.groupBy { 
+                        SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(Date(it.timestamp)) 
+                    }
+                }
+
                 LazyColumn(
-                    state = listState,
+                    state = scrollState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp) // Reduced for grouping
                 ) {
-                    itemsIndexed(state.messages) { index, message ->
-                        if (message.type == "DB_CHANGE") {
-                            SystemMessageItem(message.payload)
-                        } else {
-                            val isMine = message.senderId == state.currentUserId
-                            
-                            AnimatedMessageItem(
-                                message = message,
-                                isMine = isMine,
-                                senderName = state.participants[message.senderId]?.displayName,
-                                isSaved = savedCollections.value.contains(message.payload),
-                                localCollections = localCollections,
-                                onSaveCollection = { payload ->
-                                    viewModel.addSharedCollection(payload)
-                                    savedCollections.value = savedCollections.value + payload
-                                },
-                                onJoinSession = { sessionId -> viewModel.shareSession(state.chat!!.chatId, sessionId) },
-                                onReportMessage = {
-                                    reportingMessage = message
-                                },
-                                isAiLoading = isAiLoading && index == state.messages.size - 1 && message.senderId == ChatViewModel.QBASE_AI_BOT_ID
-                            )
+                    messagesByDate.forEach { (date, messages) ->
+                        stickyHeader {
+                            DateHeader(date)
+                        }
+                        
+                        itemsIndexed(messages) { index, message ->
+                            if (message.type == "DB_CHANGE") {
+                                SystemMessageItem(message.payload)
+                            } else {
+                                val isMine = message.senderId == state.currentUserId
+                                val prevMessage = if (index > 0) messages[index - 1] else null
+                                val showAvatar = !isMine && (prevMessage == null || prevMessage.senderId != message.senderId)
+                                val showSenderName = (state.chat?.isGroup == true) && showAvatar
+
+                                AnimatedMessageItem(
+                                    message = message,
+                                    isMine = isMine,
+                                    senderName = if (showSenderName) state.participants[message.senderId]?.displayName else null,
+                                    showAvatar = showAvatar,
+                                    avatarUrl = if (showAvatar) state.participants[message.senderId]?.profilePictureUrl else null,
+                                    isSaved = savedCollections.value.contains(message.payload),
+                                    localCollections = localCollections,
+                                    onSaveCollection = { payload ->
+                                        viewModel.addSharedCollection(payload)
+                                        savedCollections.value = savedCollections.value + payload
+                                    },
+                                    onJoinSession = { sessionId -> viewModel.shareSession(state.chat!!.chatId, sessionId) },
+                                    onReportMessage = {
+                                        reportingMessage = message
+                                    },
+                                    isAiLoading = isAiLoading && index == state.messages.size - 1 && message.senderId == ChatViewModel.QBASE_AI_BOT_ID
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Scroll to Bottom FAB
+            val showScrollToBottom by remember {
+                derivedStateOf { listState.firstVisibleItemIndex > 5 }
+            }
+            if (showScrollToBottom) {
+                SmallFloatingActionButton(
+                    onClick = {
+                        scope.launch {
+                            if (state.messages.isNotEmpty()) {
+                                listState.animateScrollToItem(state.messages.size - 1)
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 16.dp, bottom = 16.dp),
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ) {
+                    Icon(Icons.Rounded.ArrowDownward, contentDescription = "Scroll to bottom")
+                }
+            }
+        }
+    }
+
+    if (showSessionPicker) {
+        val sessions by viewModel.allSessions.collectAsStateWithLifecycle()
+        ModalBottomSheet(
+            onDismissRequest = { showSessionPicker = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            dragHandle = { BottomSheetDefaults.DragHandle() },
+            containerColor = MaterialTheme.colorScheme.surface
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp)
+            ) {
+                Text(
+                    text = "Share Session",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(24.dp)
+                )
+
+                if (sessions.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                        Text("No sessions to share", color = MaterialTheme.colorScheme.outline)
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 16.dp)
+                    ) {
+                        sessions.forEach { session ->
+                            item {
+                                Surface(
+                                    onClick = {
+                                        state.chat?.chatId?.let { 
+                                            viewModel.shareSession(it, session.sessionId)
+                                        }
+                                        showSessionPicker = false
+                                    },
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(16.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(Icons.Rounded.Event, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Column {
+                                            Text(session.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                            Text("Active Session", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
     }
-
+    
     if (showCollectionPicker) {
         ModalBottomSheet(
             onDismissRequest = { showCollectionPicker = false },
@@ -386,14 +518,13 @@ fun ChatDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         contentPadding = PaddingValues(horizontal = 16.dp)
                     ) {
-                        collections.forEach { collection: com.algorithmx.q_base.data.entity.Collection ->
+                        collections.forEach { collection: StudyCollection ->
                             item {
                                 Surface(
                                     onClick = {
                                         state.chat?.chatId?.let { 
                                             viewModel.shareCollection(it, collection.collectionId)
                                         }
-                                        // Assuming the user intended to close the picker after sharing
                                         showCollectionPicker = false
                                     },
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -406,8 +537,8 @@ fun ChatDetailScreen(
                                     ) {
                                         Icon(
                                             Icons.Filled.CollectionsBookmark, 
-                                            contentDescription = null, 
-                                            tint = MaterialTheme.colorScheme.primary
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            contentDescription = null
                                         )
                                         Spacer(modifier = Modifier.width(16.dp))
                                         Column {
@@ -498,668 +629,6 @@ fun ChatDetailScreen(
                     showReportGroupDialog = false
                 }
             )
-        }
-    }
-}
-
-@Composable
-fun AnimatedMessageItem(
-    message: MessageEntity,
-    isMine: Boolean,
-    senderName: String?,
-    isSaved: Boolean,
-    localCollections: List<com.algorithmx.q_base.data.entity.Collection>,
-    onSaveCollection: (String) -> Unit,
-    onJoinSession: (String) -> Unit,
-    onReportMessage: () -> Unit,
-    isAiLoading: Boolean = false
-) {
-    var visible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { visible = true }
-
-    AnimatedVisibility(
-        visible = visible,
- enter = slideInHorizontally(
-            initialOffsetX = { if (isMine) it / 2 else -it / 2 },
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            )
-        ) + fadeIn(animationSpec = tween(300)),
-    ) {
-        MessageBubble(message, isMine, senderName, isSaved, localCollections, onSaveCollection, onJoinSession, onReportMessage, isAiLoading)
-    }
-}
-
-@Composable
-fun MessageBubble(
-    message: MessageEntity,
-    isMine: Boolean,
-    senderName: String?,
-    isSaved: Boolean,
-    localCollections: List<com.algorithmx.q_base.data.entity.Collection>,
-    onSaveCollection: (String) -> Unit,
-    onJoinSession: (String) -> Unit,
-    onReportMessage: () -> Unit,
-    isAiLoading: Boolean = false
-) {
-    val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
-    val timeString = remember(message.timestamp) { timeFormat.format(Date(message.timestamp)) }
-
-    val isAi = message.senderId == ChatViewModel.QBASE_AI_BOT_ID
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = if (isMine) Alignment.End else Alignment.Start
-    ) {
-        if (isAi) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 12.dp, bottom = 4.dp)
-            ) {
-                val infiniteTransition = rememberInfiniteTransition(label = "ai_pulse")
-                val scale by infiniteTransition.animateFloat(
-                    initialValue = 1f,
-                    targetValue = if (isAiLoading) 1.3f else 1f,
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(800, easing = LinearEasing),
-                        repeatMode = RepeatMode.Reverse
-                    ),
-                    label = "pulse_scale"
-                )
-                
-                Icon(
-                    Icons.Rounded.AutoAwesome,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp).graphicsLayer(scaleX = scale, scaleY = scale),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "Qbase AI",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        } else {
-            senderName?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 12.dp, bottom = 4.dp, end = 12.dp)
-                )
-            }
-        }
-        
-        Surface(
-            color = when {
-                isMine -> MaterialTheme.colorScheme.primary
-                isAi -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
-                else -> MaterialTheme.colorScheme.secondaryContainer
-            },
-            contentColor = when {
-                isMine -> MaterialTheme.colorScheme.onPrimary
-                isAi -> MaterialTheme.colorScheme.onPrimaryContainer
-                else -> MaterialTheme.colorScheme.onSecondaryContainer
-            },
-            shape = RoundedCornerShape(
-                topStart = 20.dp,
-                topEnd = 20.dp,
-                bottomStart = if (isMine) 20.dp else 4.dp,
-                bottomEnd = if (isMine) 4.dp else 20.dp
-            ),
-            tonalElevation = if (isMine) 2.dp else 1.dp,
-            modifier = Modifier.widthIn(max = 280.dp)
-        ) {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
-                var showDropdown by remember { mutableStateOf(false) }
-                Box(modifier = Modifier.clickable { showDropdown = true }) {
-                    if (message.type == "COLLECTION" || message.type == "SHARED_COLLECTION") {
-                        CollectionBubbleContent(message.payload, isSaved, onSaveCollection, isMine)
-                    } else if (message.type == "SHARED_SESSION" || message.type == "SESSION_INVITE") {
-                        SessionBubbleContent(message.payload, onJoinSession, isMine)
-                    } else if (message.type == "FILE_TRANSFER") {
-                        FileTransferBubbleContent(message.payload, localCollections, onSaveCollection, isMine)
-                    } else {
-                        if (message.decryptionStatus == "FAILED" || message.decryptionStatus == "DECRYPTION_ERROR") {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(2.dp)
-                            ) {
-                                Icon(
-                                    if (message.decryptionStatus == "FAILED") Icons.Default.Lock else Icons.Default.Sync,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                    tint = if (isMine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.error
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = when (message.decryptionStatus) {
-                                        "FAILED" -> "Message from previous session unavailable"
-                                        "DECRYPTION_ERROR" -> "Waiting for secure session keys..."
-                                        else -> "Encountered decryption error"
-                                    },
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                                        color = if (isMine) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) 
-                                                else MaterialTheme.colorScheme.error
-                                    )
-                                )
-                            }
-                        } else if (isAi) {
-                            MarkdownText(
-                                markdown = message.payload,
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    lineHeight = 22.sp,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                ),
-                                modifier = Modifier.padding(2.dp)
-                            )
-                        } else {
-                            Text(
-                                text = message.payload,
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    lineHeight = 22.sp,
-                                    color = if (isMine) MaterialTheme.colorScheme.onPrimary else LocalContentColor.current
-                                ),
-                                modifier = Modifier.padding(2.dp)
-                            )
-                        }
-                    }
-
-                    DropdownMenu(
-                        expanded = showDropdown,
-                        onDismissRequest = { showDropdown = false }
-                    ) {
-                        if (!isMine && !isAi) {
-                            DropdownMenuItem(
-                                text = { Text("Report Message") },
-                                leadingIcon = { Icon(Icons.Rounded.Report, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-                                onClick = {
-                                    showDropdown = false
-                                    onReportMessage()
-                                }
-                            )
-                        }
-                        DropdownMenuItem(
-                            text = { Text("Copy Text") },
-                            leadingIcon = { Icon(Icons.Rounded.ContentCopy, contentDescription = null) },
-                            onClick = { showDropdown = false } // Mock copy
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = timeString,
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.align(Alignment.End),
-                    color = if (isMine) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f) 
-                            else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun CollectionBubbleContent(payload: String, isSaved: Boolean, onSave: (String) -> Unit, isMine: Boolean) {
-    val json = remember { kotlinx.serialization.json.Json { ignoreUnknownKeys = true } }
-    val collection = remember(payload) {
-        try {
-            json.decodeFromString<com.algorithmx.q_base.brain.models.AiCollectionResponse>(payload)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    if (collection != null) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Filled.CollectionsBookmark,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = if (isMine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = collection.collectionTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isMine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-                )
-            }
-            Text(
-                text = collection.collectionDescription,
-                style = MaterialTheme.typography.bodySmall,
-                maxLines = 2,
-                color = if (isMine) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Button(
-                onClick = { if (!isSaved) onSave(payload) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                enabled = !isSaved,
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                colors = when {
-                    isSaved -> ButtonDefaults.buttonColors(
-                        containerColor = if (isMine) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f) 
-                                       else MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
-                        contentColor = if (isMine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
-                    )
-                    isMine -> ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.onPrimary,
-                        contentColor = MaterialTheme.colorScheme.primary
-                    )
-                    else -> ButtonDefaults.buttonColors()
-                }
-            ) {
-                Icon(
-                    if (isSaved) Icons.Rounded.CheckCircle else Icons.Default.Add, 
-                    contentDescription = null, 
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    if (isSaved) "Saved to Collections" else "Save to My Collections", 
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-        }
-    } else {
-        Text("Invalid Collection Data", color = MaterialTheme.colorScheme.error)
-    }
-}
-
-@Composable
-fun SessionBubbleContent(payload: String, onJoin: (String) -> Unit, isMine: Boolean) {
-    // Payload format: sessionId|sessionTitle
-    val parts = payload.split("|")
-    val sessionId = parts.getOrNull(0) ?: ""
-    val sessionTitle = parts.getOrNull(1) ?: "Active Session"
-
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Rounded.RocketLaunch,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = if (isMine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = sessionTitle,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (isMine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-            )
-        }
-        Text(
-            text = "Join this collaborative study session to track progress together.",
-            style = MaterialTheme.typography.bodySmall,
-            color = if (isMine) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Button(
-            onClick = { onJoin(sessionId) },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isMine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary,
-                contentColor = if (isMine) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondary
-            )
-        ) {
-            Icon(Icons.Rounded.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("Join Session", style = MaterialTheme.typography.labelMedium)
-        }
-    }
-}
-
-@Composable
-fun FileTransferBubbleContent(
-    payload: String, 
-    localCollections: List<com.algorithmx.q_base.data.entity.Collection>,
-    onImport: (String) -> Unit,
-    isMine: Boolean
-) {
-    // Payload format: url|E2EE_KEY|key|UPDATED_AT|timestamp|COLLECTION_ID|id
-    val parts = payload.split("|")
-    val updatedAtRemote = parts.getOrNull(4)?.toLongOrNull() ?: 0L
-    val collectionIdMetadata = parts.getOrNull(6)
-    
-    // Use explicit id from metadata if available, otherwise fallback to URL (backward compatibility)
-    val url = parts.getOrNull(0) ?: ""
-    val collectionId = collectionIdMetadata ?: url.substringAfter("/files/").substringBefore("/download")
-    
-    val localCopy = localCollections.find { it.collectionId == collectionId }
-    
-    val buttonState = when {
-        localCopy == null -> "IMPORT"
-        updatedAtRemote > localCopy.updatedAt -> "UPDATE"
-        else -> "UP_TO_DATE"
-    }
-
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Rounded.FolderZip,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = if (isMine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = localCopy?.name ?: "Collection Shared",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (isMine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-            )
-        }
-        Text(
-            text = when(buttonState) {
-                "IMPORT" -> "A question collection has been shared with you. Tap below to import it."
-                "UPDATE" -> "A newer version of this collection is available. Tap below to update."
-                else -> "You have the latest version of this collection in your library."
-            },
-            style = MaterialTheme.typography.bodySmall,
-            color = if (isMine) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        
-        Button(
-            onClick = { if (buttonState != "UP_TO_DATE") onImport(payload) },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            enabled = buttonState != "UP_TO_DATE",
-            colors = when {
-                buttonState == "IMPORT" -> ButtonDefaults.buttonColors(
-                    containerColor = if (isMine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primaryContainer, 
-                    contentColor = if (isMine) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                buttonState == "UPDATE" -> ButtonDefaults.buttonColors(
-                    containerColor = if (isMine) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f) else MaterialTheme.colorScheme.tertiaryContainer, 
-                    contentColor = if (isMine) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onTertiaryContainer
-                )
-                else -> ButtonDefaults.buttonColors(
-                    containerColor = if (isMine) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f), 
-                    contentColor = if (isMine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
-                )
-            }
-        ) {
-            Icon(
-                when(buttonState) {
-                    "IMPORT" -> Icons.Rounded.CloudDownload
-                    "UPDATE" -> Icons.Rounded.Update
-                    else -> Icons.Rounded.CheckCircle
-                }, 
-                contentDescription = null, 
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = when(buttonState) {
-                    "IMPORT" -> "Import to Library"
-                    "UPDATE" -> "Update Collection"
-                    else -> "You have updated collection"
-                }, 
-                style = MaterialTheme.typography.labelLarge
-            )
-        }
-    }
-}
-
-@Composable
-fun SystemMessageItem(text: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Surface(
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-            shape = CircleShape
-        ) {
-            Text(
-                text = text,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-fun SharedLibraryView(
-    collections: List<Map<String, Any>>,
-    onImport: (String) -> Unit,
-    localCollections: List<com.algorithmx.q_base.data.entity.Collection>,
-    isAdmin: Boolean,
-    accessRequests: List<Map<String, Any>>,
-    onRequestAccess: (String) -> Unit,
-    onGrantAccess: (String, String) -> Unit
-) {
-    if (collections.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    Icons.Rounded.FolderOff, 
-                    contentDescription = null, 
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    "No collections shared in this group yet.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                Text(
-                    "Group Shared Library",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Black,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Text(
-                    "This is a persistent drive for all collections shared within the group. Collections here remain accessible even after chat messages are cleared.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                if (isAdmin && accessRequests.isNotEmpty()) {
-                    Text(
-                        "Pending Access Requests",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    accessRequests.forEach { request ->
-                        val collectionId = request["collectionId"] as? String ?: ""
-                        val requesterId = request["requesterId"] as? String ?: ""
-                        val requesterName = request["requesterName"] as? String ?: "Someone"
-                        
-                        AccessRequestItem(
-                            requesterName = requesterName,
-                            onApprove = { onGrantAccess(collectionId, requesterId) }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            
-            items(collections) { data ->
-                val name = data["name"] as? String ?: "Untitled Collection"
-                val description = data["description"] as? String ?: ""
-                val downloadUrl = data["downloadUrl"] as? String ?: ""
-                val symmetricKey = data["symmetricKey"] as? String ?: ""
-                val updatedAt = data["updatedAt"] as? Long ?: 0L
-                val collectionId = data["collectionId"] as? String ?: ""
-                val isExpired = data["isExpired"] as? Boolean ?: false
-
-                val payload = "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId"
-                
-                SharedCollectionCard(
-                    name = name,
-                    description = description,
-                    isExpired = isExpired,
-                    onImport = { onImport(payload) },
-                    onRequestAccess = { onRequestAccess(collectionId) },
-                    localCollections = localCollections
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun SharedCollectionCard(
-    name: String,
-    description: String,
-    isExpired: Boolean,
-    onImport: () -> Unit,
-    onRequestAccess: () -> Unit,
-    localCollections: List<com.algorithmx.q_base.data.entity.Collection>
-) {
-    val localCopy = localCollections.find { it.name == name }
-    val isImported = localCopy != null
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Rounded.FolderZip, 
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                    if (description.isNotEmpty()) {
-                        Text(
-                            description, 
-                            style = MaterialTheme.typography.bodySmall, 
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            }
-            
-            if (isExpired) {
-                Text(
-                    "Link Expired (30-day limit reached). Request access from members to refresh.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Button(
-                onClick = if (isExpired) onRequestAccess else onImport,
-                enabled = !isImported,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = when {
-                    isImported -> ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    isExpired -> ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    else -> ButtonDefaults.buttonColors()
-                }
-            ) {
-                Icon(
-                    when {
-                        isImported -> Icons.Rounded.CheckCircle
-                        isExpired -> Icons.Rounded.LockOpen
-                        else -> Icons.Rounded.CloudDownload
-                    }, 
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    when {
-                        isImported -> "Imported to Library"
-                        isExpired -> "Request Access"
-                        else -> "Import to Library"
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun AccessRequestItem(
-    requesterName: String,
-    onApprove: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-        )
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Rounded.PersonPin, 
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = "$requesterName requested access",
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
-            )
-            TextButton(onClick = onApprove) {
-                Text("Approve")
-            }
         }
     }
 }

@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.algorithmx.q_base.data.entity.Question
+import com.algorithmx.q_base.data.collections.Question
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

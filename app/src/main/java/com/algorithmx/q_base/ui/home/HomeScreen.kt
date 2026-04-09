@@ -30,7 +30,8 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.algorithmx.q_base.data.entity.Collection as AppCollection
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.Question
 import com.algorithmx.q_base.ui.components.*
 import kotlinx.coroutines.delay
 
@@ -266,7 +267,7 @@ fun QuickActionCard(
 
 @Composable
 fun HomeCategoryCard(
-    collection: com.algorithmx.q_base.data.entity.CollectionWithCount,
+    collection: com.algorithmx.q_base.data.collections.StudyCollectionWithCount,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
@@ -344,7 +345,7 @@ fun AnimatedHomeItem(
 }
 
 @Composable
-fun PinnedQuestionItem(question: com.algorithmx.q_base.data.entity.Question) {
+fun PinnedQuestionItem(question: com.algorithmx.q_base.data.collections.Question) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,

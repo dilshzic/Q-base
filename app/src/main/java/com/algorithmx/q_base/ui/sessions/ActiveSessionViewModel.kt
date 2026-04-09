@@ -5,18 +5,25 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.entity.*
-import com.algorithmx.q_base.data.repository.SessionRepository
+import com.algorithmx.q_base.data.collections.*
+import com.algorithmx.q_base.data.sessions.*
+import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.data.sessions.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Locale
-import com.algorithmx.q_base.data.repository.AiRepository
-import com.algorithmx.q_base.data.repository.SyncRepository
+import com.algorithmx.q_base.data.ai.AiRepository
+import com.algorithmx.q_base.data.auth.AuthRepository
+import com.algorithmx.q_base.data.sync.SyncRepository
 import android.util.Log
 import javax.inject.Inject
+
+sealed class SessionNavEvent {
+    data class NavigateToResults(val sessionId: String) : SessionNavEvent()
+}
 
 data class NavigatorDot(
     val index: Int,
@@ -28,9 +35,12 @@ data class NavigatorDot(
 class ActiveSessionViewModel @Inject constructor(
     private val repository: SessionRepository,
     private val aiRepository: AiRepository,
-    private val authRepository: com.algorithmx.q_base.data.repository.AuthRepository,
+    private val authRepository: AuthRepository,
     private val syncRepository: SyncRepository
 ) : ViewModel() {
+
+    private val _navigationEvents = MutableSharedFlow<SessionNavEvent>()
+    val navigationEvents = _navigationEvents.asSharedFlow()
 
     private val _actionFeedback = MutableSharedFlow<String>()
     val actionFeedback = _actionFeedback.asSharedFlow()
@@ -283,6 +293,7 @@ class ActiveSessionViewModel @Inject constructor(
             val finalAttempts = _attempts.value.map { it.copy(attemptStatus = "FINALIZED") }
             finalAttempts.forEach { repository.updateAttempt(it) }
             timerJob?.cancel()
+            _navigationEvents.emit(SessionNavEvent.NavigateToResults(_sessionId))
         }
     }
 

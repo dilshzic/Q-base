@@ -2,15 +2,16 @@ package com.algorithmx.q_base.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.dao.UserDao
-import com.algorithmx.q_base.data.dao.SessionDao
-import com.algorithmx.q_base.data.dao.CollectionDao
-import com.algorithmx.q_base.data.dao.QuestionDao
-import com.algorithmx.q_base.data.entity.UserEntity
-import com.algorithmx.q_base.data.model.UserProfile
-import com.algorithmx.q_base.data.repository.ProfileRepository
-import com.algorithmx.q_base.data.repository.AuthRepository
-import com.algorithmx.q_base.data.repository.DataClearingRepository
+import com.algorithmx.q_base.data.core.UserDao
+import com.algorithmx.q_base.data.sessions.SessionDao
+import com.algorithmx.q_base.data.collections.CollectionDao
+import com.algorithmx.q_base.data.collections.QuestionDao
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.data.auth.UserProfile
+import com.algorithmx.q_base.data.auth.ProfileRepository
+import com.algorithmx.q_base.data.auth.AuthRepository
+import com.algorithmx.q_base.data.core.DataClearingRepository
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*

@@ -1,9 +1,11 @@
 package com.algorithmx.q_base.data.util
 
 import android.content.Context
-import com.algorithmx.q_base.data.entity.SetWithQuestions
-import com.algorithmx.q_base.data.model.MockExport
-import com.algorithmx.q_base.data.model.QuestionExport
+import com.algorithmx.q_base.data.collections.QuestionDao
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.SetWithQuestions
+import com.algorithmx.q_base.data.collections.MockExport
+import com.algorithmx.q_base.data.collections.QuestionExport
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -18,7 +20,8 @@ import javax.inject.Singleton
 
 @Singleton
 class ExportUtils @Inject constructor(
-    @param:ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context,
+    private val questionDao: QuestionDao
 ) {
     private val json = Json { 
         prettyPrint = false
@@ -28,8 +31,10 @@ class ExportUtils @Inject constructor(
     suspend fun prepareZip(setWithQuestions: SetWithQuestions): File = withContext(Dispatchers.IO) {
         val exportData = MockExport(
             collection = setWithQuestions.set,
-            questions = setWithQuestions.questions.map { 
-                QuestionExport(it.question, it.options, it.answer)
+            questions = setWithQuestions.questions.map { question ->
+                val options = questionDao.getOptionsForQuestionOnce(question.questionId)
+                val answer = questionDao.getAnswerForQuestionOnce(question.questionId)
+                QuestionExport(question, options, answer)
             }
         )
 

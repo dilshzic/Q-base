@@ -1,11 +1,11 @@
 package com.algorithmx.q_base.data.util
 
 import android.content.Context
-import com.algorithmx.q_base.data.dao.CollectionDao
-import com.algorithmx.q_base.data.dao.QuestionDao
-import com.algorithmx.q_base.data.entity.SetQuestionCrossRef
-import com.algorithmx.q_base.data.model.CollectionExport
-import com.algorithmx.q_base.data.model.MockExport
+import com.algorithmx.q_base.data.collections.CollectionDao
+import com.algorithmx.q_base.data.collections.QuestionDao
+import com.algorithmx.q_base.data.collections.SetQuestionCrossRef
+import com.algorithmx.q_base.data.collections.CollectionExport
+import com.algorithmx.q_base.data.collections.MockExport
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -80,7 +80,7 @@ class MockDownloader @Inject constructor(
 
     private suspend fun importCollectionData(exportData: CollectionExport) {
         // 1. Insert Collection
-        collectionDao.insertCollections(listOf(exportData.collection))
+        collectionDao.insertStudyCollections(listOf(exportData.collection))
         
         // 2. Insert Sets
         collectionDao.insertSets(exportData.sets)

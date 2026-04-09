@@ -3,7 +3,11 @@
 Integrating E2EE into Qbase ensures that neither the application host, Firebase, nor Appwrite can read the contents of user chats, shared collections, or files. 
 
 ## 1. Cryptographic Architecture
-We will use an authenticated encryption protocol, specifically AES-GCM for message/file payload encryption, combined with Elliptic Curve Diffie-Hellman (ECDH) via X25519 for secure key exchange between users.
+We will use an authenticated encryption protocol (AES-GCM) for message/file payload encryption.
+
+For key exchange we will use **public‑key hybrid encryption** (ECIES P‑256 via Google Tink) to wrap (encrypt) the symmetric AES key for each recipient.
+
+**Implementation note (matches current code):** Qbase generates a random ephemeral AES‑GCM key per message/file, encrypts the payload once, then encrypts (“wraps”) that AES key separately for each participant using their published public key.
 
 ### Dependencies
 Android provides `Tink`, Google's cryptography library, which is highly recommended for securely managing keys and performing AES-GCM and ECDH in a way that avoids common footguns.
@@ -16,18 +20,21 @@ Every user needs a long-term Key Pair (Public/Private).
 *   **Private Key:** Stored locally in the Android `KeyStore`. It NEVER leaves the user's device.
 *   **Public Key:** Published to a public `Users/{userId}` document in Firestore.
 
+**Implementation detail:** Keys are managed by Tink `AndroidKeysetManager` using a Keystore-backed master key URI (e.g. `android-keystore://...`). The public keyset is serialized (Base64) and stored in Firestore.
+
 ### Session Keys (Ephemeral)
-When exchanging messages, a shared secret is derived.
-1.  **Key Agreement (ECDH):** User A uses their Private Key and User B's Public Key to compute a shared secret.
-2.  **Key Derivation Function (KDF):** The shared secret is passed through HKDF to generate a symmetic AES-256 key.
+When exchanging messages/files, we generate an ephemeral symmetric key.
+1.  **Generate session key:** Create a new random AES‑256‑GCM key (Tink AEAD key).
+2.  **Wrap for recipients:** Encrypt the session key separately for each recipient using Tink Hybrid (ECIES P‑256) and the recipient’s published public key.
+3.  **Unwrap on device:** The recipient uses their private key to decrypt (“unwrap”) the session key locally, then decrypts the payload with AES‑GCM.
 
 ## 3. Encrypting Firestore Chats
 
 *   **Current State:** `MessageEntity` stores plaintext `payload`.
 *   **E2EE State:**
-    *   Sender encrypts the `payload` using the derived AES-256 session key.
-    *   The ciphertext is uploaded to Firestore along with an initialization vector (IV) and an authentication tag (inherent to AES-GCM).
-    *   Receiver fetches the ciphertext, computes the identical session key (using their Private Key + Sender's Public Key), and decrypts the payload locally before saving to Room.
+    *   Sender generates a random AES‑256‑GCM session key and encrypts the `payload`.
+    *   Sender uploads the ciphertext to Firestore plus a `wrappedKeys` map (`userId -> wrappedSessionKey`) so every participant can unwrap the same session key.
+    *   Receiver fetches the ciphertext + their wrapped key, unwraps the session key using their private key, decrypts locally, then saves plaintext to Room.
 *   **Group Chats:** Requires "Sender Keys" (Signal Protocol) or sharing a symmetric group key wrapped individually for each group member's public key. For Qbase, wrapping a symmetric group key is simpler to implement over Firestore.
 
 ## 4. Encrypting Collections & Storage (Appwrite)
@@ -36,7 +43,7 @@ When exporting and sharing a `.zip` collection via `MockExporter`:
 1.  Locally generate a random symmetric AES-256 file key.
 2.  Encrypt the `.zip` file using this key.
 3.  Upload the *encrypted* `.zip` to Appwrite.
-4.   The `FILE_TRANSFER` message sent over the chat contains the URL *and* the symmetric file key. 
+4.   The `FILE_TRANSFER` message sent over the chat contains the URL *and* the symmetric file key (or a serialized key handle).
 5.  Since the chat itself is E2EE, the symmetric file key is securely transported to the recipient, who uses it to decrypt the downloaded ZIP.
 
 ## 5. Security Considerations and Challenges
@@ -48,7 +55,7 @@ When exporting and sharing a `.zip` collection via `MockExporter`:
 1.  **Add Tink dependency** and initialize it in `QbaseApplication`.
 2.  **Generate User Key Pairs** on signup/login. Store private in `EncryptedSharedPreferences` or KeyStore. Publish public key to Firestore.
 3.  **Update `SyncRepository`**:
-    *   Intercept outbound messages, fetch receiver's public key, derive secret, encrypt `payload`.
-    *   Intercept inbound messages, derive secret, decrypt `payload` before inserting into Room.
+    *   Intercept outbound messages, fetch every participant's public key, generate random AES session key, encrypt `payload`, wrap session key for each participant.
+    *   Intercept inbound messages, unwrap session key for the current user, decrypt `payload` before inserting into Room.
 4.  **Update `MockExporter`/`MockDownloader`**:
     *   Wrap input/output streams with Tink's Streaming AEAD to encrypt/decrypt large ZIP files on the fly.

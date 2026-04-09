@@ -1,10 +1,11 @@
 package com.algorithmx.q_base.data.util
 
 import android.content.Context
-import com.algorithmx.q_base.data.dao.CollectionDao
-import com.algorithmx.q_base.data.dao.QuestionDao
-import com.algorithmx.q_base.data.model.CollectionExport
-import com.algorithmx.q_base.data.model.QuestionExport
+import com.algorithmx.q_base.data.collections.CollectionDao
+import com.algorithmx.q_base.data.collections.QuestionDao
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.CollectionExport
+import com.algorithmx.q_base.data.collections.QuestionExport
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -26,8 +27,8 @@ class MockExporter @Inject constructor(
     private val json = Json { prettyPrint = true }
 
     suspend fun exportCollection(collectionId: String): File? = withContext(Dispatchers.IO) {
-        val collection: com.algorithmx.q_base.data.entity.Collection = collectionDao.getCollectionByIdOnce(collectionId) ?: return@withContext null
-        val sets = collectionDao.getSetsByCollectionIdOnce(collectionId)
+        val collection: StudyCollection = collectionDao.getStudyCollectionByIdOnce(collectionId) ?: return@withContext null
+        val sets = collectionDao.getSetsByStudyCollectionIdOnce(collectionId)
         val setIds = sets.map { it.setId }
         
         val crossRefs = collectionDao.getCrossRefsForSetsBatch(setIds)
