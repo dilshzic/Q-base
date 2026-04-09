@@ -18,7 +18,7 @@ import javax.inject.Singleton
 
 @Singleton
 class ImportRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) {
     private val TAG = "ImportRepository"
     private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)

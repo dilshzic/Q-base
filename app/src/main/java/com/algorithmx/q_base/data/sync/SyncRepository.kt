@@ -78,6 +78,7 @@ class SyncRepository @Inject constructor(
                     if (change.type == DocumentChange.Type.ADDED) {
                         val doc = change.document
                         val type = doc.getString("type") ?: "TEXT"
+                        @Suppress("UNCHECKED_CAST")
                         val wrappedKeyMap = doc.get("wrappedKeys") as? Map<String, String>
                         val ciphertextPayload = doc.getString("ciphertextPayload")
 
@@ -167,7 +168,9 @@ class SyncRepository @Inject constructor(
                                         
                                         // Check if we are the last one. Wait a bit for Firestore sync or fetch fresh doc
                                         val freshDoc = doc.reference.get().await()
+                                        @Suppress("UNCHECKED_CAST")
                                         val deliveredTo = freshDoc.get("deliveredTo") as? List<String> ?: emptyList()
+                                        @Suppress("UNCHECKED_CAST")
                                         val participantIds = freshDoc.get("participantIds") as? List<String> ?: emptyList()
                                         
                                         if (participantIds.isNotEmpty() && deliveredTo.containsAll(participantIds)) {
@@ -421,6 +424,7 @@ class SyncRepository @Inject constructor(
                         val doc = change.document
                         val title = doc.getString("title") ?: "New Notification"
                         val body = doc.getString("body") ?: ""
+                        @Suppress("UNCHECKED_CAST")
                         val data = doc.get("data") as? Map<String, String> ?: emptyMap()
                         
                         val chatId = data["chatId"]
@@ -467,6 +471,7 @@ class SyncRepository @Inject constructor(
         try {
             val doc = firestore.collection("chats").document(chatId).get().await()
             if (doc.exists()) {
+                @Suppress("UNCHECKED_CAST")
                 val participantsList = doc.get("participantIds") as? List<String> ?: emptyList()
                 val chat = ChatEntity(
                     chatId = chatId,
@@ -928,6 +933,7 @@ class SyncRepository @Inject constructor(
                         }
 
                         val encryptedPayload = data["encryptedMetadataPayload"] as? String
+                        @Suppress("UNCHECKED_CAST")
                         val wrappedMetadataKeys = data["wrappedMetadataKeys"] as? Map<String, String>
 
                         var isRestricted = false
@@ -1107,6 +1113,7 @@ class SyncRepository @Inject constructor(
 
             if (!collDoc.exists()) throw Exception("Collection record missing")
 
+            @Suppress("UNCHECKED_CAST")
             val wrappedMetadataKeys = (collDoc.get("wrappedMetadataKeys") as? Map<String, String>)?.toMutableMap() ?: mutableMapOf()
             
             val myWrappedKey = wrappedMetadataKeys[currentUserId] ?: throw Exception("Admin access missing")

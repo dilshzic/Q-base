@@ -103,12 +103,16 @@ class ExploreViewModel @Inject constructor(
         }
     }
 
-    fun loadQuestionsByStudyCollection(collectionName: String) {
+    fun loadQuestionsByStudyCollection(collectionId: String) {
         viewModelScope.launch {
-            repository.getQuestionsByStudyCollection(collectionName).collect { questions ->
-                val states = questions.map { ExploreQuestionState(it) }
-                _questionStates.value = states
-                if (states.isNotEmpty()) loadQuestionDetails(0)
+            repository.getStudyCollectionById(collectionId).collect { collection ->
+                collection?.let {
+                    repository.getQuestionsByStudyCollection(it.name).collect { questions ->
+                        val states = questions.map { ExploreQuestionState(it) }
+                        _questionStates.value = states
+                        if (states.isNotEmpty()) loadQuestionDetails(0)
+                    }
+                }
             }
         }
     }

@@ -25,7 +25,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val dataStoreManager: BrainDataStoreManager,
     private val database: AppDatabase,
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
     val brainConfig: StateFlow<StoredBrainConfig> = dataStoreManager.brainConfigFlow

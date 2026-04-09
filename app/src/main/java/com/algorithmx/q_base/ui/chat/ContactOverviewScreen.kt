@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.rounded.Chat
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,7 +22,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 import androidx.compose.foundation.clickable
 import com.algorithmx.q_base.data.core.UserEntity
@@ -142,7 +143,7 @@ fun ContactOverviewScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     ActionButton(
-                        icon = Icons.Rounded.Chat,
+                        icon = Icons.AutoMirrored.Rounded.Chat,
                         label = "Message",
                         onClick = onBack
                     )

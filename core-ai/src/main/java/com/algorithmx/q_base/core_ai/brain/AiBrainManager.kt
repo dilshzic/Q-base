@@ -59,10 +59,6 @@ class AiBrainManager @Inject constructor(
             BrainProvider.LOCAL_GEMMA -> {
                 null
             }
-            else -> {
-                Log.e(TAG, "Unsupported brain provider: $provider")
-                null
-            }
         }
     }
 

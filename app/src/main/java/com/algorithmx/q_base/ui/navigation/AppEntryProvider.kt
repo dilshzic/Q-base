@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
@@ -180,8 +180,8 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onContinueSession = { sessionId, index ->
                     navigator.navigate(Screen.ActiveSession(sessionId))
                 },
-                onExplore = { categoryName ->
-                    navigator.navigate(Screen.ExplorePager(categoryName))
+                onExplore = { _ ->
+                    navigator.navigate(Screen.ExplorePager(key.collectionId))
                 },
                 onStartSet = { setId ->
                     navigator.navigate(Screen.ExploreSet(setId))

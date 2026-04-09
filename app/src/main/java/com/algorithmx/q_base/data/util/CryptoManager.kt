@@ -17,7 +17,7 @@ import javax.inject.Singleton
 
 @Singleton
 class CryptoManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) {
     companion object {
         private const val KEYSET_NAME = "qbase_e2ee_keyset"

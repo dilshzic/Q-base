@@ -458,7 +458,7 @@ fun NewSessionWizard(
                 )
             }
 
-            Divider(modifier = Modifier.padding(bottom = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            HorizontalDivider(modifier = Modifier.padding(bottom = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
             Box(modifier = Modifier.weight(1f, fill = false).heightIn(min = 300.dp)) {
                 when (step) {

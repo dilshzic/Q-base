@@ -51,7 +51,7 @@ fun AiConfigSelector(
                 readOnly = true,
                 label = { Text("Primary Model") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = primaryExpanded) },
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth()
             )
             ExposedDropdownMenu(
                 expanded = primaryExpanded,
@@ -81,7 +81,7 @@ fun AiConfigSelector(
                 readOnly = true,
                 label = { Text("Fallback Model (Optional)") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = fallbackExpanded) },
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth()
             )
             ExposedDropdownMenu(
                 expanded = fallbackExpanded,

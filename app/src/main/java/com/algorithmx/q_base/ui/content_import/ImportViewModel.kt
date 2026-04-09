@@ -55,6 +55,8 @@ class ImportViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
+    private val json = Json { ignoreUnknownKeys = true }
+
     private val _uiState = MutableStateFlow<ImportStep>(ImportStep.Welcome)
     val uiState = _uiState.asStateFlow()
 
@@ -200,8 +202,7 @@ class ImportViewModel @Inject constructor(
             viewModelScope.launch {
                 val entity = aiRepository.getAiResponseById(responseId)
                 val count = try {
-                    Json { ignoreUnknownKeys = true }
-                        .decodeFromString<com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse>(entity?.rawJson ?: "")
+                    json.decodeFromString<com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse>(entity?.rawJson ?: "")
                         .questions.size
                 } catch (e: Exception) { 0 }
                 

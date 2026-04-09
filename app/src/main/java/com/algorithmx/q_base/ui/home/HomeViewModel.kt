@@ -12,8 +12,8 @@ import com.algorithmx.q_base.data.auth.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,12 +22,13 @@ class HomeViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val currentUser: StateFlow<UserEntity?> = authRepository.currentUser
         .flatMapLatest { firebaseUser ->
             if (firebaseUser != null) {
                 repository.getCurrentUser(firebaseUser.uid)
             } else {
-                kotlinx.coroutines.flow.flowOf(null)
+                flowOf(null)
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 

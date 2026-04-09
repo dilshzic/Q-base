@@ -1,12 +1,10 @@
 package com.algorithmx.q_base.ui.chat
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -22,62 +20,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.rounded.ChatBubble
-import androidx.compose.material.icons.rounded.FolderOff
 import androidx.compose.material.icons.rounded.FolderZip
-import androidx.compose.material.icons.rounded.CloudDownload
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.Update
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.data.chat.MessageEntity
 import com.algorithmx.q_base.data.collections.StudyCollection
-import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.DeleteSweep
 import androidx.compose.material.icons.rounded.Report
-import coil.compose.AsyncImage
-import androidx.compose.foundation.ExperimentalFoundationApi
-import android.content.ClipboardManager
-import android.content.Context
-import com.algorithmx.q_base.R
 import java.util.Date
 import java.util.Locale
 import java.text.SimpleDateFormat
-import androidx.compose.material.icons.rounded.Done
-import androidx.compose.material.icons.rounded.DoneAll
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.Event
 import com.algorithmx.q_base.ui.chat.components.*
 import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CollectionsBookmark
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.RocketLaunch
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.PersonPin
-import androidx.compose.material.icons.rounded.LockOpen
 import com.algorithmx.q_base.ui.components.ReportDialog
 import com.algorithmx.q_base.ui.components.ProfileIconButton
 import kotlinx.coroutines.launch
 import java.util.*
-import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,15 +58,13 @@ fun ChatDetailScreen(
 ) {
     val state by viewModel.chatDetailState.collectAsState()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
-    val totalUnreadCount by viewModel.totalUnreadCount.collectAsStateWithLifecycle()
     val localCollections by viewModel.localStudyCollections.collectAsStateWithLifecycle()
-    val isSharing by viewModel.isSharing.collectAsState()
     val isAiLoading by viewModel.isAiLoading.collectAsState()
     var messageText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    val savedCollections = remember { mutableStateOf(setOf<String>()) }
+    var savedCollections by remember { mutableStateOf(setOf<String>()) }
     var showCollectionPicker by remember { mutableStateOf(false) }
     var showSessionPicker by remember { mutableStateOf(false) } // Added for Shared Sessions
     var showClearConfirm by remember { mutableStateOf(false) }
@@ -112,7 +79,19 @@ fun ChatDetailScreen(
         }
     }
 
-    // Expressive Scroll Behavior
+    // Keyboard Visibility Awareness for Scrolling
+    val density = LocalDensity.current
+    val imeInsets = WindowInsets.ime
+    val isKeyboardOpen by remember {
+        derivedStateOf { imeInsets.getBottom(density) > 0 }
+    }
+    
+    LaunchedEffect(isKeyboardOpen) {
+        if (isKeyboardOpen && state.messages.isNotEmpty()) {
+            listState.animateScrollToItem(state.messages.size - 1)
+        }
+    }
+
     LaunchedEffect(state.messages.size) {
         if (state.messages.isNotEmpty()) {
             listState.animateScrollToItem(state.messages.size - 1)
@@ -121,7 +100,10 @@ fun ChatDetailScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        modifier = Modifier.nestedScroll(TopAppBarDefaults.pinnedScrollBehavior().nestedScrollConnection),
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(TopAppBarDefaults.pinnedScrollBehavior().nestedScrollConnection),
+        contentWindowInsets = WindowInsets.statusBars, // Handle top bars, let bottom handle itself
         topBar = {
             TopAppBar(
                 title = {
@@ -136,7 +118,8 @@ fun ChatDetailScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = if (state.chat?.isGroup == true) "${state.participants.size} participants" 
+                            text = if (isAiLoading) "Typing..."
+                                   else if (state.chat?.isGroup == true) "${state.participants.size} participants" 
                                    else if (state.chat?.isBlocked == true) "Blocked" else "Active now",
                             style = MaterialTheme.typography.labelSmall,
                             color = if (state.chat?.isBlocked == true) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
@@ -231,94 +214,91 @@ fun ChatDetailScreen(
                 }
             } else if (!isLibraryMode) {
                 Surface(
-                    tonalElevation = 6.dp,
-                    shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) // Expressive Shape
+                    tonalElevation = 1.dp,
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier
+                        .navigationBarsPadding()
+                        .imePadding() // Pushes bar above keyboard
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
-                            .navigationBarsPadding(),
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.Bottom
                     ) {
-                        IconButton(
-                            onClick = { showCollectionPicker = true },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), CircleShape),
-                            enabled = !isSharing
+                        Surface(
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(24.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                         ) {
-                            if (isSharing) {
-                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                            } else {
-                                Icon(Icons.Default.Add, contentDescription = "Share Collection", tint = MaterialTheme.colorScheme.primary)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                            ) {
+                                IconButton(onClick = { showCollectionPicker = true }) {
+                                    Icon(
+                                        Icons.Default.Add,
+                                        contentDescription = "Attach",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                                
+                                TextField(
+                                    value = messageText,
+                                    onValueChange = { messageText = it },
+                                    modifier = Modifier.weight(1f),
+                                    placeholder = { Text("Message...", style = MaterialTheme.typography.bodyMedium) },
+                                    maxLines = 5,
+                                    colors = TextFieldDefaults.colors(
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        disabledIndicatorColor = Color.Transparent,
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent
+                                    ),
+                                    textStyle = MaterialTheme.typography.bodyMedium
+                                )
+                                
+                                AnimatedVisibility(visible = messageText.isEmpty()) {
+                                    IconButton(onClick = { showSessionPicker = true }) {
+                                        Icon(
+                                            Icons.Rounded.RocketLaunch,
+                                            contentDescription = "Session",
+                                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
                         
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        // Added for Shared Sessions
-                        IconButton(
-                            onClick = { showSessionPicker = true },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), CircleShape)
-                        ) {
-                            Icon(Icons.Rounded.Event, contentDescription = "Share Session", tint = MaterialTheme.colorScheme.primary)
-                        }
-                        
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        TextField(
-                            value = messageText,
-                            onValueChange = { messageText = it },
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(28.dp)),
-                            placeholder = { Text("Message...", style = MaterialTheme.typography.bodyLarge) },
-                            maxLines = 5,
-                            colors = TextFieldDefaults.colors(
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent,
-                                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                            )
-                        )
-                        
-                        Spacer(modifier = Modifier.width(12.dp))
-                        
                         val isNotEmpty = messageText.isNotBlank()
-                        val buttonScale by animateFloatAsState(
-                            targetValue = if (isNotEmpty) 1.1f else 1f,
-                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
-                        )
-
-                        FilledIconButton(
-                            onClick = {
-                                if (isNotEmpty) {
+                        AnimatedVisibility(
+                            visible = isNotEmpty,
+                            enter = scaleIn() + fadeIn(),
+                            exit = scaleOut() + fadeOut()
+                        ) {
+                            IconButton(
+                                onClick = {
                                     state.chat?.chatId?.let { 
                                         viewModel.sendMessage(it, messageText)
                                         messageText = ""
                                     }
-                                }
-                            },
-                            modifier = Modifier
-                                .size(52.dp)
-                                .graphicsLayer {
-                                    scaleX = buttonScale
-                                    scaleY = buttonScale
                                 },
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = if (isNotEmpty) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                                contentColor = if (isNotEmpty) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        ) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.Send, 
-                                contentDescription = "Send",
-                                modifier = Modifier.size(24.dp)
-                            )
+                                modifier = Modifier
+                                    .padding(start = 4.dp)
+                                    .size(48.dp)
+                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.Send, 
+                                    contentDescription = "Send",
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -352,51 +332,62 @@ fun ChatDetailScreen(
                     onGrantAccess = { collId, reqId -> viewModel.grantAccess(collId, reqId) }
                 )
             } else {
-                val scrollState = listState
                 val messagesByDate = remember(state.messages) {
-                    state.messages.groupBy { 
-                        SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(Date(it.timestamp)) 
+                    state.messages.groupBy { message ->
+                        formatDateRelatively(message.timestamp)
                     }
                 }
-
+ 
                 LazyColumn(
-                    state = scrollState,
+                    state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp) // Reduced for grouping
+                    contentPadding = PaddingValues(bottom = 16.dp, start = 8.dp, end = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.dp) // Handled by bubble padding
                 ) {
                     messagesByDate.forEach { (date, messages) ->
-                        stickyHeader {
+                        stickyHeader(key = date) {
                             DateHeader(date)
                         }
                         
-                        itemsIndexed(messages) { index, message ->
+                        itemsIndexed(
+                            items = messages,
+                            key = { _, msg -> msg.messageId }
+                        ) { index, message ->
                             if (message.type == "DB_CHANGE") {
                                 SystemMessageItem(message.payload)
                             } else {
                                 val isMine = message.senderId == state.currentUserId
                                 val prevMessage = if (index > 0) messages[index - 1] else null
-                                val showAvatar = !isMine && (prevMessage == null || prevMessage.senderId != message.senderId)
-                                val showSenderName = (state.chat?.isGroup == true) && showAvatar
-
-                                AnimatedMessageItem(
-                                    message = message,
-                                    isMine = isMine,
-                                    senderName = if (showSenderName) state.participants[message.senderId]?.displayName else null,
-                                    showAvatar = showAvatar,
-                                    avatarUrl = if (showAvatar) state.participants[message.senderId]?.profilePictureUrl else null,
-                                    isSaved = savedCollections.value.contains(message.payload),
-                                    localCollections = localCollections,
-                                    onSaveCollection = { payload ->
-                                        viewModel.addSharedCollection(payload)
-                                        savedCollections.value = savedCollections.value + payload
-                                    },
-                                    onJoinSession = { sessionId -> viewModel.shareSession(state.chat!!.chatId, sessionId) },
-                                    onReportMessage = {
-                                        reportingMessage = message
-                                    },
-                                    isAiLoading = isAiLoading && index == state.messages.size - 1 && message.senderId == ChatViewModel.QBASE_AI_BOT_ID
-                                )
+                                val nextMessage = if (index < messages.size - 1) messages[index + 1] else null
+                                
+                                val isFirstInGroup = prevMessage == null || prevMessage.senderId != message.senderId
+                                val isLastInGroup = nextMessage == null || nextMessage.senderId != message.senderId
+                                
+                                val showAvatar = !isMine && isLastInGroup
+                                val showSenderName = (state.chat?.isGroup == true) && isFirstInGroup && !isMine
+ 
+                                Box(modifier = Modifier.animateItem()) {
+                                    AnimatedMessageItem(
+                                        message = message,
+                                        isMine = isMine,
+                                        senderName = if (showSenderName) state.participants[message.senderId]?.displayName else null,
+                                        showAvatar = showAvatar,
+                                        avatarUrl = if (showAvatar) state.participants[message.senderId]?.profilePictureUrl else null,
+                                        isSaved = savedCollections.contains(message.payload),
+                                        localCollections = localCollections,
+                                        onSaveCollection = { payload ->
+                                            viewModel.addSharedCollection(payload)
+                                            savedCollections += payload
+                                        },
+                                        onJoinSession = { sessionId -> viewModel.shareSession(state.chat!!.chatId, sessionId) },
+                                        onReportMessage = {
+                                            reportingMessage = message
+                                        },
+                                        isAiLoading = isAiLoading && index == state.messages.size - 1 && message.senderId == ChatViewModel.QBASE_AI_BOT_ID,
+                                        isFirstInGroup = isFirstInGroup,
+                                        isLastInGroup = isLastInGroup
+                                    )
+                                }
                             }
                         }
                     }
@@ -631,4 +622,28 @@ fun ChatDetailScreen(
             )
         }
     }
+}
+
+private fun formatDateRelatively(timestamp: Long): String {
+    val now = Calendar.getInstance()
+    val messageDate = Calendar.getInstance().apply { timeInMillis = timestamp }
+    
+    return when {
+        isSameDay(now, messageDate) -> "Today"
+        isYesterday(now, messageDate) -> "Yesterday"
+        else -> SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(Date(timestamp))
+    }
+}
+
+private fun isSameDay(cal1: Calendar, cal2: Calendar): Boolean {
+    return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+           cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
+}
+
+private fun isYesterday(now: Calendar, date: Calendar): Boolean {
+    val yesterday = Calendar.getInstance().apply { 
+        timeInMillis = now.timeInMillis
+        add(Calendar.DAY_OF_YEAR, -1)
+    }
+    return isSameDay(yesterday, date)
 }

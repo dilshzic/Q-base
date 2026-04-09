@@ -1,13 +1,16 @@
 package com.algorithmx.q_base.ui.chat.components
 
-import android.content.ClipboardManager
-import android.content.Context
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.ClipEntry
+import android.content.ClipData
+import kotlinx.coroutines.launch
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -45,7 +48,9 @@ fun AnimatedMessageItem(
     onSaveCollection: (String) -> Unit,
     onJoinSession: (String) -> Unit,
     onReportMessage: () -> Unit,
-    isAiLoading: Boolean = false
+    isAiLoading: Boolean = false,
+    isFirstInGroup: Boolean = true,
+    isLastInGroup: Boolean = true
 ) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
@@ -60,7 +65,11 @@ fun AnimatedMessageItem(
             )
         ) + fadeIn(animationSpec = tween(300)),
     ) {
-        MessageBubble(message, isMine, senderName, showAvatar, avatarUrl, isSaved, localCollections, onSaveCollection, onJoinSession, onReportMessage, isAiLoading)
+        MessageBubble(
+            message, isMine, senderName, showAvatar, avatarUrl, 
+            isSaved, localCollections, onSaveCollection, onJoinSession, 
+            onReportMessage, isAiLoading, isFirstInGroup, isLastInGroup
+        )
     }
 }
 
@@ -76,18 +85,42 @@ fun MessageBubble(
     onSaveCollection: (String) -> Unit,
     onJoinSession: (String) -> Unit,
     onReportMessage: () -> Unit,
-    isAiLoading: Boolean = false
+    isAiLoading: Boolean = false,
+    isFirstInGroup: Boolean = true,
+    isLastInGroup: Boolean = true
 ) {
-    val context = LocalContext.current
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
     val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
     val timeString = remember(message.timestamp) { timeFormat.format(Date(message.timestamp)) }
     val isAi = message.senderId == ChatViewModel.QBASE_AI_BOT_ID
 
+    val bubbleShape = if (isMine) {
+        RoundedCornerShape(
+            topStart = 20.dp,
+            topEnd = if (isFirstInGroup) 20.dp else 4.dp,
+            bottomStart = 20.dp,
+            bottomEnd = if (isLastInGroup) 4.dp else 4.dp
+        ).let {
+            if (isLastInGroup) it.copy(bottomEnd = CornerSize(20.dp)) else it
+        }
+    } else {
+        RoundedCornerShape(
+            topStart = if (isFirstInGroup) 20.dp else 4.dp,
+            topEnd = 20.dp,
+            bottomStart = if (isLastInGroup) 20.dp else 4.dp,
+            bottomEnd = 20.dp
+        )
+    }
+
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(
+            top = if (isFirstInGroup) 8.dp else 2.dp,
+            bottom = if (isLastInGroup) 8.dp else 2.dp
+        ),
         horizontalAlignment = if (isMine) Alignment.End else Alignment.Start
     ) {
-        if (isAi) {
+        if (isAi && isFirstInGroup) {
             AIHeader(isAiLoading)
         }
 
@@ -96,14 +129,16 @@ fun MessageBubble(
             horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start,
             modifier = Modifier.fillMaxWidth()
         ) {
-            if (showAvatar && !isMine) {
+            if (showAvatar && !isMine && isLastInGroup) {
                 SenderAvatar(avatarUrl)
             } else if (!isMine) {
                 Spacer(modifier = Modifier.width(48.dp))
             }
 
             Column(horizontalAlignment = if (isMine) Alignment.End else Alignment.Start) {
-                senderName?.let { SenderNameLabel(it) }
+                if (isFirstInGroup && !isMine && senderName != null) {
+                    SenderNameLabel(senderName)
+                }
         
                 Surface(
                     color = when {
@@ -116,18 +151,15 @@ fun MessageBubble(
                         isAi -> MaterialTheme.colorScheme.onPrimaryContainer
                         else -> MaterialTheme.colorScheme.onSecondaryContainer
                     },
-                    shape = RoundedCornerShape(
-                        topStart = 20.dp,
-                        topEnd = 20.dp,
-                        bottomStart = if (isMine) 20.dp else 4.dp,
-                        bottomEnd = if (isMine) 4.dp else 20.dp
-                    ),
+                    shape = bubbleShape,
                     modifier = Modifier.widthIn(max = 280.dp)
                 ) {
                     MessageContent(message, isMine, isAi, isSaved, onSaveCollection, onJoinSession, localCollections, onReportMessage, context)
                 }
                 
-                MessageTimestampAndStatus(timeString, isMine, message.status)
+                if (isLastInGroup) {
+                    MessageTimestampAndStatus(timeString, isMine, message.status)
+                }
             }
         }
     }
@@ -261,9 +293,9 @@ private fun MessageContent(
                 text = { Text("Copy Text") },
                 leadingIcon = { Icon(Icons.Rounded.ContentCopy, contentDescription = null) },
                 onClick = { 
-                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    val clip = android.content.ClipData.newPlainText("Chat Message", message.payload)
-                    clipboard.setPrimaryClip(clip)
+                    scope.launch {
+                        clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Chat Message", message.payload)))
+                    }
                     showDropdown = false 
                 }
             )

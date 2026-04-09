@@ -36,7 +36,10 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.platform.LocalClipboardManager
+import android.content.ClipData as AndroidClipData
+import android.content.ClipDescription
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -135,17 +138,21 @@ fun ExploreQuestionPagerScreen(
                     if (questionStates.isNotEmpty()) {
                         val currentQuestionState = questionStates[pagerState.currentPage]
                         val currentQuestion = currentQuestionState.question
-                        val clipboardManager = LocalClipboardManager.current
+                        val clipboard = LocalClipboard.current
+                        val scope = rememberCoroutineScope()
                         
                         IconButton(onClick = {
                             val content = buildString {
                                 appendLine("Q: ${currentQuestion.stem}")
                                 appendLine("\nOptions:")
                                 currentQuestionState.options.forEachIndexed { i, opt ->
-                                    appendLine("${(i + 'A'.toInt()).toChar()}. ${opt.optionText}")
+                                    appendLine("${(i + 'A'.code).toChar()}. ${opt.optionText}")
                                 }
                             }
-                            clipboardManager.setText(AnnotatedString(content))
+                            val clipData = AndroidClipData.newPlainText("question_content", content)
+                            scope.launch {
+                                clipboard.setClipEntry(ClipEntry(clipData))
+                            }
                         }) {
                             Icon(Icons.Rounded.ContentCopy, contentDescription = "Copy Content")
                         }

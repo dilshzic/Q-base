@@ -13,7 +13,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Explore
-import androidx.compose.material.icons.rounded.ListAlt
+import androidx.compose.material.icons.automirrored.rounded.ListAlt
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Quiz
@@ -217,7 +217,7 @@ fun CollectionOverviewScreen(
                     StatCard(
                         title = "Sets",
                         value = sets.size.toString(),
-                        icon = Icons.Rounded.ListAlt,
+                        icon = Icons.AutoMirrored.Rounded.ListAlt,
                         color = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.weight(1f)
                     )

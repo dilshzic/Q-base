@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.rounded.CollectionsBookmark
-import androidx.compose.material.icons.rounded.PlaylistAdd
+import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.rounded.PushPin
@@ -95,7 +95,7 @@ fun QuestionHeader(
                 }
                 IconButton(onClick = onAddToSession, modifier = Modifier.size(32.dp)) {
                     Icon(
-                        imageVector = Icons.Rounded.PlaylistAdd,
+                        imageVector = Icons.AutoMirrored.Rounded.PlaylistAdd,
                         contentDescription = "Add to Session",
                         modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.secondary

@@ -1,5 +1,6 @@
 package com.algorithmx.q_base.data.auth
 
+import com.google.firebase.firestore.PropertyName
 import com.google.firebase.firestore.ServerTimestamp
 import java.util.Date
 
@@ -11,6 +12,10 @@ data class UserProfile(
     val friendCode: String = "",
     val intro: String = "",
     val publicKey: String? = null,
-    val isBanned: Boolean = false,
-    val isPhotoVisible: Boolean = true
+    @get:PropertyName("banned")
+    @set:PropertyName("banned")
+    var isBanned: Boolean = false,
+    @get:PropertyName("photoVisible")
+    @set:PropertyName("photoVisible")
+    var isPhotoVisible: Boolean = true
 )
