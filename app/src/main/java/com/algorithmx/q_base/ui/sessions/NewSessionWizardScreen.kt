@@ -69,16 +69,21 @@ fun NewSessionWizardScreen(
                         onRandomSelect = { viewModel.selectRandomQuestions(it) },
                         onNext = { viewModel.setWizardStep(3) }
                     )
-                    3 -> ConfigurationStep(
-                        order = order,
-                        timingType = timingType,
-                        timeLimitSeconds = timeLimitSeconds,
-                        onOrderChange = { viewModel.setOrder(it) },
-                        onTimingChange = { viewModel.setTimingType(it) },
-                        onTimeLimitChange = { viewModel.setTimeLimit(it) },
-                        selectedCount = selectedIds.size,
-                        onLaunch = { title -> viewModel.launchSession(title) }
-                    )
+                    3 -> {
+                        val isAdminOnly by viewModel.sessionIsAdminOnly.collectAsStateWithLifecycle()
+                        ConfigurationStep(
+                            order = order,
+                            timingType = timingType,
+                            timeLimitSeconds = timeLimitSeconds,
+                            onOrderChange = { viewModel.setOrder(it) },
+                            onTimingChange = { viewModel.setTimingType(it) },
+                            onTimeLimitChange = { viewModel.setTimeLimit(it) },
+                            selectedCount = selectedIds.size,
+                            isAdminOnly = isAdminOnly,
+                            onIsAdminOnlyChange = { viewModel.setSessionIsAdminOnly(it) },
+                            onLaunch = { title -> viewModel.launchSession(title) }
+                        )
+                    }
                 }
             }
         }

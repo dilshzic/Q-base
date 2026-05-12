@@ -6,6 +6,8 @@ import com.algorithmx.q_base.data.collections.QuestionDao
 import com.algorithmx.q_base.data.collections.SetQuestionCrossRef
 import com.algorithmx.q_base.data.collections.CollectionExport
 import com.algorithmx.q_base.data.collections.MockExport
+import com.algorithmx.q_base.data.sessions.SessionDao
+import com.algorithmx.q_base.data.sessions.SessionExport
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -22,6 +24,7 @@ class MockDownloader @Inject constructor(
     private val okHttpClient: OkHttpClient,
     private val questionDao: QuestionDao,
     private val collectionDao: CollectionDao,
+    private val sessionDao: SessionDao,
     private val cryptoManager: com.algorithmx.q_base.core_crypto.CryptoManager
 ) {
     private val json = Json { 
@@ -78,6 +81,51 @@ class MockDownloader @Inject constructor(
             }
             
             Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun downloadAndImportSession(
+        url: String,
+        symmetricKeyBase64: String? = null
+    ): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val request = Request.Builder().url(url).build()
+            val response = okHttpClient.newCall(request).execute()
+            
+            if (!response.isSuccessful) return@withContext Result.failure(Exception("Download failed: ${response.code}"))
+            
+            val body = response.body ?: return@withContext Result.failure(Exception("Empty response body"))
+            
+            var bytes = body.bytes()
+            if (symmetricKeyBase64 != null) {
+                bytes = cryptoManager.decryptFileContent(bytes, symmetricKeyBase64)
+            }
+            
+            val zipInputStream = ZipInputStream(java.io.ByteArrayInputStream(bytes))
+            var entry = zipInputStream.nextEntry
+            var jsonString: String? = null
+            
+            while (entry != null) {
+                if (entry.name == "data.json") {
+                    jsonString = zipInputStream.bufferedReader().readText()
+                    break
+                }
+                zipInputStream.closeEntry()
+                entry = zipInputStream.nextEntry
+            }
+            zipInputStream.close()
+
+            if (jsonString == null) return@withContext Result.failure(Exception("No data.json found in zip"))
+
+            val sessionData = json.decodeFromString<SessionExport>(jsonString)
+            
+            // Insert the StudySession and its attempts to the DB
+            sessionDao.insertSession(sessionData.session)
+            sessionDao.insertAttempts(sessionData.attempts)
+            
+            Result.success(sessionData.session.sessionId)
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -3,7 +3,9 @@ package com.algorithmx.q_base.data.sessions
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Entity(tableName = "Study_Sessions")
 data class StudySession(
     @PrimaryKey
@@ -26,5 +28,7 @@ data class StudySession(
     @ColumnInfo(name = "collection_id")
     val collectionId: String? = null,
     @ColumnInfo(name = "last_question_index")
-    val lastQuestionIndex: Int = 0
+    val lastQuestionIndex: Int = 0,
+    @ColumnInfo(name = "is_admin_only")
+    val isAdminOnly: Boolean = false
 )

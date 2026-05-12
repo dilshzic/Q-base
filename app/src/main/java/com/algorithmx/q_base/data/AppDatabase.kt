@@ -25,7 +25,7 @@ import com.algorithmx.q_base.data.sessions.*
         com.algorithmx.q_base.data.ai.AiResponseEntity::class,
         com.algorithmx.q_base.data.ai.BrainUsageEntity::class
     ],
-    version = 25,
+    version = 26,
     exportSchema = false
 )
 @TypeConverters(com.algorithmx.q_base.data.util.TypeConverters::class)

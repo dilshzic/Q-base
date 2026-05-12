@@ -56,6 +56,7 @@ class ActiveSessionViewModel @Inject constructor(
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private var _sessionId: String = ""
+    private var _chatId: String? = null
 
     private val _attempts = MutableStateFlow<List<SessionAttempt>>(emptyList())
     val attempts: StateFlow<List<SessionAttempt>> = _attempts.asStateFlow()
@@ -111,7 +112,8 @@ class ActiveSessionViewModel @Inject constructor(
 
     private var timerJob: Job? = null
 
-    fun setSessionId(id: String) {
+    fun setSessionId(id: String, chatId: String? = null) {
+        _chatId = chatId
         if (_sessionId == id) return
         _sessionId = id
         loadSessionData()
@@ -119,13 +121,33 @@ class ActiveSessionViewModel @Inject constructor(
         startTimer()
     }
 
+    private val _isReadOnly = MutableStateFlow(false)
+    val isReadOnly: StateFlow<Boolean> = _isReadOnly.asStateFlow()
+
     fun getSessionId(): String = _sessionId
 
     private fun loadSessionData() {
         viewModelScope.launch {
-            repository.getSessionById(_sessionId)?.let { 
-                _session.value = it
-                _timeLimitSeconds.value = it.timeLimitSeconds 
+            repository.getSessionById(_sessionId)?.let { session ->
+                _session.value = session
+                _timeLimitSeconds.value = session.timeLimitSeconds 
+
+                // Evaluate if session editing is restricted to admins only
+                if (session.isAdminOnly) {
+                    val colId = session.collectionId
+                    if (colId != null) {
+                        val collection = repository.getStudyCollectionByIdOnce(colId)
+                        val groupId = collection?.sharedWithGroupId
+                        if (groupId != null) {
+                            val chat = syncRepository.getChatById(groupId)
+                            val currentUid = currentUser.value?.userId ?: authRepository.currentUser.firstOrNull()?.uid
+                            if (chat != null && chat.adminId != currentUid) {
+                                _isReadOnly.value = true
+                                Log.d("ActiveSessionViewModel", "Session is marked Admin-Only. Non-admin user is restricted to Read-Only access.")
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -191,6 +213,7 @@ class ActiveSessionViewModel @Inject constructor(
     }
 
     fun onAnswerSelected(optionLetter: String) {
+        if (_isReadOnly.value) return // Block if session is read-only
         val currentAttempt = _attempts.value.getOrNull(_currentQuestionIndex.value) ?: return
         if (_session.value?.isCompleted == true) return // Disable answering in completed sessions
 
@@ -231,6 +254,7 @@ class ActiveSessionViewModel @Inject constructor(
     }
 
     fun toggleFlag() {
+        if (_isReadOnly.value) return // Block if session is read-only
         val currentAttempt = _attempts.value.getOrNull(_currentQuestionIndex.value) ?: return
         val newStatus = if (currentAttempt.attemptStatus == "FLAGGED") "ATTEMPTED" else "FLAGGED"
         updateAttempt(currentAttempt.copy(attemptStatus = newStatus))
@@ -239,6 +263,26 @@ class ActiveSessionViewModel @Inject constructor(
     private fun updateAttempt(attempt: SessionAttempt) {
         viewModelScope.launch {
             repository.updateAttemptAndRecalculate(attempt)
+            
+            // Micro-update real-time synchronization pipeline
+            try {
+                val activeChatId = _chatId ?: _session.value?.collectionId?.let { colId ->
+                    repository.getStudyCollectionByIdOnce(colId)?.sharedWithGroupId
+                }
+                
+                if (activeChatId != null) {
+                    val data = org.json.JSONObject()
+                    data.put("questionId", attempt.questionId)
+                    data.put("attemptStatus", attempt.attemptStatus)
+                    data.put("userSelectedAnswers", attempt.userSelectedAnswers)
+                    data.put("marksObtained", attempt.marksObtained.toDouble())
+                    
+                    syncRepository.sendSessionPatch(activeChatId, _sessionId, "UPSERT_ATTEMPT", data)
+                    Log.d("ActiveSessionViewModel", "Dispatched attempt sync patch for question ${attempt.questionId} to chat $activeChatId")
+                }
+            } catch (e: Exception) {
+                Log.e("ActiveSessionViewModel", "Failed to send micro-update attempt patch", e)
+            }
         }
     }
 
@@ -284,6 +328,7 @@ class ActiveSessionViewModel @Inject constructor(
     }
 
     fun submitSession() {
+        if (_isReadOnly.value) return // Block if session is read-only
         viewModelScope.launch {
             val currentSession = _session.value ?: return@launch
             val updatedSession = currentSession.copy(isCompleted = true)
@@ -292,6 +337,26 @@ class ActiveSessionViewModel @Inject constructor(
 
             val finalAttempts = _attempts.value.map { it.copy(attemptStatus = "FINALIZED") }
             finalAttempts.forEach { repository.updateAttempt(it) }
+            
+            // Micro-update real-time synchronization pipeline on final submit
+            try {
+                val activeChatId = _chatId ?: _session.value?.collectionId?.let { colId ->
+                    repository.getStudyCollectionByIdOnce(colId)?.sharedWithGroupId
+                }
+                
+                if (activeChatId != null) {
+                    val data = org.json.JSONObject()
+                    data.put("title", updatedSession.title)
+                    data.put("isCompleted", true)
+                    data.put("scoreAchieved", updatedSession.scoreAchieved.toDouble())
+                    
+                    syncRepository.sendSessionPatch(activeChatId, _sessionId, "UPDATE_SESSION", data)
+                    Log.d("ActiveSessionViewModel", "Dispatched session completion sync patch to chat $activeChatId")
+                }
+            } catch (e: Exception) {
+                Log.e("ActiveSessionViewModel", "Failed to send micro-update session patch", e)
+            }
+
             timerJob?.cancel()
             _navigationEvents.emit(SessionNavEvent.NavigateToResults(_sessionId))
         }

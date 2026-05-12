@@ -42,12 +42,11 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
 
         entry<Screen.Home> {
             HomeScreen(
-                onNavigateToExplore = { navigator.navigate(Screen.Explore) },
+                onNavigateToCollections = { navigator.navigate(Screen.Collections) },
                 onNavigateToSessions = { navigator.navigate(Screen.Sessions()) },
                 onNavigateToSession = { sessionId -> navigator.navigate(Screen.ActiveSession(sessionId)) },
-                onNavigateToCollections = { navigator.navigate(Screen.Collections) },
                 onNewSessionWizard = { navigator.navigate(Screen.NewSessionWizard) },
-                onNavigateToUnifiedCreation = { navigator.navigate(Screen.UnifiedCreation) },
+                onNavigateToCreateNewCollection = { navigator.navigate(Screen.CreateNewCollection) },
                 onCollectionClick = { collectionId ->
                     navigator.navigate(Screen.CollectionOverview(collectionId))
                 },
@@ -66,25 +65,9 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onSetClick = { setId, title ->
                     navigator.navigate(Screen.ExploreSet(setId))
                 },
-                onNavigateToUnifiedCreation = { navigator.navigate(Screen.UnifiedCreation) },
+                onNavigateToCreateNewCollection = { navigator.navigate(Screen.CreateNewCollection) },
                 onProfileClick = { navigator.navigate(Screen.Profile) },
-                onBack = { navigator.navigate(Screen.Home) } // Go home from Explore
-            )
-        }
-
-        entry<Screen.Categories> {
-            val viewModel: ExploreViewModel = hiltViewModel()
-            UnifiedExploreScreen(
-                viewModel = viewModel,
-                onCollectionClick = { collectionId ->
-                    navigator.navigate(Screen.CollectionOverview(collectionId))
-                },
-                onSetClick = { setId, title ->
-                    navigator.navigate(Screen.ExploreSet(setId))
-                },
-                onNavigateToUnifiedCreation = { navigator.navigate(Screen.UnifiedCreation) },
-                onProfileClick = { navigator.navigate(Screen.Profile) },
-                onBack = { navigator.navigate(Screen.Home) }
+                onBack = { navigator.goBack() }
             )
         }
 
@@ -96,12 +79,12 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
             val sessions by viewModel.sessions.collectAsStateWithLifecycle()
             val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
             
-            LaunchedEffect(key.categoryName) {
-                viewModel.loadQuestionsByStudyCollection(key.categoryName)
+            LaunchedEffect(key.collectionName) {
+                viewModel.loadQuestionsByStudyCollection(key.collectionName)
             }
             
             ExploreQuestionPagerScreen(
-                categoryName = key.categoryName,
+                collectionName = key.collectionName,
                 questionStates = questionStates,
                 collections = sets,
                 sessions = sessions,
@@ -153,7 +136,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onSetClick = { setId, _ ->
                     navigator.navigate(Screen.ExploreSet(setId))
                 },
-                onNavigateToUnifiedCreation = { navigator.navigate(Screen.UnifiedCreation) },
+                onNavigateToCreateNewCollection = { navigator.navigate(Screen.CreateNewCollection) },
                 onProfileClick = { navigator.navigate(Screen.Profile) },
                 onBack = { navigator.goBack() }
             )
@@ -212,7 +195,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
             }
 
             ExploreQuestionPagerScreen(
-                categoryName = sets.find { it.setId == key.setId }?.title ?: "Questions",
+                collectionName = sets.find { it.setId == key.setId }?.title ?: "Questions",
                 questionStates = questionStates,
                 collections = sets,
                 sessions = sessions,
@@ -284,7 +267,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
         entry<Screen.ActiveSession> { key ->
             val viewModel: ActiveSessionViewModel = hiltViewModel()
             LaunchedEffect(key.sessionId) {
-                viewModel.setSessionId(key.sessionId)
+                viewModel.setSessionId(key.sessionId, key.chatId)
             }
             ActiveSessionScreen(
                 viewModel = viewModel,
@@ -303,7 +286,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
             SessionResultsScreen(
                 viewModel = viewModel,
                 onDone = {
-                    navigator.navigate(Screen.Sessions())
+                    navigator.goBack()
                 }
             )
         }
@@ -347,7 +330,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
             )
         }
 
-        entry<Screen.UnifiedCreation> {
+        entry<Screen.CreateNewCollection> {
             ImportWizardScreen(
                 viewModel = hiltViewModel(),
                 source = null,
@@ -399,6 +382,9 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                     } else {
                         navigator.navigate(Screen.ContactOverview(chatId))
                     }
+                },
+                onJoinSession = { sessionId ->
+                    navigator.navigate(Screen.ActiveSession(sessionId = sessionId, chatId = key.chatId))
                 }
             )
         }

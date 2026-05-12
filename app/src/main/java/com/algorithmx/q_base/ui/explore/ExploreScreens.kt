@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExploreQuestionPagerScreen(
-    categoryName: String,
+    collectionName: String,
     questionStates: List<ExploreQuestionState>,
     collections: List<QuestionSet>,
     sessions: List<StudySession>,
@@ -97,7 +97,7 @@ fun ExploreQuestionPagerScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             UnifiedTopAppBar(
-                title = categoryName,
+                title = collectionName,
                 currentUser = currentUser,
                 onProfileClick = onProfileClick,
                 isLarge = false,

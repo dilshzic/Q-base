@@ -427,16 +427,21 @@ fun NewSessionWizard(
                         onRandomSelect = { viewModel.selectRandomQuestions(it) },
                         onNext = { viewModel.setWizardStep(3) }
                     )
-                    3 -> ConfigurationStep(
-                        order = order,
-                        timingType = timingType,
-                        timeLimitSeconds = timeLimitSeconds,
-                        onOrderChange = { viewModel.setOrder(it) },
-                        onTimingChange = { viewModel.setTimingType(it) },
-                        onTimeLimitChange = { viewModel.setTimeLimit(it) },
-                        selectedCount = selectedIds.size,
-                        onLaunch = { title -> viewModel.launchSession(title) }
-                    )
+                    3 -> {
+                        val isAdminOnly by viewModel.sessionIsAdminOnly.collectAsState()
+                        ConfigurationStep(
+                            order = order,
+                            timingType = timingType,
+                            timeLimitSeconds = timeLimitSeconds,
+                            onOrderChange = { viewModel.setOrder(it) },
+                            onTimingChange = { viewModel.setTimingType(it) },
+                            onTimeLimitChange = { viewModel.setTimeLimit(it) },
+                            selectedCount = selectedIds.size,
+                            isAdminOnly = isAdminOnly,
+                            onIsAdminOnlyChange = { viewModel.setSessionIsAdminOnly(it) },
+                            onLaunch = { title -> viewModel.launchSession(title) }
+                        )
+                    }
                 }
             }
         }
@@ -607,6 +612,8 @@ fun ConfigurationStep(
     onTimingChange: (String) -> Unit,
     onTimeLimitChange: (Int) -> Unit,
     selectedCount: Int,
+    isAdminOnly: Boolean,
+    onIsAdminOnlyChange: (Boolean) -> Unit,
     onLaunch: (String) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
@@ -657,6 +664,29 @@ fun ConfigurationStep(
                     )
                 }
             }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Admin-Only Session",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Only group admins can answer, submit, or edit attempts.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = isAdminOnly,
+                onCheckedChange = onIsAdminOnlyChange
+            )
         }
 
         Spacer(modifier = Modifier.height(12.dp))

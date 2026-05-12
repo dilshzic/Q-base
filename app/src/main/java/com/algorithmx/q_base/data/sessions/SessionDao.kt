@@ -40,6 +40,9 @@ interface SessionDao {
     @Query("SELECT * FROM Session_Attempts WHERE session_id = :sessionId")
     fun getAttemptsForSession(sessionId: String): Flow<List<SessionAttempt>>
 
+    @Query("SELECT * FROM Session_Attempts WHERE session_id = :sessionId")
+    suspend fun getAttemptsForSessionOnce(sessionId: String): List<SessionAttempt>
+
     @Update
     suspend fun updateAttempt(attempt: SessionAttempt)
 

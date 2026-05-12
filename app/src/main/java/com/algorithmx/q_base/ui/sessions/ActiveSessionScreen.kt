@@ -65,6 +65,7 @@ fun ActiveSessionScreen(
     val currentAnswer by viewModel.currentAnswer.collectAsStateWithLifecycle()
     val aiResponse by viewModel.aiResponse.collectAsStateWithLifecycle()
     val isAiLoading by viewModel.isAiLoading.collectAsStateWithLifecycle()
+    val isReadOnly by viewModel.isReadOnly.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     
     val pagerState = rememberPagerState(pageCount = { attempts.size })
@@ -107,7 +108,7 @@ fun ActiveSessionScreen(
         topBar = {
             UnifiedTopAppBar(
                 title = session?.title ?: "Active Session",
-                subtitle = "Practice Progress",
+                subtitle = if (isReadOnly) "Read-Only (Admin-Only)" else "Practice Progress",
                 currentUser = currentUser,
                 onProfileClick = { /* Navigate to profile? Or just icon */ },
                 navigationIcon = {
@@ -116,11 +117,19 @@ fun ActiveSessionScreen(
                     }
                 },
                 actions = {
-                    if (!isCompleted) {
+                    IconButton(onClick = { showNavigator = true }) {
+                        Icon(Icons.Rounded.GridView, contentDescription = "Navigator")
+                    }
+                    if (isCompleted) {
+                        IconButton(onClick = { onViewResults(viewModel.getSessionId()) }) {
+                            Icon(Icons.Default.Assessment, contentDescription = "View Results", tint = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                    if (!isCompleted && !isReadOnly) {
                         Button(
                             onClick = { viewModel.submitSession() },
                             shape = MaterialTheme.shapes.medium,
-                            modifier = Modifier.padding(end = 8.dp)
+                            modifier = Modifier.padding(horizontal = 8.dp)
                         ) {
                             Text("FINISH", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
                         }
@@ -164,6 +173,41 @@ fun ActiveSessionScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
+            if (isReadOnly) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                "Read-Only Access",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Text(
+                                "This session is marked as Admin-Only. Non-admins cannot submit answers.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
+            }
+
             // Expressive Progress and Info Row
             Row(
                 modifier = Modifier
@@ -214,22 +258,6 @@ fun ActiveSessionScreen(
                             contentDescription = "Flag",
                             tint = if (currentAttempt?.attemptStatus == "FLAGGED") warningOrange else MaterialTheme.colorScheme.outlineVariant
                         )
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    IconButton(
-                        onClick = { showNavigator = true },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(Icons.Rounded.GridView, contentDescription = "Navigator")
-                    }
-                    if (isCompleted) {
-                        Spacer(modifier = Modifier.width(4.dp))
-                        IconButton(
-                            onClick = { onViewResults(viewModel.getSessionId()) },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(Icons.Default.Assessment, contentDescription = "View Results", tint = MaterialTheme.colorScheme.primary)
-                        }
                     }
                     Spacer(modifier = Modifier.width(4.dp))
 

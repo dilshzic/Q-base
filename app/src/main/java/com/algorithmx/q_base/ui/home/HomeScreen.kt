@@ -39,12 +39,11 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun HomeScreen(
-    onNavigateToExplore: () -> Unit,
+    onNavigateToCollections: () -> Unit,
     onNavigateToSessions: () -> Unit,
     onNavigateToSession: (String) -> Unit,
-    onNavigateToCollections: () -> Unit,
     onNewSessionWizard: () -> Unit,
-    onNavigateToUnifiedCreation: () -> Unit,
+    onNavigateToCreateNewCollection: () -> Unit,
     onCollectionClick: (String) -> Unit,
     onProfileClick: () -> Unit,
     onNavigateToNotifications: () -> Unit,
@@ -107,13 +106,13 @@ fun HomeScreen(
                         subtitle = "Create set",
                         icon = Icons.Rounded.CreateNewFolder,
                         containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                        onClick = onNavigateToUnifiedCreation,
+                        onClick = onNavigateToCreateNewCollection,
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
 
-            // Section: Categories (Renamed to Collections, vertically rectangular)
+            // Section: Collections
             if (collections.isNotEmpty()) {
                 item {
                     SectionHeader("Collections", icon = Icons.Rounded.FolderOpen, onActionClick = onNavigateToCollections)
@@ -397,7 +396,7 @@ fun EmptyHomeView(onNavigate: () -> Unit) {
                 shape = MaterialTheme.shapes.large,
                 modifier = Modifier.height(56.dp).fillMaxWidth()
             ) {
-                Text("Explore Categories", style = MaterialTheme.typography.titleMedium)
+                Text("Explore Collections", style = MaterialTheme.typography.titleMedium)
             }
         }
     }

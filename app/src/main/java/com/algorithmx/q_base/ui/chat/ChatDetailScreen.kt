@@ -54,6 +54,7 @@ fun ChatDetailScreen(
     onBack: () -> Unit,
     onHeaderClick: (String) -> Unit,
     onProfileClick: () -> Unit,
+    onJoinSession: (String) -> Unit,
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val state by viewModel.chatDetailState.collectAsState()
@@ -325,7 +326,7 @@ fun ChatDetailScreen(
                     collections = sharedCollections,
                     sessions = sharedSessions,
                     onImport = { payload -> viewModel.importSharedCollection(payload) },
-                    onJoinSession = { sessionId -> viewModel.shareSession(state.chat!!.chatId, sessionId) },
+                    onJoinSession = { sessionId -> viewModel.joinSession(sessionId, onJoinSession) },
                     localCollections = localCollections,
                     isAdmin = isAdmin,
                     accessRequests = accessRequests,
@@ -380,7 +381,7 @@ fun ChatDetailScreen(
                                             viewModel.addSharedCollection(payload)
                                             savedCollections += payload
                                         },
-                                        onJoinSession = { sessionId -> viewModel.shareSession(state.chat!!.chatId, sessionId) },
+                                        onJoinSession = { payload -> viewModel.joinSession(payload, onJoinSession) },
                                         onReportMessage = {
                                             reportingMessage = message
                                         },

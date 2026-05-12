@@ -38,7 +38,7 @@ fun UnifiedExploreScreen(
     viewModel: ExploreViewModel,
     onCollectionClick: (String) -> Unit,
     onSetClick: (String, String) -> Unit,
-    onNavigateToUnifiedCreation: () -> Unit,
+    onNavigateToCreateNewCollection: () -> Unit,
     onProfileClick: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -67,7 +67,7 @@ fun UnifiedExploreScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             UnifiedTopAppBar(
-                title = if (isSelectionMode) "${selectedIds.size} Selected" else "Explorer",
+                title = if (isSelectionMode) "${selectedIds.size} Selected" else "Collections",
                 subtitle = if (isSelectionMode) null else "Your complete question library",
                 currentUser = currentUser,
                 onProfileClick = onProfileClick,
@@ -90,7 +90,7 @@ fun UnifiedExploreScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = onNavigateToUnifiedCreation,
+                onClick = onNavigateToCreateNewCollection,
                 icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
                 text = { Text("Create New") },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,

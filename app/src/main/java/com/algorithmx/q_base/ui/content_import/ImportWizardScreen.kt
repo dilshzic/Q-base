@@ -186,7 +186,7 @@ fun WelcomeView(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            "Quick Creation",
+            "Create new collection",
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Black,
             textAlign = TextAlign.Center

@@ -6,6 +6,8 @@ import com.algorithmx.q_base.data.collections.QuestionDao
 import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.data.collections.CollectionExport
 import com.algorithmx.q_base.data.collections.QuestionExport
+import com.algorithmx.q_base.data.sessions.SessionDao
+import com.algorithmx.q_base.data.sessions.SessionExport
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -22,7 +24,8 @@ import javax.inject.Singleton
 class MockExporter @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val collectionDao: CollectionDao,
-    private val questionDao: QuestionDao
+    private val questionDao: QuestionDao,
+    private val sessionDao: SessionDao
 ) {
     private val json = Json { prettyPrint = true }
 
@@ -58,6 +61,31 @@ class MockExporter @Inject constructor(
             zipFile
         } catch (e: Exception) {
             android.util.Log.e("MockExporter", "Failed to zip collection $collectionId", e)
+            null
+        }
+    }
+
+    suspend fun exportSession(sessionId: String): File? = withContext(Dispatchers.IO) {
+        val session = sessionDao.getSessionById(sessionId) ?: return@withContext null
+        val attempts = sessionDao.getAttemptsForSessionOnce(sessionId)
+        
+        val exportData = SessionExport(session, attempts)
+        val jsonString = json.encodeToString(exportData)
+        
+        val exportDir = File(context.cacheDir, "exports").apply { if (!exists()) mkdirs() }
+        val zipFile = File(exportDir, "session_${sessionId}.zip")
+        
+        try {
+            ZipOutputStream(FileOutputStream(zipFile)).use { zos ->
+                val entry = ZipEntry("data.json")
+                zos.putNextEntry(entry)
+                zos.write(jsonString.toByteArray())
+                zos.closeEntry()
+            }
+            android.util.Log.d("MockExporter", "Exported session $sessionId to ${zipFile.absolutePath} (${zipFile.length()} bytes)")
+            zipFile
+        } catch (e: Exception) {
+            android.util.Log.e("MockExporter", "Failed to zip session $sessionId", e)
             null
         }
     }

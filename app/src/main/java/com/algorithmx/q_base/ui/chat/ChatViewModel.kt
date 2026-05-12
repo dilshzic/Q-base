@@ -550,22 +550,84 @@ class ChatViewModel @Inject constructor(
 
     fun shareSession(chatId: String, sessionId: String) {
         viewModelScope.launch {
+            _isAiLoading.value = true // Show loading
             try {
-                _isAiLoading.value = true // Show loading
-                val session = sessionDao.getSessionById(sessionId)
-                val sessionTitle = session?.title ?: "Study Session"
+                val session = sessionDao.getSessionById(sessionId) ?: throw Exception("Session not found")
+                val sessionTitle = session.title
                 
-                val chat = chatDao.getChatById(chatId)
-                if (chat?.isGroup == true) {
-                    syncRepository.addSharedSessionToGroup(chatId, sessionId, sessionTitle)
+                val chat = chatDao.getChatById(chatId) ?: throw Exception("Chat not found")
+                
+                _actionFeedback.emit("Exporting and zipping study session...")
+                val zipFile = mockExporter.exportSession(sessionId) ?: throw Exception("Failed to export session")
+                
+                _actionFeedback.emit("Uploading encrypted session...")
+                val (downloadUrl, symmetricKey) = syncRepository.uploadQuestionBankZip(zipFile)
+                
+                if (chat.isGroup) {
+                    syncRepository.addSharedSessionToGroup(chatId, sessionId, sessionTitle, downloadUrl, symmetricKey)
                     sendMessage(chatId, "shared a study session: $sessionTitle", type = "DB_CHANGE")
                 } else {
-                    syncRepository.sendSessionInvite(chatId, sessionId, sessionTitle)
+                    syncRepository.sendSessionInvite(chatId, sessionId, sessionTitle, downloadUrl, symmetricKey)
                 }
+                
+                mockExporter.cleanup(zipFile)
                 _actionFeedback.emit("Session shared successfully")
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Failed to share session", e)
                 _actionFeedback.emit("Failed to share session: ${e.message}")
+            } finally {
+                _isAiLoading.value = false
+            }
+        }
+    }
+
+    fun joinSession(sessionIdOrPayload: String, onSessionImported: (String) -> Unit) {
+        viewModelScope.launch {
+            _isAiLoading.value = true
+            try {
+                var downloadUrl: String? = null
+                var symmetricKey: String? = null
+                var sessionId: String = sessionIdOrPayload
+                
+                if (sessionIdOrPayload.contains("|E2EE_KEY|")) {
+                    val parts = sessionIdOrPayload.split("|E2EE_KEY|")
+                    downloadUrl = parts.getOrNull(0)
+                    val remainder = parts.getOrNull(1) ?: ""
+                    symmetricKey = remainder.substringBefore("|SESSION_ID|")
+                    sessionId = remainder.substringAfter("|SESSION_ID|", "").substringBefore("|TITLE|")
+                } else {
+                    // Try finding in sharedSessions list
+                    val sharedSessionsList = _sharedSessions.value
+                    val matchingSession = sharedSessionsList.find { (it["sessionId"] as? String) == sessionIdOrPayload }
+                    if (matchingSession != null) {
+                        downloadUrl = matchingSession["downloadUrl"] as? String
+                        symmetricKey = matchingSession["symmetricKey"] as? String
+                        sessionId = sessionIdOrPayload
+                    }
+                }
+                
+                if (!downloadUrl.isNullOrBlank()) {
+                    _actionFeedback.emit("Downloading and joining study session...")
+                    val result = mockDownloader.downloadAndImportSession(downloadUrl, symmetricKey)
+                    if (result.isSuccess) {
+                        val importedId = result.getOrNull() ?: sessionId
+                        _actionFeedback.emit("Session joined successfully!")
+                        onSessionImported(importedId)
+                    } else {
+                        val error = result.exceptionOrNull()?.message ?: "Unknown error"
+                        _actionFeedback.emit("Failed to join session: $error")
+                    }
+                } else {
+                    val existing = sessionDao.getSessionById(sessionId)
+                    if (existing != null) {
+                        onSessionImported(sessionId)
+                    } else {
+                        _actionFeedback.emit("Session data not found locally or on the cloud.")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ChatViewModel", "Error joining session", e)
+                _actionFeedback.emit("Failed to join session: ${e.message}")
             } finally {
                 _isAiLoading.value = false
             }

@@ -14,9 +14,9 @@ sealed class Screen : NavKey {
     @Serializable data class ChatDetail(val chatId: String) : Screen()
     @Serializable data class ContactOverview(val chatId: String) : Screen()
     @Serializable data class GroupOverview(val chatId: String) : Screen()
-    @Serializable data class ActiveSession(val sessionId: String) : Screen()
+    @Serializable data class ActiveSession(val sessionId: String, val chatId: String? = null) : Screen()
     @Serializable data class SessionResults(val sessionId: String) : Screen()
-    @Serializable data object UnifiedCreation : Screen()
+    @Serializable data object CreateNewCollection : Screen()
     
     @Serializable data class ManualBuilder(val targetId: String? = null, val name: String? = null) : Screen()
     @Serializable data class ExtractionConfig(val extractedText: String, val targetId: String? = null) : Screen()
@@ -29,9 +29,7 @@ sealed class Screen : NavKey {
     @Serializable data object AiBrainManager : Screen()
     @Serializable data class ImportWizard(val source: String? = null, val targetId: String? = null) : Screen()
     
-    // Nested Explore Routes
-    @Serializable data object Categories : Screen()
-    @Serializable data class ExplorePager(val categoryName: String) : Screen()
+    @Serializable data class ExplorePager(val collectionName: String) : Screen()
     @Serializable data class AiGeneration(val collectionId: String, val collectionName: String) : Screen()
     @Serializable data object Collections : Screen()
     @Serializable data class CollectionOverview(val collectionId: String) : Screen()

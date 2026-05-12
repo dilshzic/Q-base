@@ -49,8 +49,8 @@ fun UnifiedTopAppBar(
                 text = title,
                 style = if (isLarge) MaterialTheme.typography.displaySmall else MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.ExtraBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                maxLines = 2,
+                lineHeight = if (isLarge) 32.sp else 24.sp
             )
             if (subtitle != null) {
                 Text(

@@ -134,9 +134,13 @@ class SessionsViewModel @Inject constructor(
         _lastRandomCount.value = count
     }
 
+    private val _sessionIsAdminOnly = MutableStateFlow(false)
+    val sessionIsAdminOnly = _sessionIsAdminOnly.asStateFlow()
+
     fun setOrder(order: String) { _sessionOrder.value = order }
     fun setTimingType(type: String) { _timingType.value = type }
     fun setTimeLimit(seconds: Int) { _timeLimitSeconds.value = seconds }
+    fun setSessionIsAdminOnly(value: Boolean) { _sessionIsAdminOnly.value = value }
 
     fun launchSession(title: String) {
         viewModelScope.launch {
@@ -145,7 +149,8 @@ class SessionsViewModel @Inject constructor(
                 questionIds = _selectedQuestionIds.value.toList(),
                 timeLimitSeconds = if (_timingType.value != "NONE") _timeLimitSeconds.value else null,
                 timingType = _timingType.value,
-                isRandom = _sessionOrder.value == "RANDOM"
+                isRandom = _sessionOrder.value == "RANDOM",
+                isAdminOnly = _sessionIsAdminOnly.value
             )
             _sessionCreated.emit(sessionId)
             resetWizard()
@@ -160,6 +165,7 @@ class SessionsViewModel @Inject constructor(
         _sessionOrder.value = "SEQUENTIAL"
         _timingType.value = "NONE"
         _lastRandomCount.value = null
+        _sessionIsAdminOnly.value = false
     }
 
     fun toggleSessionSelection(sessionId: String) {

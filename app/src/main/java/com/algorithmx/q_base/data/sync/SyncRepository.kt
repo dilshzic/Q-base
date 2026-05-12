@@ -141,6 +141,11 @@ class SyncRepository @Inject constructor(
                                 applyCollectionPatch(payload)
                             }
                             
+                            // Handle SESSION_PATCH: Apply micro-updates to study sessions and attempts in real-time
+                            if (type == "SESSION_PATCH" && decryptionStatus == "SUCCESS") {
+                                applySessionPatch(payload)
+                            }
+                            
                             // 3. Update chat's last used key fingerprint if it's a success
                             if (decryptionStatus == "SUCCESS" && keyFingerprint != null) {
                                 chatDao.getChatById(chatId)?.let { chat ->
@@ -294,7 +299,7 @@ class SyncRepository @Inject constructor(
             "senderId" to message.senderId,
             "ciphertextPayload" to ciphertextPayload,
             "wrappedKeys" to wrappedKeys,
-            "payload" to message.payload,
+            "payload" to "ENCRYPTED_MESSAGE",
             "type" to message.type,
             "timestamp" to message.timestamp,
             "participantIds" to participants,
@@ -411,11 +416,6 @@ class SyncRepository @Inject constructor(
                                 // Increment unread count for local badge
                                 chatDao.incrementUnreadCount(chatId)
                                 
-                                // Trigger immediate background message sync and wait for the decrypted message
-                                val decryptedMessage = observeAndSyncMessages(chatId)
-                                    .filterNotNull()
-                                    .first()
-                                
                                 if (localChat?.isBlocked == true) {
                                     Log.d("SyncRepository", "Skipping notification for blocked chat $chatId")
                                     return@launch
@@ -424,7 +424,7 @@ class SyncRepository @Inject constructor(
                                 notificationHelper.showMessageNotification(
                                     chatId = chatId, 
                                     senderName = title, 
-                                    message = decryptedMessage.payload
+                                    message = body
                                 )
                             }
                         } else if (sessionId != null) {
@@ -463,7 +463,13 @@ class SyncRepository @Inject constructor(
         }
     }
 
-    suspend fun sendSessionInvite(chatId: String, sessionId: String, sessionTitle: String) {
+    suspend fun sendSessionInvite(
+        chatId: String, 
+        sessionId: String, 
+        sessionTitle: String,
+        downloadUrl: String,
+        symmetricKey: String
+    ) {
         val senderId = currentUserId ?: return
         val messageId = UUID.randomUUID().toString()
         
@@ -471,7 +477,7 @@ class SyncRepository @Inject constructor(
             messageId = messageId,
             chatId = chatId,
             senderId = senderId,
-            payload = "$sessionId|$sessionTitle",
+            payload = "$downloadUrl|E2EE_KEY|$symmetricKey|SESSION_ID|$sessionId|TITLE|$sessionTitle",
             type = "SESSION_INVITE",
             timestamp = System.currentTimeMillis()
         )
@@ -789,11 +795,19 @@ class SyncRepository @Inject constructor(
         }
     }
 
-    suspend fun addSharedSessionToGroup(chatId: String, sessionId: String, sessionTitle: String) {
+    suspend fun addSharedSessionToGroup(
+        chatId: String, 
+        sessionId: String, 
+        sessionTitle: String,
+        downloadUrl: String,
+        symmetricKey: String
+    ) {
         try {
             val sessionMetadata = hashMapOf(
                 "sessionId" to sessionId,
                 "title" to sessionTitle,
+                "downloadUrl" to downloadUrl,
+                "symmetricKey" to symmetricKey,
                 "sharedBy" to (currentUserId ?: "Unknown"),
                 "timestamp" to System.currentTimeMillis()
             )
@@ -995,6 +1009,66 @@ class SyncRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("SyncRepository", "Failed to apply collection patch", e)
+        }
+    }
+
+    suspend fun sendSessionPatch(chatId: String, sessionId: String, op: String, data: JSONObject) {
+        val patchObj = JSONObject()
+        patchObj.put("sessionId", sessionId)
+        patchObj.put("op", op)
+        patchObj.put("data", data)
+        
+        val message = MessageEntity(
+            messageId = UUID.randomUUID().toString(),
+            chatId = chatId,
+            senderId = currentUserId ?: "",
+            payload = patchObj.toString(),
+            type = "SESSION_PATCH",
+            timestamp = System.currentTimeMillis()
+        )
+        sendMessage(message)
+    }
+
+    private suspend fun applySessionPatch(jsonString: String) {
+        try {
+            val patch = JSONObject(jsonString)
+            val op = patch.getString("op")
+            val sessionId = patch.getString("sessionId")
+            val data = patch.getJSONObject("data")
+
+            when (op) {
+                "UPSERT_ATTEMPT" -> {
+                    val qId = data.getString("questionId")
+                    val attemptStatus = data.getString("attemptStatus")
+                    val userSelectedAnswers = data.getString("userSelectedAnswers")
+                    val marksObtained = data.optDouble("marksObtained", 0.0).toFloat()
+
+                    val attempt = SessionAttempt(
+                        sessionId = sessionId,
+                        questionId = qId,
+                        attemptStatus = attemptStatus,
+                        userSelectedAnswers = userSelectedAnswers,
+                        marksObtained = marksObtained
+                    )
+                    sessionDao.insertAttempts(listOf(attempt))
+                }
+                "UPDATE_SESSION" -> {
+                    val title = data.getString("title")
+                    val isCompleted = data.getBoolean("isCompleted")
+                    val scoreAchieved = data.optDouble("scoreAchieved", 0.0).toFloat()
+                    
+                    val existing = sessionDao.getSessionById(sessionId)
+                    if (existing != null) {
+                        sessionDao.updateSession(existing.copy(
+                            title = title,
+                            isCompleted = isCompleted,
+                            scoreAchieved = scoreAchieved
+                        ))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("SyncRepository", "Failed to apply session patch", e)
         }
     }
 

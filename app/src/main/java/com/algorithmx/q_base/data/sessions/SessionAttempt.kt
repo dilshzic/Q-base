@@ -6,7 +6,9 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.algorithmx.q_base.data.collections.Question
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Entity(
     tableName = "Session_Attempts",
     foreignKeys = [
