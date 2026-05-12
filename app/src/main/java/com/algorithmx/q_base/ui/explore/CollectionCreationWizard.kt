@@ -107,7 +107,7 @@ fun DetailsStep(
             value = title,
             onValueChange = onTitleChange,
             label = { Text("Collection Title") },
-            placeholder = { Text("e.g. Cardiology Essentials") },
+            placeholder = { Text("e.g. Physics Essentials") },
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
             singleLine = true

@@ -9,9 +9,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.rounded.Group
 import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,12 +26,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactSelector(
     onUserSelected: (UserEntity) -> Unit = {},
     onUsersSelected: (List<UserEntity>) -> Unit = {},
     multiSelectMode: Boolean = false,
+    onBack: (() -> Unit)? = null,
+    onProfileClick: (() -> Unit)? = null,
+    onNavigateToNewGroup: (() -> Unit)? = null,
+    currentUser: UserEntity? = null,
+    titleCentered: Boolean = false,
     modifier: Modifier = Modifier,
     viewModel: ContactSelectorViewModel = hiltViewModel()
 ) {
@@ -44,120 +53,181 @@ fun ContactSelector(
         }
     }
 
-    Column(modifier = modifier.fillMaxWidth()) {
-        // Friend Code Search Section (Distinct)
-        Card(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    "Search by Friend Code",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(
-                        value = friendCodeQuery,
-                        onValueChange = { friendCodeQuery = it.uppercase() },
-                        modifier = Modifier.weight(1f),
-                        placeholder = { Text("e.g. QBS-A1B2-C3D4") },
-                        leadingIcon = { Icon(Icons.Rounded.QrCodeScanner, contentDescription = null) },
-                        shape = RoundedCornerShape(16.dp),
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                            focusedContainerColor = MaterialTheme.colorScheme.surface
-                        )
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = { viewModel.searchByFriendCode(friendCodeQuery) },
-                        enabled = friendCodeQuery.isNotBlank() && !state.isSearching,
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        if (state.isSearching) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                        } else {
-                            Text("Find")
+    Scaffold(
+        topBar = {
+            if (onBack != null) {
+                UnifiedTopAppBar(
+                    title = if (multiSelectMode) "Select Participants" else "New Chat",
+                    currentUser = currentUser,
+                    onProfileClick = onProfileClick ?: {},
+                    isLarge = false,
+                    titleCentered = titleCentered,
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         }
                     }
+                )
+            }
+        }
+    ) { padding ->
+        Column(modifier = modifier.fillMaxWidth().padding(padding)) {
+            if (!multiSelectMode && onNavigateToNewGroup != null) {
+                // New Group Option
+                Surface(
+                    onClick = onNavigateToNewGroup,
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(40.dp),
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.secondary
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Group,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSecondary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            "New Group",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
-                
-                // Search Result from Firestore
-                state.searchResult?.let { user ->
-                    Spacer(modifier = Modifier.height(12.dp))
+
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                )
+            }
+
+            // Friend Code Search Section (Distinct)
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        "Search by Friend Code",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = friendCodeQuery,
+                            onValueChange = { friendCodeQuery = it.uppercase() },
+                            modifier = Modifier.weight(1f),
+                            placeholder = { Text("e.g. QBS-A1B2-C3D4") },
+                            leadingIcon = { Icon(Icons.Rounded.QrCodeScanner, contentDescription = null) },
+                            shape = RoundedCornerShape(16.dp),
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface
+                            )
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = { viewModel.searchByFriendCode(friendCodeQuery) },
+                            enabled = friendCodeQuery.isNotBlank() && !state.isSearching,
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            if (state.isSearching) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            } else {
+                                Text("Find")
+                            }
+                        }
+                    }
+                    
+                    // Search Result from Firestore
+                    state.searchResult?.let { user ->
+                        Spacer(modifier = Modifier.height(12.dp))
+                        UserItem(
+                            user = user, 
+                            isSearchResult = true,
+                            onClick = { onUserSelected(user) }
+                        )
+                    }
+
+                    state.searchError?.let { error ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+
+            // Local Name Search
+            OutlinedTextField(
+                value = nameQuery,
+                onValueChange = { nameQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                placeholder = { Text("Search local contacts by name...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                shape = RoundedCornerShape(16.dp),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(
+                "Suggested Contacts",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
+                items(filteredContacts) { user ->
                     UserItem(
                         user = user, 
-                        isSearchResult = true,
-                        onClick = { onUserSelected(user) }
+                        isSelected = selectedUsers.value.contains(user),
+                        showCheckbox = multiSelectMode,
+                        onClick = { 
+                            if (multiSelectMode) {
+                                if (selectedUsers.value.contains(user)) {
+                                    selectedUsers.value = selectedUsers.value - user
+                                } else {
+                                    selectedUsers.value = selectedUsers.value + user
+                                }
+                            } else {
+                                onUserSelected(user)
+                            }
+                        }
                     )
                 }
+            }
 
-                state.searchError?.let { error ->
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            if (multiSelectMode) {
+                Button(
+                    onClick = { onUsersSelected(selectedUsers.value.toList()) },
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    enabled = selectedUsers.value.isNotEmpty(),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("Confirm Selection (${selectedUsers.value.size})")
                 }
-            }
-        }
-
-        // Local Name Search
-        OutlinedTextField(
-            value = nameQuery,
-            onValueChange = { nameQuery = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            placeholder = { Text("Search local contacts by name...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-            shape = RoundedCornerShape(16.dp),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Text(
-            "Suggested Contacts",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            contentPadding = PaddingValues(bottom = 16.dp)
-        ) {
-            items(filteredContacts) { user ->
-                UserItem(
-                    user = user, 
-                    isSelected = selectedUsers.value.contains(user),
-                    showCheckbox = multiSelectMode,
-                    onClick = { 
-                        if (multiSelectMode) {
-                            if (selectedUsers.value.contains(user)) {
-                                selectedUsers.value = selectedUsers.value - user
-                            } else {
-                                selectedUsers.value = selectedUsers.value + user
-                            }
-                        } else {
-                            onUserSelected(user)
-                        }
-                    }
-                )
-            }
-        }
-
-        if (multiSelectMode) {
-            Button(
-                onClick = { onUsersSelected(selectedUsers.value.toList()) },
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                enabled = selectedUsers.value.isNotEmpty(),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text("Confirm Selection (${selectedUsers.value.size})")
             }
         }
     }

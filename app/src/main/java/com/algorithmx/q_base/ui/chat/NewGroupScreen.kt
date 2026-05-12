@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Group
 import androidx.compose.material3.*
@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.data.core.UserEntity
-import com.algorithmx.q_base.ui.components.ProfileIconButton
+import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,25 +44,18 @@ fun NewGroupScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        if (step == 1) "Select Participants" else "Group Details", 
-                        fontWeight = FontWeight.Bold 
-                    ) 
-                },
+            UnifiedTopAppBar(
+                title = if (step == 1) "Select Participants" else "Group Details",
+                currentUser = currentUser,
+                onProfileClick = onProfileClick,
+                isLarge = false,
+                titleCentered = true,
                 navigationIcon = {
                     IconButton(onClick = {
                         if (step == 2) step = 1 else onBack()
                     }) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                },
-                actions = {
-                    ProfileIconButton(
-                        user = currentUser,
-                        onClick = onProfileClick
-                    )
                 }
             )
         }
@@ -129,7 +122,7 @@ fun NewGroupScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         
                         Text(
-                            "${selectedParticipants.size} participants selected",
+                            "${selectedParticipants.size + 1} participants (including you)",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.outline
                         )

@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface QuestionDao {
-    @Query("SELECT * FROM Questions WHERE collection = :collection")
+    @Query("SELECT * FROM Questions WHERE master_category = :collection")
     fun getQuestionsByStudyCollection(collection: String): Flow<List<Question>>
 
     @Query("SELECT * FROM Questions WHERE category = :category")
@@ -65,7 +65,7 @@ interface QuestionDao {
     @Query("""
         SELECT COUNT(q.question_id) 
         FROM Questions q 
-        INNER JOIN StudyCollections c ON q.collection = c.name 
+        INNER JOIN StudyCollections c ON q.master_category = c.name 
         WHERE c.is_user_created = 1
     """)
     fun getUserCreatedQuestionCount(): Flow<Int>
@@ -73,7 +73,7 @@ interface QuestionDao {
     @Query("""
         SELECT COUNT(q.question_id) 
         FROM Questions q 
-        INNER JOIN StudyCollections c ON q.collection = c.name 
+        INNER JOIN StudyCollections c ON q.master_category = c.name 
         WHERE c.is_shared = 1
     """)
     fun getSharedQuestionCount(): Flow<Int>
@@ -81,11 +81,14 @@ interface QuestionDao {
     @Query("SELECT COUNT(*) FROM Questions")
     suspend fun getQuestionCount(): Int
 
+    @Query("SELECT * FROM Questions WHERE is_pinned = 1")
+    fun getPinnedQuestions(): Flow<List<Question>>
+
     @Transaction
     @Query("SELECT * FROM Question_Sets WHERE set_id = :setId")
     suspend fun getSetWithContent(setId: String): SetWithQuestions?
 
-    @Query("SELECT COUNT(*) FROM Questions WHERE collection = :collectionName")
+    @Query("SELECT COUNT(*) FROM Questions WHERE master_category = :collectionName")
     fun getQuestionCountByStudyCollection(collectionName: String): Flow<Int>
 
     @Query("DELETE FROM Question_Options WHERE question_id = :questionId")

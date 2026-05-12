@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.data.core.UserEntity
-import com.algorithmx.q_base.ui.components.ProfileIconButton
+import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,22 +58,16 @@ fun GroupOverviewScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = { Text("Group Info") },
+            UnifiedTopAppBar(
+                title = "Group Info",
+                currentUser = currentUser,
+                onProfileClick = onProfileClick,
+                isLarge = false,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                },
-                actions = {
-                    ProfileIconButton(
-                        user = currentUser,
-                        onClick = onProfileClick
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
+                }
             )
         }
     ) { padding ->

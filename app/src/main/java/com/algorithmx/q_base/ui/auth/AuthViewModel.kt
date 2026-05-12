@@ -32,15 +32,20 @@ class AuthViewModel @Inject constructor(
     fun signIn(email: String, pass: String) {
         _state.value = AuthState(isLoading = true)
         viewModelScope.launch {
+            android.util.Log.d("AuthViewModel", "Starting sign in for $email")
             val result = authRepository.signInWithEmail(email, pass)
             result.onSuccess { user ->
+                android.util.Log.d("AuthViewModel", "Sign in successful for ${user.uid}, syncing profile...")
                 try {
                     profileRepository.syncUserProfile(user.uid)
+                    android.util.Log.d("AuthViewModel", "Profile sync complete, setting success state")
                     _state.value = AuthState(user = user, isSuccess = true, isProfileCreated = true)
                 } catch (e: Exception) {
+                    android.util.Log.e("AuthViewModel", "Profile sync failed", e)
                     _state.value = AuthState(error = "Sync profile failed: ${e.message}")
                 }
             }.onFailure { error ->
+                android.util.Log.e("AuthViewModel", "Sign in failed", error)
                 _state.value = AuthState(error = error.message)
             }
         }

@@ -4,12 +4,12 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
-import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
 @Serializable
 @Entity(
     tableName = "Question_Options",
+    primaryKeys = ["question_id", "option_letter"],
     foreignKeys = [
         ForeignKey(
             entity = Question::class,
@@ -21,13 +21,10 @@ import kotlinx.serialization.Serializable
     indices = [Index(value = ["question_id"])]
 )
 data class QuestionOption(
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "option_id")
-    val optionId: Int = 0,
     @ColumnInfo(name = "question_id")
     val questionId: String,
     @ColumnInfo(name = "option_letter")
-    val optionLetter: String?,
+    val optionLetter: String,
     @ColumnInfo(name = "option_text")
     val optionText: String?,
     @ColumnInfo(name = "option_explanation")

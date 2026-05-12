@@ -2,100 +2,75 @@ package com.algorithmx.q_base.ui.explore
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import com.algorithmx.q_base.ui.components.ProfileIconButton
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.automirrored.rounded.*
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import android.content.ClipData as AndroidClipData
-import android.content.ClipDescription
-import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.algorithmx.q_base.data.collections.StudyCollection
-import com.algorithmx.q_base.data.collections.StudyCollectionWithCount
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.data.collections.QuestionSet
-import com.algorithmx.q_base.data.sessions.StudySession
 import com.algorithmx.q_base.data.core.UserEntity
-import com.algorithmx.q_base.ui.components.QuestionViewer
-import com.algorithmx.q_base.ui.components.ReportDialog
-import com.algorithmx.q_base.ui.components.ProfileIconButton
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
+import com.algorithmx.q_base.data.sessions.StudySession
+import com.algorithmx.q_base.ui.components.question.QuestionViewer
+import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
+import com.algorithmx.q_base.ui.components.reusable.ReportDialog
 import dev.jeziellago.compose.markdowntext.MarkdownText
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExploreQuestionPagerScreen(
     categoryName: String,
     questionStates: List<ExploreQuestionState>,
-    collections: List<com.algorithmx.q_base.data.collections.QuestionSet> = emptyList(),
-    sessions: List<com.algorithmx.q_base.data.sessions.StudySession> = emptyList(),
+    collections: List<QuestionSet>,
+    sessions: List<StudySession>,
     onOptionSelected: (Int, String) -> Unit,
     onCheckAnswer: (Int) -> Unit,
+    onPageChanged: (Int) -> Unit,
     onPinToggled: (Int) -> Unit,
     onAddToCollection: (Int, String) -> Unit,
     onAddToSession: (Int, String) -> Unit,
     onReportSubmitted: (Int, String) -> Unit,
-    onAskAi: (Int, String, String) -> Unit,
+    onAskAi: (Int, String) -> Unit,
     onSaveAiAsOfficial: (Int) -> Unit,
     onClearAiResponse: (Int) -> Unit,
     onDeleteQuestion: (Int) -> Unit,
-    onPageChanged: (Int) -> Unit,
     onProfileClick: () -> Unit,
     onBack: () -> Unit,
-    currentUser: com.algorithmx.q_base.data.core.UserEntity? = null,
+    currentUser: UserEntity? = null,
     viewModel: ExploreViewModel? = null
 ) {
-    val pagerState = rememberPagerState(initialPage = 0, pageCount = { questionStates.size })
+    val pagerState = rememberPagerState(pageCount = { questionStates.size })
     val coroutineScope = rememberCoroutineScope()
     var showReportDialog by remember { mutableStateOf(false) }
     var showCollectionDialog by remember { mutableStateOf(false) }
     var showSessionDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(viewModel) {
-        viewModel?.actionFeedback?.collect { message ->
-            snackbarHostState.showSnackbar(message)
-        }
-    }
-
+    // Group questions by sub-category for fast navigation
     val subCategories = remember(questionStates) {
-        questionStates.mapNotNull { it.question.category }
+        questionStates.map { it.question.category }
             .distinct()
+            .filterNotNull()
             .map { category ->
                 category to questionStates.indexOfFirst { it.question.category == category }
             }
@@ -121,74 +96,50 @@ fun ExploreQuestionPagerScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { 
-                    Text(
-                        categoryName, 
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    ) 
-                },
+            UnifiedTopAppBar(
+                title = categoryName,
+                currentUser = currentUser,
+                onProfileClick = onProfileClick,
+                isLarge = false,
+                titleCentered = true,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
                     if (questionStates.isNotEmpty()) {
-                        val currentQuestionState = questionStates[pagerState.currentPage]
-                        val currentQuestion = currentQuestionState.question
-                        val clipboard = LocalClipboard.current
-                        val scope = rememberCoroutineScope()
-                        
-                        IconButton(onClick = {
-                            val content = buildString {
-                                appendLine("Q: ${currentQuestion.stem}")
-                                appendLine("\nOptions:")
-                                currentQuestionState.options.forEachIndexed { i, opt ->
-                                    appendLine("${(i + 'A'.code).toChar()}. ${opt.optionText}")
-                                }
-                            }
-                            val clipData = AndroidClipData.newPlainText("question_content", content)
-                            scope.launch {
-                                clipboard.setClipEntry(ClipEntry(clipData))
-                            }
-                        }) {
-                            Icon(Icons.Rounded.ContentCopy, contentDescription = "Copy Content")
-                        }
-
-                        IconButton(onClick = { onDeleteQuestion(pagerState.currentPage) }) {
-                            Icon(Icons.Rounded.Delete, contentDescription = "Delete Question")
-                        }
-
-                        var showMoreMenu by remember { mutableStateOf(false) }
-                        IconButton(onClick = { showMoreMenu = true }) {
+                        var showMenu by remember { mutableStateOf(false) }
+                        IconButton(onClick = { showMenu = true }) {
                             Icon(Icons.Default.MoreVert, contentDescription = "More Options")
                         }
                         DropdownMenu(
-                            expanded = showMoreMenu,
-                            onDismissRequest = { showMoreMenu = false }
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Report Problem") },
-                                leadingIcon = { Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                                text = { Text("Report Content") },
                                 onClick = {
-                                    showMoreMenu = false
+                                    showMenu = false
                                     showReportDialog = true
                                 }
                             )
                         }
-
-                        ProfileIconButton(
-                            user = currentUser,
-                            onClick = onProfileClick
-                        )
                     }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                }
             )
+        },
+        floatingActionButton = {
+            if (questionStates.isNotEmpty()) {
+                ExtendedFloatingActionButton(
+                    onClick = { onAskAi(pagerState.currentPage, "EXPLAIN") },
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary,
+                    icon = { Icon(Icons.Rounded.AutoAwesome, contentDescription = null) },
+                    text = { Text("Ask AI") },
+                    modifier = Modifier.padding(bottom = 72.dp)
+                )
+            }
         }
     ) { padding ->
         if (questionStates.isEmpty()) {
@@ -243,6 +194,8 @@ fun ExploreQuestionPagerScreen(
                     pageSpacing = 16.dp
                 ) { page ->
                     val state = questionStates[page]
+                    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+                    
                     QuestionViewer(
                         question = state.question,
                         options = state.options,
@@ -256,7 +209,21 @@ fun ExploreQuestionPagerScreen(
                         onPinToggled = { onPinToggled(page) },
                         onAddToSet = { showCollectionDialog = true },
                         onAddToSession = { showSessionDialog = true },
-                        onAskAi = { onAskAi(page, "EXPLAIN", "") }
+                        onDelete = { onDeleteQuestion(page) },
+                        isEditable = state.isEditable,
+                        onCopy = {
+                            val content = buildString {
+                                appendLine("Q: ${state.question.stem}")
+                                appendLine("\nOptions:")
+                                state.options.forEachIndexed { i, opt ->
+                                    appendLine("${(i + 'A'.code).toChar()}. ${opt.optionText}")
+                                }
+                            }
+                            clipboard.setText(androidx.compose.ui.text.AnnotatedString(content))
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Question copied to clipboard")
+                            }
+                        }
                     )
                 }
             }
@@ -283,24 +250,9 @@ fun ExploreQuestionPagerScreen(
             onDismissRequest = { onClearAiResponse(pagerState.currentPage) },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    val infiniteTransition = rememberInfiniteTransition(label = "ai_pulse")
-                    val scale by infiniteTransition.animateFloat(
-                        initialValue = 1f,
-                        targetValue = if (currentQuestionState.isAiLoading) 1.3f else 1f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(800, easing = LinearEasing),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "pulse_scale"
-                    )
-                    Icon(
-                        Icons.Default.AutoAwesome,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp).graphicsLayer(scaleX = scale, scaleY = scale)
-                    )
+                    Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("AI Assistance", style = MaterialTheme.typography.titleLarge)
+                    Text("AI Insights", style = MaterialTheme.typography.titleLarge)
                 }
             },
             text = {
@@ -310,21 +262,14 @@ fun ExploreQuestionPagerScreen(
                     } else {
                         MarkdownText(
                             markdown = currentQuestionState.aiResponse!!,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                            style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
                         )
                     }
                 }
             },
             confirmButton = {
-                Button(
-                    onClick = { 
-                        onSaveAiAsOfficial(pagerState.currentPage)
-                    },
-                    enabled = false // Temporarily disabled per user request
-                ) {
-                    Text("Save as Official Explanation")
+                Button(onClick = { onSaveAiAsOfficial(pagerState.currentPage) }) {
+                    Text("Save to Question")
                 }
             },
             dismissButton = {
@@ -335,60 +280,47 @@ fun ExploreQuestionPagerScreen(
         )
     }
 
+    // Collection Selector Dialog
     if (showCollectionDialog) {
         AlertDialog(
             onDismissRequest = { showCollectionDialog = false },
-            title = { Text("Add to Set", fontWeight = FontWeight.Bold) },
+            title = { Text("Add to Collection") },
             text = {
-                if (collections.isEmpty()) {
-                    Text("No sets found.")
-                } else {
-                    LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp)) {
-                        itemsIndexed(collections) { _, set ->
-                            ListItem(
-                                headlineContent = { Text(set.title) },
-                                modifier = Modifier.clickable {
-                                    onAddToCollection(pagerState.currentPage, set.setId)
-                                    showCollectionDialog = false
-                                }
-                            )
-                        }
+                LazyColumn {
+                    itemsIndexed(collections) { _, set ->
+                        ListItem(
+                            headlineContent = { Text(set.title) },
+                            modifier = Modifier.clickable {
+                                onAddToCollection(pagerState.currentPage, set.setId)
+                                showCollectionDialog = false
+                            }
+                        )
                     }
                 }
             },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showCollectionDialog = false }) { Text("Cancel") }
-            }
+            confirmButton = {}
         )
     }
 
+    // Session Selector Dialog
     if (showSessionDialog) {
         AlertDialog(
             onDismissRequest = { showSessionDialog = false },
-            title = { Text("Add to Session", fontWeight = FontWeight.Bold) },
+            title = { Text("Add to Study Session") },
             text = {
-                if (sessions.isEmpty()) {
-                    Text("No active sessions found.")
-                } else {
-                    LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp)) {
-                        itemsIndexed(sessions) { _, session ->
-                            ListItem(
-                                headlineContent = { Text(session.title) },
-                                supportingContent = { Text("Created ${SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(Date(session.createdTimestamp))}") },
-                                modifier = Modifier.clickable {
-                                    onAddToSession(pagerState.currentPage, session.sessionId)
-                                    showSessionDialog = false
-                                }
-                            )
-                        }
+                LazyColumn {
+                    itemsIndexed(sessions) { _, session ->
+                        ListItem(
+                            headlineContent = { Text(session.title) },
+                            modifier = Modifier.clickable {
+                                onAddToSession(pagerState.currentPage, session.sessionId)
+                                showSessionDialog = false
+                            }
+                        )
                     }
                 }
             },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showSessionDialog = false }) { Text("Cancel") }
-            }
+            confirmButton = {}
         )
     }
 }

@@ -19,3 +19,8 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-dontwarn com.gemalto.jp2.JP2Decoder
+
+-keep class com.algorithmx.q_base.core_ai.brain.** { *; }
+-dontwarn com.algorithmx.q_base.core_ai.brain.**

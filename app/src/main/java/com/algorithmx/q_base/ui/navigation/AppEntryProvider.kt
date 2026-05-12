@@ -46,7 +46,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onNavigateToSessions = { navigator.navigate(Screen.Sessions()) },
                 onNavigateToSession = { sessionId -> navigator.navigate(Screen.ActiveSession(sessionId)) },
                 onNavigateToCollections = { navigator.navigate(Screen.Collections) },
-                onNewSessionWizard = { navigator.navigate(Screen.Sessions(startWizard = true)) },
+                onNewSessionWizard = { navigator.navigate(Screen.NewSessionWizard) },
                 onNavigateToUnifiedCreation = { navigator.navigate(Screen.UnifiedCreation) },
                 onCollectionClick = { collectionId ->
                     navigator.navigate(Screen.CollectionOverview(collectionId))
@@ -123,7 +123,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onReportSubmitted = { index, explanation ->
                     viewModel.reportProblem(index, explanation)
                 },
-                onAskAi = { index, mode, _ ->
+                onAskAi = { index, mode ->
                     viewModel.askAi(index, mode)
                 },
                 onSaveAiAsOfficial = { index -> viewModel.saveAiResponseToQuestion(index) },
@@ -227,7 +227,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                     viewModel.loadQuestionDetails(index + 1)
                     key.sessionId?.let { viewModel.updateSessionProgress(it, index) }
                 },
-                onAskAi = { index, mode, _ -> viewModel.askAi(index, mode) },
+                onAskAi = { index, mode -> viewModel.askAi(index, mode) },
                 onSaveAiAsOfficial = { index -> viewModel.saveAiResponseToQuestion(index) },
                 onClearAiResponse = { index -> viewModel.clearAiResponse(index) },
                 onDeleteQuestion = { index -> viewModel.deleteQuestion(index) },
@@ -238,7 +238,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
             )
         }
 
-        entry<Screen.Sessions> { key ->
+        entry<Screen.Sessions> {
             val viewModel: SessionsViewModel = hiltViewModel()
             val sessions by viewModel.sessions.collectAsStateWithLifecycle()
             val collections by viewModel.collections.collectAsStateWithLifecycle()
@@ -255,9 +255,28 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onSessionClick = { sessionId ->
                     navigator.navigate(Screen.ActiveSession(sessionId))
                 },
-                onFabClick = { /* Handled in screen internal state now */ },
+                onFabClick = { 
+                    navigator.navigate(Screen.NewSessionWizard)
+                },
                 viewModel = viewModel,
                 onProfileClick = { navigator.navigate(Screen.Profile) },
+                onBack = { navigator.goBack() }
+            )
+        }
+
+        entry<Screen.NewSessionWizard> {
+            val viewModel: SessionsViewModel = hiltViewModel()
+            val collections by viewModel.collections.collectAsStateWithLifecycle()
+
+            LaunchedEffect(viewModel.sessionCreated) {
+                viewModel.sessionCreated.collect { sessionId ->
+                    navigator.navigate(Screen.ActiveSession(sessionId))
+                }
+            }
+
+            NewSessionWizardScreen(
+                viewModel = viewModel,
+                collections = collections,
                 onBack = { navigator.goBack() }
             )
         }
@@ -283,8 +302,8 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
             }
             SessionResultsScreen(
                 viewModel = viewModel,
-                onBackToHome = {
-                    navigator.navigate(Screen.Home)
+                onDone = {
+                    navigator.navigate(Screen.Sessions())
                 }
             )
         }
@@ -413,6 +432,24 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
         entry<Screen.Settings> {
             val viewModel: SettingsViewModel = hiltViewModel()
             SettingsScreen(
+                viewModel = viewModel,
+                onBack = { navigator.goBack() },
+                onNavigateToBrainManager = { navigator.navigate(Screen.AiBrainManager) },
+                onNavigateToAppTheme = { navigator.navigate(Screen.AppTheme) }
+            )
+        }
+
+        entry<Screen.AppTheme> {
+            val viewModel: SettingsViewModel = hiltViewModel()
+            AppThemeScreen(
+                viewModel = viewModel,
+                onBack = { navigator.goBack() }
+            )
+        }
+
+        entry<Screen.AiBrainManager> {
+            val viewModel: SettingsViewModel = hiltViewModel()
+            AiBrainManagerScreen(
                 viewModel = viewModel,
                 onBack = { navigator.goBack() }
             )

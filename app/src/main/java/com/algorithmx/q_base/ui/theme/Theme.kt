@@ -3,6 +3,7 @@ package com.algorithmx.q_base.ui.theme
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -67,20 +68,55 @@ private val DarkColorScheme = darkColorScheme(
     outline = outlineDark
 )
 
+private val MonochromeLightColorScheme = lightColorScheme(
+    primary = primaryMonochromeLight,
+    onPrimary = onPrimaryMonochromeLight,
+    primaryContainer = primaryContainerMonochromeLight,
+    onPrimaryContainer = onPrimaryContainerMonochromeLight,
+    secondary = primaryMonochromeLight,
+    onSecondary = onPrimaryMonochromeLight,
+    background = backgroundMonochromeLight,
+    onBackground = onBackgroundMonochromeLight,
+    surface = surfaceMonochromeLight,
+    onSurface = onSurfaceMonochromeLight
+)
+
+private val MonochromeDarkColorScheme = darkColorScheme(
+    primary = primaryMonochromeDark,
+    onPrimary = onPrimaryMonochromeDark,
+    primaryContainer = primaryContainerMonochromeDark,
+    onPrimaryContainer = onPrimaryContainerMonochromeDark,
+    secondary = primaryMonochromeDark,
+    onSecondary = onPrimaryMonochromeDark,
+    background = backgroundMonochromeDark,
+    onBackground = onBackgroundMonochromeDark,
+    surface = surfaceMonochromeDark,
+    onSurface = onSurfaceMonochromeDark
+)
+
 @Composable
 fun QbaseTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
+    themeMode: String = "SYSTEM",
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    val darkTheme = when (themeMode) {
+        "LIGHT" -> false
+        "DARK" -> true
+        "MONOCHROME" -> isSystemInDarkTheme() // Or handle specifically
+        else -> isSystemInDarkTheme()
+    }
+
+    val colorScheme = when (themeMode) {
+        "LIGHT" -> LightColorScheme
+        "DARK" -> DarkColorScheme
+        "MONOCHROME" -> if (isSystemInDarkTheme()) MonochromeDarkColorScheme else MonochromeLightColorScheme
+        else -> {
+            if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val context = LocalContext.current
+                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            } else if (darkTheme) DarkColorScheme else LightColorScheme
         }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
     }
 
     val view = LocalView.current

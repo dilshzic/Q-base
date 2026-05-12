@@ -43,8 +43,8 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.rounded.RocketLaunch
-import com.algorithmx.q_base.ui.components.ReportDialog
-import com.algorithmx.q_base.ui.components.ProfileIconButton
+import com.algorithmx.q_base.ui.components.reusable.ReportDialog
+import com.algorithmx.q_base.ui.components.reusable.ProfileIconButton
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -321,6 +321,7 @@ fun ChatDetailScreen(
                 val sharedSessions by viewModel.sharedSessions.collectAsStateWithLifecycle()
                 
                 SharedLibraryView(
+                    chatId = state.chat!!.chatId,
                     collections = sharedCollections,
                     sessions = sharedSessions,
                     onImport = { payload -> viewModel.importSharedCollection(payload) },
@@ -382,6 +383,13 @@ fun ChatDetailScreen(
                                         onJoinSession = { sessionId -> viewModel.shareSession(state.chat!!.chatId, sessionId) },
                                         onReportMessage = {
                                             reportingMessage = message
+                                        },
+                                        onProfileClick = { _ -> state.chat?.chatId?.let { onHeaderClick(it) } },
+                                        onDeleteChat = { 
+                                            state.chat?.chatId?.let { chatId ->
+                                                viewModel.deleteChat(chatId)
+                                                onBack()
+                                            }
                                         },
                                         isAiLoading = isAiLoading && index == state.messages.size - 1 && message.senderId == ChatViewModel.QBASE_AI_BOT_ID,
                                         isFirstInGroup = isFirstInGroup,

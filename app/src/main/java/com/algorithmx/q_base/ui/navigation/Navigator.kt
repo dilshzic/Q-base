@@ -7,9 +7,22 @@ import androidx.navigation3.runtime.NavKey
  */
 class Navigator(val state: NavigationState) {
     fun navigate(route: NavKey) {
-        if (route in state.backStacks.keys) {
-            // This is a top level route, just switch to it.
-            state.topLevelRoute = route
+        android.util.Log.d("Navigator", "Navigating to: $route")
+        
+        // Find if this route (or its type) is in the top level routes
+        val topLevelMatch = state.backStacks.keys.find { it == route || it::class == route::class }
+        
+        if (topLevelMatch != null) {
+            if (state.topLevelRoute == topLevelMatch) {
+                // If we're already on this top level route, pop to root
+                val stack = state.backStacks[topLevelMatch]
+                while ((stack?.size ?: 0) > 1) {
+                    stack?.removeLastOrNull()
+                }
+            } else {
+                // Switch to the top level route
+                state.topLevelRoute = topLevelMatch
+            }
         } else {
             state.backStacks[state.topLevelRoute]?.add(route)
         }

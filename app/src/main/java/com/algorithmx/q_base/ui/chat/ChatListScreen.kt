@@ -28,10 +28,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.data.chat.ChatEntity
 import com.algorithmx.q_base.data.chat.MessageEntity
-import com.algorithmx.q_base.ui.components.ProfileIconButton
+import com.algorithmx.q_base.ui.components.reusable.ProfileIconButton
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.delay
+import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
@@ -56,8 +57,12 @@ fun ChatListScreen(
     Scaffold(
         topBar = {
             if (isSelectionMode) {
-                TopAppBar(
-                    title = { Text("${selectedChatIds.size} selected") },
+                UnifiedTopAppBar(
+                    title = "${selectedChatIds.size} selected",
+                    currentUser = null,
+                    onProfileClick = {},
+                    showProfileIcon = false,
+                    isLarge = false,
                     navigationIcon = {
                         IconButton(onClick = { viewModel.clearSelection() }) {
                             Icon(Icons.Rounded.Close, contentDescription = "Clear Selection")
@@ -67,51 +72,14 @@ fun ChatListScreen(
                         IconButton(onClick = { showDeleteConfirm = true }) {
                             Icon(Icons.Rounded.Delete, contentDescription = "Delete Selected")
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    }
                 )
             } else {
-                LargeTopAppBar(
-                    title = { 
-                        Text(
-                            "Connect", 
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.ExtraBold
-                        ) 
-                    },
-                    actions = {
-                        IconButton(onClick = onNewGroup) {
-                            Icon(Icons.Rounded.GroupAdd, contentDescription = "New Group")
-                        }
-                        ProfileIconButton(
-                            user = currentUser,
-                            onClick = onProfileClick
-                        )
-                        var showMenu by remember { mutableStateOf(false) }
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Rounded.MoreVert, contentDescription = "More options")
-                        }
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Blocked List") },
-                                onClick = { 
-                                    showMenu = false
-                                    onNavigateToBlockedList() 
-                                },
-                                leadingIcon = { Icon(Icons.Rounded.Block, contentDescription = null) }
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.largeTopAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background,
-                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
-                    )
+                UnifiedTopAppBar(
+                    title = "Connect",
+                    subtitle = "Connect with Groups and People",
+                    currentUser = currentUser,
+                    onProfileClick = onProfileClick
                 )
             }
         },
@@ -129,7 +97,7 @@ fun ChatListScreen(
             }
         }
     ) { padding ->
-        if (state.chats.isEmpty()) {
+        if (state.chats.isEmpty() && !state.isLoading) {
             EmptyConnectView(modifier = Modifier.padding(padding))
         } else {
             LazyColumn(
@@ -138,6 +106,14 @@ fun ChatListScreen(
                     .padding(padding),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
+                item {
+                    ChatActionsPane(
+                        onNewChat = onNewChat,
+                        onNewGroup = onNewGroup,
+                        onNavigateToBlockedList = onNavigateToBlockedList
+                    )
+                }
+
                 item {
                     AiChatQuickAction(onClick = { viewModel.startAiChat() })
                 }
@@ -333,6 +309,85 @@ fun ChatItem(
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun ChatActionsPane(
+    onNewChat: () -> Unit,
+    onNewGroup: () -> Unit,
+    onNavigateToBlockedList: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        ActionChip(
+            label = "New Chat",
+            icon = Icons.Rounded.PersonAdd,
+            onClick = onNewChat,
+            modifier = Modifier.weight(1f)
+        )
+        ActionChip(
+            label = "New Group",
+            icon = Icons.Rounded.GroupAdd,
+            onClick = onNewGroup,
+            modifier = Modifier.weight(1f)
+        )
+        
+        var showMenu by remember { mutableStateOf(false) }
+        Box {
+            IconButton(
+                onClick = { showMenu = true },
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+            ) {
+                Icon(Icons.Rounded.MoreVert, contentDescription = "More")
+            }
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Blocked List") },
+                    onClick = {
+                        showMenu = false
+                        onNavigateToBlockedList()
+                    },
+                    leadingIcon = { Icon(Icons.Rounded.Block, contentDescription = null) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ActionChip(
+    label: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
         }
     }
 }

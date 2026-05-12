@@ -60,7 +60,7 @@ class ImportRepository @Inject constructor(
             .replace(Regex("(?i)page \\d+"), "") // Remove page numbers
             .trim()
             
-        // Add more specific regex as needed based on medical textbook patterns
+        // Add more specific regex as needed based on educational textbook patterns
         return cleaned
     }
 }

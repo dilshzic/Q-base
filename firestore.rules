@@ -1,0 +1,119 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isNotBanned() {
+      return isAuthenticated() && 
+        (!exists(/databases/$(database)/documents/users/$(request.auth.uid)) || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isBanned', false) != true);
+    }
+
+    function isParticipant(data) {
+      return isAuthenticated() && 
+        data != null && 
+        "participantIds" in data && 
+        (
+          (data.participantIds is list && request.auth.uid in data.participantIds) ||
+          (data.participantIds is string && data.participantIds.matches(".*" + request.auth.uid + ".*"))
+        );
+    }
+
+    // Helper for subcollections that don't have participantIds themselves
+    function isMemberOfChat(chatId) {
+      return isAuthenticated() && 
+        isParticipant(get(/databases/$(database)/documents/chats/$(chatId)).data);
+    }
+
+    // User Profile Rules
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) && isNotBanned();
+      
+      // Shields Personally Identifiable Information (PII)
+      match /private_settings/{settingId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Notifications (System and other users can write alerts)
+      match /notifications/{notificationId} {
+        allow read, delete: if isOwner(userId);
+        allow create: if isNotBanned() && 
+          request.resource.data.senderId == request.auth.uid &&
+          request.resource.data.size() < 2048;
+      }
+      
+      // Synchronization requests
+      match /sync_requests/{requestId} {
+        allow read, delete: if isOwner(userId);
+        allow create: if isNotBanned() && 
+          request.resource.data.senderId == request.auth.uid &&
+          request.resource.data.size() < 2048;
+        allow update: if isOwner(userId);
+      }
+    }
+
+    // Chat Rules
+    match /chats/{chatId} {
+      // Query compatibility: Must use resource.data here for chat listing queries to work
+      allow read: if isParticipant(resource.data);
+      
+      allow create: if isNotBanned() && 
+        isParticipant(request.resource.data) &&
+        request.resource.data.adminId == request.auth.uid;
+      
+      allow update: if isParticipant(resource.data) && (
+        (request.auth.uid == resource.data.adminId) ||
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['adminId', 'participantIds', 'chatName']))
+      );
+      
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.adminId;
+        
+      match /messages/{messageId} {
+        // Preference for resource.data to support filtered message queries
+        allow read: if isParticipant(resource.data) || isMemberOfChat(chatId);
+          
+        allow create: if isNotBanned() && 
+          (isParticipant(request.resource.data) || isMemberOfChat(chatId)) &&
+          request.resource.data.senderId == request.auth.uid;
+
+        allow delete: if isMemberOfChat(chatId);
+      }
+
+      // Shared collections within the chat library
+      match /shared_collections/{collectionId} {
+        allow read: if isMemberOfChat(chatId);
+        allow create, update, delete: if isNotBanned() && isMemberOfChat(chatId);
+      }
+
+      // Live session sharing
+      match /shared_sessions/{sessionId} {
+        allow read: if isMemberOfChat(chatId);
+        allow create, delete: if isNotBanned() && isMemberOfChat(chatId);
+      }
+
+      // Access requests for encrypted content
+      match /access_requests/{requestId} {
+        allow read: if isMemberOfChat(chatId);
+        allow create: if isNotBanned() && isMemberOfChat(chatId) && request.resource.data.requesterId == request.auth.uid;
+        allow update, delete: if isNotBanned() && isMemberOfChat(chatId);
+      }
+    }
+
+    // Moderation (Create-only for all authenticated users)
+    match /reported_messages/{reportId} { allow create: if isNotBanned(); }
+    match /reported_sessions/{reportId} { allow create: if isNotBanned(); }
+    match /reported_questions/{reportId} { allow create: if isNotBanned(); }
+    match /reported_groups/{reportId} { allow create: if isNotBanned(); }
+    match /reported_users/{reportId} { allow create: if isNotBanned(); }
+    match /reported_collections/{reportId} { allow create: if isNotBanned(); }
+  }
+}

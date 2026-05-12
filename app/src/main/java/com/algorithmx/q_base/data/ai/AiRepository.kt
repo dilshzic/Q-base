@@ -34,12 +34,12 @@ class AiRepository @Inject constructor(
             Generate a question collection for the topic: $topic.
             Count: $count questions.
             Question Type: $type.
-            Difficulty Level: $difficulty level clinical scenario.
+            Difficulty Level: $difficulty level scenario.
             Number of Options: Each question must have exactly $optionCount options.
             
             Return ONLY a valid JSON object with this exact structure:
             {
-              "collectionTitle": "Cardiology Basics",
+              "collectionTitle": "Physics Basics",
               "collectionDescription": "Fundamentals of cardiology",
               "questions": [
                 {

@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.*
 import coil.compose.AsyncImage
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -32,7 +33,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.data.collections.Question
-import com.algorithmx.q_base.ui.components.*
+import com.algorithmx.q_base.ui.components.reusable.*
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -71,47 +72,12 @@ fun HomeScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
-                title = { 
-                    Column {
-                        Text(
-                            "Q-Base", 
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                        Text(
-                            "Master Your Knowledge",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            letterSpacing = 2.sp
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onNavigateToNotifications) {
-                        BadgedBox(
-                            badge = {
-                                if (totalUnreadCount > 0) {
-                                    Badge {
-                                        Text(totalUnreadCount.toString())
-                                    }
-                                }
-                            }
-                        ) {
-                            Icon(Icons.Rounded.Notifications, contentDescription = "Notifications")
-                        }
-                    }
-                    
-                    ProfileIconButton(
-                        user = currentUser,
-                        onClick = onProfileClick
-                    )
-                },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
-                )
+            UnifiedTopAppBar(
+                title = "Q-Base",
+                subtitle = "Master Your Knowledge",
+                currentUser = currentUser,
+                onProfileClick = onProfileClick,
+                scrollBehavior = scrollBehavior
             )
         }
     ) { padding ->
@@ -133,7 +99,7 @@ fun HomeScreen(
                         subtitle = "Timed practice",
                         icon = Icons.Rounded.RocketLaunch,
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        onClick = { showCreateSheet = true }, 
+                        onClick = onNewSessionWizard, 
                         modifier = Modifier.weight(1f)
                     )
                     QuickActionCard(
@@ -218,16 +184,7 @@ fun HomeScreen(
         }
     }
 
-    if (showCreateSheet) {
-        NewSessionWizard(
-            viewModel = sessionsViewModel,
-            collections = collections.map { it.collection },
-            onDismiss = { 
-                showCreateSheet = false
-                sessionsViewModel.resetWizard()
-            }
-        )
-    }
+
 }
 
 @Composable
@@ -308,12 +265,26 @@ fun HomeCategoryCard(
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                Text(
-                    text = collection.collection.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = collection.collection.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f, fill = false),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (collection.collection.isShared) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            Icons.Rounded.Groups, 
+                            contentDescription = "Shared",
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+                }
                 Text(
                     text = "${collection.questionCount} Questions", 
                     style = MaterialTheme.typography.labelSmall,
@@ -371,7 +342,7 @@ fun PinnedQuestionItem(question: com.algorithmx.q_base.data.collections.Question
                     shape = CircleShape
                 ) {
                     Text(
-                        text = question.collection ?: "Medical",
+                        text = question.collection ?: "General",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -415,7 +386,7 @@ fun EmptyHomeView(onNavigate: () -> Unit) {
                 fontWeight = FontWeight.ExtraBold
             )
             Text(
-                "Your personalized learning journey starts here.",
+                "Your personalized knowledge discovery starts here.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.outline,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center

@@ -55,9 +55,13 @@ class ProfileViewModel @Inject constructor(
     private val _stats = MutableStateFlow(UserStats())
     val stats = _stats.asStateFlow()
 
+    private val _hasSecureBackup = MutableStateFlow(false)
+    val hasSecureBackup = _hasSecureBackup.asStateFlow()
+
     init {
         loadUser()
         loadStats()
+        loadBackupStatus()
     }
 
     private fun loadUser() {
@@ -65,6 +69,16 @@ class ProfileViewModel @Inject constructor(
             authRepository.currentUser.collectLatest { user ->
                 if (user != null) {
                     profileRepository.syncUserProfile(user.uid)
+                }
+            }
+        }
+    }
+
+    private fun loadBackupStatus() {
+        viewModelScope.launch {
+            authRepository.currentUser.collectLatest { user ->
+                if (user != null) {
+                    _hasSecureBackup.value = profileRepository.checkHasSecureBackup(user.uid)
                 }
             }
         }

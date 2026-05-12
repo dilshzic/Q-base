@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.animation.core.tween
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.algorithmx.q_base.ui.components.ProfileIconButton
+import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
 import com.algorithmx.q_base.data.collections.StudyCollection
 import kotlinx.coroutines.delay
 
@@ -53,6 +53,7 @@ fun ImportWizardScreen(
     val extractedText by viewModel.extractedText.collectAsStateWithLifecycle()
     val selectedCategoryId by viewModel.selectedCategoryId.collectAsStateWithLifecycle()
     val newCollectionName by viewModel.newCollectionName.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     
     LaunchedEffect(Unit) {
         viewModel.setInitialSource(source, targetId)
@@ -60,19 +61,16 @@ fun ImportWizardScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Universal Creation", fontWeight = FontWeight.Black) },
+            UnifiedTopAppBar(
+                title = "Create new collection",
+                currentUser = currentUser,
+                onProfileClick = onProfileClick,
+                isLarge = false,
+                titleCentered = true,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                },
-                actions = {
-                    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
-                    ProfileIconButton(
-                        user = currentUser,
-                        onClick = onProfileClick
-                    )
                 }
             )
         }
@@ -163,7 +161,7 @@ fun WelcomeView(
                 OutlinedTextField(
                     value = tempName,
                     onValueChange = { tempName = it },
-                    placeholder = { Text("e.g. Cardiology Basics") },
+                    placeholder = { Text("e.g. Physics Basics") },
                     singleLine = true
                 )
             },
@@ -465,7 +463,7 @@ fun GenerateConfigView(onProceed: (ExtractionConfigData) -> Unit) {
             onValueChange = { instructions = it },
             modifier = Modifier.fillMaxWidth().height(100.dp),
             label = { Text("Special Context") },
-            placeholder = { Text("Focus on clinical features...") }
+            placeholder = { Text("Focus on key features...") }
         )
         
         Spacer(Modifier.height(16.dp))
@@ -536,7 +534,7 @@ fun OverviewView(
                 value = name,
                 onValueChange = onNameChanged,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("e.g., Clinical Anatomy") },
+                placeholder = { Text("e.g., General Science") },
                 shape = RoundedCornerShape(12.dp)
             )
             Spacer(Modifier.height(32.dp))

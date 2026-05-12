@@ -86,6 +86,9 @@ fun LoginScreen(
                 android.util.Log.e("LoginScreen", "Google Sign In failed", e)
                 Toast.makeText(context, "Google Sign In failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+        } else {
+            android.util.Log.e("LoginScreen", "Google Sign In cancelled or failed. Result code: ${result.resultCode}")
+            Toast.makeText(context, "Sign In cancelled or failed (Code: ${result.resultCode})", Toast.LENGTH_SHORT).show()
         }
     }
 

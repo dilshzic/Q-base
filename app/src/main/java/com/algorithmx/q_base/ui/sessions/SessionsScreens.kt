@@ -40,8 +40,8 @@ import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.data.collections.Question
 import com.algorithmx.q_base.data.sessions.StudySession
 import com.algorithmx.q_base.data.core.UserEntity
-import com.algorithmx.q_base.ui.components.SectionHeader
-import com.algorithmx.q_base.ui.components.ReportDialog
+import com.algorithmx.q_base.ui.components.reusable.SectionHeader
+import com.algorithmx.q_base.ui.components.reusable.ReportDialog
 import kotlinx.coroutines.delay
 import java.util.Locale
 
@@ -60,7 +60,6 @@ fun SessionsListScreen(
     val scrollState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(scrollState)
     val currentUser by viewModel.currentUser.collectAsState()
-    var showCreateSheet by remember { mutableStateOf(startWizard) }
 
     val isSelectionMode by viewModel.isSelectionMode.collectAsState()
     val selectedIds by viewModel.selectedSessionIds.collectAsState()
@@ -75,24 +74,11 @@ fun SessionsListScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
-                title = { 
-                    Column {
-                        Text(
-                            if (isSelectionMode) "${selectedIds.size} Selected" else "Sessions", 
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                        if (!isSelectionMode) {
-                            Text(
-                                "Your Learning Journey",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                letterSpacing = 1.sp
-                            )
-                        }
-                    }
-                },
+            com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar(
+                title = if (isSelectionMode) "${selectedIds.size} Selected" else "Sessions",
+                subtitle = if (isSelectionMode) null else "Test your knowledge",
+                currentUser = currentUser,
+                onProfileClick = onProfileClick,
                 navigationIcon = {
                     if (isSelectionMode) {
                         IconButton(onClick = { viewModel.clearSessionSelection() }) {
@@ -105,23 +91,14 @@ fun SessionsListScreen(
                         IconButton(onClick = { viewModel.deleteSelectedSessions() }) {
                             Icon(Icons.Default.Delete, contentDescription = "Delete Selected", tint = MaterialTheme.colorScheme.error)
                         }
-                    } else {
-                        com.algorithmx.q_base.ui.components.ProfileIconButton(
-                            user = currentUser,
-                            onClick = onProfileClick
-                        )
                     }
                 },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
-                )
+                scrollBehavior = scrollBehavior
             )
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { showCreateSheet = true },
+                onClick = onFabClick,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = RoundedCornerShape(16.dp),
@@ -140,18 +117,6 @@ fun SessionsListScreen(
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             item {
-                SectionHeader(
-                    title = "Categories"
-                )
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(vertical = 16.dp)
-                ) {
-                    items(collections) { category ->
-                        CategoryChip(category.name)
-                    }
-                }
                 Spacer(modifier = Modifier.height(16.dp))
                 SectionHeader(
                     title = "Past Performance", 
@@ -201,17 +166,6 @@ fun SessionsListScreen(
             onConfirm = { reason ->
                 viewModel.reportSession(sessionId, reason)
                 reportingSessionId = null
-            }
-        )
-    }
-
-    if (showCreateSheet) {
-        NewSessionWizard(
-            viewModel = viewModel,
-            collections = collections,
-            onDismiss = { 
-                showCreateSheet = false
-                viewModel.resetWizard()
             }
         )
     }
@@ -655,7 +609,7 @@ fun ConfigurationStep(
     selectedCount: Int,
     onLaunch: (String) -> Unit
 ) {
-    var title by remember { mutableStateOf("Exam Session ${java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(System.currentTimeMillis())}") }
+    var title by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -667,7 +621,7 @@ fun ConfigurationStep(
         OutlinedTextField(
             value = title,
             onValueChange = { title = it },
-            label = { Text("Session Title") },
+            placeholder = { Text("Session Title") },
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large
         )
@@ -708,7 +662,10 @@ fun ConfigurationStep(
         Spacer(modifier = Modifier.height(12.dp))
 
         Button(
-            onClick = { onLaunch(title) },
+            onClick = { 
+                val finalTitle = title.takeIf { it.isNotBlank() } ?: "Exam Session ${java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(System.currentTimeMillis())}"
+                onLaunch(finalTitle) 
+            },
             modifier = Modifier.fillMaxWidth().height(56.dp),
             enabled = selectedCount > 0,
             shape = MaterialTheme.shapes.large

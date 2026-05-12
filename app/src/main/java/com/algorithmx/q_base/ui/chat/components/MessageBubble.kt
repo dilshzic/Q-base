@@ -1,9 +1,6 @@
 package com.algorithmx.q_base.ui.chat.components
 
-import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.ClipEntry
 import android.content.ClipData
-import kotlinx.coroutines.launch
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -23,16 +20,22 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.Clipboard
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.algorithmx.q_base.R
+import coil.request.ImageRequest
 import com.algorithmx.q_base.data.chat.MessageEntity
 import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.ui.chat.ChatViewModel
 import dev.jeziellago.compose.markdowntext.MarkdownText
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -48,6 +51,8 @@ fun AnimatedMessageItem(
     onSaveCollection: (String) -> Unit,
     onJoinSession: (String) -> Unit,
     onReportMessage: () -> Unit,
+    onProfileClick: (String) -> Unit,
+    onDeleteChat: () -> Unit,
     isAiLoading: Boolean = false,
     isFirstInGroup: Boolean = true,
     isLastInGroup: Boolean = true
@@ -68,7 +73,7 @@ fun AnimatedMessageItem(
         MessageBubble(
             message, isMine, senderName, showAvatar, avatarUrl, 
             isSaved, localCollections, onSaveCollection, onJoinSession, 
-            onReportMessage, isAiLoading, isFirstInGroup, isLastInGroup
+            onReportMessage, onProfileClick, onDeleteChat, isAiLoading, isFirstInGroup, isLastInGroup
         )
     }
 }
@@ -85,6 +90,8 @@ fun MessageBubble(
     onSaveCollection: (String) -> Unit,
     onJoinSession: (String) -> Unit,
     onReportMessage: () -> Unit,
+    onProfileClick: (String) -> Unit,
+    onDeleteChat: () -> Unit,
     isAiLoading: Boolean = false,
     isFirstInGroup: Boolean = true,
     isLastInGroup: Boolean = true
@@ -130,14 +137,14 @@ fun MessageBubble(
             modifier = Modifier.fillMaxWidth()
         ) {
             if (showAvatar && !isMine && isLastInGroup) {
-                SenderAvatar(avatarUrl)
+                SenderAvatar(avatarUrl, onClick = { onProfileClick(message.senderId) })
             } else if (!isMine) {
                 Spacer(modifier = Modifier.width(48.dp))
             }
 
             Column(horizontalAlignment = if (isMine) Alignment.End else Alignment.Start) {
                 if (isFirstInGroup && !isMine && senderName != null) {
-                    SenderNameLabel(senderName)
+                    SenderNameLabel(senderName, onClick = { onProfileClick(message.senderId) })
                 }
         
                 Surface(
@@ -154,7 +161,7 @@ fun MessageBubble(
                     shape = bubbleShape,
                     modifier = Modifier.widthIn(max = 280.dp)
                 ) {
-                    MessageContent(message, isMine, isAi, isSaved, onSaveCollection, onJoinSession, localCollections, onReportMessage, context)
+                    MessageContent(message, isMine, isAi, isSaved, onSaveCollection, onJoinSession, localCollections, onReportMessage, onDeleteChat, clipboard, scope)
                 }
                 
                 if (isLastInGroup) {
@@ -199,41 +206,45 @@ private fun AIHeader(isAiLoading: Boolean) {
 }
 
 @Composable
-private fun SenderAvatar(avatarUrl: String?) {
-    if (avatarUrl != null) {
-        AsyncImage(
-            model = avatarUrl,
-            contentDescription = null,
-            modifier = Modifier
-                .padding(start = 8.dp, bottom = 4.dp)
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentScale = ContentScale.Crop
-        )
-    } else {
-        Icon(
-            imageVector = Icons.Default.AccountCircle,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.outline,
-            modifier = Modifier
-                .padding(start = 8.dp, bottom = 4.dp)
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        )
+private fun SenderAvatar(avatarUrl: String?, onClick: () -> Unit) {
+    Box(modifier = Modifier.clickable { onClick() }) {
+        if (avatarUrl != null) {
+            AsyncImage(
+                model = avatarUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(start = 8.dp, bottom = 4.dp)
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outline,
+                modifier = Modifier
+                    .padding(start = 8.dp, bottom = 4.dp)
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            )
+        }
     }
     Spacer(modifier = Modifier.width(8.dp))
 }
 
 @Composable
-private fun SenderNameLabel(name: String) {
+private fun SenderNameLabel(name: String, onClick: () -> Unit) {
     Text(
         text = name,
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.primary,
         fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+        modifier = Modifier
+            .padding(start = 4.dp, bottom = 4.dp)
+            .clickable { onClick() }
     )
 }
 
@@ -247,7 +258,9 @@ private fun MessageContent(
     onJoinSession: (String) -> Unit,
     localCollections: List<StudyCollection>,
     onReportMessage: () -> Unit,
-    context: Context
+    onDeleteChat: () -> Unit,
+    clipboard: Clipboard,
+    scope: CoroutineScope
 ) {
     var showDropdown by remember { mutableStateOf(false) }
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
@@ -258,7 +271,7 @@ private fun MessageContent(
                 "FILE_TRANSFER" -> FileTransferBubbleContent(message.payload, localCollections, onSaveCollection, isMine)
                 else -> {
                     if (message.decryptionStatus == "FAILED" || message.decryptionStatus == "DECRYPTION_ERROR") {
-                        DecryptionErrorContent(message.decryptionStatus, isMine)
+                        DecryptionErrorContent(message.decryptionStatus, isMine, onDeleteChat)
                     } else {
                         MarkdownText(
                             markdown = message.payload,
@@ -304,27 +317,41 @@ private fun MessageContent(
 }
 
 @Composable
-private fun DecryptionErrorContent(status: String, isMine: Boolean) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(2.dp)) {
-        Icon(
-            if (status == "FAILED") Icons.Default.Lock else Icons.Default.Sync,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-            tint = if (isMine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.error
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = when (status) {
-                "FAILED" -> "Encrypted for a different session/key. If you just joined, you cannot see previous history."
-                "DECRYPTION_ERROR" -> "Decryption failed. Secure session keys missing or invalid."
-                else -> "Encountered decryption error"
-            },
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                color = if (isMine) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) 
-                        else MaterialTheme.colorScheme.error
+private fun DecryptionErrorContent(status: String, isMine: Boolean, onDeleteChat: () -> Unit) {
+    Column(modifier = Modifier.padding(8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(2.dp)) {
+            Icon(
+                if (status == "FAILED") Icons.Default.Lock else Icons.Default.Sync,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = if (isMine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.error
             )
-        )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = when (status) {
+                    "FAILED" -> "Encrypted for a different session/key. If you just joined, you cannot see previous history."
+                    "DECRYPTION_ERROR" -> "Decryption failed. Secure session keys missing or invalid."
+                    else -> "Encountered decryption error"
+                },
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    color = if (isMine) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) 
+                            else MaterialTheme.colorScheme.error
+                )
+            )
+        }
+        if (!isMine) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = onDeleteChat,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Delete Chat & Restart")
+            }
+        }
     }
 }
 
@@ -442,6 +469,87 @@ fun FileTransferBubbleContent(payload: String, localCollections: List<StudyColle
             Icon(when(buttonState) { "IMPORT" -> Icons.Rounded.CloudDownload; "UPDATE" -> Icons.Rounded.Update; else -> Icons.Rounded.CheckCircle }, null, Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
             Text(when(buttonState) { "IMPORT" -> "Import"; "UPDATE" -> "Update"; else -> "Up to date" })
+        }
+    }
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+fun MessageBubblePreview() {
+    MaterialTheme {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Incoming Message
+            MessageBubble(
+                message = MessageEntity(
+                    messageId = "1",
+                    chatId = "chat1",
+                    senderId = "other_user",
+                    payload = "Hello! Have you checked the latest knowledge collection?",
+                    timestamp = System.currentTimeMillis(),
+                    status = "READ",
+                    type = "TEXT"
+                ),
+                isMine = false,
+                senderName = "Prof. Anderson",
+                showAvatar = true,
+                avatarUrl = null,
+                isSaved = false,
+                localCollections = emptyList(),
+                onSaveCollection = {},
+                onJoinSession = {},
+                onReportMessage = {},
+                onProfileClick = {},
+                onDeleteChat = {}
+            )
+
+            // Outgoing Message
+            MessageBubble(
+                message = MessageEntity(
+                    messageId = "2",
+                    chatId = "chat1",
+                    senderId = "my_user",
+                    payload = "Yes, I'm reviewing it right now. Looks very comprehensive!",
+                    timestamp = System.currentTimeMillis(),
+                    status = "READ",
+                    type = "TEXT"
+                ),
+                isMine = true,
+                senderName = "Me",
+                showAvatar = false,
+                avatarUrl = null,
+                isSaved = false,
+                localCollections = emptyList(),
+                onSaveCollection = {},
+                onJoinSession = {},
+                onReportMessage = {},
+                onProfileClick = {},
+                onDeleteChat = {}
+            )
+
+            // AI Message
+            MessageBubble(
+                message = MessageEntity(
+                    messageId = "3",
+                    chatId = "chat1",
+                    senderId = ChatViewModel.QBASE_AI_BOT_ID,
+                    payload = "I can help you analyze the specific questions in this collection. Would you like to start a practice session?",
+                    timestamp = System.currentTimeMillis(),
+                    status = "DELIVERED",
+                    type = "TEXT"
+                ),
+                isMine = false,
+                senderName = "Qbase AI",
+                showAvatar = false,
+                avatarUrl = null,
+                isSaved = false,
+                localCollections = emptyList(),
+                onSaveCollection = {},
+                onJoinSession = {},
+                onReportMessage = {},
+                onProfileClick = {},
+                onDeleteChat = {},
+                isAiLoading = false
+            )
         }
     }
 }

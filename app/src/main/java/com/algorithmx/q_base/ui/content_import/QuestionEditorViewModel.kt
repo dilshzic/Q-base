@@ -110,11 +110,11 @@ class QuestionEditorViewModel @Inject constructor(
         viewModelScope.launch {
             val optionsList = currentState.options.joinToString { "${it.first}: ${it.second}" }
             val prompt = """
-                Explain the following medical question and why the correct answer is ${currentState.correctAnswer}.
+                Explain the following question and why the correct answer is ${currentState.correctAnswer}.
                 Stem: ${currentState.stem}
                 Options: $optionsList
                 
-                Provide a high-quality clinical explanation suitable for a medical textbook.
+                Provide a high-quality detailed explanation suitable for a educational textbook.
             """.trimIndent()
             
             val result = aiRepository.getAiAssistance(prompt)
@@ -165,7 +165,6 @@ class QuestionEditorViewModel @Inject constructor(
             
             val options = currentState.options.map { 
                 QuestionOption(
-                    optionId = 0,
                     questionId = qId,
                     optionLetter = it.first,
                     optionText = it.second,

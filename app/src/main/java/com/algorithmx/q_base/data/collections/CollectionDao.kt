@@ -10,7 +10,7 @@ interface CollectionDao {
 
     @Transaction
     @Query("""
-        SELECT *, (SELECT COUNT(*) FROM Questions WHERE collection = name) as questionCount 
+        SELECT *, (SELECT COUNT(*) FROM Questions WHERE master_category = name) as questionCount 
         FROM StudyCollections
     """)
     fun getAllStudyCollectionsWithCount(): Flow<List<StudyCollectionWithCount>>
@@ -32,7 +32,7 @@ interface CollectionDao {
 
     @Query("""
         SELECT DISTINCT q.category FROM Questions q
-        INNER JOIN StudyCollections c ON q.collection = c.name
+        INNER JOIN StudyCollections c ON q.master_category = c.name
         WHERE c.collection_id = :collectionId
     """)
     fun getCategoriesByStudyCollectionId(collectionId: String): Flow<List<String>>

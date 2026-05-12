@@ -24,6 +24,12 @@ data class StudyCollection(
     @ColumnInfo(name = "is_shared")
     val isShared: Boolean = false,
 
+    @ColumnInfo(name = "shared_with_group_id")
+    val sharedWithGroupId: String? = null,
+
+    @ColumnInfo(name = "is_admin_only")
+    val isAdminOnly: Boolean = false,
+
     @ColumnInfo(name = "updated_at")
     val updatedAt: Long = 0
 )

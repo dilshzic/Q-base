@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.key
 import androidx.compose.runtime.toMutableStateList
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavEntry
@@ -28,6 +29,14 @@ fun rememberNavigationState(
     topLevelRoutes: Set<NavKey>
 ): NavigationState {
 
+    val routes = remember(startRoute, topLevelRoutes) { (topLevelRoutes + startRoute).toList() }
+    val backStacks = mutableMapOf<NavKey, NavBackStack<NavKey>>()
+    for (route in routes) {
+        key(route) {
+            backStacks[route] = rememberNavBackStack(route)
+        }
+    }
+
     val topLevelRoute = rememberSerializable(
         startRoute, topLevelRoutes,
         serializer = MutableStateSerializer(NavKeySerializer())
@@ -35,10 +44,7 @@ fun rememberNavigationState(
         mutableStateOf(startRoute)
     }
 
-    val routes = remember(startRoute, topLevelRoutes) { (topLevelRoutes + startRoute).toList() }
-    val backStacks = routes.associateWith { key -> rememberNavBackStack(key) }
-
-    return remember(startRoute, topLevelRoutes, backStacks) {
+    return remember(startRoute, topLevelRoute, backStacks) {
         NavigationState(
             startRoute = startRoute,
             topLevelRoute = topLevelRoute,
@@ -61,11 +67,7 @@ class NavigationState(
 ) {
     var topLevelRoute: NavKey by topLevelRoute
     val stacksInUse: List<NavKey>
-        get() = if (topLevelRoute == startRoute) {
-            listOf(startRoute)
-        } else {
-            listOf(startRoute, topLevelRoute)
-        }
+        get() = listOf(topLevelRoute)
 }
 
 /**

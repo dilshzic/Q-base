@@ -138,7 +138,7 @@ fun ExtractionConfigScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    val lengths = listOf("Short", "Medium", "Long (Clinical)")
+                    val lengths = listOf("Short", "Medium", "Long (Detailed)")
                     lengths.forEach { len ->
                         OutlinedButton(
                             onClick = { stemLength = len },

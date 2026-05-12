@@ -55,3 +55,17 @@ fun SystemMessageItem(text: String) {
         }
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+fun ChatDetailComponentsPreview() {
+    MaterialTheme {
+        Column(modifier = Modifier.padding(16.dp)) {
+            DateHeader(date = "October 24, 2023")
+            Spacer(modifier = Modifier.height(8.dp))
+            SystemMessageItem(text = "You joined the group 'Global Study'")
+            Spacer(modifier = Modifier.height(8.dp))
+            SystemMessageItem(text = "Encryption keys verified for this session")
+        }
+    }
+}

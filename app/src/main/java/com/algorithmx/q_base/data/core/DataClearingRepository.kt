@@ -23,7 +23,7 @@ class DataClearingRepository @Inject constructor(
     private val aiResponseDao: AiResponseDao,
     private val brainUsageDao: BrainUsageDao,
     private val collectionDao: CollectionDao,
-    private val cryptoManager: com.algorithmx.q_base.data.util.CryptoManager
+    private val cryptoManager: com.algorithmx.q_base.core_crypto.CryptoManager
 ) {
     suspend fun clearAllData(clearCollections: Boolean) = withContext(Dispatchers.IO) {
         // Always clear chats and sessions

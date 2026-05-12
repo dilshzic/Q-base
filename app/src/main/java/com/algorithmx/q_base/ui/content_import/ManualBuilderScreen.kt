@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.data.collections.Question
+import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,17 +41,14 @@ fun ManualBuilderScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text("Manual Builder", style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            targetName,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
+            UnifiedTopAppBar(
+                title = "Manual Builder",
+                subtitle = targetName,
+                currentUser = null,
+                onProfileClick = {},
+                showProfileIcon = false,
+                isLarge = false,
+                titleCentered = true,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

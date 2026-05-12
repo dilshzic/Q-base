@@ -25,7 +25,7 @@ data class ReviewState(
 
 sealed class ResultsUiState {
     object Loading : ResultsUiState()
-    data class Success(val attempts: List<SessionAttempt>, val score: Float) : ResultsUiState()
+    data class Success(val session: StudySession?, val attempts: List<SessionAttempt>, val score: Float) : ResultsUiState()
 }
 
 @HiltViewModel
@@ -48,14 +48,15 @@ class SessionResultsViewModel @Inject constructor(
 
     private val _attempts = MutableStateFlow<List<SessionAttempt>>(emptyList())
     private val _score = MutableStateFlow(0f)
+    private val _session = MutableStateFlow<StudySession?>(null)
     private val _isLoading = MutableStateFlow(true)
 
     private val _reviewQuestion = MutableStateFlow<ReviewState?>(null)
     val reviewQuestion = _reviewQuestion.asStateFlow()
 
-    val uiState: StateFlow<ResultsUiState> = combine(_attempts, _score, _isLoading) { attempts, score, loading ->
+    val uiState: StateFlow<ResultsUiState> = combine(_attempts, _score, _session, _isLoading) { attempts, score, session, loading ->
         if (loading) ResultsUiState.Loading
-        else ResultsUiState.Success(attempts, score)
+        else ResultsUiState.Success(session, attempts, score)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ResultsUiState.Loading)
 
     fun initSession(id: String) {
@@ -66,6 +67,7 @@ class SessionResultsViewModel @Inject constructor(
 
     private fun loadResults() {
         viewModelScope.launch {
+            _session.value = repository.getSessionById(_sessionId)
             repository.getAttemptsForSession(_sessionId).collect { attempts ->
                 val totalMarks = attempts.sumOf { it.marksObtained.toDouble() }.toFloat()
                 val maxPossibleMarks = attempts.size * 4f 

@@ -40,7 +40,8 @@ data class ChatUiModel(
 
 data class ChatListState(
     val chats: List<ChatUiModel> = emptyList(),
-    val users: Map<String, UserEntity> = emptyMap()
+    val users: Map<String, UserEntity> = emptyMap(),
+    val isLoading: Boolean = false
 )
 
 data class ChatDetailState(
@@ -120,7 +121,8 @@ class ChatViewModel @Inject constructor(
         _isLibraryMode.value = enabled
     }
 
-    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    val currentUserId: String
+        get() = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     companion object {
         const val QBASE_AI_BOT_ID = "qbase_ai_bot"
@@ -455,11 +457,19 @@ class ChatViewModel @Inject constructor(
                 }
                 
                 val url = parts[0]
-                val key = parts[1].substringBefore("|UPDATED_AT|")
+                val remainder = parts[1]
+                val key = remainder.substringBefore("|UPDATED_AT|")
+                val isAdminOnly = remainder.contains("|ADMIN_ONLY|true")
+                val groupId = remainder.substringAfter("|GROUP_ID|", "").substringBefore("|")
                 
                 _actionFeedback.emit("Downloading and importing collection...")
                 
-                val result = mockDownloader.downloadAndImportMock(url, key)
+                val result = mockDownloader.downloadAndImportMock(
+                    url = url, 
+                    symmetricKeyBase64 = key,
+                    sharedWithGroupId = groupId.ifBlank { null },
+                    isAdminOnly = isAdminOnly
+                )
                 if (result.isSuccess) {
                     _actionFeedback.emit("Collection imported successfully to your library!")
                     
@@ -491,6 +501,17 @@ class ChatViewModel @Inject constructor(
             _isSharing.value = true
             try {
                 val collection = collectionDao.getStudyCollectionByIdOnce(collectionId) ?: throw Exception("Collection not found")
+                
+                // RESTRICTION: Non-sharable if admin-only and user is not admin
+                if (collection.isAdminOnly) {
+                    val groupAdminId = chat.adminId
+                    if (groupAdminId != currentUserId) {
+                        _actionFeedback.emit("Cannot share: This collection is restricted to group admins only.")
+                        _isSharing.value = false
+                        return@launch
+                    }
+                }
+
                 val zipFile = mockExporter.exportCollection(collectionId) ?: throw Exception("Failed to export collection")
                 
                 val (downloadUrl, symmetricKey) = syncRepository.uploadQuestionBankZip(zipFile)
@@ -503,11 +524,11 @@ class ChatViewModel @Inject constructor(
                         "name" to collection.name,
                         "description" to (collection.description ?: ""),
                         "downloadUrl" to downloadUrl,
-                        "symmetricKey" to symmetricKey, // This is already encrypted via encryptFileContent logic? No, symmetricKey is the key to decrypt the ZIP.
-                        // Actually, in the current app, the ZIP symmetric key IS the E2EE key for that file.
+                        "symmetricKey" to symmetricKey,
                         "updatedAt" to updatedAt,
                         "sharedBy" to currentUserId,
-                        "timestamp" to System.currentTimeMillis()
+                        "timestamp" to System.currentTimeMillis(),
+                        "isAdminOnly" to collection.isAdminOnly
                     )
                     syncRepository.shareCollectionToGroup(chatId, metadata)
                     sendMessage(chatId, "shared a collection to the group library: ${collection.name}", type = "DB_CHANGE")
@@ -553,9 +574,10 @@ class ChatViewModel @Inject constructor(
 
     fun startNewChat(userId: String, userName: String) {
         viewModelScope.launch {
+            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
             // Check for existing P2P chat
-            val ids1 = "$currentUserId,$userId"
-            val ids2 = "$userId,$currentUserId"
+            val ids1 = "$uid,$userId"
+            val ids2 = "$userId,$uid"
             val existingChat = chatDao.getP2PChat(ids1, ids2)
             
             if (existingChat != null) {
@@ -570,7 +592,7 @@ class ChatViewModel @Inject constructor(
                 chatName = userName,
                 isGroup = false,
                 participantIds = ids1,
-                adminId = currentUserId
+                adminId = uid
             )
             chatDao.insertChat(newChat)
             
@@ -583,7 +605,7 @@ class ChatViewModel @Inject constructor(
                 "Hello! I am Qbase AI. How can I assist you with your studies today?"
                 else "Hi! I'd like to start a professional conversation."
             
-            sendMessage(chatId, initialMessage, senderId = if (userId == QBASE_AI_BOT_ID) QBASE_AI_BOT_ID else currentUserId)
+            sendMessage(chatId, initialMessage, senderId = if (userId == QBASE_AI_BOT_ID) QBASE_AI_BOT_ID else uid)
             _currentChatId.value = chatId
             _navigationEvents.emit(ChatNavEvent.NavigateToChatDetail(chatId))
         }
@@ -591,21 +613,22 @@ class ChatViewModel @Inject constructor(
 
     fun startNewGroup(participantIds: List<String>, groupName: String) {
         viewModelScope.launch {
+            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
             val chatId = UUID.randomUUID().toString()
-            val allParticipants = (participantIds + currentUserId).distinct().joinToString(",")
+            val allParticipants = (participantIds + uid).filter { it.isNotBlank() }.distinct().joinToString(",")
             
             val newChat = ChatEntity(
                 chatId = chatId,
                 chatName = groupName,
                 isGroup = true,
                 participantIds = allParticipants,
-                adminId = currentUserId
+                adminId = uid
             )
             
             chatDao.insertChat(newChat)
             syncRepository.createChatOnFirestore(newChat)
             
-            sendMessage(chatId, "created the group \"$groupName\"", type = "DB_CHANGE")
+            sendMessage(chatId, "created the group \"$groupName\"", type = "DB_CHANGE", senderId = uid)
             _currentChatId.value = chatId
             _navigationEvents.emit(ChatNavEvent.NavigateToChatDetail(chatId))
         }

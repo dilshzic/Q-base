@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -29,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,9 +41,12 @@ import com.algorithmx.q_base.data.collections.QuestionOption
 import com.algorithmx.q_base.data.collections.Answer
 import com.algorithmx.q_base.data.sessions.SessionAttempt
 import com.algorithmx.q_base.data.core.UserEntity
-import com.algorithmx.q_base.ui.components.QuestionViewer
+import com.algorithmx.q_base.ui.components.question.QuestionViewer
+import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
+import com.algorithmx.q_base.ui.theme.*
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import androidx.compose.material.icons.rounded.AutoAwesome
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,10 +66,13 @@ fun ActiveSessionScreen(
     val aiResponse by viewModel.aiResponse.collectAsStateWithLifecycle()
     val isAiLoading by viewModel.isAiLoading.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    
+    val pagerState = rememberPagerState(pageCount = { attempts.size })
     var showNavigator by remember { mutableStateOf(false) }
     var showReportSessionDialog by remember { mutableStateOf(false) }
     var showReportQuestionDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         viewModel.actionFeedback.collect { message ->
@@ -78,6 +87,17 @@ fun ActiveSessionScreen(
             }
         }
     }
+
+    // Sync pagerState with viewModel.currentQuestionIndex
+    LaunchedEffect(currentIndex) {
+        if (pagerState.currentPage != currentIndex) {
+            pagerState.animateScrollToPage(currentIndex)
+        }
+    }
+
+    LaunchedEffect(pagerState.currentPage) {
+        viewModel.navigateToQuestion(pagerState.currentPage)
+    }
     
     val currentAttempt = attempts.getOrNull(currentIndex)
     val isCompleted = session?.isCompleted == true
@@ -85,127 +105,28 @@ fun ActiveSessionScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Surface(
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                            shape = CircleShape
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Default.Timer,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = if (isCompleted) "Review Mode" else timerText,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
-                    },
-                    actions = {
-                        if (!isCompleted) {
-                            Button(
-                                onClick = { viewModel.submitSession() },
-                                shape = MaterialTheme.shapes.medium,
-                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
-                                modifier = Modifier.height(36.dp)
-                            ) {
-                                Text("FINISH", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
-                            }
-                        } else {
-                            IconButton(onClick = { onViewResults(viewModel.getSessionId()) }) {
-                                Icon(Icons.Default.Assessment, contentDescription = "View Results")
-                            }
-                        }
-                        var showMenu by remember { mutableStateOf(false) }
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "Options")
-                        }
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Report Session") },
-                                leadingIcon = { Icon(Icons.Rounded.Flag, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-                                onClick = {
-                                    showMenu = false
-                                    showReportSessionDialog = true
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Report Question") },
-                                leadingIcon = { Icon(Icons.Rounded.Flag, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-                                onClick = {
-                                    showMenu = false
-                                    showReportQuestionDialog = true
-                                }
-                            )
-                        }
-
-                        com.algorithmx.q_base.ui.components.ProfileIconButton(
-                            user = currentUser,
-                            onClick = { /* Navigate to profile */ }
-                        )
+            UnifiedTopAppBar(
+                title = session?.title ?: "Active Session",
+                subtitle = "Practice Progress",
+                currentUser = currentUser,
+                onProfileClick = { /* Navigate to profile? Or just icon */ },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                )
-                
-                // Expressive Progress Row
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Question ${currentIndex + 1} of ${attempts.size}",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(
-                            onClick = { viewModel.toggleFlag() },
-                            modifier = Modifier.size(32.dp)
+                },
+                actions = {
+                    if (!isCompleted) {
+                        Button(
+                            onClick = { viewModel.submitSession() },
+                            shape = MaterialTheme.shapes.medium,
+                            modifier = Modifier.padding(end = 8.dp)
                         ) {
-                            Icon(
-                                Icons.Rounded.Flag, 
-                                contentDescription = "Flag",
-                                tint = if (currentAttempt?.attemptStatus == "FLAGGED") Color(0xFFFFA500) else MaterialTheme.colorScheme.outlineVariant
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        IconButton(
-                            onClick = { showNavigator = true },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(Icons.Rounded.GridView, contentDescription = "Navigator")
+                            Text("FINISH", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
                         }
                     }
                 }
-                
-                LinearProgressIndicator(
-                    progress = { (currentIndex + 1).toFloat() / attempts.size.coerceAtLeast(1) },
-                    modifier = Modifier.fillMaxWidth(),
-                    strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
-                )
-            }
+            )
         },
         bottomBar = {
             Surface(
@@ -242,33 +163,149 @@ fun ActiveSessionScreen(
             }
         }
     ) { padding ->
-        AnimatedContent(
-            targetState = currentIndex,
-            transitionSpec = {
-                if (targetState > initialState) {
-                    (slideInHorizontally { it } + fadeIn()).togetherWith(slideOutHorizontally { -it } + fadeOut())
-                } else {
-                    (slideInHorizontally { -it } + fadeIn()).togetherWith(slideOutHorizontally { it } + fadeOut())
-                }.using(SizeTransform(clip = false))
-            },
-            modifier = Modifier.padding(padding),
-            label = "question_transition"
-        ) { targetIndex ->
-            val attemptForIndex = attempts.getOrNull(targetIndex)
-            Box(modifier = Modifier.fillMaxSize()) {
-                val question: Question? = currentQuestion
-                if (question != null) {
-                    QuestionViewer(
-                        question = question,
-                        options = options,
-                        selectedAnswers = attemptForIndex?.userSelectedAnswers?.split(",")?.filter { it.isNotEmpty() } ?: emptyList(),
-                        onOptionToggled = { viewModel.onAnswerSelected(it) },
-                        isAnswerRevealed = isCompleted,
-                        correctAnswers = currentAnswer?.correctAnswerString?.split(",")?.map { it.trim() } ?: emptyList(),
-                        explanation = currentAnswer?.generalExplanation,
-                        references = currentAnswer?.references,
-                        onAskAi = { viewModel.askAi() }
-                    )
+        Column(modifier = Modifier.padding(padding)) {
+            // Expressive Progress and Info Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                    shape = CircleShape
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Default.Timer,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isCompleted) "Review" else timerText,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Text(
+                    text = "Q ${currentIndex + 1}/${attempts.size}",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = { viewModel.toggleFlag() },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Rounded.Flag, 
+                            contentDescription = "Flag",
+                            tint = if (currentAttempt?.attemptStatus == "FLAGGED") warningOrange else MaterialTheme.colorScheme.outlineVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    IconButton(
+                        onClick = { showNavigator = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(Icons.Rounded.GridView, contentDescription = "Navigator")
+                    }
+                    if (isCompleted) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        IconButton(
+                            onClick = { onViewResults(viewModel.getSessionId()) },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(Icons.Default.Assessment, contentDescription = "View Results", tint = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    var showMenu by remember { mutableStateOf(false) }
+                    IconButton(onClick = { showMenu = true }, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "Options")
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Report Session") },
+                                leadingIcon = { Icon(Icons.Rounded.Flag, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                                onClick = {
+                                    showMenu = false
+                                    showReportSessionDialog = true
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Report Question") },
+                                leadingIcon = { Icon(Icons.Rounded.Flag, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                                onClick = {
+                                    showMenu = false
+                                    showReportQuestionDialog = true
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            LinearProgressIndicator(
+                progress = { (currentIndex + 1).toFloat() / attempts.size.coerceAtLeast(1) },
+                modifier = Modifier.fillMaxWidth(),
+                strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+            )
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.Top,
+                beyondViewportPageCount = 1
+            ) { page ->
+                val attemptForIndex = attempts.getOrNull(page)
+                val clipboard = LocalClipboardManager.current
+                
+                Box(modifier = Modifier.fillMaxSize()) {
+                    val question: Question? = currentQuestion
+                    if (question != null && page == currentIndex) {
+                        QuestionViewer(
+                            question = question,
+                            options = options,
+                            selectedAnswers = attemptForIndex?.userSelectedAnswers?.split(",")?.filter { it.isNotEmpty() } ?: emptyList(),
+                            onOptionToggled = { viewModel.onAnswerSelected(it) },
+                            isAnswerRevealed = isCompleted,
+                            correctAnswers = currentAnswer?.correctAnswerString?.split(",")?.map { it.trim() } ?: emptyList(),
+                            explanation = currentAnswer?.generalExplanation,
+                            references = currentAnswer?.references,
+                            onPinToggled = { viewModel.toggleFlag() },
+                            onDelete = { /* Logic? */ },
+                            onCopy = {
+                                val content = buildString {
+                                    appendLine("Q: ${question.stem}")
+                                    appendLine("\nOptions:")
+                                    options.forEachIndexed { i, opt ->
+                                        appendLine("${(i + 'A'.code).toChar()}. ${opt.optionText}")
+                                    }
+                                }
+                                clipboard.setText(androidx.compose.ui.text.AnnotatedString(content))
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar("Question copied")
+                                }
+                            },
+                            showHeader = false
+                        )
+                    }
                 }
             }
         }
@@ -327,7 +364,7 @@ fun ActiveSessionScreen(
     }
 
     if (showReportSessionDialog) {
-        com.algorithmx.q_base.ui.components.ReportDialog(
+        com.algorithmx.q_base.ui.components.reusable.ReportDialog(
             itemType = "Session",
             itemName = session?.title ?: "current session",
             onDismiss = { showReportSessionDialog = false },
@@ -339,7 +376,7 @@ fun ActiveSessionScreen(
     }
 
     if (showReportQuestionDialog) {
-        com.algorithmx.q_base.ui.components.ReportDialog(
+        com.algorithmx.q_base.ui.components.reusable.ReportDialog(
             itemType = "Question",
             itemName = currentQuestion?.stem?.take(30) + "..." ?: "this question",
             onDismiss = { showReportQuestionDialog = false },
@@ -400,21 +437,21 @@ fun MasterNavigator(
             itemsIndexed(dots) { index, dot ->
                 val backgroundColor = when (dot.status) {
                     "ATTEMPTED" -> MaterialTheme.colorScheme.primaryContainer
-                    "FLAGGED" -> Color(0xFFFFF4E5)
+                    "FLAGGED" -> warningOrange.copy(alpha = 0.1f)
                     "FINALIZED" -> MaterialTheme.colorScheme.surfaceVariant
                     else -> Color.Transparent
                 }
                 
                 val contentColor = when (dot.status) {
                     "ATTEMPTED" -> MaterialTheme.colorScheme.onPrimaryContainer
-                    "FLAGGED" -> Color(0xFFFFA500)
+                    "FLAGGED" -> warningOrange
                     "FINALIZED" -> MaterialTheme.colorScheme.onSurfaceVariant
                     else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 }
                 
                 val borderColor = when {
                     dot.isSelected -> MaterialTheme.colorScheme.primary
-                    dot.status == "FLAGGED" -> Color(0xFFFFA500)
+                    dot.status == "FLAGGED" -> warningOrange
                     else -> MaterialTheme.colorScheme.outlineVariant
                 }
 
@@ -422,8 +459,8 @@ fun MasterNavigator(
                     modifier = Modifier
                         .size(56.dp)
                         .graphicsLayer {
-                            scaleX = if (dot.isSelected) 1.1f else 1f
-                            scaleY = if (dot.isSelected) 1.1f else 1f
+                            scaleX = if (dot.isSelected) { 1.1f } else 1f
+                            scaleY = if (dot.isSelected) { 1.1f } else 1f
                         },
                     onClick = { onQuestionClick(index) },
                     shape = RoundedCornerShape(16.dp),

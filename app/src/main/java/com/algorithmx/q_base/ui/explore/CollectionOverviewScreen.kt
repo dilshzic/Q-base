@@ -8,18 +8,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.Explore
-import androidx.compose.material.icons.automirrored.rounded.ListAlt
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Quiz
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.CollectionsBookmark
-import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.automirrored.rounded.*
+import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,8 +29,8 @@ import androidx.compose.ui.unit.sp
 import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.data.collections.QuestionSet
 import com.algorithmx.q_base.data.sessions.StudySession
-import com.algorithmx.q_base.ui.components.ReportDialog
-import com.algorithmx.q_base.ui.components.ProfileIconButton
+import com.algorithmx.q_base.ui.components.reusable.ReportDialog
+import com.algorithmx.q_base.ui.components.reusable.ProfileIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,7 +58,10 @@ fun CollectionOverviewScreen(
 
     val scrollState = rememberScrollState()
     var showReportDialog by remember { mutableStateOf(false) }
+    var showReportToGroupDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    
+    val sourceGroupName by viewModel?.sourceGroupName?.collectAsState() ?: remember { mutableStateOf(null) }
 
     LaunchedEffect(viewModel) {
         viewModel?.actionFeedback?.collect { message ->
@@ -75,11 +72,15 @@ fun CollectionOverviewScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = { Text(collection.name, fontWeight = FontWeight.Black) },
+            UnifiedTopAppBar(
+                title = collection.name,
+                currentUser = currentUser,
+                onProfileClick = onProfileClick,
+                isLarge = false,
+                titleCentered = true,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -99,6 +100,16 @@ fun CollectionOverviewScreen(
                                 showReportDialog = true
                             }
                         )
+                        if (collection.sharedWithGroupId != null) {
+                            DropdownMenuItem(
+                                text = { Text("Report to Group") },
+                                leadingIcon = { Icon(Icons.Rounded.Groups, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                                onClick = {
+                                    showMoreMenu = false
+                                    showReportToGroupDialog = true
+                                }
+                            )
+                        }
                         DropdownMenuItem(
                             text = { Text("Delete Collection") },
                             leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
@@ -108,14 +119,7 @@ fun CollectionOverviewScreen(
                             }
                         )
                     }
-                    com.algorithmx.q_base.ui.components.ProfileIconButton(
-                        user = currentUser,
-                        onClick = onProfileClick
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
+                }
             )
         }
     ) { padding ->
@@ -148,11 +152,39 @@ fun CollectionOverviewScreen(
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
-                        Text(
-                            text = collection.name,
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Black
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = collection.name,
+                                style = MaterialTheme.typography.headlineLarge,
+                                fontWeight = FontWeight.Black,
+                                modifier = Modifier.weight(1f)
+                            )
+                            if (collection.isShared) {
+                                Surface(
+                                    color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f),
+                                    shape = CircleShape
+                                ) {
+                                    Text(
+                                        "SHARED",
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.tertiary
+                                    )
+                                }
+                            }
+                        }
+                        
+                        if (sourceGroupName != null) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Source: $sourceGroupName",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = collection.description ?: "No description provided.",
@@ -259,6 +291,18 @@ fun CollectionOverviewScreen(
             onConfirm = { reason ->
                 onReportCollection(reason)
                 showReportDialog = false
+            }
+        )
+    }
+
+    if (showReportToGroupDialog) {
+        ReportDialog(
+            itemType = "Group Report",
+            itemName = sourceGroupName ?: "Source Group",
+            onDismiss = { showReportToGroupDialog = false },
+            onConfirm = { reason ->
+                viewModel?.reportCollectionToGroup(collection, reason)
+                showReportToGroupDialog = false
             }
         )
     }

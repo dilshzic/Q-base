@@ -5,6 +5,7 @@ import android.util.Log
 import com.algorithmx.q_base.BuildConfig
 import com.algorithmx.q_base.data.chat.ChatDao
 import com.algorithmx.q_base.data.chat.ChatEntity
+import com.algorithmx.q_base.data.chat.ChatFirestoreRepository
 import com.algorithmx.q_base.data.chat.MessageDao
 import com.algorithmx.q_base.data.chat.MessageEntity
 import com.algorithmx.q_base.data.collections.*
@@ -14,7 +15,7 @@ import com.algorithmx.q_base.data.auth.UserProfile
 import com.algorithmx.q_base.data.sessions.SessionDao
 import com.algorithmx.q_base.data.sessions.SessionAttempt
 import com.algorithmx.q_base.data.sessions.StudySession
-import com.algorithmx.q_base.data.util.CryptoManager
+import com.algorithmx.q_base.core_crypto.CryptoManager
 import com.algorithmx.q_base.data.util.MockDownloader
 import com.algorithmx.q_base.util.NotificationHelper
 import com.google.firebase.auth.FirebaseAuth
@@ -28,10 +29,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -45,6 +43,7 @@ import javax.inject.Singleton
 class SyncRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val auth: FirebaseAuth,
+    private val chatFirestoreRepository: ChatFirestoreRepository,
     private val chatDao: ChatDao,
     private val messageDao: MessageDao,
     private val userDao: UserDao,
@@ -63,7 +62,7 @@ class SyncRepository @Inject constructor(
     private val currentUserId: String?
         get() = auth.currentUser?.uid
 
-    fun observeAndSyncMessages(chatId: String): Flow<Unit> {
+    fun observeAndSyncMessages(chatId: String): Flow<MessageEntity?> {
         return callbackFlow {
             val listener = firestore.collection("chats")
             .document(chatId)
@@ -107,9 +106,11 @@ class SyncRepository @Inject constructor(
                                             decryptionStatus = "SUCCESS"
                                         } else {
                                             decryptionStatus = "DECRYPTION_ERROR"
+                                            payload = "[Message locked: Decryption key lost. Set up Secure Backup to prevent this.]"
                                         }
                                     } else {
                                         decryptionStatus = "DECRYPTION_ERROR"
+                                        payload = "[Message locked: Decryption key lost. Set up Secure Backup to prevent this.]"
                                     }
                                 }
                             }
@@ -181,10 +182,15 @@ class SyncRepository @Inject constructor(
                                     }
                                 }
                             }
+
+                            // Emit for notification use
+                            if (message.senderId != currentUserId) {
+                                trySend(message).isSuccess
+                            }
                         }
                     }
                 }
-                trySend(Unit)
+                trySend(null).isSuccess
             }
         
         awaitClose { listener.remove() }
@@ -288,7 +294,7 @@ class SyncRepository @Inject constructor(
             "senderId" to message.senderId,
             "ciphertextPayload" to ciphertextPayload,
             "wrappedKeys" to wrappedKeys,
-            "payload" to "ENCRYPTED_MESSAGE",
+            "payload" to message.payload,
             "type" to message.type,
             "timestamp" to message.timestamp,
             "participantIds" to participants,
@@ -321,7 +327,7 @@ class SyncRepository @Inject constructor(
                         sendNotification(
                             targetUserId = targetId,
                             title = "New Message",
-                            body = "Encrypted Message Content", // Secure against plaintext leaks in Firestore
+                            body = message.payload, // Rely on transit encryption
                             data = mapOf(
                                 "chatId" to message.chatId,
                                 "type" to message.type,
@@ -338,25 +344,11 @@ class SyncRepository @Inject constructor(
     }
 
     suspend fun addParticipantToFirestore(chatId: String, userId: String) {
-        try {
-            firestore.collection("chats")
-                .document(chatId)
-                .update("participantIds", FieldValue.arrayUnion(userId))
-                .await()
-        } catch (e: Exception) {
-            Log.e("SyncRepository", "Failed to add participant in Firestore", e)
-        }
+        chatFirestoreRepository.addParticipantToFirestore(chatId, userId)
     }
 
     suspend fun removeParticipantFromFirestore(chatId: String, userId: String) {
-        try {
-            firestore.collection("chats")
-                .document(chatId)
-                .update("participantIds", FieldValue.arrayRemove(userId))
-                .await()
-        } catch (e: Exception) {
-            Log.e("SyncRepository", "Failed to remove participant in Firestore", e)
-        }
+        chatFirestoreRepository.removeParticipantFromFirestore(chatId, userId)
     }
 
     suspend fun sendNotification(targetUserId: String, title: String, body: String, data: Map<String, String> = emptyMap()) {
@@ -381,29 +373,7 @@ class SyncRepository @Inject constructor(
     }
 
     suspend fun createChatOnFirestore(chat: ChatEntity) {
-        val participants = chat.participantIds.split(",").filter { it.isNotBlank() }.toMutableList()
-        // Ensure creator is in the list
-        currentUserId?.let { uid ->
-            if (!participants.contains(uid)) {
-                participants.add(uid)
-            }
-        }
-
-        val chatMap = hashMapOf(
-            "chatName" to chat.chatName,
-            "isGroup" to chat.isGroup,
-            "participantIds" to participants,
-            "adminId" to (chat.adminId ?: currentUserId),
-            "createdAt" to System.currentTimeMillis()
-        )
-        try {
-            firestore.collection("chats")
-                .document(chat.chatId)
-                .set(chatMap)
-                .await()
-        } catch (e: Exception) {
-            Log.e("SyncRepository", "Failed to create chat in Firestore", e)
-        }
+        chatFirestoreRepository.createChatOnFirestore(chat)
     }
 
     fun observeAllIncomingEvents(notificationHelper: NotificationHelper): Flow<Unit> {
@@ -441,15 +411,21 @@ class SyncRepository @Inject constructor(
                                 // Increment unread count for local badge
                                 chatDao.incrementUnreadCount(chatId)
                                 
-                                // Trigger immediate background message sync
-                                observeAndSyncMessages(chatId).first()
+                                // Trigger immediate background message sync and wait for the decrypted message
+                                val decryptedMessage = observeAndSyncMessages(chatId)
+                                    .filterNotNull()
+                                    .first()
                                 
                                 if (localChat?.isBlocked == true) {
                                     Log.d("SyncRepository", "Skipping notification for blocked chat $chatId")
                                     return@launch
                                 }
                                 
-                                notificationHelper.showMessageNotification(chatId, title, body)
+                                notificationHelper.showMessageNotification(
+                                    chatId = chatId, 
+                                    senderName = title, 
+                                    message = decryptedMessage.payload
+                                )
                             }
                         } else if (sessionId != null) {
                             notificationHelper.showSessionNotification(sessionId, title, body)
@@ -593,30 +569,11 @@ class SyncRepository @Inject constructor(
     }
 
     suspend fun clearChatMessagesOnFirestore(chatId: String) {
-        try {
-            val messagesRef = firestore.collection("chats").document(chatId).collection("messages")
-            var snapshot = messagesRef.limit(500).get().await()
-            
-            while (!snapshot.isEmpty) {
-                val batch = firestore.batch()
-                snapshot.documents.forEach { doc ->
-                    batch.delete(doc.reference)
-                }
-                batch.commit().await()
-                snapshot = messagesRef.limit(500).get().await()
-            }
-        } catch (e: Exception) {
-            Log.e("SyncRepository", "Failed to clear messages on Firestore", e)
-        }
+        chatFirestoreRepository.clearChatMessagesOnFirestore(chatId)
     }
 
     suspend fun deleteChatOnFirestore(chatId: String) {
-        try {
-            clearChatMessagesOnFirestore(chatId)
-            firestore.collection("chats").document(chatId).delete().await()
-        } catch (e: Exception) {
-            Log.e("SyncRepository", "Failed to delete chat on Firestore", e)
-        }
+        chatFirestoreRepository.deleteChatOnFirestore(chatId)
     }
 
     suspend fun reportSession(sessionId: String, reason: String) {
@@ -692,22 +649,7 @@ class SyncRepository @Inject constructor(
     }
 
     suspend fun reportGroup(group: ChatEntity, reason: String) {
-        val reporterId = currentUserId ?: throw IllegalStateException("User not authenticated")
-        val reportRef = firestore.collection("reported_groups").document()
-        val reportMap = hashMapOf(
-            "groupId" to group.chatId,
-            "groupName" to group.chatName,
-            "participantIds" to group.participantIds,
-            "reporterId" to reporterId,
-            "reason" to reason,
-            "reportedAt" to System.currentTimeMillis()
-        )
-        try {
-            reportRef.set(reportMap).await()
-            Log.d("SyncRepository", "Group report submitted successfully: ${reportRef.id}")
-        } catch (e: Exception) {
-            Log.e("SyncRepository", "Failed to submit reported group ${group.chatId}", e)
-        }
+        chatFirestoreRepository.reportGroup(group, reason)
     }
 
     suspend fun reportUser(user: UserEntity, reason: String) {
@@ -747,24 +689,7 @@ class SyncRepository @Inject constructor(
     }
 
     suspend fun reportMessage(message: MessageEntity, reason: String) {
-        val reporterId = currentUserId ?: return
-        val reportRef = firestore.collection("reported_messages").document()
-        val reportMap = hashMapOf(
-            "messageId" to message.messageId,
-            "chatId" to message.chatId,
-            "senderId" to message.senderId,
-            "payload" to message.payload,
-            "type" to message.type,
-            "reporterId" to reporterId,
-            "reason" to reason,
-            "reportedAt" to System.currentTimeMillis()
-        )
-        try {
-            reportRef.set(reportMap).await()
-            Log.d("SyncRepository", "Message report submitted successfully: ${reportRef.id}")
-        } catch (e: Exception) {
-            Log.e("SyncRepository", "Failed to submit reported message ${message.messageId}", e)
-        }
+        chatFirestoreRepository.reportMessage(message, reason)
     }
 
     suspend fun shareCollectionToGroup(chatId: String, collectionMetadata: Map<String, Any>) {
@@ -796,7 +721,8 @@ class SyncRepository @Inject constructor(
             val rawName = collectionMetadata["name"] as String
             val rawDesc = collectionMetadata["description"] as? String ?: ""
             val zipKey = collectionMetadata["symmetricKey"] as String
-            val metadataPayload = "$rawName|$rawDesc|$zipKey"
+            val isAdminOnly = collectionMetadata["isAdminOnly"] as? Boolean ?: false
+            val metadataPayload = "$rawName|$rawDesc|$zipKey|$isAdminOnly"
             
             val (encryptedPayload, sessionKeyHandle) = cryptoManager.encryptWithSessionKey(metadataPayload)
             val sessionKeyBytes = Base64.decode(sessionKeyHandle, Base64.NO_WRAP)
@@ -956,6 +882,9 @@ class SyncRepository @Inject constructor(
                                             data["name"] = parts[0]
                                             data["description"] = parts[1]
                                             data["symmetricKey"] = parts[2]
+                                            if (parts.size >= 4) {
+                                                data["isAdminOnly"] = parts[3].toBoolean()
+                                            }
                                             isRestricted = false
                                         } else {
                                             isRestricted = true
@@ -990,6 +919,9 @@ class SyncRepository @Inject constructor(
             awaitClose { listenerRegistration.remove() }
         }
     }
+
+    suspend fun getChatById(chatId: String): ChatEntity? = chatDao.getChatById(chatId)
+
     suspend fun sendCollectionPatch(chatId: String, collectionId: String, op: String, data: JSONObject) {
         val patchObj = JSONObject()
         patchObj.put("collectionId", collectionId)

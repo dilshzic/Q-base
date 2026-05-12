@@ -9,7 +9,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.rounded.Group
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Search
@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.algorithmx.q_base.ui.components.ProfileIconButton
+import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
 import com.algorithmx.q_base.data.core.UserEntity
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,74 +44,17 @@ fun NewChatScreen(
             }
         }
     }
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("New Message", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    ProfileIconButton(
-                        user = currentUser,
-                        onClick = onProfileClick
-                    )
-                }
-            )
-        }
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            // New Group Option
-            Surface(
-                onClick = onNavigateToNewGroup,
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Surface(
-                        modifier = Modifier.size(40.dp),
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.secondary
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Rounded.Group,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        "New Group",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
 
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                thickness = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-            )
-
-            ContactSelector(
-                modifier = Modifier.weight(1f),
-                onUserSelected = { user ->
-                    viewModel.startNewChat(user.userId, user.displayName)
-                    // Navigation is handled via LaunchedEffect above
-                }
-            )
-        }
-    }
+    ContactSelector(
+        onUserSelected = { user ->
+            viewModel.startNewChat(user.userId, user.displayName)
+        },
+        onBack = onBack,
+        onProfileClick = onProfileClick,
+        onNavigateToNewGroup = onNavigateToNewGroup,
+        currentUser = currentUser,
+        titleCentered = true
+    )
 }
 
 @Composable

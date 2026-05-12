@@ -22,19 +22,24 @@ class MockDownloader @Inject constructor(
     private val okHttpClient: OkHttpClient,
     private val questionDao: QuestionDao,
     private val collectionDao: CollectionDao,
-    private val cryptoManager: com.algorithmx.q_base.data.util.CryptoManager
+    private val cryptoManager: com.algorithmx.q_base.core_crypto.CryptoManager
 ) {
     private val json = Json { 
         ignoreUnknownKeys = true 
         coerceInputValues = true
     }
 
-    suspend fun downloadAndImportMock(url: String, symmetricKeyBase64: String? = null): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun downloadAndImportMock(
+        url: String, 
+        symmetricKeyBase64: String? = null,
+        sharedWithGroupId: String? = null,
+        isAdminOnly: Boolean = false
+    ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder().url(url).build()
             val response = okHttpClient.newCall(request).execute()
             
-            if (!response.isSuccessful) return@withContext Result.failure(Exception("Download failed: \${response.code}"))
+            if (!response.isSuccessful) return@withContext Result.failure(Exception("Download failed: ${response.code}"))
             
             val body = response.body ?: return@withContext Result.failure(Exception("Empty response body"))
             
@@ -62,11 +67,11 @@ class MockDownloader @Inject constructor(
             // Try to decode as CollectionExport first, then fallback to MockExport
             try {
                 val collectionData = json.decodeFromString<CollectionExport>(jsonString)
-                importCollectionData(collectionData)
+                importCollectionData(collectionData, sharedWithGroupId, isAdminOnly)
             } catch (e: Exception) {
                 try {
                     val mockData = json.decodeFromString<MockExport>(jsonString)
-                    importMockData(mockData)
+                    importMockData(mockData) // MockExport (Legacy) doesn't support shared flags yet
                 } catch (e2: Exception) {
                     return@withContext Result.failure(Exception("Failed to decode data.json as CollectionExport or MockExport"))
                 }
@@ -78,41 +83,86 @@ class MockDownloader @Inject constructor(
         }
     }
 
-    private suspend fun importCollectionData(exportData: CollectionExport) {
-        // 1. Insert Collection
-        collectionDao.insertStudyCollections(listOf(exportData.collection))
+    private suspend fun importCollectionData(
+        exportData: CollectionExport,
+        sharedWithGroupId: String?,
+        isAdminOnly: Boolean
+    ) {
+        // 1. Generate new UUIDs for questions to avoid conflicts
+        val oldToNewQuestionIds = mutableMapOf<String, String>()
         
-        // 2. Insert Sets
+        val newQuestions = exportData.questions.map { qData ->
+            val newId = java.util.UUID.randomUUID().toString()
+            oldToNewQuestionIds[qData.question.questionId] = newId
+            qData.question.copy(questionId = newId)
+        }
+        
+        val newOptions = exportData.questions.flatMap { qData ->
+            val newId = oldToNewQuestionIds[qData.question.questionId]!!
+            qData.options.map { it.copy(questionId = newId) }
+        }
+        
+        val newAnswers = exportData.questions.mapNotNull { qData ->
+            val newId = oldToNewQuestionIds[qData.question.questionId]!!
+            qData.answer?.copy(questionId = newId)
+        }
+        
+        val newCrossRefs = exportData.crossRefs.mapNotNull { ref ->
+            oldToNewQuestionIds[ref.questionId]?.let { newId ->
+                ref.copy(questionId = newId)
+            }
+        }
+
+        // 2. Insert Collection
+        val collection = exportData.collection.copy(
+            isShared = sharedWithGroupId != null,
+            sharedWithGroupId = sharedWithGroupId,
+            isAdminOnly = isAdminOnly
+        )
+        collectionDao.insertStudyCollections(listOf(collection))
+        
+        // 3. Insert Sets
         collectionDao.insertSets(exportData.sets)
         
-        // 3. Insert Questions, Options, and Answers
-        val questions = exportData.questions.map { it.question }
-        val options = exportData.questions.flatMap { it.options }
-        val answers = exportData.questions.mapNotNull { it.answer }
+        // 4. Insert Questions, Options, and Answers
+        questionDao.insertQuestions(newQuestions)
+        questionDao.insertOptions(newOptions)
+        questionDao.insertAnswers(newAnswers)
         
-        questionDao.insertQuestions(questions)
-        questionDao.insertOptions(options)
-        questionDao.insertAnswers(answers)
-        
-        // 4. Create CrossRefs
-        collectionDao.insertCrossRefs(exportData.crossRefs)
+        // 5. Create CrossRefs
+        collectionDao.insertCrossRefs(newCrossRefs)
     }
 
     private suspend fun importMockData(mockData: MockExport) {
+        // Generate new UUIDs for questions
+        val oldToNewQuestionIds = mutableMapOf<String, String>()
+        
+        val newQuestions = mockData.questions.map { qData ->
+            val newId = java.util.UUID.randomUUID().toString()
+            oldToNewQuestionIds[qData.question.questionId] = newId
+            qData.question.copy(questionId = newId)
+        }
+        
+        val newOptions = mockData.questions.flatMap { qData ->
+            val newId = oldToNewQuestionIds[qData.question.questionId]!!
+            qData.options.map { it.copy(questionId = newId) }
+        }
+        
+        val newAnswers = mockData.questions.mapNotNull { qData ->
+            val newId = oldToNewQuestionIds[qData.question.questionId]!!
+            qData.answer?.copy(questionId = newId)
+        }
+
         // 1. Insert Set (Was QuestionCollection)
         collectionDao.insertSets(listOf(mockData.collection))
         
         // 2. Insert Questions, Options, and Answers
-        val questions = mockData.questions.map { it.question }
-        val options = mockData.questions.flatMap { it.options }
-        val answers = mockData.questions.mapNotNull { it.answer }
-        
-        questionDao.insertQuestions(questions)
-        questionDao.insertOptions(options)
-        questionDao.insertAnswers(answers)
+        questionDao.insertQuestions(newQuestions)
+        questionDao.insertOptions(newOptions)
+        questionDao.insertAnswers(newAnswers)
         
         // 3. Create CrossRefs (SetQuestionCrossRef)
-        val crossRefs = questions.map { question ->
+        val crossRefs = newQuestions.map { question ->
             SetQuestionCrossRef(
                 setId = mockData.collection.setId,
                 questionId = question.questionId

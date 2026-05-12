@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
@@ -25,8 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.algorithmx.q_base.ui.components.QuestionViewer
-import com.algorithmx.q_base.ui.components.ReportDialog
+import com.algorithmx.q_base.ui.components.question.QuestionViewer
+import com.algorithmx.q_base.ui.components.reusable.ReportDialog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -34,7 +35,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SessionResultsScreen(
     viewModel: SessionResultsViewModel = hiltViewModel(),
-    onBackToHome: () -> Unit
+    onDone: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val reviewState by viewModel.reviewQuestion.collectAsStateWithLifecycle()
@@ -49,33 +50,17 @@ fun SessionResultsScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            LargeTopAppBar(
-                title = { 
-                    Column {
-                        Text(
-                            "Report Card", 
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                        Text(
-                            "Analysis of Your Performance",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            letterSpacing = 1.sp
-                        )
+            com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar(
+                title = (uiState as? ResultsUiState.Success)?.session?.title?.takeIf { it.isNotBlank() } ?: "Session Results",
+                subtitle = "Analysis of Your Performance",
+                currentUser = currentUser,
+                onProfileClick = { /* Or direct to profile */ },
+                navigationIcon = {
+                    IconButton(onClick = onDone) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                actions = {
-                    com.algorithmx.q_base.ui.components.ProfileIconButton(
-                        user = currentUser,
-                        onClick = { onBackToHome() } // Or direct to profile
-                    )
-                },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
-                )
+                scrollBehavior = scrollBehavior
             )
         }
     ) { padding ->
@@ -93,7 +78,7 @@ fun SessionResultsScreen(
                         onReportSession = {
                             showReportDialog = true
                         },
-                        onBackToHome = onBackToHome
+                        onDone = onDone
                     )
                 }
             }
@@ -170,7 +155,7 @@ fun ResultsContent(
     state: ResultsUiState.Success,
     onReviewQuestion: (com.algorithmx.q_base.data.sessions.SessionAttempt) -> Unit,
     onReportSession: () -> Unit,
-    onBackToHome: () -> Unit
+    onDone: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -215,13 +200,13 @@ fun ResultsContent(
         Spacer(modifier = Modifier.height(40.dp))
         
         Text(
-            text = "Question Breakdown",
+            text = "Performance Summary",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.ExtraBold,
             modifier = Modifier.align(Alignment.Start)
         )
         Text(
-            text = "Tap any item to review key concepts.",
+            text = "Tap any question to review detailed explanations.",
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.align(Alignment.Start),
             color = MaterialTheme.colorScheme.secondary
@@ -231,9 +216,9 @@ fun ResultsContent(
         
         // Expressive Staggered Grid
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(48.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            columns = GridCells.Adaptive(56.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.weight(1f)
         ) {
             itemsIndexed(state.attempts) { index, attempt ->
@@ -242,7 +227,7 @@ fun ResultsContent(
         }
         
         Button(
-            onClick = onBackToHome,
+            onClick = onDone,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
@@ -250,7 +235,7 @@ fun ResultsContent(
             shape = MaterialTheme.shapes.large,
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
         ) {
-            Icon(Icons.Default.Home, contentDescription = null)
+            Icon(Icons.Rounded.History, contentDescription = null)
             Spacer(modifier = Modifier.width(12.dp))
             Text("Done Reviewing", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         }
@@ -267,7 +252,7 @@ fun ResultsContent(
         ) {
             Icon(Icons.Default.Warning, contentDescription = null)
             Spacer(modifier = Modifier.width(12.dp))
-            Text("Report Session Discrepancies", style = MaterialTheme.typography.titleMedium)
+            Text("Report Session Issues", style = MaterialTheme.typography.titleMedium)
         }
     }
 }
@@ -285,10 +270,10 @@ fun AnimatedAttemptDot(
     }
     
     val color = when {
-        attempt.marksObtained >= 3f -> Color(0xFF4CAF50)
-        attempt.marksObtained > 0f -> Color(0xFFFF9800)
-        attempt.attemptStatus == "UNATTEMPTED" -> Color.LightGray
-        else -> Color(0xFFF44336)
+        attempt.marksObtained >= 1f -> com.algorithmx.q_base.ui.theme.successGreen
+        attempt.marksObtained > 0f -> com.algorithmx.q_base.ui.theme.warningOrange
+        attempt.attemptStatus == "UNATTEMPTED" -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+        else -> MaterialTheme.colorScheme.error
     }
 
     AnimatedVisibility(
@@ -297,9 +282,9 @@ fun AnimatedAttemptDot(
     ) {
         Surface(
             modifier = Modifier
-                .size(48.dp)
+                .size(56.dp)
                 .clickable { onClick(attempt) },
-            shape = CircleShape,
+            shape = RoundedCornerShape(16.dp),
             color = color.copy(alpha = 0.15f),
             border = androidx.compose.foundation.BorderStroke(2.dp, color)
         ) {

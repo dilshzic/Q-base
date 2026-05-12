@@ -2,7 +2,7 @@ package com.algorithmx.q_base.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Vibrant & Energetic Medical Palette (Deep Blues, Neon Teals, Electric Purples)
+// Vibrant & Energetic Educational Palette (Deep Blues, Neon Teals, Electric Purples)
 val primaryLight = Color(0xFF005AC1)
 val onPrimaryLight = Color(0xFFFFFFFF)
 val primaryContainerLight = Color(0xFFD8E2FF)
@@ -59,3 +59,30 @@ val onSurfaceDark = Color(0xFFE3E2E6)
 val surfaceVariantDark = Color(0xFF44474F)
 val onSurfaceVariantDark = Color(0xFFC4C6D0)
 val outlineDark = Color(0xFF8E9099)
+
+// Monochrome Theme Palette
+val primaryMonochromeLight = Color(0xFF000000)
+val onPrimaryMonochromeLight = Color(0xFFFFFFFF)
+val primaryContainerMonochromeLight = Color(0xFFE0E0E0)
+val onPrimaryContainerMonochromeLight = Color(0xFF000000)
+
+val backgroundMonochromeLight = Color(0xFFFFFFFF)
+val onBackgroundMonochromeLight = Color(0xFF000000)
+val surfaceMonochromeLight = Color(0xFFFFFFFF)
+val onSurfaceMonochromeLight = Color(0xFF000000)
+
+val primaryMonochromeDark = Color(0xFFFFFFFF)
+val onPrimaryMonochromeDark = Color(0xFF000000)
+val primaryContainerMonochromeDark = Color(0xFF333333)
+val onPrimaryContainerMonochromeDark = Color(0xFFFFFFFF)
+
+val backgroundMonochromeDark = Color(0xFF000000)
+val onBackgroundMonochromeDark = Color(0xFFFFFFFF)
+val surfaceMonochromeDark = Color(0xFF000000)
+val onSurfaceMonochromeDark = Color(0xFFFFFFFF)
+
+// Success and Warning Colors (Standardized)
+val successGreen = Color(0xFF4CAF50)
+val warningOrange = Color(0xFFFFA500)
+val infoBlue = Color(0xFF2196F3)
+

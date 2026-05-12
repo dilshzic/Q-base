@@ -15,14 +15,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.algorithmx.q_base.data.collections.StudyCollection
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import com.algorithmx.q_base.ui.theme.QbaseTheme
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
 fun SharedLibraryView(
+    chatId: String,
     collections: List<Map<String, Any>>,
     sessions: List<Map<String, Any>>,
     onImport: (String) -> Unit,
@@ -67,6 +70,7 @@ fun SharedLibraryView(
         Box(modifier = Modifier.fillMaxSize()) {
             when (selectedTab) {
                 0 -> CollectionsTabContent(
+                    chatId = chatId,
                     collections = collections,
                     onImport = onImport,
                     localCollections = localCollections,
@@ -86,6 +90,7 @@ fun SharedLibraryView(
 
 @Composable
 fun CollectionsTabContent(
+    chatId: String,
     collections: List<Map<String, Any>>,
     onImport: (String) -> Unit,
     localCollections: List<StudyCollection>,
@@ -119,8 +124,9 @@ fun CollectionsTabContent(
                 val collectionId = data["collectionId"] as? String ?: ""
                 val isExpired = data["isExpired"] as? Boolean ?: false
                 val isRestricted = data["isRestricted"] as? Boolean ?: false
+                val isAdminOnly = data["isAdminOnly"] as? Boolean ?: false
 
-                val payload = "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId"
+                val payload = "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId|ADMIN_ONLY|$isAdminOnly|GROUP_ID|$chatId"
                 
                 SharedCollectionCard(
                     collectionId = collectionId,
@@ -373,5 +379,53 @@ fun AccessRequestItem(
                 Text("Approve")
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SharedLibraryViewPreview() {
+    val mockCollections = listOf(
+        mapOf(
+            "name" to "Internal Physics Collection",
+            "description" to "Key principles of classical mechanics.",
+            "collectionId" to "col1",
+            "isRestricted" to false
+        ),
+        mapOf(
+            "name" to "Space Science Advanced",
+            "description" to "Deep dive into orbital mechanics.",
+            "collectionId" to "col2",
+            "isRestricted" to true
+        )
+    )
+    val mockSessions = listOf(
+        mapOf(
+            "title" to "Midterm Prep Session",
+            "sessionId" to "sess1",
+            "timestamp" to System.currentTimeMillis()
+        )
+    )
+    val mockRequests = listOf(
+        mapOf(
+            "requesterName" to "John Doe",
+            "collectionId" to "col2",
+            "requesterId" to "user1"
+        )
+    )
+
+    QbaseTheme {
+        SharedLibraryView(
+            chatId = "chat1",
+            collections = mockCollections,
+            sessions = mockSessions,
+            onImport = {},
+            onJoinSession = {},
+            localCollections = emptyList(),
+            isAdmin = true,
+            accessRequests = mockRequests,
+            onRequestAccess = {},
+            onGrantAccess = { _, _ -> }
+        )
     }
 }

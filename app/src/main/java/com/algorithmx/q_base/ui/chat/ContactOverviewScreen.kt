@@ -26,7 +26,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 import androidx.compose.foundation.clickable
 import com.algorithmx.q_base.data.core.UserEntity
-import com.algorithmx.q_base.ui.components.ProfileIconButton
+import com.algorithmx.q_base.ui.components.reusable.ProfileIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,22 +56,15 @@ fun ContactOverviewScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = { Text("Contact Info") },
+            com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar(
+                title = "Contact Info",
+                currentUser = currentUser,
+                onProfileClick = onProfileClick,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                },
-                actions = {
-                    ProfileIconButton(
-                        user = currentUser,
-                        onClick = onProfileClick
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
+                }
             )
         }
     ) { padding ->
@@ -151,11 +144,6 @@ fun ContactOverviewScreen(
                         icon = if (chat?.isMuted == true) Icons.Rounded.NotificationsOff else Icons.Rounded.Notifications,
                         label = if (chat?.isMuted == true) "Unmute" else "Mute",
                         onClick = { chat?.let { viewModel.toggleMute(it.chatId, !it.isMuted) } }
-                    )
-                    ActionButton(
-                        icon = Icons.Rounded.Search,
-                        label = "Search",
-                        onClick = { /* Search in chat */ }
                     )
                 }
             }

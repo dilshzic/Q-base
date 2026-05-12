@@ -3,7 +3,7 @@ package com.algorithmx.q_base.data.ai
 import com.algorithmx.q_base.BuildConfig
 import com.algorithmx.q_base.core_ai.brain.AiUsageLogger
 import com.algorithmx.q_base.core_ai.brain.BrainConfigProvider
-import com.algorithmx.q_base.core_ai.brain.models.BrainProvider
+import com.algorithmx.androidmodules.coreai.brain.models.BrainProvider
 import com.algorithmx.q_base.core_ai.brain.models.BrainTask
 import com.algorithmx.q_base.data.ai.BrainUsageDao
 import com.algorithmx.q_base.data.ai.BrainUsageEntity

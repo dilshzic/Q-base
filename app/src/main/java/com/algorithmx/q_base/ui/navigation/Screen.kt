@@ -9,6 +9,7 @@ sealed class Screen : NavKey {
     @Serializable data object Home : Screen()
     @Serializable data object Explore : Screen()
     @Serializable data class Sessions(val startWizard: Boolean = false) : Screen()
+    @Serializable data object NewSessionWizard : Screen()
     @Serializable data object Connect : Screen()
     @Serializable data class ChatDetail(val chatId: String) : Screen()
     @Serializable data class ContactOverview(val chatId: String) : Screen()
@@ -24,6 +25,8 @@ sealed class Screen : NavKey {
     data class QuestionEditor(val questionId: String?, val setId: String) : Screen()
     @Serializable data object Settings : Screen()
     @Serializable data object Profile : Screen()
+    @Serializable data object AppTheme : Screen()
+    @Serializable data object AiBrainManager : Screen()
     @Serializable data class ImportWizard(val source: String? = null, val targetId: String? = null) : Screen()
     
     // Nested Explore Routes
@@ -37,6 +40,7 @@ sealed class Screen : NavKey {
     @Serializable data object NewGroup : Screen()
     @Serializable data object Signup : Screen()
     @Serializable data object CollectionWizard : Screen()
+    @Serializable data object PinnedQuestions : Screen()
     @Serializable data object Notifications : Screen()
     @Serializable data object BlockedList : Screen()
 }

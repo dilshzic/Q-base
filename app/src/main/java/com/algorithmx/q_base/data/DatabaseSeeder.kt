@@ -16,10 +16,16 @@ import java.io.FileOutputStream
 import java.util.UUID
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import javax.inject.Inject
+import dagger.hilt.android.qualifiers.ApplicationContext
 
-class DatabaseSeeder(
-    private val context: Context,
+class DatabaseSeeder @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     private val database: AppDatabase,
+    private val chatDatabase: ChatDatabase,
+    private val chatDao: ChatDao,
+    private val messageDao: MessageDao,
+    private val userDao: UserDao,
     private val dataStoreManager: com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager
 ) {
     private fun getColumnString(cursor: android.database.Cursor, index: Int): String? {
@@ -30,16 +36,19 @@ class DatabaseSeeder(
         val collectionDao = database.collectionDao()
         val questionDao = database.questionDao()
 
-        if (dataStoreManager.isSeedAppliedFlow.first()) {
-            Log.d("DatabaseSeeder", "Seed already applied according to DataStore.")
+        val seedApplied = dataStoreManager.isSeedAppliedFlow.first()
+        val collectionCount = collectionDao.getStudyCollectionCount()
+
+        if (seedApplied && collectionCount > 0) {
+            Log.d("DatabaseSeeder", "Seed already applied and data exists. Skipping.")
             return@withContext
         }
 
-        Log.d("DatabaseSeeder", "Seeding database from assets...")
+        Log.d("DatabaseSeeder", "Seeding database from assets (seedApplied=$seedApplied, count=$collectionCount)...")
 
         val tempDbFile = File(context.cacheDir, "seed_temp.db")
         try {
-            context.assets.open("database/q base.db").use { input ->
+            context.assets.open("database/qbase.db").use { input ->
                 FileOutputStream(tempDbFile).use { output ->
                     input.copyTo(output)
                 }
@@ -211,15 +220,12 @@ class DatabaseSeeder(
     }
 
     private suspend fun seedSampleChats() {
-        val chatDao = database.chatDao()
-        val messageDao = database.messageDao()
-        val userDao = database.userDao()
         val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "current_user"
 
         try {
-            database.withTransaction {
+            chatDatabase.withTransaction {
                 val sampleUsers = listOf(
-                    UserEntity(userId = "mentor_1", displayName = "Dr. Alice (Mentor)", profilePictureUrl = null, friendCode = "DR-ALICE"),
+                    UserEntity(userId = "mentor_1", displayName = "Alice (Mentor)", profilePictureUrl = null, friendCode = "ALICE-77"),
                     UserEntity(userId = "peer_1", displayName = "John Doe", profilePictureUrl = null, friendCode = "JD-1234"),
                     UserEntity(userId = "peer_2", displayName = "Sarah Miller", profilePictureUrl = null, friendCode = "SM-5678")
                 )
@@ -228,7 +234,7 @@ class DatabaseSeeder(
                 // P2P Chat
                 val p2pChat = ChatEntity(
                     chatId = "sample_p2p",
-                    chatName = "Dr. Alice (Mentor)",
+                    chatName = "Alice (Mentor)",
                     isGroup = false,
                     participantIds = "mentor_1,$currentUserId"
                 )
@@ -236,7 +242,7 @@ class DatabaseSeeder(
                 
                 messageDao.insertMessage(MessageEntity(
                     messageId = "m1", chatId = "sample_p2p", senderId = "mentor_1",
-                    payload = "Hello! I saw your recent progress on Cardiology. Great work!",
+                    payload = "Hello! I saw your recent progress on the General Knowledge collection. Great work!",
                     type = "TEXT", timestamp = System.currentTimeMillis() - 3600000
                 ))
 
@@ -251,51 +257,51 @@ class DatabaseSeeder(
 
                 messageDao.insertMessage(MessageEntity(
                     messageId = "m2", chatId = "sample_group", senderId = "peer_1",
-                    payload = "Has anyone read the latest paper on CRISPR applications in oncology?",
+                    payload = "Has anyone explored the new Space Science module?",
                     type = "TEXT", timestamp = System.currentTimeMillis() - 7200000
                 ))
                 messageDao.insertMessage(MessageEntity(
                     messageId = "m3", chatId = "sample_group", senderId = "peer_2",
-                    payload = "Yes! It's fascinating. Especially the section on base editing.",
+                    payload = "Yes! The section on orbital mechanics is quite detailed.",
                     type = "TEXT", timestamp = System.currentTimeMillis() - 3600000
                 ))
 
                 // Shared Collection Message
-                val cardioCollectionJson = """
+                val scienceCollectionJson = """
                     {
-                      "collectionTitle": "Cardiology Basics",
+                      "collectionTitle": "Scientific Foundations",
                       "collectionDescription": "A collection of essential foundational questions for multi-disciplinary study covering core principles and advanced concepts.",
                       "questions": [
                         {
-                          "id": "cardio_1",
-                          "stem": "What is the primary pacemaker of the heart responsible for initiating the electrical impulse under normal physiological conditions?",
+                          "id": "sci_1",
+                          "stem": "What is the approximate speed of light in a vacuum?",
                           "type": "SBA",
                           "options": [
-                            {"letter": "A", "text": "Atrioventricular (AV) Node"},
-                            {"letter": "B", "text": "Sinoatrial (SA) Node"},
-                            {"letter": "C", "text": "Purkinje Fibers"},
-                            {"letter": "D", "text": "Bundle of His"}
+                            {"letter": "A", "text": "300,000 km/s"},
+                            {"letter": "B", "text": "150,000 km/s"},
+                            {"letter": "C", "text": "450,000 km/s"},
+                            {"letter": "D", "text": "600,000 km/s"}
                           ],
                           "answer": {
-                            "correctLetter": "B",
-                            "explanation": "The Sinoatrial (SA) node is the heart's natural pacemaker because it has the fastest intrinsic rate of spontaneous depolarization.",
+                            "correctLetter": "A",
+                            "explanation": "Light travels at approximately 299,792 kilometers per second in a vacuum.",
                             "references": "General Educational Resources"
                           }
                         },
                         {
-                          "id": "cardio_2",
-                          "stem": "Which heart sound is associated with rapid ventricular filling and is often heard in physiological states in children or pathological states like heart failure in adults?",
+                          "id": "sci_2",
+                          "stem": "Which planet is known as the Red Planet?",
                           "type": "SBA",
                           "options": [
-                            {"letter": "A", "text": "S1 (First heart sound)"},
-                            {"letter": "B", "text": "S2 (Second heart sound)"},
-                            {"letter": "C", "text": "S3 (Third heart sound)"},
-                            {"letter": "D", "text": "S4 (Fourth heart sound)"}
+                            {"letter": "A", "text": "Venus"},
+                            {"letter": "B", "text": "Jupiter"},
+                            {"letter": "C", "text": "Mars"},
+                            {"letter": "D", "text": "Saturn"}
                           ],
                           "answer": {
                             "correctLetter": "C",
-                            "explanation": "S3 occurs during the early part of diastole and is caused by blood rushing into a non-compliant or overly loaded ventricle.",
-                            "references": "Lilly, Pathophysiology of Heart Disease"
+                            "explanation": "Mars is often called the Red Planet due to iron oxide on its surface.",
+                            "references": "Astronomy 101"
                           }
                         }
                       ]
@@ -304,7 +310,7 @@ class DatabaseSeeder(
 
                 messageDao.insertMessage(MessageEntity(
                     messageId = "m_col_1", chatId = "sample_p2p", senderId = "mentor_1",
-                    payload = cardioCollectionJson,
+                    payload = scienceCollectionJson,
                     type = "COLLECTION", timestamp = System.currentTimeMillis()
                 ))
 
@@ -338,7 +344,7 @@ class DatabaseSeeder(
             val questionDao = database.questionDao()
             
             questions.forEach { qJson ->
-                val qId = qJson["questionId"]?.toString()?.removeSurrounding("\"") ?: UUID.randomUUID().toString()
+                val qId = UUID.randomUUID().toString()
                 val stem = qJson["stem"]?.toString()?.removeSurrounding("\"") ?: ""
                 val qType = qJson["questionType"]?.toString()?.removeSurrounding("\"") ?: "SBA"
                 

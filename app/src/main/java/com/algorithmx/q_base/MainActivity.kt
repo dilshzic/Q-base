@@ -25,7 +25,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
 import com.google.firebase.auth.FirebaseAuth
-import com.algorithmx.q_base.data.AppDatabase
 import com.algorithmx.q_base.data.DatabaseSeeder
 import com.algorithmx.q_base.data.auth.AuthRepository
 import com.algorithmx.q_base.data.sync.SyncRepository
@@ -63,9 +62,6 @@ class MainActivity : ComponentActivity() {
     }
 
     @Inject
-    lateinit var database: AppDatabase
-
-    @Inject
     lateinit var syncRepository: SyncRepository
 
     @Inject
@@ -76,6 +72,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var dataStoreManager: com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager
+
+    @Inject
+    lateinit var databaseSeeder: DatabaseSeeder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,12 +91,27 @@ class MainActivity : ComponentActivity() {
         }
 
         lifecycleScope.launch {
-            DatabaseSeeder(this@MainActivity, database, dataStoreManager).seedDatabaseIfNeeded()
+            databaseSeeder.seedDatabaseIfNeeded()
             isSeeded.value = true
         }
 
         setContent {
-            QbaseTheme {
+            val brainConfig by dataStoreManager.brainConfigFlow.collectAsStateWithLifecycle(
+                initialValue = com.algorithmx.q_base.core_ai.brain.models.StoredBrainConfig(
+                    provider = com.algorithmx.androidmodules.coreai.brain.models.BrainProvider.GEMINI,
+                    modelName = "gemini-1.5-flash",
+                    systemInstruction = "",
+                    totalRequests = 0,
+                    totalTokens = 0,
+                    category = com.algorithmx.androidmodules.coreai.brain.models.BrainCategory.TEXT_TO_TEXT,
+                    themeMode = "SYSTEM",
+                    notificationsEnabled = true,
+                    isMasterAiFreeze = false,
+                    taskConfigs = emptyMap()
+                )
+            )
+
+            QbaseTheme(themeMode = brainConfig.themeMode) {
                 val seeded by isSeeded.collectAsStateWithLifecycle()
                 
                 // Observe authentication state reactively
@@ -111,33 +125,48 @@ class MainActivity : ComponentActivity() {
                     if (user == null) Screen.Login else Screen.Home 
                 }
                 
+                val topLevelRoutes = remember(user == null) {
+                    if (user == null) {
+                        setOf(Screen.Home, Screen.Explore, Screen.Connect, Screen.Sessions(), Screen.Login)
+                    } else {
+                        setOf(Screen.Home, Screen.Explore, Screen.Connect, Screen.Sessions())
+                    }
+                }
+                
                 val navigationState = rememberNavigationState(
                     startRoute = startRoute,
-                    topLevelRoutes = setOf(Screen.Home, Screen.Explore, Screen.Connect, Screen.Sessions(), Screen.Login)
+                    topLevelRoutes = topLevelRoutes
                 )
                 val navigator = remember(navigationState) { Navigator(navigationState) }
+
+                android.util.Log.d("MainActivity", "Composition: startRoute=$startRoute, currentTopLevel=${navigationState.topLevelRoute}")
 
                 // Sync navigation when user state changes
                 LaunchedEffect(user) {
                     val uid = user?.uid
                     val currentRoute = navigationState.topLevelRoute
-                    android.util.Log.d("MainActivity", "User state changed: $uid, current route: $currentRoute")
+                    android.util.Log.d("MainActivity", "User state changed: UID=$uid, currentTopLevel=$currentRoute, startRoute=$startRoute")
                     
                     if (user != null && currentRoute == Screen.Login) {
-                        android.util.Log.d("MainActivity", "Switching to Home after login")
+                        android.util.Log.d("MainActivity", "CONDITION MET: Switching to Home after login")
                         navigator.navigate(Screen.Home)
                     } else if (user == null && currentRoute != Screen.Login) {
-                        android.util.Log.d("MainActivity", "Switching to Login after logout")
+                        android.util.Log.d("MainActivity", "CONDITION MET: Switching to Login after logout")
                         navigator.navigate(Screen.Login)
+                    } else {
+                        android.util.Log.d("MainActivity", "NO ACTION: user=${if(user==null)"NULL" else "VALID"}, route=$currentRoute")
                     }
                 }
 
                 LaunchedEffect(seeded) {
+                    android.util.Log.d("MainActivity", "Seeded changed: $seeded")
                     if (seeded) {
                         intent?.getStringExtra("CHAT_ID")?.let { chatId ->
+                            android.util.Log.d("MainActivity", "Deep link to chat: $chatId")
                             navigator.navigate(Screen.ChatDetail(chatId))
                         }
                         intent?.getStringExtra("SESSION_ID")?.let { sessionId ->
+                            android.util.Log.d("MainActivity", "Deep link to session: $sessionId")
                             navigator.navigate(Screen.ActiveSession(sessionId))
                         }
                     }
@@ -192,6 +221,10 @@ fun MainScreen(navigationState: NavigationState, navigator: Navigator) {
         navigationState.topLevelRoute is Screen.Connect
     )
 
+    // Global observation of unread messages for the badge
+    val homeViewModel: com.algorithmx.q_base.ui.home.HomeViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
+    val totalUnreadCount by homeViewModel.totalUnreadCount.collectAsStateWithLifecycle()
+
     Row(modifier = Modifier.fillMaxSize()) {
         if (isExpanded && showNav) {
             NavigationRail(
@@ -211,7 +244,19 @@ fun MainScreen(navigationState: NavigationState, navigator: Navigator) {
                     onClick = { navigator.navigate(Screen.Explore) }
                 )
                 NavigationRailItem(
-                    icon = { Icon(Icons.Rounded.Hub, contentDescription = null) },
+                    icon = {
+                        BadgedBox(
+                            badge = {
+                                if (totalUnreadCount > 0) {
+                                    Badge {
+                                        Text(totalUnreadCount.toString())
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Rounded.Hub, contentDescription = null)
+                        }
+                    },
                     label = { Text("Connect") },
                     selected = navigationState.topLevelRoute == Screen.Connect,
                     onClick = { navigator.navigate(Screen.Connect) }
@@ -242,7 +287,23 @@ fun MainScreen(navigationState: NavigationState, navigator: Navigator) {
                         
                         navItems.forEach { (screen, label, icon) ->
                             NavigationBarItem(
-                                icon = { Icon(icon, contentDescription = null) },
+                                icon = {
+                                    if (screen == Screen.Connect) {
+                                        BadgedBox(
+                                            badge = {
+                                                if (totalUnreadCount > 0) {
+                                                    Badge {
+                                                        Text(totalUnreadCount.toString())
+                                                    }
+                                                }
+                                            }
+                                        ) {
+                                            Icon(icon, contentDescription = null)
+                                        }
+                                    } else {
+                                        Icon(icon, contentDescription = null)
+                                    }
+                                },
                                 label = { Text(label) },
                                 selected = navigationState.topLevelRoute == screen || (screen is Screen.Sessions && navigationState.topLevelRoute is Screen.Sessions),
                                 onClick = { navigator.navigate(screen) }

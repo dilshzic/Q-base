@@ -43,8 +43,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -52,8 +52,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     buildFeatures {
@@ -63,7 +63,10 @@ android {
 }
 
 dependencies {
-    implementation(project(":core-ai"))
+    implementation("com.github.dilshzic:alx-core-ai:v1.0.1")
+    implementation(project(":core-chat"))
+    implementation(project(":core-auth"))
+    implementation(project(":core-crypto"))
     // AndroidX Core & Lifecycle
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -130,9 +133,6 @@ dependencies {
 
     // Google Play Services
     implementation(libs.play.services.auth)
-
-    // Security & Cryptography
-    implementation("com.google.crypto.tink:tink-android:1.8.0")
 
     // Testing
     testImplementation(libs.junit)

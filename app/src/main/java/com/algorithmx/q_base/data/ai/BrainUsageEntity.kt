@@ -2,7 +2,7 @@ package com.algorithmx.q_base.data.ai
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.algorithmx.q_base.core_ai.brain.models.BrainProvider
+import com.algorithmx.androidmodules.coreai.brain.models.BrainProvider
 import com.algorithmx.q_base.core_ai.brain.models.BrainTask
 
 @Entity(tableName = "brain_usage_history")

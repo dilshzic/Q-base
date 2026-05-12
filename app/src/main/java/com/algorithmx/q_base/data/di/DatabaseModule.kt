@@ -5,6 +5,7 @@ import com.algorithmx.q_base.data.AppDatabase
 import com.algorithmx.q_base.data.ai.AiResponseDao
 import com.algorithmx.q_base.data.ai.BrainUsageDao
 import com.algorithmx.q_base.data.chat.ChatDao
+import com.algorithmx.q_base.data.chat.ChatDatabase
 import com.algorithmx.q_base.data.chat.MessageDao
 import com.algorithmx.q_base.data.collections.CollectionDao
 import com.algorithmx.q_base.data.collections.ProblemReportDao
@@ -14,10 +15,11 @@ import com.algorithmx.q_base.data.collections.ExploreRepository
 import com.algorithmx.q_base.data.sessions.SessionDao
 import com.algorithmx.q_base.data.sessions.SessionRepository
 import com.algorithmx.q_base.data.auth.ProfileRepository
+import com.algorithmx.q_base.data.auth.ProfileCache
 import com.algorithmx.q_base.data.core.HomeRepository
 import com.algorithmx.q_base.data.collections.ImportRepository
 import com.algorithmx.q_base.data.core.DataClearingRepository
-import com.algorithmx.q_base.data.util.CryptoManager
+import com.algorithmx.q_base.core_crypto.CryptoManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -51,10 +53,16 @@ object DatabaseModule {
     fun provideUserDao(database: AppDatabase): UserDao = database.userDao()
 
     @Provides
-    fun provideChatDao(database: AppDatabase): ChatDao = database.chatDao()
+    @Singleton
+    fun provideChatDatabase(@ApplicationContext context: Context): ChatDatabase {
+        return ChatDatabase.getDatabase(context)
+    }
 
     @Provides
-    fun provideMessageDao(database: AppDatabase): MessageDao = database.messageDao()
+    fun provideChatDao(database: ChatDatabase): ChatDao = database.chatDao()
+
+    @Provides
+    fun provideMessageDao(database: ChatDatabase): MessageDao = database.messageDao()
 
     @Provides
     fun provideAiResponseDao(database: AppDatabase): AiResponseDao = database.aiResponseDao()
@@ -120,5 +128,26 @@ object DatabaseModule {
             chatDao, messageDao, sessionDao, questionDao, userDao,
             aiResponseDao, brainUsageDao, collectionDao, cryptoManager
         )
+    }
+
+    @Provides
+    fun provideProfileCache(userDao: UserDao): ProfileCache {
+        return object : ProfileCache {
+            override suspend fun upsert(profile: com.algorithmx.q_base.data.auth.UserProfile) {
+                userDao.insertUser(
+                    com.algorithmx.q_base.data.core.UserEntity(
+                        userId = profile.userId,
+                        displayName = profile.displayName,
+                        email = profile.email,
+                        intro = profile.intro,
+                        profilePictureUrl = profile.profilePictureUrl,
+                        friendCode = profile.friendCode,
+                        publicKey = profile.publicKey,
+                        isBanned = profile.isBanned,
+                        isPhotoVisible = profile.isPhotoVisible
+                    )
+                )
+            }
+        }
     }
 }

@@ -62,6 +62,8 @@ class ExploreRepository @Inject constructor(
 
     fun getAllSessions(): Flow<List<StudySession>> = sessionDao.getAllSessions()
 
+    fun getPinnedQuestions(): Flow<List<Question>> = questionDao.getPinnedQuestions()
+
     fun getQuestionCountByStudyCollection(collectionName: String): Flow<Int> =
         questionDao.getQuestionCountByStudyCollection(collectionName)
 

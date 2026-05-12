@@ -24,7 +24,8 @@ data class ExploreQuestionState(
     val selectedOption: String? = null,
     val isAnswerRevealed: Boolean = false,
     val aiResponse: String? = null,
-    val isAiLoading: Boolean = false
+    val isAiLoading: Boolean = false,
+    val isEditable: Boolean = true
 )
 
 @HiltViewModel
@@ -51,6 +52,14 @@ class ExploreViewModel @Inject constructor(
 
     private val _collections = MutableStateFlow<List<StudyCollectionWithCount>>(emptyList())
     val collections: StateFlow<List<StudyCollectionWithCount>> = _collections.asStateFlow()
+
+    val personalCollections: StateFlow<List<StudyCollectionWithCount>> = collections.map { list ->
+        list.filter { !it.collection.isShared }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val sharedCollections: StateFlow<List<StudyCollectionWithCount>> = collections.map { list ->
+        list.filter { it.collection.isShared }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _questionStates = MutableStateFlow<List<ExploreQuestionState>>(emptyList())
     val questionStates: StateFlow<List<ExploreQuestionState>> = _questionStates.asStateFlow()
@@ -107,8 +116,9 @@ class ExploreViewModel @Inject constructor(
         viewModelScope.launch {
             repository.getStudyCollectionById(collectionId).collect { collection ->
                 collection?.let {
+                    val isEditable = checkIsEditable(it)
                     repository.getQuestionsByStudyCollection(it.name).collect { questions ->
-                        val states = questions.map { ExploreQuestionState(it) }
+                        val states = questions.map { ExploreQuestionState(it, isEditable = isEditable) }
                         _questionStates.value = states
                         if (states.isNotEmpty()) loadQuestionDetails(0)
                     }
@@ -120,6 +130,9 @@ class ExploreViewModel @Inject constructor(
     fun loadQuestionsBySet(setId: String) {
         viewModelScope.launch {
             repository.getQuestionsBySet(setId).collect { questions ->
+                // For sets, we should check parent collection for edit permissions
+                // This is a bit more complex, let's fetch collection first
+                // For now assuming sets in explore are editable unless we implement deeper check
                 val states = questions.map { ExploreQuestionState(it) }
                 _questionStates.value = states
                 if (states.isNotEmpty()) loadQuestionDetails(0)
@@ -127,9 +140,41 @@ class ExploreViewModel @Inject constructor(
         }
     }
 
+    private suspend fun checkIsEditable(collection: StudyCollection?): Boolean {
+        if (collection == null) return true
+        if (!collection.isAdminOnly) return true
+        val groupId = collection.sharedWithGroupId ?: return true
+        val chat = syncRepository.getChatById(groupId)
+        val currentUid = authRepository.currentUser.first()?.uid
+        return chat?.adminId == currentUid
+    }
+
+    fun loadPinnedQuestions() {
+        viewModelScope.launch {
+            repository.getPinnedQuestions().collect { questions ->
+                val states = questions.map { ExploreQuestionState(it) }
+                _questionStates.value = states
+                if (states.isNotEmpty()) loadQuestionDetails(0)
+            }
+        }
+    }
+
+    private val _sourceGroupName = MutableStateFlow<String?>(null)
+    val sourceGroupName = _sourceGroupName.asStateFlow()
+
     fun loadCollectionOverview(collectionId: String) {
         viewModelScope.launch {
-            repository.getStudyCollectionById(collectionId).collect { _selectedCollection.value = it }
+            repository.getStudyCollectionById(collectionId).collect { collection ->
+                _selectedCollection.value = collection
+                
+                // Fetch group name if shared
+                collection?.sharedWithGroupId?.let { groupId ->
+                    val chat = syncRepository.getChatById(groupId)
+                    _sourceGroupName.value = chat?.chatName
+                } ?: run {
+                    _sourceGroupName.value = null
+                }
+            }
         }
         viewModelScope.launch {
             repository.getSetsByStudyCollectionId(collectionId).collect { _collectionSets.value = it }
@@ -142,6 +187,28 @@ class ExploreViewModel @Inject constructor(
                 col?.name?.let { name ->
                     repository.getQuestionCountByStudyCollection(name).collect { _questionCount.value = it }
                 }
+            }
+        }
+    }
+
+    fun reportCollectionToGroup(collection: StudyCollection, reason: String) {
+        val groupId = collection.sharedWithGroupId ?: return
+        viewModelScope.launch {
+            try {
+                val reportMessage = "⚠️ PROBLEM REPORT: Issue with shared collection '${collection.name}'. Reason: $reason"
+                val message = com.algorithmx.q_base.data.chat.MessageEntity(
+                    messageId = java.util.UUID.randomUUID().toString(),
+                    chatId = groupId,
+                    senderId = authRepository.currentUser.first()?.uid ?: "",
+                    payload = reportMessage,
+                    timestamp = System.currentTimeMillis(),
+                    type = "TEXT"
+                )
+                syncRepository.sendMessage(message)
+                _actionFeedback.emit("Report sent to group chat.")
+            } catch (e: Exception) {
+                Log.e("ExploreViewModel", "Failed to report to group", e)
+                _actionFeedback.emit("Failed to send report: ${e.message}")
             }
         }
     }
@@ -362,9 +429,9 @@ class ExploreViewModel @Inject constructor(
             }
             
             val prompt = when(mode) {
-                "HINT" -> "Give me a subtle hint for this medical question without revealing the answer: ${question.stem}"
-                "CLINICAL" -> "Provide a clinical summary related to this question: ${question.stem}"
-                else -> "Explain this medical question and why the options are correct or incorrect: ${question.stem}. Options: ${state.options.joinToString { "${it.optionLetter}: ${it.optionText}" }}"
+                "HINT" -> "Give me a subtle hint for this question without revealing the answer: ${question.stem}"
+                "DETAILED" -> "Provide a summary related to this question: ${question.stem}"
+                else -> "Explain this question and why the options are correct or incorrect: ${question.stem}. Options: ${state.options.joinToString { "${it.optionLetter}: ${it.optionText}" }}"
             }
             
             val result = aiRepository.getAiAssistance(prompt)

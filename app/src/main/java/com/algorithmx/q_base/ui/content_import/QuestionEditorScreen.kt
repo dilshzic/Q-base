@@ -80,7 +80,7 @@ fun QuestionEditorScreen(
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
                     shape = RoundedCornerShape(12.dp),
-                    placeholder = { Text("Enter the question clinical scenario or stem...") }
+                    placeholder = { Text("Enter the question scenario or stem...") }
                 )
             }
 
