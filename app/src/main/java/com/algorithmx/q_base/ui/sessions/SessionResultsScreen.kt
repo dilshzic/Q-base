@@ -4,6 +4,8 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -72,8 +74,13 @@ fun SessionResultsScreen(
                     }
                 }
                 is ResultsUiState.Success -> {
+                    val isUserGroupAdmin by viewModel.isUserGroupAdmin.collectAsStateWithLifecycle()
                     ResultsContent(
                         state = state,
+                        isUserGroupAdmin = isUserGroupAdmin,
+                        onIsAdminOnlyChange = { isAdminOnly ->
+                            state.session?.let { viewModel.updateSessionAdminOnly(it.sessionId, isAdminOnly) }
+                        },
                         onReviewQuestion = { viewModel.selectQuestionForReview(it) },
                         onReportSession = {
                             showReportDialog = true
@@ -153,6 +160,8 @@ fun SessionResultsScreen(
 @Composable
 fun ResultsContent(
     state: ResultsUiState.Success,
+    isUserGroupAdmin: Boolean,
+    onIsAdminOnlyChange: (Boolean) -> Unit,
     onReviewQuestion: (com.algorithmx.q_base.data.sessions.SessionAttempt) -> Unit,
     onReportSession: () -> Unit,
     onDone: () -> Unit
@@ -160,6 +169,7 @@ fun ResultsContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -197,8 +207,60 @@ fun ResultsContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(40.dp))
-        
+        Spacer(modifier = Modifier.height(24.dp))
+
+        if (isUserGroupAdmin && state.session != null) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.15f)
+                ),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Rounded.AdminPanelSettings,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Access Settings (Admin Only)",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Admin-Only Restrictions",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = if (state.session.isAdminOnly) "Only admins can answer or share this session" else "All group members can answer & share",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = state.session.isAdminOnly,
+                            onCheckedChange = onIsAdminOnlyChange
+                        )
+                    }
+                }
+            }
+        }
+
         Text(
             text = "Performance Summary",
             style = MaterialTheme.typography.titleLarge,
@@ -214,17 +276,27 @@ fun ResultsContent(
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        // Expressive Staggered Grid
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(56.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.weight(1f)
-        ) {
-            itemsIndexed(state.attempts) { index, attempt ->
-                AnimatedAttemptDot(index, attempt, onReviewQuestion)
+        // Expressive Staggered Grid chunked by 5 to prevent nested scrolling crash
+        state.attempts.chunked(5).forEach { rowAttempts ->
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                rowAttempts.forEachIndexed { rowIndex, attempt ->
+                    val absoluteIndex = state.attempts.indexOf(attempt)
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        AnimatedAttemptDot(absoluteIndex, attempt, onReviewQuestion)
+                    }
+                }
+                if (rowAttempts.size < 5) {
+                    repeat(5 - rowAttempts.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
             }
         }
+        
+        Spacer(modifier = Modifier.height(24.dp))
         
         Button(
             onClick = onDone,

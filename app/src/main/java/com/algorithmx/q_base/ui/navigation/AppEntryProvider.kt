@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavEntry
@@ -83,6 +85,8 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 viewModel.loadQuestionsByStudyCollection(key.collectionName)
             }
             
+            val coroutineScope = rememberCoroutineScope()
+            
             ExploreQuestionPagerScreen(
                 collectionName = key.collectionName,
                 questionStates = questionStates,
@@ -112,6 +116,15 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onSaveAiAsOfficial = { index -> viewModel.saveAiResponseToQuestion(index) },
                 onClearAiResponse = { index -> viewModel.clearAiResponse(index) },
                 onDeleteQuestion = { index -> viewModel.deleteQuestion(index) },
+                onEditQuestion = { index ->
+                    val qState = questionStates.getOrNull(index)
+                    if (qState != null) {
+                        coroutineScope.launch {
+                            val setId = viewModel.getSetIdForQuestion(qState.question.questionId) ?: ""
+                            navigator.navigate(Screen.QuestionEditor(questionId = qState.question.questionId, setId = setId))
+                        }
+                    }
+                },
                 onProfileClick = { navigator.navigate(Screen.Profile) },
                 onBack = { navigator.goBack() },
                 currentUser = currentUser,

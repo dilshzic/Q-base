@@ -2,6 +2,7 @@ package com.algorithmx.q_base.ui.settings
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -206,25 +207,22 @@ fun ProfileContent(
             Spacer(modifier = Modifier.height(24.dp))
 
             Column(
-                modifier = Modifier.padding(horizontal = 24.dp)
+                modifier = Modifier.padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // StatisticsSection(stats = stats)
-
-                // Spacer(modifier = Modifier.height(16.dp))
+                StatisticsSection(stats = stats)
                 
                 SecureBackupCard(
                     hasSecureBackup = hasSecureBackup,
                     onClick = { showBackupDialog = true }
                 )
-
-                Spacer(modifier = Modifier.height(16.dp))
                 
-                // PrivacyCard(
-                //     isPhotoVisible = user?.isPhotoVisible ?: true,
-                //     onToggle = onTogglePhotoVisibility
-                // )
+                PrivacyCard(
+                    isPhotoVisible = user?.isPhotoVisible ?: true,
+                    onToggle = onTogglePhotoVisibility
+                )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 
                 LogoutButton(onClick = { showLogoutDialog = true })
                 
@@ -246,7 +244,7 @@ fun ProfileHeader(
             .padding(top = padding.calculateTopPadding()),
         contentAlignment = Alignment.BottomCenter
     ) {
-        // Gradient Background
+        // Premium organic gradient backplate with a gorgeous multi-layered modern layout
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -255,44 +253,53 @@ fun ProfileHeader(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
-                            MaterialTheme.colorScheme.surface
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f),
+                            MaterialTheme.colorScheme.background
                         )
                     )
                 )
         )
         
-        // Profile Avatar Overlapping
-        Box(contentAlignment = Alignment.BottomEnd) {
-            if (user?.profilePictureUrl != null) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(user.profilePictureUrl)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier
-                        .size(130.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .padding(4.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Surface(
-                    modifier = Modifier.size(130.dp).padding(4.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
-                    shadowElevation = 8.dp
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
+        // Multi-layered glassmorphic ring around avatar
+        Box(
+            modifier = Modifier
+                .size(140.dp)
+                .background(Color.White.copy(alpha = 0.15f), CircleShape)
+                .border(2.dp, Color.White.copy(alpha = 0.5f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(contentAlignment = Alignment.BottomEnd) {
+                if (user?.profilePictureUrl != null) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(user.profilePictureUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier
+                            .size(130.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(4.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Surface(
+                        modifier = Modifier.size(130.dp).padding(4.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary,
+                        shadowElevation = 8.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Default.Person,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
                     }
                 }
             }

@@ -54,6 +54,7 @@ fun ExploreQuestionPagerScreen(
     onSaveAiAsOfficial: (Int) -> Unit,
     onClearAiResponse: (Int) -> Unit,
     onDeleteQuestion: (Int) -> Unit,
+    onEditQuestion: (Int) -> Unit = {},
     onProfileClick: () -> Unit,
     onBack: () -> Unit,
     currentUser: UserEntity? = null,
@@ -211,6 +212,7 @@ fun ExploreQuestionPagerScreen(
                         onAddToSession = { showSessionDialog = true },
                         onDelete = { onDeleteQuestion(page) },
                         isEditable = state.isEditable,
+                        onEditQuestion = { onEditQuestion(page) },
                         onCopy = {
                             val content = buildString {
                                 appendLine("Q: ${state.question.stem}")

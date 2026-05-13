@@ -159,8 +159,22 @@ class ExploreViewModel @Inject constructor(
         }
     }
 
+    private val _isUserGroupAdmin = MutableStateFlow(false)
+    val isUserGroupAdmin: StateFlow<Boolean> = _isUserGroupAdmin.asStateFlow()
+
     private val _sourceGroupName = MutableStateFlow<String?>(null)
     val sourceGroupName = _sourceGroupName.asStateFlow()
+
+    fun updateCollectionAdminOnly(collectionId: String, isAdminOnly: Boolean) {
+        viewModelScope.launch {
+            repository.getStudyCollectionByIdOnce(collectionId)?.let { col ->
+                val updated = col.copy(isAdminOnly = isAdminOnly)
+                repository.updateStudyCollection(updated)
+                _selectedCollection.value = updated
+                _actionFeedback.emit("Collection access updated: ${if (isAdminOnly) "Admin-Only" else "Editable & Sharable by Members"}")
+            }
+        }
+    }
 
     fun loadCollectionOverview(collectionId: String) {
         viewModelScope.launch {
@@ -171,8 +185,12 @@ class ExploreViewModel @Inject constructor(
                 collection?.sharedWithGroupId?.let { groupId ->
                     val chat = syncRepository.getChatById(groupId)
                     _sourceGroupName.value = chat?.chatName
+                    
+                    val currentUid = authRepository.currentUser.firstOrNull()?.uid
+                    _isUserGroupAdmin.value = chat == null || chat.adminId == currentUid
                 } ?: run {
                     _sourceGroupName.value = null
+                    _isUserGroupAdmin.value = true // Owners have full control over personal sets
                 }
             }
         }
@@ -307,6 +325,10 @@ class ExploreViewModel @Inject constructor(
             questionDao.deleteSetById(setId)
             loadSetsAndSessions()
         }
+    }
+
+    suspend fun getSetIdForQuestion(questionId: String): String? {
+        return repository.getSetIdForQuestion(questionId)
     }
 
     fun deleteSelectedSets() {

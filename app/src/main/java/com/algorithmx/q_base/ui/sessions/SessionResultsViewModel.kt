@@ -54,6 +54,9 @@ class SessionResultsViewModel @Inject constructor(
     private val _reviewQuestion = MutableStateFlow<ReviewState?>(null)
     val reviewQuestion = _reviewQuestion.asStateFlow()
 
+    private val _isUserGroupAdmin = MutableStateFlow(false)
+    val isUserGroupAdmin: StateFlow<Boolean> = _isUserGroupAdmin.asStateFlow()
+
     val uiState: StateFlow<ResultsUiState> = combine(_attempts, _score, _session, _isLoading) { attempts, score, session, loading ->
         if (loading) ResultsUiState.Loading
         else ResultsUiState.Success(session, attempts, score)
@@ -67,7 +70,24 @@ class SessionResultsViewModel @Inject constructor(
 
     private fun loadResults() {
         viewModelScope.launch {
-            _session.value = repository.getSessionById(_sessionId)
+            val sessionVal = repository.getSessionById(_sessionId)
+            _session.value = sessionVal
+            if (sessionVal != null) {
+                val colId = sessionVal.collectionId
+                if (colId != null) {
+                    val collection = repository.getStudyCollectionByIdOnce(colId)
+                    val groupId = collection?.sharedWithGroupId
+                    if (groupId != null) {
+                        val chat = syncRepository.getChatById(groupId)
+                        val currentUid = currentUser.value?.userId ?: authRepository.currentUser.firstOrNull()?.uid
+                        _isUserGroupAdmin.value = (chat != null && chat.adminId == currentUid)
+                    } else {
+                        _isUserGroupAdmin.value = true
+                    }
+                } else {
+                    _isUserGroupAdmin.value = true
+                }
+            }
             repository.getAttemptsForSession(_sessionId).collect { attempts ->
                 val totalMarks = attempts.sumOf { it.marksObtained.toDouble() }.toFloat()
                 val maxPossibleMarks = attempts.size * 4f 
@@ -77,6 +97,15 @@ class SessionResultsViewModel @Inject constructor(
                 _score.value = scorePercentage
                 _isLoading.value = false
             }
+        }
+    }
+
+    fun updateSessionAdminOnly(sessionId: String, isAdminOnly: Boolean) {
+        viewModelScope.launch {
+            val sessionVal = _session.value ?: return@launch
+            val updated = sessionVal.copy(isAdminOnly = isAdminOnly)
+            repository.updateSession(updated)
+            _session.value = updated
         }
     }
 

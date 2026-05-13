@@ -557,6 +557,15 @@ class ChatViewModel @Inject constructor(
                 
                 val chat = chatDao.getChatById(chatId) ?: throw Exception("Chat not found")
                 
+                // RESTRICTION: Non-sharable if admin-only and user is not admin
+                if (session.isAdminOnly) {
+                    val groupAdminId = chat.adminId
+                    if (groupAdminId != currentUserId) {
+                        _actionFeedback.emit("Cannot share: This session is restricted to group admins only.")
+                        return@launch
+                    }
+                }
+                
                 _actionFeedback.emit("Exporting and zipping study session...")
                 val zipFile = mockExporter.exportSession(sessionId) ?: throw Exception("Failed to export session")
                 

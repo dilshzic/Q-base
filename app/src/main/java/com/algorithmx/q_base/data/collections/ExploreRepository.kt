@@ -93,6 +93,18 @@ class ExploreRepository @Inject constructor(
         questionDao.insertAnswer(answer)
     }
 
+    suspend fun updateStudyCollection(collection: StudyCollection) {
+        collectionDao.updateStudyCollection(collection)
+    }
+
+    suspend fun getStudyCollectionByIdOnce(collectionId: String): StudyCollection? {
+        return collectionDao.getStudyCollectionByIdOnce(collectionId)
+    }
+
+    suspend fun getSetIdForQuestion(questionId: String): String? {
+        return questionDao.getSetIdForQuestion(questionId)
+    }
+
     suspend fun deleteStudyCollection(collectionId: String) {
         collectionDao.deleteStudyCollectionById(collectionId)
     }

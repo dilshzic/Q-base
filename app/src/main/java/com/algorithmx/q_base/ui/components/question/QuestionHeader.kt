@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.rounded.CollectionsBookmark
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Report
 import com.algorithmx.q_base.data.collections.Question
 import com.algorithmx.q_base.data.collections.QuestionOption
@@ -41,7 +42,8 @@ fun QuestionHeader(
     onDelete: () -> Unit = {},
     onCopy: () -> Unit = {},
     onReport: () -> Unit = {},
-    isEditable: Boolean = true
+    isEditable: Boolean = true,
+    onEditQuestion: (() -> Unit)? = null
 ) {
     val type = question.questionType?.trim()?.uppercase()
     val isSBA = type == "SBA"
@@ -146,6 +148,16 @@ fun QuestionHeader(
                             },
                             leadingIcon = { Icon(Icons.Rounded.Report, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
                         )
+                        if (isEditable && onEditQuestion != null) {
+                            DropdownMenuItem(
+                                text = { Text("Edit Question") },
+                                onClick = {
+                                    showMenu = false
+                                    onEditQuestion()
+                                },
+                                leadingIcon = { Icon(Icons.Rounded.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+                            )
+                        }
                     }
                 }
             }

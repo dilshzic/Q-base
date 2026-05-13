@@ -144,13 +144,16 @@ class SessionsViewModel @Inject constructor(
 
     fun launchSession(title: String) {
         viewModelScope.launch {
+            val colName = _selectedCollection.value ?: ""
+            val collection = repository.getStudyCollectionByNameOnce(colName)
             val sessionId = repository.createNewSession(
                 title = title,
                 questionIds = _selectedQuestionIds.value.toList(),
                 timeLimitSeconds = if (_timingType.value != "NONE") _timeLimitSeconds.value else null,
                 timingType = _timingType.value,
                 isRandom = _sessionOrder.value == "RANDOM",
-                isAdminOnly = _sessionIsAdminOnly.value
+                isAdminOnly = _sessionIsAdminOnly.value,
+                collectionId = collection?.collectionId
             )
             _sessionCreated.emit(sessionId)
             resetWizard()

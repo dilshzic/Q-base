@@ -24,6 +24,9 @@ interface CollectionDao {
     @Query("SELECT * FROM StudyCollections WHERE collection_id = :collectionId")
     suspend fun getStudyCollectionByIdOnce(collectionId: String): StudyCollection?
 
+    @Query("SELECT * FROM StudyCollections WHERE name = :name LIMIT 1")
+    suspend fun getStudyCollectionByNameOnce(name: String): StudyCollection?
+
     @Query("SELECT * FROM Question_Sets WHERE parent_collection_id = :collectionId")
     fun getSetsByStudyCollectionId(collectionId: String): Flow<List<QuestionSet>>
 
@@ -59,6 +62,9 @@ interface CollectionDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStudyCollections(collections: List<StudyCollection>)
+
+    @Update
+    suspend fun updateStudyCollection(collection: StudyCollection)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSets(sets: List<QuestionSet>)

@@ -91,6 +91,9 @@ interface QuestionDao {
     @Query("SELECT COUNT(*) FROM Questions WHERE master_category = :collectionName")
     fun getQuestionCountByStudyCollection(collectionName: String): Flow<Int>
 
+    @Query("SELECT set_id FROM Set_Questions_CrossRef WHERE question_id = :questionId LIMIT 1")
+    suspend fun getSetIdForQuestion(questionId: String): String?
+
     @Query("DELETE FROM Question_Options WHERE question_id = :questionId")
     suspend fun deleteOptionsForQuestion(questionId: String)
 

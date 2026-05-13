@@ -32,7 +32,8 @@ fun QuestionViewer(
     onDelete: () -> Unit = {},
     onCopy: () -> Unit = {},
     showHeader: Boolean = true,
-    isEditable: Boolean = true
+    isEditable: Boolean = true,
+    onEditQuestion: (() -> Unit)? = null
 ) {
     val scrollState = rememberScrollState()
 
@@ -61,7 +62,8 @@ fun QuestionViewer(
                     onAddToSession = onAddToSession,
                     onDelete = onDelete,
                     onCopy = onCopy,
-                    isEditable = isEditable
+                    isEditable = isEditable,
+                    onEditQuestion = onEditQuestion
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             } else {

@@ -32,6 +32,9 @@ class SessionRepository @Inject constructor(
     suspend fun getStudyCollectionByIdOnce(collectionId: String): StudyCollection? =
         collectionDao.getStudyCollectionByIdOnce(collectionId)
 
+    suspend fun getStudyCollectionByNameOnce(name: String): StudyCollection? =
+        collectionDao.getStudyCollectionByNameOnce(name)
+
     fun getAllSets(): Flow<List<QuestionSet>> = sessionDao.getAllSets()
 
     suspend fun getSessionById(sessionId: String): StudySession? = sessionDao.getSessionById(sessionId)
@@ -45,7 +48,8 @@ class SessionRepository @Inject constructor(
         timeLimitSeconds: Int?,
         timingType: String = "NONE",
         isRandom: Boolean = false,
-        isAdminOnly: Boolean = false
+        isAdminOnly: Boolean = false,
+        collectionId: String? = null
     ): String {
         val sessionId = UUID.randomUUID().toString()
         
@@ -60,6 +64,7 @@ class SessionRepository @Inject constructor(
             scoreAchieved = 0f,
             timingType = timingType,
             isRandom = isRandom,
+            collectionId = collectionId,
             isAdminOnly = isAdminOnly
         )
 
@@ -87,13 +92,15 @@ class SessionRepository @Inject constructor(
     ): String {
         val allQuestions = questionDao.getQuestionsByStudyCollection(collectionName).first()
         val selectedIds = allQuestions.shuffled().take(questionCount).map { it.questionId }
+        val collection = getStudyCollectionByNameOnce(collectionName)
         
         return createNewSession(
             title = if (collectionName.isNotEmpty()) "$collectionName Exam" else "Mock Session",
             questionIds = selectedIds,
             timeLimitSeconds = timeLimitSeconds,
             timingType = if (timeLimitSeconds != null) "TOTAL" else "NONE",
-            isAdminOnly = isAdminOnly
+            isAdminOnly = isAdminOnly,
+            collectionId = collection?.collectionId
         )
     }
 
