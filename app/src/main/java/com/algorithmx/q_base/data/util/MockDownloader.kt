@@ -201,6 +201,18 @@ class MockDownloader @Inject constructor(
             qData.answer?.copy(questionId = newId)
         }
 
+        // 0. Ensure parent StudyCollection exists (FK requirement)
+        val parentId = mockData.collection.parentCollectionId
+        if (collectionDao.getStudyCollectionByIdOnce(parentId) == null) {
+            collectionDao.insertStudyCollections(listOf(
+                com.algorithmx.q_base.data.collections.StudyCollection(
+                    collectionId = parentId,
+                    name = "Imported Collection",
+                    isUserCreated = true
+                )
+            ))
+        }
+
         // 1. Insert Set (Was QuestionCollection)
         collectionDao.insertSets(listOf(mockData.collection))
         

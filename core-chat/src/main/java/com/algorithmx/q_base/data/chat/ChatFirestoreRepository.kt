@@ -3,6 +3,7 @@ package com.algorithmx.q_base.data.chat
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -45,7 +46,7 @@ class ChatFirestoreRepository @Inject constructor(
         try {
             firestore.collection("chats")
                 .document(chatId)
-                .update("participantIds", userId)
+                .update("participantIds", FieldValue.arrayUnion(userId))
                 .await()
         } catch (e: Exception) {
             Log.e("ChatFirestoreRepository", "Failed to add participant in Firestore", e)
@@ -56,7 +57,7 @@ class ChatFirestoreRepository @Inject constructor(
         try {
             firestore.collection("chats")
                 .document(chatId)
-                .update("participantIds", userId)
+                .update("participantIds", FieldValue.arrayRemove(userId))
                 .await()
         } catch (e: Exception) {
             Log.e("ChatFirestoreRepository", "Failed to remove participant in Firestore", e)
