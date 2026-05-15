@@ -16,6 +16,7 @@ if (localPropertiesFile.exists()) {
 }
 
 val appwriteProjectId = localProperties.getProperty("APPWRITE_PROJECT_ID") ?: ""
+val appwriteDatabaseId = localProperties.getProperty("APPWRITE_DATABASE_ID") ?: "qbase_db"
 val appwriteBucketId = localProperties.getProperty("APPWRITE_BUCKET_ID") ?: ""
 val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY") ?: ""
 val groqApiKey = localProperties.getProperty("GROQ_API_KEY") ?: ""
@@ -35,6 +36,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "APPWRITE_PROJECT_ID", "\"$appwriteProjectId\"")
+        buildConfigField("String", "APPWRITE_DATABASE_ID", "\"$appwriteDatabaseId\"")
         buildConfigField("String", "APPWRITE_BUCKET_ID", "\"$appwriteBucketId\"")
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
         buildConfigField("String", "GROQ_API_KEY", "\"$groqApiKey\"")

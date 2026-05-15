@@ -2,23 +2,25 @@
 .gradle/
 build/
 /*/build/
+.kotlin/
 
 # Local configuration files
 local.properties
+.bundle/
 
 # Log files
 *.log
+firebase-debug.log
+ui-debug.log
 
-# Proguard folder
-proguard/
-
-# OS/System/IDE files
-.DS_Store
-Thumbs.db
-*.iml
+# Android Studio / IntelliJ
 .idea/
-.kotlin/
-.navigation/
+*.iml
+*.iws
+.shelf/
+workspace.xml
+tasks.xml
+usage_statistics.xml
 
 # Built artifacts
 *.apk
@@ -26,12 +28,31 @@ Thumbs.db
 *.dex
 *.class
 *.hprof
+*.pyc
+__pycache__/
+*.swp
+*~
+
+# Captures and Lint
+captures/
+lint/
 
 # External native build folders
 .externalNativeBuild/
 .cxx/
 
-# App Specific
+# Keystores / Sensitive data
+*.jks
+*.keystore
+*.p12
 /app/google-services.json
-firebase-debug.log
-ui-debug.log
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Project specific
+input_images/
+temp_icon.png
+venv/
+.venv/

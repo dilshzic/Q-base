@@ -11,6 +11,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.appwrite.Client
+import io.appwrite.services.Databases
 import io.appwrite.services.Storage
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -47,5 +48,11 @@ object NetworkModule {
     @Singleton
     fun provideAppwriteStorage(client: Client): Storage {
         return Storage(client)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAppwriteDatabases(client: Client): Databases {
+        return Databases(client)
     }
 }
