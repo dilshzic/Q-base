@@ -73,65 +73,65 @@ class SyncRepository @Inject constructor(
                     return@addSnapshotListener
                 }
 
-                snapshot?.documentChanges?.forEach { change ->
-                    if (change.type == DocumentChange.Type.ADDED) {
-                        val doc = change.document
-                        val type = doc.getString("type") ?: "TEXT"
-                        @Suppress("UNCHECKED_CAST")
-                        val wrappedKeyMap = doc.get("wrappedKeys") as? Map<String, String>
-                        val ciphertextPayload = doc.getString("ciphertextPayload")
+                repositoryScope.launch {
+                    snapshot?.documentChanges?.forEach { change ->
+                        if (change.type == DocumentChange.Type.ADDED) {
+                            val doc = change.document
+                            val type = doc.getString("type") ?: "TEXT"
+                            @Suppress("UNCHECKED_CAST")
+                            val wrappedKeyMap = doc.get("wrappedKeys") as? Map<String, String>
+                            val ciphertextPayload = doc.getString("ciphertextPayload")
 
-                        val isEncrypted = wrappedKeyMap != null && ciphertextPayload != null
-                        var wrappedKey: String? = null
-                        var payload = if (isEncrypted) ciphertextPayload!! else (doc.getString("payload") ?: "")
-                        var decryptionStatus = if (isEncrypted) "DECRYPTION_ERROR" else "NOT_ENCRYPTED"
-                        val keyFingerprint = doc.getString("keyFingerprint")
+                            val isEncrypted = wrappedKeyMap != null && ciphertextPayload != null
+                            var wrappedKey: String? = null
+                            var payload = if (isEncrypted) ciphertextPayload!! else (doc.getString("payload") ?: "")
+                            var decryptionStatus = if (isEncrypted) "DECRYPTION_ERROR" else "NOT_ENCRYPTED"
+                            val keyFingerprint = doc.getString("keyFingerprint")
 
-                        if (isEncrypted) {
-                            val uid = currentUserId
-                            if (uid == null) {
-                                decryptionStatus = "FAILED"
-                            } else {
-                                wrappedKey = wrappedKeyMap!![uid]
-                                if (wrappedKey == null) {
-                                    // Not encrypted for this user (e.g., joined after message was sent)
+                            if (isEncrypted) {
+                                val uid = currentUserId
+                                if (uid == null) {
                                     decryptionStatus = "FAILED"
                                 } else {
-                                    val unwrapResult = cryptoManager.decryptSessionKey(wrappedKey!!)
-                                    if (unwrapResult.isSuccess) {
-                                        val sessionKeyHandle = Base64.encodeToString(unwrapResult.getOrThrow(), Base64.NO_WRAP)
-                                        val decryptResult = cryptoManager.decryptWithSessionKey(ciphertextPayload!!, sessionKeyHandle)
-                                        if (decryptResult.isSuccess) {
-                                            payload = decryptResult.getOrNull() ?: ""
-                                            decryptionStatus = "SUCCESS"
+                                    wrappedKey = wrappedKeyMap!![uid]
+                                    if (wrappedKey == null) {
+                                        // Not encrypted for this user (e.g., joined after message was sent)
+                                        decryptionStatus = "FAILED"
+                                    } else {
+                                        val unwrapResult = cryptoManager.decryptSessionKey(wrappedKey!!)
+                                        if (unwrapResult.isSuccess) {
+                                            val sessionKeyHandle = Base64.encodeToString(unwrapResult.getOrThrow(), Base64.NO_WRAP)
+                                            val decryptResult = cryptoManager.decryptWithSessionKey(ciphertextPayload!!, sessionKeyHandle)
+                                            if (decryptResult.isSuccess) {
+                                                payload = decryptResult.getOrNull() ?: ""
+                                                decryptionStatus = "SUCCESS"
+                                            } else {
+                                                decryptionStatus = "DECRYPTION_ERROR"
+                                                payload = "[Message locked: Decryption key lost. Set up Secure Backup to prevent this.]"
+                                            }
                                         } else {
                                             decryptionStatus = "DECRYPTION_ERROR"
                                             payload = "[Message locked: Decryption key lost. Set up Secure Backup to prevent this.]"
                                         }
-                                    } else {
-                                        decryptionStatus = "DECRYPTION_ERROR"
-                                        payload = "[Message locked: Decryption key lost. Set up Secure Backup to prevent this.]"
                                     }
                                 }
                             }
-                        }
-                        
-                        val message = MessageEntity(
-                            messageId = doc.id,
-                            chatId = chatId,
-                            senderId = doc.getString("senderId") ?: "",
-                            payload = payload,
-                            type = type,
-                            timestamp = doc.getLong("timestamp") ?: System.currentTimeMillis(),
-                            decryptionStatus = decryptionStatus,
-                            keyFingerprint = keyFingerprint,
-                            wrappedKey = wrappedKey
-                        )
-                        
-                        repositoryScope.launch {
+                            
+                            val message = MessageEntity(
+                                messageId = doc.id,
+                                chatId = chatId,
+                                senderId = doc.getString("senderId") ?: "",
+                                payload = payload,
+                                type = type,
+                                timestamp = doc.getLong("timestamp") ?: System.currentTimeMillis(),
+                                decryptionStatus = decryptionStatus,
+                                keyFingerprint = keyFingerprint,
+                                wrappedKey = wrappedKey
+                            )
+                            
                             // SKIP if already in local DB
                             if (messageDao.getMessageById(doc.id) != null) {
-                                return@launch
+                                return@forEach
                             }
                             
                             messageDao.insertMessage(message)
@@ -862,44 +862,48 @@ class SyncRepository @Inject constructor(
                         return@addSnapshotListener
                     }
 
-                    val items = snapshot?.documents?.map { doc ->
-                        val data = doc.data?.toMutableMap() ?: mutableMapOf<String, Any>()
-                        
-                        val expiresAt = data["expiresAt"] as? Long ?: 0L
-                        if (expiresAt > 0 && System.currentTimeMillis() > expiresAt) {
-                            data["isExpired"] = true
-                        } else {
-                            data["isExpired"] = false
-                        }
+                    repositoryScope.launch {
+                        val items = snapshot?.documents?.map { doc ->
+                            val data = doc.data?.toMutableMap() ?: mutableMapOf<String, Any>()
+                            
+                            val expiresAt = data["expiresAt"] as? Long ?: 0L
+                            if (expiresAt > 0 && System.currentTimeMillis() > expiresAt) {
+                                data["isExpired"] = true
+                            } else {
+                                data["isExpired"] = false
+                            }
 
-                        val encryptedPayload = data["encryptedMetadataPayload"] as? String
-                        @Suppress("UNCHECKED_CAST")
-                        val wrappedMetadataKeys = data["wrappedMetadataKeys"] as? Map<String, String>
+                            val encryptedPayload = data["encryptedMetadataPayload"] as? String
+                            @Suppress("UNCHECKED_CAST")
+                            val wrappedMetadataKeys = data["wrappedMetadataKeys"] as? Map<String, String>
 
-                        var isRestricted = false
+                            var isRestricted = false
 
-                        if (encryptedPayload == null || wrappedMetadataKeys == null) {
-                            isRestricted = true
-                        }
-                        
-                        if (encryptedPayload != null && wrappedMetadataKeys != null && currentUserId != null) {
-                            val myWrappedKey = wrappedMetadataKeys[currentUserId]
-                            if (myWrappedKey != null) {
-                                val unwrapResult = cryptoManager.decryptSessionKey(myWrappedKey)
-                                if (unwrapResult.isSuccess) {
-                                    val sessionKeyHandle = Base64.encodeToString(unwrapResult.getOrThrow(), Base64.NO_WRAP)
-                                    val decryptResult = cryptoManager.decryptWithSessionKey(encryptedPayload, sessionKeyHandle)
-                                    if (decryptResult.isSuccess) {
-                                        val decryptedPayload = decryptResult.getOrNull() ?: ""
-                                        val parts = decryptedPayload.split("|")
-                                        if (parts.size >= 3) {
-                                            data["name"] = parts[0]
-                                            data["description"] = parts[1]
-                                            data["symmetricKey"] = parts[2]
-                                            if (parts.size >= 4) {
-                                                data["isAdminOnly"] = parts[3].toBoolean()
+                            if (encryptedPayload == null || wrappedMetadataKeys == null) {
+                                isRestricted = true
+                            }
+                            
+                            if (encryptedPayload != null && wrappedMetadataKeys != null && currentUserId != null) {
+                                val myWrappedKey = wrappedMetadataKeys[currentUserId]
+                                if (myWrappedKey != null) {
+                                    val unwrapResult = cryptoManager.decryptSessionKey(myWrappedKey)
+                                    if (unwrapResult.isSuccess) {
+                                        val sessionKeyHandle = Base64.encodeToString(unwrapResult.getOrThrow(), Base64.NO_WRAP)
+                                        val decryptResult = cryptoManager.decryptWithSessionKey(encryptedPayload, sessionKeyHandle)
+                                        if (decryptResult.isSuccess) {
+                                            val decryptedPayload = decryptResult.getOrNull() ?: ""
+                                            val parts = decryptedPayload.split("|")
+                                            if (parts.size >= 3) {
+                                                data["name"] = parts[0]
+                                                data["description"] = parts[1]
+                                                data["symmetricKey"] = parts[2]
+                                                if (parts.size >= 4) {
+                                                    data["isAdminOnly"] = parts[3].toBoolean()
+                                                }
+                                                isRestricted = false
+                                            } else {
+                                                isRestricted = true
                                             }
-                                            isRestricted = false
                                         } else {
                                             isRestricted = true
                                         }
@@ -907,27 +911,25 @@ class SyncRepository @Inject constructor(
                                         isRestricted = true
                                     }
                                 } else {
+                                    // User joined after share; key wasn't wrapped for them yet
                                     isRestricted = true
                                 }
-                            } else {
-                                // User joined after share; key wasn't wrapped for them yet
+                            } else if (currentUserId == null) {
                                 isRestricted = true
                             }
-                        } else if (currentUserId == null) {
-                            isRestricted = true
-                        }
-                        
-                        if (data["name"] == null) {
-                            data["name"] = "Encrypted Collection"
-                            data["description"] = "Metadata decryption failed or restricted."
-                            isRestricted = true
-                        }
+                            
+                            if (data["name"] == null) {
+                                data["name"] = "Encrypted Collection"
+                                data["description"] = "Metadata decryption failed or restricted."
+                                isRestricted = true
+                            }
 
-                        data["isRestricted"] = isRestricted
-                        data
-                    } ?: emptyList()
-                    
-                    trySend(items).isSuccess
+                            data["isRestricted"] = isRestricted
+                            data
+                        } ?: emptyList()
+                        
+                        trySend(items).isSuccess
+                    }
                 }
 
             awaitClose { listenerRegistration.remove() }

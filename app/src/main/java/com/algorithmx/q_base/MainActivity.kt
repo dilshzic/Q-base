@@ -62,6 +62,9 @@ class MainActivity : ComponentActivity() {
     }
 
     @Inject
+    lateinit var cryptoManager: com.algorithmx.q_base.core_crypto.CryptoManager
+
+    @Inject
     lateinit var syncRepository: SyncRepository
 
     @Inject
@@ -80,6 +83,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         checkNotificationPermission()
         enableEdgeToEdge()
+
+        // Pre-warm Crypto
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.Default) {
+            try {
+                cryptoManager.initializeAndGetPublicKey()
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Crypto pre-warm failed", e)
+            }
+        }
 
         // Start global sync for notifications reactively
         lifecycleScope.launch {

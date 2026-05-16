@@ -1,5 +1,6 @@
 package com.algorithmx.q_base.data.ai
 
+import android.util.Log
 import com.algorithmx.q_base.BuildConfig
 import com.algorithmx.q_base.core_ai.brain.AiUsageLogger
 import com.algorithmx.q_base.core_ai.brain.BrainConfigProvider

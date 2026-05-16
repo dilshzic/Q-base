@@ -343,12 +343,17 @@ class DatabaseSeeder @Inject constructor(
             
             val questionDao = database.questionDao()
             
+            val batchQuestions = mutableListOf<Question>()
+            val batchOptions = mutableListOf<QuestionOption>()
+            val batchAnswers = mutableListOf<Answer>()
+            val batchCrossRefs = mutableListOf<SetQuestionCrossRef>()
+
             questions.forEach { qJson ->
                 val qId = UUID.randomUUID().toString()
                 val stem = qJson["stem"]?.toString()?.removeSurrounding("\"") ?: ""
                 val qType = qJson["questionType"]?.toString()?.removeSurrounding("\"") ?: "SBA"
                 
-                questionDao.insertQuestion(Question(
+                batchQuestions.add(Question(
                     questionId = qId,
                     collection = collectionName,
                     category = "History",
@@ -358,33 +363,37 @@ class DatabaseSeeder @Inject constructor(
                     isPinned = false
                 ))
 
-                // Insert Options
+                // Options
                 val optionsArray = qJson["options"]?.jsonArray?.map { it.jsonObject } ?: emptyList()
-                
                 optionsArray.forEach { optJson ->
                     val letter = optJson["optionLetter"]?.toString()?.removeSurrounding("\"") ?: ""
                     val text = optJson["optionText"]?.toString()?.removeSurrounding("\"") ?: ""
-                    questionDao.insertOption(QuestionOption(
+                    batchOptions.add(QuestionOption(
                         questionId = qId,
                         optionLetter = letter,
                         optionText = text
                     ))
                 }
 
-                // Insert Answer
+                // Answer
                 val correctAnswer = qJson["correctAnswer"]?.toString()?.removeSurrounding("\"") ?: ""
                 val explanation = qJson["explanation"]?.toString()?.removeSurrounding("\"") ?: ""
-                questionDao.insertAnswer(Answer(
+                batchAnswers.add(Answer(
                     questionId = qId,
                     correctAnswerString = correctAnswer,
                     generalExplanation = explanation
                 ))
 
                 // Cross Ref
-                database.collectionDao().insertCrossRefs(listOf(
-                    SetQuestionCrossRef(setId = setId, questionId = qId)
-                ))
+                batchCrossRefs.add(SetQuestionCrossRef(setId = setId, questionId = qId))
             }
+
+            // Perform Batch Inserts
+            questionDao.insertQuestions(batchQuestions)
+            questionDao.insertOptions(batchOptions)
+            questionDao.insertAnswers(batchAnswers)
+            database.collectionDao().insertCrossRefs(batchCrossRefs)
+
         } catch (e: Exception) {
             Log.e("DatabaseSeeder", "Failed to seed Ancient Sri Lanka", e)
         }
