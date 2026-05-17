@@ -31,30 +31,6 @@ import kotlinx.serialization.json.Json
 import java.util.UUID
 import javax.inject.Inject
 
-data class ChatUiModel(
-    val chat: ChatEntity,
-    val displayName: String, // Resolved name
-    val latestMessage: MessageEntity? = null,
-    val unreadCount: Int = 0
-)
-
-data class ChatListState(
-    val chats: List<ChatUiModel> = emptyList(),
-    val users: Map<String, UserEntity> = emptyMap(),
-    val isLoading: Boolean = false
-)
-
-data class ChatDetailState(
-    val chat: ChatEntity? = null,
-    val displayName: String = "", // Resolved name
-    val messages: List<MessageEntity> = emptyList(),
-    val participants: Map<String, UserEntity> = emptyMap(),
-    val currentUserId: String = ""
-)
-
-sealed class ChatNavEvent {
-    data class NavigateToChatDetail(val chatId: String) : ChatNavEvent()
-}
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
