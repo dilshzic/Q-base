@@ -3,6 +3,18 @@ package com.algorithmx.q_base.data.chat
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
+data class ChatSummary(
+    val chatId: String,
+    val chatName: String?,
+    val isGroup: Boolean,
+    val participantIds: String,
+    val unreadCount: Int,
+    val isBlocked: Boolean,
+    val lastMessagePayload: String?,
+    val lastMessageTimestamp: Long?,
+    val lastMessageType: String?
+)
+
 @Dao
 interface ChatDao {
     @Upsert
@@ -19,6 +31,19 @@ interface ChatDao {
 
     @Query("SELECT * FROM chats")
     fun getAllChats(): Flow<List<ChatEntity>>
+
+    @Query("""
+        SELECT 
+            c.chatId, c.chatName, c.isGroup, c.participantIds, c.unreadCount, c.isBlocked,
+            m.payload as lastMessagePayload, m.timestamp as lastMessageTimestamp, m.type as lastMessageType
+        FROM chats c
+        LEFT JOIN (
+            SELECT chatId, payload, timestamp, type
+            FROM messages m1
+            WHERE timestamp = (SELECT MAX(timestamp) FROM messages m2 WHERE m2.chatId = m1.chatId)
+        ) m ON c.chatId = m.chatId
+    """)
+    fun getChatSummaries(): Flow<List<ChatSummary>>
 
     @Query("UPDATE chats SET isBlocked = :isBlocked WHERE chatId = :chatId")
     suspend fun updateBlockedStatus(chatId: String, isBlocked: Boolean)

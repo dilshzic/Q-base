@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.algorithmx.q_base.data.auth.AuthRepository
 import com.algorithmx.q_base.data.auth.ProfileRepository
-import com.google.firebase.auth.FirebaseUser
+import com.algorithmx.q_base.data.auth.AppwriteUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class AuthState(
-    val user: FirebaseUser? = null,
+    val user: AppwriteUser? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
     val isSuccess: Boolean = false,
@@ -73,7 +73,24 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun onGoogleSignInSuccess(user: FirebaseUser) {
+    fun signInWithGoogle(activity: androidx.activity.ComponentActivity) {
+        _state.value = AuthState(isLoading = true)
+        viewModelScope.launch {
+            val result = authRepository.signInWithGoogle(activity)
+            result.onSuccess { user ->
+                try {
+                    profileRepository.syncUserProfile(user.uid)
+                    _state.value = AuthState(user = user, isSuccess = true, isProfileCreated = true)
+                } catch (e: Exception) {
+                    _state.value = AuthState(error = "Sync profile failed: ${e.message}")
+                }
+            }.onFailure { error ->
+                _state.value = AuthState(error = error.message)
+            }
+        }
+    }
+
+    fun onGoogleSignInSuccess(user: AppwriteUser) {
         _state.value = AuthState(isLoading = true)
         viewModelScope.launch {
             try {

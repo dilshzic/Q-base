@@ -71,13 +71,13 @@ class MainActivity : ComponentActivity() {
     lateinit var notificationHelper: com.algorithmx.q_base.util.NotificationHelper
 
     @Inject
-    lateinit var auth: FirebaseAuth
-
-    @Inject
     lateinit var dataStoreManager: com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager
 
     @Inject
     lateinit var databaseSeeder: DatabaseSeeder
+
+    @Inject
+    lateinit var authRepository: AuthRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,7 +95,7 @@ class MainActivity : ComponentActivity() {
 
         // Start global sync for notifications reactively
         lifecycleScope.launch {
-            AuthRepository(auth).currentUser.collect { user ->
+            authRepository.currentUser.collect { user ->
                 if (user != null) {
                     syncRepository.observeAllIncomingEvents(notificationHelper).collect {}
                 }
@@ -127,8 +127,8 @@ class MainActivity : ComponentActivity() {
                 val seeded by isSeeded.collectAsStateWithLifecycle()
                 
                 // Observe authentication state reactively
-                val userFlow = remember { AuthRepository(auth).currentUser }
-                val user by userFlow.collectAsState(initial = auth.currentUser)
+                val userFlow = remember { authRepository.currentUser }
+                val user by userFlow.collectAsState(initial = null)
                 
                 // Use a derived state for the preferred start route based on current auth state.
                 // We use 'user' as a key for remember to ensure startRoute updates if the process is restored
@@ -155,18 +155,11 @@ class MainActivity : ComponentActivity() {
 
                 // Sync navigation when user state changes
                 LaunchedEffect(user) {
-                    val uid = user?.uid
                     val currentRoute = navigationState.topLevelRoute
-                    android.util.Log.d("MainActivity", "User state changed: UID=$uid, currentTopLevel=$currentRoute, startRoute=$startRoute")
-                    
                     if (user != null && currentRoute == Screen.Login) {
-                        android.util.Log.d("MainActivity", "CONDITION MET: Switching to Home after login")
                         navigator.navigate(Screen.Home)
                     } else if (user == null && currentRoute != Screen.Login) {
-                        android.util.Log.d("MainActivity", "CONDITION MET: Switching to Login after logout")
                         navigator.navigate(Screen.Login)
-                    } else {
-                        android.util.Log.d("MainActivity", "NO ACTION: user=${if(user==null)"NULL" else "VALID"}, route=$currentRoute")
                     }
                 }
 
@@ -226,12 +219,7 @@ fun MainScreen(navigationState: NavigationState, navigator: Navigator) {
     val currentStack = navigationState.backStacks[navigationState.topLevelRoute]
     val isAtRoot = (currentStack?.size ?: 0) <= 1
 
-    val showNav = isAtRoot && (
-        navigationState.topLevelRoute is Screen.Home ||
-        navigationState.topLevelRoute is Screen.Explore ||
-        navigationState.topLevelRoute is Screen.Sessions ||
-        navigationState.topLevelRoute is Screen.Connect
-    )
+    val showNav = isAtRoot && (navigationState.topLevelRoute as? Screen)?.isTopLevel == true && navigationState.topLevelRoute !is Screen.Login
 
     // Global observation of unread messages for the badge
     val homeViewModel: com.algorithmx.q_base.ui.home.HomeViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
@@ -335,9 +323,20 @@ fun MainScreen(navigationState: NavigationState, navigator: Navigator) {
 @Composable
 fun AppNavDisplay(navigationState: NavigationState, navigator: Navigator) {
     val entryProvider = rememberAppEntryProvider(navigator)
+    val currentRoute = navigationState.topLevelRoute
     
-    NavDisplay(
-        entries = navigationState.toEntries(entryProvider),
-        onBack = { navigator.goBack() }
-    )
+    // Animate between top-level destinations
+    AnimatedContent(
+        targetState = navigationState.toEntries(entryProvider),
+        transitionSpec = {
+            fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.95f) togetherWith 
+            fadeOut(animationSpec = tween(200))
+        },
+        label = "nav_display_transition"
+    ) { entries ->
+        NavDisplay(
+            entries = entries,
+            onBack = { navigator.goBack() }
+        )
+    }
 }

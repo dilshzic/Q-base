@@ -50,47 +50,6 @@ fun LoginScreen(
     
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val auth = remember { FirebaseAuth.getInstance() }
-
-    val gso = remember {
-        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(context.getString(R.string.default_web_client_id))
-            .requestEmail()
-            .build()
-    }
-
-    val googleSignInClient = remember { GoogleSignIn.getClient(context, gso) }
-
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            try {
-                val account = task.getResult(ApiException::class.java)
-                account.idToken?.let { idToken ->
-                    coroutineScope.launch {
-                        try {
-                            val credential = GoogleAuthProvider.getCredential(idToken, null)
-                            val authResult = auth.signInWithCredential(credential).await()
-                            authResult.user?.let { user ->
-                                viewModel.onGoogleSignInSuccess(user)
-                            }
-                        } catch (e: Exception) {
-                            android.util.Log.e("LoginScreen", "Firebase Google Auth failed", e)
-                            Toast.makeText(context, "Sign in failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
-            } catch (e: ApiException) {
-                android.util.Log.e("LoginScreen", "Google Sign In failed", e)
-                Toast.makeText(context, "Google Sign In failed: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            android.util.Log.e("LoginScreen", "Google Sign In cancelled or failed. Result code: ${result.resultCode}")
-            Toast.makeText(context, "Sign In cancelled or failed (Code: ${result.resultCode})", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
@@ -248,7 +207,10 @@ fun LoginScreen(
             
             OutlinedButton(
                 onClick = {
-                    launcher.launch(googleSignInClient.signInIntent)
+                    val activity = context as? androidx.activity.ComponentActivity
+                    if (activity != null) {
+                        viewModel.signInWithGoogle(activity)
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()

@@ -34,7 +34,8 @@ class ExploreViewModel @Inject constructor(
     private val aiRepository: AiRepository,
     private val questionDao: QuestionDao,
     private val syncRepository: SyncRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val configRepository: com.algorithmx.q_base.data.core.ConfigRepository
 ) : ViewModel() {
 
     private val _actionFeedback = MutableSharedFlow<String>()
@@ -85,6 +86,12 @@ class ExploreViewModel @Inject constructor(
     private val _questionCount = MutableStateFlow(0)
     val questionCount: StateFlow<Int> = _questionCount.asStateFlow()
 
+    private val _collectionAiResponse = MutableStateFlow<String?>(null)
+    val collectionAiResponse = _collectionAiResponse.asStateFlow()
+
+    private val _isCollectionAiLoading = MutableStateFlow(false)
+    val isCollectionAiLoading = _isCollectionAiLoading.asStateFlow()
+
     // Selection Mode for Library/Sets
     private val _isSelectionMode = MutableStateFlow(false)
     val isSelectionMode = _isSelectionMode.asStateFlow()
@@ -95,6 +102,9 @@ class ExploreViewModel @Inject constructor(
     init {
         loadCollections()
         loadSetsAndSessions()
+        viewModelScope.launch {
+            configRepository.fetchRemoteConfig()
+        }
     }
 
     private fun loadSetsAndSessions() {
@@ -467,6 +477,29 @@ class ExploreViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun askAiAboutCollection(collection: StudyCollection) {
+        viewModelScope.launch {
+            _isCollectionAiLoading.value = true
+            _collectionAiResponse.value = "" // Clear previous
+            
+            val prompt = """
+                Provide a comprehensive summary and key learning points for the study collection: '${collection.name}'.
+                Description: ${collection.description ?: "N/A"}
+                
+                Focus on high-yield information and potential exam topics.
+            """.trimIndent()
+            
+            val result = aiRepository.getAiAssistance(prompt)
+            
+            _collectionAiResponse.value = result.getOrNull() ?: "Failed to get AI assistance: ${result.exceptionOrNull()?.message}"
+            _isCollectionAiLoading.value = false
+        }
+    }
+
+    fun clearCollectionAiResponse() {
+        _collectionAiResponse.value = null
     }
 
     fun clearAiResponse(index: Int) {

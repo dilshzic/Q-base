@@ -1,62 +1,112 @@
 package com.algorithmx.q_base.data.auth
 
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import kotlinx.coroutines.channels.awaitClose
+import androidx.activity.ComponentActivity
+import io.appwrite.enums.OAuthProvider
+import io.appwrite.Client
+import io.appwrite.services.Account
+import io.appwrite.models.User
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
+data class AppwriteUser(
+    val uid: String,
+    val email: String?,
+    val displayName: String?,
+    val photoUrl: android.net.Uri? = null
+)
+
 @Singleton
 class AuthRepository @Inject constructor(
-    private val firebaseAuth: FirebaseAuth
+    private val appwriteClient: Client,
+    private val appwriteAccount: Account
 ) {
-    val currentUser: Flow<FirebaseUser?> = callbackFlow {
-        val listener = FirebaseAuth.AuthStateListener { auth ->
-            trySend(auth.currentUser)
-        }
-        firebaseAuth.addAuthStateListener(listener)
-        awaitClose {
-            firebaseAuth.removeAuthStateListener(listener)
+    private val _currentUser = MutableStateFlow<AppwriteUser?>(null)
+    val currentUser: Flow<AppwriteUser?> = _currentUser.asStateFlow()
+    val currentUserId: String?
+        get() = _currentUser.value?.uid
+
+    private val repositoryScope = CoroutineScope(Dispatchers.IO)
+
+    init {
+        checkCurrentSession()
+    }
+
+    fun checkCurrentSession() {
+        repositoryScope.launch {
+            try {
+                val user = appwriteAccount.get()
+                _currentUser.value = mapAppwriteUser(user)
+            } catch (e: Exception) {
+                _currentUser.value = null
+            }
         }
     }
 
-    suspend fun signInWithEmail(email: String, pass: String): Result<FirebaseUser> {
+    private fun mapAppwriteUser(user: User<*>): AppwriteUser {
+        return AppwriteUser(
+            uid = user.id,
+            email = user.email,
+            displayName = user.name,
+            photoUrl = null
+        )
+    }
+
+    suspend fun signInWithEmail(email: String, pass: String): Result<AppwriteUser> {
         return try {
-            val task = firebaseAuth.signInWithEmailAndPassword(email, pass).await()
-            val user = task.user
-            if (user != null) {
-                Result.success(user)
-            } else {
-                Result.failure(Exception("User is null after successful sign in"))
-            }
+            try { appwriteAccount.deleteSession("current") } catch (e: Exception) {}
+            
+            appwriteAccount.createEmailPasswordSession(email, pass)
+            val user = appwriteAccount.get()
+            val appUser = mapAppwriteUser(user)
+            _currentUser.value = appUser
+            Result.success(appUser)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun signUpWithEmail(email: String, pass: String, username: String, photoUrl: String? = null): Result<FirebaseUser> {
+    suspend fun signUpWithEmail(email: String, pass: String, username: String, photoUrl: String? = null): Result<AppwriteUser> {
         return try {
-            val task = firebaseAuth.createUserWithEmailAndPassword(email, pass).await()
-            val user = task.user
-            if (user != null) {
-                val profileUpdates = com.google.firebase.auth.userProfileChangeRequest {
-                    displayName = username
-                    photoUrl?.let { this.photoUri = android.net.Uri.parse(it) }
-                }
-                user.updateProfile(profileUpdates).await()
-                Result.success(user)
-            } else {
-                Result.failure(Exception("User is null after successful sign up"))
-            }
+            val userId = io.appwrite.ID.unique()
+            appwriteAccount.create(userId, email, pass, username)
+            
+            appwriteAccount.createEmailPasswordSession(email, pass)
+            val user = appwriteAccount.get()
+            val appUser = mapAppwriteUser(user)
+            _currentUser.value = appUser
+            Result.success(appUser)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun signInWithGoogle(activity: ComponentActivity): Result<AppwriteUser> {
+        return try {
+            appwriteAccount.createOAuth2Session(
+                activity = activity,
+                provider = OAuthProvider.GOOGLE
+            )
+            val user = appwriteAccount.get()
+            val appUser = mapAppwriteUser(user)
+            _currentUser.value = appUser
+            Result.success(appUser)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
     fun signOut() {
-        firebaseAuth.signOut()
+        repositoryScope.launch {
+            try {
+                appwriteAccount.deleteSession("current")
+            } catch (e: Exception) {}
+            _currentUser.value = null
+        }
     }
 }

@@ -9,21 +9,25 @@ class Navigator(val state: NavigationState) {
     fun navigate(route: NavKey) {
         android.util.Log.d("Navigator", "Navigating to: $route")
         
-        // Find if this route (or its type) is in the top level routes
-        val topLevelMatch = state.backStacks.keys.find { it == route || it::class == route::class }
+        // Find if this route is a top-level destination
+        val topLevelMatch = state.backStacks.keys.find { 
+            it == route || (it::class == route::class && it is Screen.Sessions && route is Screen.Sessions)
+        }
         
         if (topLevelMatch != null) {
             if (state.topLevelRoute == topLevelMatch) {
-                // If we're already on this top level route, pop to root
+                // If already on this tab, pop to root
                 val stack = state.backStacks[topLevelMatch]
-                while ((stack?.size ?: 0) > 1) {
-                    stack?.removeLastOrNull()
+                if ((stack?.size ?: 0) > 1) {
+                    stack?.clear()
+                    stack?.add(topLevelMatch)
                 }
             } else {
-                // Switch to the top level route
+                // Switch tab
                 state.topLevelRoute = topLevelMatch
             }
         } else {
+            // Push to current stack
             state.backStacks[state.topLevelRoute]?.add(route)
         }
     }

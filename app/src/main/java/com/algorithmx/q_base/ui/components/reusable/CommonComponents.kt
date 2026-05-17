@@ -19,7 +19,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.algorithmx.q_base.data.collections.StudyCollection
-import com.algorithmx.q_base.data.collections.QuestionSet
 import com.algorithmx.q_base.data.sessions.StudySession
 import com.algorithmx.q_base.data.core.UserEntity
 import com.algorithmx.q_base.ui.theme.QbaseTheme
@@ -117,34 +116,6 @@ fun UnifiedTopAppBar(
     }
 }
 
-@Composable
-fun CategoryCard(
-    category: StudyCollection,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = category.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
 
 @Composable
 fun SessionCard(
@@ -225,31 +196,6 @@ fun SessionListItem(
     }
 }
 
-@Composable
-fun StudyCollectionItem(collection: QuestionSet) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp))
-    ) {
-        ListItem(
-            headlineContent = { Text(collection.title, fontWeight = FontWeight.SemiBold) },
-            supportingContent = { Text(collection.description ?: "No description", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-            leadingContent = { 
-                Surface(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = CircleShape,
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
-                    }
-                }
-            },
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-        )
-    }
-}
 
 @Composable
 fun SectionHeader(
@@ -291,16 +237,6 @@ fun SectionHeader(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun CategoryCardPreview() {
-    QbaseTheme {
-        CategoryCard(
-            category = StudyCollection("1", "Human Anatomy", "Description"),
-            onClick = {}
-        )
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
@@ -337,20 +273,6 @@ fun SessionListItemPreview() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun StudyCollectionItemPreview() {
-    QbaseTheme {
-        StudyCollectionItem(
-            collection = QuestionSet(
-                setId = "1",
-                title = "Neuroscience Basics",
-                parentCollectionId = "1",
-                description = "Fundamentals of the nervous system."
-            )
-        )
-    }
-}
 
 @Preview(showBackground = true)
 @Composable

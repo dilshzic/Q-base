@@ -15,6 +15,8 @@ import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.automirrored.rounded.*
 import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
 import androidx.compose.material3.*
+import androidx.compose.material3.rememberModalBottomSheetState
+import dev.jeziellago.compose.markdowntext.MarkdownText
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -120,6 +122,15 @@ fun CollectionOverviewScreen(
                         )
                     }
                 }
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { viewModel?.askAiAboutCollection(collection) },
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = MaterialTheme.colorScheme.onTertiary,
+                icon = { Icon(Icons.Rounded.AutoAwesome, contentDescription = null) },
+                text = { Text("Ask AI") }
             )
         }
     ) { padding ->
@@ -359,6 +370,76 @@ fun CollectionOverviewScreen(
                 showReportToGroupDialog = false
             }
         )
+    }
+
+    // AI Response Content Bottom Sheet
+    val collectionAiResponse by viewModel?.collectionAiResponse?.collectAsState() ?: remember { mutableStateOf(null) }
+    val isCollectionAiLoading by viewModel?.isCollectionAiLoading?.collectAsState() ?: remember { mutableStateOf(false) }
+
+    if (collectionAiResponse != null) {
+        ModalBottomSheet(
+            onDismissRequest = { viewModel?.clearCollectionAiResponse() },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = MaterialTheme.colorScheme.surface,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 48.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                ) {
+                    Icon(
+                        Icons.Rounded.AutoAwesome, 
+                        contentDescription = null, 
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        "AI Insights", 
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                if (isCollectionAiLoading) {
+                    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        MarkdownText(
+                            markdown = collectionAiResponse!!,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                color = MaterialTheme.colorScheme.onSurface,
+                                lineHeight = 24.sp
+                            ),
+                            modifier = Modifier.padding(20.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Button(
+                    onClick = { viewModel?.clearCollectionAiResponse() },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("Close")
+                }
+            }
+        }
     }
 }
 

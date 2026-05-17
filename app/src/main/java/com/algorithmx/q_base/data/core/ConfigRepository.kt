@@ -1,0 +1,171 @@
+package com.algorithmx.q_base.data.core
+
+import android.content.Context
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import com.algorithmx.q_base.BuildConfig
+import com.algorithmx.q_base.core_crypto.CryptoManager
+import io.appwrite.services.Databases
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
+
+private val Context.dataStore by preferencesDataStore(name = "app_config")
+
+@Singleton
+class ConfigRepository @Inject constructor(
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context,
+    private val databases: Databases,
+    private val cryptoManager: CryptoManager
+) {
+    private val GEMINI_KEY = stringPreferencesKey("gemini_api_key")
+    private val GROQ_KEY = stringPreferencesKey("groq_api_key")
+    private val DEEPSEEK_KEY = stringPreferencesKey("deepseek_api_key")
+    private val LAST_FETCH = stringPreferencesKey("last_fetch_timestamp")
+
+    val geminiApiKey: Flow<String> = context.dataStore.data.map { prefs ->
+        val encrypted = prefs[GEMINI_KEY]
+        if (encrypted.isNullOrBlank()) {
+            BuildConfig.GEMINI_API_KEY
+        } else {
+            cryptoManager.decryptLocalString(encrypted).getOrDefault(BuildConfig.GEMINI_API_KEY)
+        }
+    }
+    
+    val groqApiKey: Flow<String> = context.dataStore.data.map { prefs ->
+        val encrypted = prefs[GROQ_KEY]
+        if (encrypted.isNullOrBlank()) {
+            BuildConfig.GROQ_API_KEY
+        } else {
+            cryptoManager.decryptLocalString(encrypted).getOrDefault(BuildConfig.GROQ_API_KEY)
+        }
+    }
+
+    suspend fun saveGeminiKey(key: String) {
+        val encrypted = cryptoManager.encryptLocalString(key)
+        context.dataStore.edit { prefs ->
+            prefs[GEMINI_KEY] = encrypted
+        }
+    }
+
+    suspend fun saveGroqKey(key: String) {
+        val encrypted = cryptoManager.encryptLocalString(key)
+        context.dataStore.edit { prefs ->
+            prefs[GROQ_KEY] = encrypted
+        }
+    }
+
+    suspend fun fetchRemoteConfig() {
+        try {
+            val lastFetch = context.dataStore.data.map { it[LAST_FETCH]?.toLong() ?: 0L }.first()
+            val now = System.currentTimeMillis()
+            
+            // Only fetch once an hour to save battery/bandwidth
+            if (now - lastFetch < 3600000 && lastFetch != 0L) return
+
+            val response = databases.getDocument(
+                databaseId = BuildConfig.APPWRITE_DATABASE_ID,
+                collectionId = "app_config",
+                documentId = "global_keys"
+            )
+
+            context.dataStore.edit { prefs ->
+                val gemini = response.data["gemini_api_key"] as? String
+                val groq = response.data["groq_api_key"] as? String
+                val deepseek = response.data["deepseek_api_key"] as? String
+
+                if (gemini != null) {
+                    // Global Decryption: if the database key is GCM-encrypted, decrypt it with the static binary key first, then encrypt with local AEAD
+                    val decrypted = cryptoManager.decryptGlobalKey(gemini).getOrNull() ?: gemini
+                    prefs[GEMINI_KEY] = cryptoManager.encryptLocalString(decrypted)
+                }
+                if (groq != null) {
+                    val decrypted = cryptoManager.decryptGlobalKey(groq).getOrNull() ?: groq
+                    prefs[GROQ_KEY] = cryptoManager.encryptLocalString(decrypted)
+                }
+                if (deepseek != null) {
+                    val decrypted = cryptoManager.decryptGlobalKey(deepseek).getOrNull() ?: deepseek
+                    prefs[DEEPSEEK_KEY] = cryptoManager.encryptLocalString(decrypted)
+                }
+                
+                prefs[LAST_FETCH] = now.toString()
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ConfigRepository", "Failed to fetch remote config", e)
+        }
+    }
+    
+    suspend fun getGeminiKeyDirectly(): String = geminiApiKey.first()
+    suspend fun getGroqKeyDirectly(): String = groqApiKey.first()
+
+    suspend fun backupKeysToCloud(userId: String) {
+        try {
+            val rawGemini = getGeminiKeyDirectly()
+            val rawGroq = getGroqKeyDirectly()
+            
+            // Validate that these are user-entered custom keys, not the build config fallbacks
+            val isCustomGemini = rawGemini.isNotBlank() && rawGemini != BuildConfig.GEMINI_API_KEY
+            val isCustomGroq = rawGroq.isNotBlank() && rawGroq != BuildConfig.GROQ_API_KEY
+            
+            if (!isCustomGemini && !isCustomGroq) return
+            
+            val userPublicKey = cryptoManager.initializeAndGetPublicKey()
+            
+            val updateData = mutableMapOf<String, Any?>()
+            if (isCustomGemini) {
+                updateData["geminiKeyEncrypted"] = cryptoManager.encryptMessage(rawGemini, userPublicKey)
+            }
+            if (isCustomGroq) {
+                updateData["groqKeyEncrypted"] = cryptoManager.encryptMessage(rawGroq, userPublicKey)
+            }
+            
+            if (updateData.isNotEmpty()) {
+                databases.updateDocument(
+                    databaseId = BuildConfig.APPWRITE_DATABASE_ID,
+                    collectionId = "user_private_settings",
+                    documentId = userId,
+                    data = updateData
+                )
+                android.util.Log.d("ConfigRepository", "Successfully backed up E2EE API keys to Appwrite Cloud.")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ConfigRepository", "Failed to backup E2EE API keys to cloud", e)
+        }
+    }
+
+    suspend fun restoreKeysFromCloud(userId: String) {
+        try {
+            val response = databases.getDocument(
+                databaseId = BuildConfig.APPWRITE_DATABASE_ID,
+                collectionId = "user_private_settings",
+                documentId = userId
+            )
+            
+            val encryptedGemini = response.data["geminiKeyEncrypted"] as? String
+            val encryptedGroq = response.data["groqKeyEncrypted"] as? String
+            
+            if (!encryptedGemini.isNullOrBlank()) {
+                cryptoManager.decryptMessage(encryptedGemini).onSuccess { decrypted ->
+                    saveGeminiKey(decrypted)
+                    android.util.Log.d("ConfigRepository", "Successfully restored Gemini API key from E2EE Cloud.")
+                }.onFailure { err ->
+                    android.util.Log.e("ConfigRepository", "Failed to decrypt restored Gemini key", err)
+                }
+            }
+            
+            if (!encryptedGroq.isNullOrBlank()) {
+                cryptoManager.decryptMessage(encryptedGroq).onSuccess { decrypted ->
+                    saveGroqKey(decrypted)
+                    android.util.Log.d("ConfigRepository", "Successfully restored Groq API key from E2EE Cloud.")
+                }.onFailure { err ->
+                    android.util.Log.e("ConfigRepository", "Failed to decrypt restored Groq key", err)
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ConfigRepository", "Failed to restore E2EE API keys from cloud", e)
+        }
+    }
+}

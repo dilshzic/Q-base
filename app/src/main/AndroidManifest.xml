@@ -31,6 +31,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Appwrite OAuth Redirect Callback Receiver -->
+        <activity
+            android:name="io.appwrite.keepalive.CallbackActivity"
+            android:exported="true">
+            <intent-filter android:label="Appwrite OAuth Callback">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="appwrite-callback-69bc19160017581ff94b" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

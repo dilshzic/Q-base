@@ -203,35 +203,48 @@ class ChatViewModel @Inject constructor(
 
     // State for the Inbox/Chat List
     val chatListState: StateFlow<ChatListState> = combine(
-        chatDao.getAllChats(),
-        userDao.getAllUsers(),
-        messageDao.getAllMessages() 
-    ) { chats, users, allMessages ->
+        chatDao.getChatSummaries(),
+        userDao.getAllUsers()
+    ) { summaries, users ->
         val userMap = users.associateBy { it.userId }
-        val chatUiModels = chats.mapNotNull { chat ->
-            val chatMessages = allMessages.filter { it.chatId == chat.chatId }
-            
+        val chatUiModels = summaries.mapNotNull { summary ->
             // Resolve Display Name
-            val otherParticipantId = chat.participantIds.split(",")
+            val otherParticipantId = summary.participantIds.split(",")
                 .firstOrNull { it != currentUserId && it.isNotEmpty() }
             val otherUser = userMap[otherParticipantId]
 
             // Account-Level Ban/Block mechanism: Client-Side Hiding
-            if ((!chat.isGroup && otherUser?.isBanned == true) || chat.isBlocked) {
+            if ((!summary.isGroup && otherUser?.isBanned == true) || summary.isBlocked) {
                 return@mapNotNull null
             }
 
-            val resolvedName = (if (chat.isGroup) {
-                chat.chatName
+            val resolvedName = (if (summary.isGroup) {
+                summary.chatName
             } else {
-                otherUser?.displayName ?: chat.chatName
+                otherUser?.displayName ?: summary.chatName
             }) ?: "Chat"
 
             ChatUiModel(
-                chat = chat,
+                chat = ChatEntity(
+                    chatId = summary.chatId,
+                    chatName = summary.chatName,
+                    isGroup = summary.isGroup,
+                    participantIds = summary.participantIds,
+                    unreadCount = summary.unreadCount,
+                    isBlocked = summary.isBlocked
+                ),
                 displayName = resolvedName,
-                latestMessage = chatMessages.maxByOrNull { it.timestamp },
-                unreadCount = 0 
+                latestMessage = if (summary.lastMessageTimestamp != null) {
+                    MessageEntity(
+                        messageId = "", // Not needed for UI list
+                        chatId = summary.chatId,
+                        senderId = "", // Not needed for UI list
+                        payload = summary.lastMessagePayload ?: "",
+                        type = summary.lastMessageType ?: "TEXT",
+                        timestamp = summary.lastMessageTimestamp ?: 0L
+                    )
+                } else null,
+                unreadCount = summary.unreadCount
             )
         }.sortedByDescending { it.latestMessage?.timestamp ?: 0L }
 
@@ -243,27 +256,41 @@ class ChatViewModel @Inject constructor(
     
     // State for the Blocked List
     val blockedChatsState: StateFlow<List<ChatUiModel>> = combine(
-        chatDao.getAllChats(),
-        userDao.getAllUsers(),
-        messageDao.getAllMessages()
-    ) { chats, users, allMessages ->
+        chatDao.getChatSummaries(),
+        userDao.getAllUsers()
+    ) { summaries, users ->
         val userMap = users.associateBy { it.userId }
-        chats.filter { it.isBlocked }.map { chat ->
-            val chatMessages = allMessages.filter { it.chatId == chat.chatId }
-            val otherParticipantId = chat.participantIds.split(",")
+        summaries.filter { it.isBlocked }.map { summary ->
+            val otherParticipantId = summary.participantIds.split(",")
                 .firstOrNull { it != currentUserId && it.isNotEmpty() }
             val otherUser = userMap[otherParticipantId]
-            val resolvedName = (if (chat.isGroup) {
-                chat.chatName
+            val resolvedName = (if (summary.isGroup) {
+                summary.chatName
             } else {
-                otherUser?.displayName ?: chat.chatName
+                otherUser?.displayName ?: summary.chatName
             }) ?: "Chat"
 
             ChatUiModel(
-                chat = chat,
+                chat = ChatEntity(
+                    chatId = summary.chatId,
+                    chatName = summary.chatName,
+                    isGroup = summary.isGroup,
+                    participantIds = summary.participantIds,
+                    unreadCount = summary.unreadCount,
+                    isBlocked = summary.isBlocked
+                ),
                 displayName = resolvedName,
-                latestMessage = chatMessages.maxByOrNull { it.timestamp },
-                unreadCount = 0
+                latestMessage = if (summary.lastMessageTimestamp != null) {
+                    MessageEntity(
+                        messageId = "",
+                        chatId = summary.chatId,
+                        senderId = "",
+                        payload = summary.lastMessagePayload ?: "",
+                        type = summary.lastMessageType ?: "TEXT",
+                        timestamp = summary.lastMessageTimestamp ?: 0L
+                    )
+                } else null,
+                unreadCount = summary.unreadCount
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

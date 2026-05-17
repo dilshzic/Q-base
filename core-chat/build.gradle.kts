@@ -24,6 +24,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.hilt.android)
+    implementation(libs.appwrite.sdk)
     implementation(project(":core-crypto"))
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)

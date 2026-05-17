@@ -1,19 +1,50 @@
 package com.algorithmx.q_base.data.auth
 
 import android.util.Log
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
+import com.algorithmx.q_base.data.backend.CoreAuth
+import com.algorithmx.q_base.data.backend.CoreDatabase
+import com.algorithmx.q_base.data.backend.CoreQuery
+import com.algorithmx.q_base.data.backend.CoreQueryOperator
+import kotlinx.coroutines.flow.firstOrNull
 import kotlin.random.Random
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ProfileRepository @Inject constructor(
-    private val firestore: FirebaseFirestore,
+    private val coreDatabase: CoreDatabase,
+    private val coreAuth: CoreAuth,
     private val profileCache: ProfileCache,
     private val cryptoManager: com.algorithmx.q_base.core_crypto.CryptoManager
 ) {
+
+    private fun mapToUserProfile(map: Map<String, Any>): UserProfile {
+        return UserProfile(
+            userId = map["userId"] as? String ?: "",
+            email = map["email"] as? String ?: "",
+            displayName = map["displayName"] as? String ?: "",
+            profilePictureUrl = map["profilePictureUrl"] as? String,
+            friendCode = map["friendCode"] as? String ?: "",
+            intro = map["intro"] as? String ?: "",
+            publicKey = map["publicKey"] as? String,
+            isBanned = map["isBanned"] as? Boolean ?: map["banned"] as? Boolean ?: false,
+            isPhotoVisible = map["isPhotoVisible"] as? Boolean ?: map["photoVisible"] as? Boolean ?: true
+        )
+    }
+
+    private fun userProfileToMap(profile: UserProfile): Map<String, Any> {
+        return mapOf(
+            "userId" to profile.userId,
+            "displayName" to profile.displayName,
+            "profilePictureUrl" to (profile.profilePictureUrl ?: ""),
+            "friendCode" to profile.friendCode,
+            "intro" to profile.intro,
+            "publicKey" to (profile.publicKey ?: ""),
+            "isBanned" to profile.isBanned,
+            "isPhotoVisible" to profile.isPhotoVisible
+        )
+    }
+
     suspend fun createOrUpdateProfile(
         userId: String,
         email: String,
@@ -22,11 +53,11 @@ class ProfileRepository @Inject constructor(
         isPhotoVisible: Boolean = true
     ): Result<UserProfile> {
         return try {
-            val docRef = firestore.collection("users").document(userId)
-            val existingDoc = docRef.get().await()
+            val docResult = coreDatabase.getDocument("users", userId)
+            val existingDoc = docResult.getOrNull()
 
-            val profile = if (existingDoc.exists()) {
-                val currentProfile = existingDoc.toObject(UserProfile::class.java)!!
+            val profile = if (existingDoc != null && existingDoc.isNotEmpty()) {
+                val currentProfile = mapToUserProfile(existingDoc)
                 currentProfile.copy(
                     email = email,
                     displayName = displayName,
@@ -47,8 +78,8 @@ class ProfileRepository @Inject constructor(
             }
 
             val finalProfile = if (profile.profilePictureUrl == null) {
-                val firebasePhotoUrl = FirebaseAuth.getInstance().currentUser?.photoUrl?.toString()
-                profile.copy(profilePictureUrl = firebasePhotoUrl)
+                val authPhotoUrl = coreAuth.currentUser.firstOrNull()?.photoUrl
+                profile.copy(profilePictureUrl = authPhotoUrl)
             } else {
                 profile
             }
@@ -62,21 +93,10 @@ class ProfileRepository @Inject constructor(
 
     suspend fun updateProfile(profile: UserProfile): Result<Unit> {
         return try {
-            val docRef = firestore.collection("users").document(profile.userId)
-
-            val publicProfile = profile.copy(email = "")
-            docRef.set(publicProfile).await()
-
-            val currentUser = FirebaseAuth.getInstance().currentUser
-            if (currentUser != null && currentUser.uid == profile.userId && currentUser.displayName != profile.displayName) {
-                val profileUpdates = com.google.firebase.auth.userProfileChangeRequest {
-                    displayName = profile.displayName
-                }
-                currentUser.updateProfile(profileUpdates).await()
-            }
+            val publicProfileMap = userProfileToMap(profile)
+            coreDatabase.createDocument("users", profile.userId, publicProfileMap)
 
             profileCache.upsert(profile)
-
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("ProfileRepository", "Failed to update profile", e)
@@ -85,15 +105,19 @@ class ProfileRepository @Inject constructor(
     }
 
     private suspend fun saveProfile(profile: UserProfile, email: String) {
-        val docRef = firestore.collection("users").document(profile.userId)
         try {
-            val publicProfile = profile.copy(email = "")
-            docRef.set(publicProfile).await()
+            val publicProfileMap = userProfileToMap(profile)
+            coreDatabase.createDocument("users", profile.userId, publicProfileMap)
 
-            docRef.collection("private_settings")
-                .document("settings")
-                .set(mapOf("email" to email))
-                .await()
+            // Save private settings
+            coreDatabase.createDocument(
+                "user_private_settings",
+                profile.userId,
+                mapOf(
+                    "userId" to profile.userId,
+                    "email" to email
+                )
+            )
 
             profileCache.upsert(profile)
         } catch (e: Exception) {
@@ -104,15 +128,13 @@ class ProfileRepository @Inject constructor(
 
     suspend fun findUserByFriendCode(friendCode: String): Result<UserProfile?> {
         return try {
-            val query = firestore.collection("users")
-                .whereEqualTo("friendCode", friendCode.uppercase())
-                .limit(1)
-                .get()
-                .await()
-
-            val doc = query.documents.firstOrNull()
+            val queries = listOf(
+                CoreQuery("friendCode", CoreQueryOperator.EQUAL, friendCode.uppercase())
+            )
+            val result = coreDatabase.queryDocuments("users", queries)
+            val doc = result.getOrNull()?.firstOrNull()
             if (doc != null) {
-                val profile = doc.toObject(UserProfile::class.java)!!
+                val profile = mapToUserProfile(doc)
                 profileCache.upsert(profile)
                 Result.success(profile)
             } else {
@@ -126,32 +148,30 @@ class ProfileRepository @Inject constructor(
     suspend fun syncUserProfile(userId: String) {
         Log.d("ProfileRepository", "Starting syncUserProfile for $userId")
         try {
-            Log.d("ProfileRepository", "Fetching user doc from Firestore...")
-            val doc = firestore.collection("users").document(userId).get().await()
-            Log.d("ProfileRepository", "User doc fetched, exists: ${doc.exists()}")
-            val profile = if (doc.exists()) {
-                val p = doc.toObject(UserProfile::class.java)!!
+            Log.d("ProfileRepository", "Fetching user doc from CoreDatabase...")
+            val docResult = coreDatabase.getDocument("users", userId)
+            val doc = docResult.getOrNull()
+            Log.d("ProfileRepository", "User doc fetched, exists: ${doc != null}")
+            
+            val profile = if (doc != null && doc.isNotEmpty()) {
+                val p = mapToUserProfile(doc)
                 Log.d("ProfileRepository", "Fetching private settings...")
-                val privateDoc = firestore.collection("users")
-                    .document(userId)
-                    .collection("private_settings")
-                    .document("settings")
-                    .get()
-                    .await()
+                val privateDocResult = coreDatabase.getDocument("user_private_settings", userId)
+                val privateDoc = privateDocResult.getOrNull()
                 Log.d("ProfileRepository", "Private settings fetched")
 
-                val privateEmail = privateDoc.getString("email") ?: ""
+                val privateEmail = privateDoc?.get("email") as? String ?: ""
                 p.copy(email = privateEmail)
             } else {
-                Log.d("ProfileRepository", "User doc does not exist, creating new profile from FirebaseAuth...")
-                val currentUser = FirebaseAuth.getInstance().currentUser
-                if (currentUser != null && currentUser.uid == userId) {
-                    val email = currentUser.email ?: ""
+                Log.d("ProfileRepository", "User doc does not exist, checking current user session...")
+                val sessionUser = coreAuth.currentUser.firstOrNull() ?: coreAuth.checkCurrentSession().getOrNull()
+                if (sessionUser != null && sessionUser.uid == userId) {
+                    val email = sessionUser.email ?: ""
                     UserProfile(
                         userId = userId,
                         email = email,
-                        displayName = currentUser.displayName ?: "Learner",
-                        profilePictureUrl = currentUser.photoUrl?.toString(),
+                        displayName = sessionUser.displayName ?: "Learner",
+                        profilePictureUrl = sessionUser.photoUrl,
                         friendCode = generateUniqueFriendCode(),
                         publicKey = cryptoManager.initializeAndGetPublicKey(),
                         isPhotoVisible = true
@@ -160,7 +180,7 @@ class ProfileRepository @Inject constructor(
                         saveProfile(newProfile, email)
                     }
                 } else {
-                    Log.w("ProfileRepository", "CurrentUser is null or UID mismatch during profile creation")
+                    Log.w("ProfileRepository", "CurrentUser session is null or UID mismatch during profile creation")
                     null
                 }
             }
@@ -172,17 +192,19 @@ class ProfileRepository @Inject constructor(
                 if (p.friendCode.isBlank()) {
                     Log.d("ProfileRepository", "Generating new friend code for ${p.userId}")
                     p = p.copy(friendCode = generateUniqueFriendCode()).also { updated ->
-                        firestore.collection("users").document(userId).set(updated).await()
+                        val updatedMap = userProfileToMap(updated)
+                        coreDatabase.createDocument("users", userId, updatedMap)
                     }
                 }
 
-                val myUid = FirebaseAuth.getInstance().currentUser?.uid
+                val myUid = coreAuth.currentUserId
                 if (p.userId == myUid) {
                     val localPk = cryptoManager.initializeAndGetPublicKey()
                     if (p.publicKey != localPk) {
-                        Log.d("ProfileRepository", "Device public key mismatch! Updating Firestore with local key.")
+                        Log.d("ProfileRepository", "Device public key mismatch! Updating CoreDatabase with local key.")
                         p = p.copy(publicKey = localPk)
-                        firestore.collection("users").document(p.userId).set(p).await()
+                        val updatedMap = userProfileToMap(p)
+                        coreDatabase.createDocument("users", p.userId, updatedMap)
                     }
                 }
 
@@ -215,11 +237,11 @@ class ProfileRepository @Inject constructor(
 
     private suspend fun isFriendCodeUnique(friendCode: String): Boolean {
         return try {
-            val query = firestore.collection("users")
-                .whereEqualTo("friendCode", friendCode.uppercase())
-                .get()
-                .await()
-            query.isEmpty
+            val queries = listOf(
+                CoreQuery("friendCode", CoreQueryOperator.EQUAL, friendCode.uppercase())
+            )
+            val result = coreDatabase.queryDocuments("users", queries)
+            result.getOrNull()?.isEmpty() ?: true
         } catch (e: Exception) {
             Log.e("ProfileRepository", "Error checking friend code uniqueness for $friendCode", e)
             false
@@ -237,9 +259,14 @@ class ProfileRepository @Inject constructor(
     suspend fun setupSecureBackup(userId: String, passphrase: String): Result<Unit> {
         return try {
             val encryptedBackup = cryptoManager.exportEncryptedKeyset(passphrase)
-            val docRef = firestore.collection("users").document(userId)
-                .collection("private_settings").document("e2ee_backup")
-            docRef.set(mapOf("backup" to encryptedBackup)).await()
+            coreDatabase.createDocument(
+                "user_private_settings",
+                userId,
+                mapOf(
+                    "userId" to userId,
+                    "e2eeBackup" to encryptedBackup
+                )
+            )
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("ProfileRepository", "Failed to setup secure backup", e)
@@ -249,10 +276,8 @@ class ProfileRepository @Inject constructor(
 
     suspend fun checkHasSecureBackup(userId: String): Boolean {
         return try {
-            val doc = firestore.collection("users").document(userId)
-                .collection("private_settings").document("e2ee_backup")
-                .get().await()
-            doc.exists() && doc.getString("backup") != null
+            val doc = coreDatabase.getDocument("user_private_settings", userId).getOrNull()
+            doc != null && doc["e2eeBackup"] != null
         } catch (e: Exception) {
             Log.e("ProfileRepository", "Failed to check secure backup", e)
             false
@@ -261,11 +286,10 @@ class ProfileRepository @Inject constructor(
 
     suspend fun restoreSecureBackup(userId: String, passphrase: String): Result<Unit> {
         return try {
-            val doc = firestore.collection("users").document(userId)
-                .collection("private_settings").document("e2ee_backup")
-                .get().await()
+            val doc = coreDatabase.getDocument("user_private_settings", userId).getOrNull()
+                ?: throw IllegalStateException("Backup not found")
             
-            val encryptedBackup = doc.getString("backup") ?: throw IllegalStateException("Backup not found")
+            val encryptedBackup = doc["e2eeBackup"] as? String ?: throw IllegalStateException("Backup not found")
             
             val importResult = cryptoManager.importEncryptedKeyset(encryptedBackup, passphrase)
             if (importResult.isSuccess) {

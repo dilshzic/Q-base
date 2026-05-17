@@ -284,4 +284,97 @@ class CryptoManager @Inject constructor(
         cipher.init(javax.crypto.Cipher.DECRYPT_MODE, secretKey, parameterSpec)
         return cipher.doFinal(ciphertext)
     }
+
+    private var localAead: Aead? = null
+
+    private fun getLocalAead(): Aead {
+        val existing = localAead
+        if (existing != null) return existing
+
+        val keysetManager = AndroidKeysetManager.Builder()
+            .withSharedPref(context, "qbase_local_aead_keyset", "qbase_local_crypto_prefs")
+            .withKeyTemplate(KeyTemplates.get("AES256_GCM"))
+            .withMasterKeyUri(MASTER_KEY_URI)
+            .build()
+        
+        val aead = keysetManager.keysetHandle.getPrimitive(Aead::class.java)
+        localAead = aead
+        return aead
+    }
+
+    fun encryptLocalString(plaintext: String): String {
+        if (plaintext.isEmpty()) return ""
+        val aead = getLocalAead()
+        val ciphertext = aead.encrypt(plaintext.toByteArray(Charsets.UTF_8), null)
+        return Base64.encodeToString(ciphertext, Base64.NO_WRAP)
+    }
+
+    fun decryptLocalString(ciphertextBase64: String): Result<String> {
+        if (ciphertextBase64.isEmpty()) return Result.success("")
+        return try {
+            val aead = getLocalAead()
+            val cipherBytes = Base64.decode(ciphertextBase64, Base64.NO_WRAP)
+            val decryptedBytes = aead.decrypt(cipherBytes, null)
+            Result.success(String(decryptedBytes, Charsets.UTF_8))
+        } catch (e: Exception) {
+            Log.e("CryptoManager", "Local decryption failed", e)
+            Result.failure(e)
+        }
+    }
+
+    private fun getGlobalDecryptionKey(): javax.crypto.spec.SecretKeySpec {
+        val part1 = byteArrayOf(0x51, 0x62, 0x61, 0x73, 0x65, 0x5F, 0x53, 0x65) // "Qbase_Se"
+        val part2 = byteArrayOf(0x63, 0x72, 0x65, 0x74, 0x5F, 0x32, 0x30, 0x32) // "cret_202"
+        val part3 = byteArrayOf(0x36, 0x5F, 0x47, 0x6C, 0x6F, 0x62, 0x61, 0x6C) // "6_Global"
+        val part4 = byteArrayOf(0x5F, 0x4B, 0x65, 0x79, 0x5F, 0x41, 0x45, 0x53) // "_Key_AES"
+        
+        val keyBytes = ByteArray(32)
+        System.arraycopy(part1, 0, keyBytes, 0, 8)
+        System.arraycopy(part2, 0, keyBytes, 8, 8)
+        System.arraycopy(part3, 0, keyBytes, 16, 8)
+        System.arraycopy(part4, 0, keyBytes, 24, 8)
+        
+        return javax.crypto.spec.SecretKeySpec(keyBytes, "AES")
+    }
+
+    fun encryptGlobalKey(plainText: String): String {
+        if (plainText.isEmpty()) return ""
+        val secretKey = getGlobalDecryptionKey()
+        val cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, secretKey)
+        val iv = cipher.iv
+        val ciphertext = cipher.doFinal(plainText.toByteArray(Charsets.UTF_8))
+        
+        val combined = ByteArray(iv.size + ciphertext.size)
+        System.arraycopy(iv, 0, combined, 0, iv.size)
+        System.arraycopy(ciphertext, 0, combined, iv.size, ciphertext.size)
+        
+        return Base64.encodeToString(combined, Base64.NO_WRAP)
+    }
+
+    fun decryptGlobalKey(combinedBase64: String): Result<String> {
+        if (combinedBase64.isEmpty()) return Result.success("")
+        return try {
+            val combined = Base64.decode(combinedBase64, Base64.NO_WRAP)
+            val ivSize = 12 // GCM standard IV size
+            if (combined.size <= ivSize) return Result.failure(IllegalArgumentException("Invalid ciphertext"))
+            
+            val iv = ByteArray(ivSize)
+            val ciphertext = ByteArray(combined.size - ivSize)
+            
+            System.arraycopy(combined, 0, iv, 0, ivSize)
+            System.arraycopy(combined, ivSize, ciphertext, 0, ciphertext.size)
+            
+            val secretKey = getGlobalDecryptionKey()
+            val cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding")
+            val parameterSpec = javax.crypto.spec.GCMParameterSpec(128, iv)
+            
+            cipher.init(javax.crypto.Cipher.DECRYPT_MODE, secretKey, parameterSpec)
+            val decryptedBytes = cipher.doFinal(ciphertext)
+            Result.success(String(decryptedBytes, Charsets.UTF_8))
+        } catch (e: Exception) {
+            Log.e("CryptoManager", "Global decryption failed", e)
+            Result.failure(e)
+        }
+    }
 }

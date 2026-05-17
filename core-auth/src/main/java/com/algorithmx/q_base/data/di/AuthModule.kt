@@ -1,10 +1,11 @@
 package com.algorithmx.q_base.data.di
 
-import com.google.firebase.auth.FirebaseAuth
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import io.appwrite.Client
+import io.appwrite.services.Account
 import javax.inject.Singleton
 
 @Module
@@ -13,5 +14,5 @@ object AuthModule {
 
     @Provides
     @Singleton
-    fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
+    fun provideAppwriteAccount(client: Client): Account = Account(client)
 }

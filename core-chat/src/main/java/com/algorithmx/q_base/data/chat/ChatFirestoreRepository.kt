@@ -1,125 +1,188 @@
 package com.algorithmx.q_base.data.chat
 
 import android.util.Log
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FieldValue
-import kotlinx.coroutines.tasks.await
+import io.appwrite.Client
+import io.appwrite.services.Databases
+import io.appwrite.services.Account
+import io.appwrite.Query
+import io.appwrite.ID
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ChatFirestoreRepository @Inject constructor(
-    private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth
+    private val databases: Databases,
+    private val appwriteAccount: Account
 ) {
-    private val currentUserId: String?
-        get() = auth.currentUser?.uid
+    private suspend fun getCurrentUserId(): String? {
+        return try {
+            appwriteAccount.get().id
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     suspend fun createChatOnFirestore(chat: ChatEntity) {
         val participants = chat.participantIds.split(",").filter { it.isNotBlank() }.toMutableList()
-        currentUserId?.let { uid ->
+        getCurrentUserId()?.let { uid ->
             if (!participants.contains(uid)) {
                 participants.add(uid)
             }
         }
 
-        val chatMap = hashMapOf(
-            "chatName" to chat.chatName,
+        val chatMap = mapOf(
+            "chatId" to chat.chatId,
+            "chatName" to chat.chatName.orEmpty(),
             "isGroup" to chat.isGroup,
             "participantIds" to participants,
-            "adminId" to (chat.adminId.takeIf { it?.isNotBlank() == true } ?: currentUserId),
+            "adminId" to (chat.adminId.takeIf { !it.isNullOrBlank() } ?: getCurrentUserId().orEmpty()),
             "createdAt" to System.currentTimeMillis()
         )
 
         try {
-            firestore.collection("chats")
-                .document(chat.chatId)
-                .set(chatMap)
-                .await()
+            databases.createDocument(
+                databaseId = "qbase_db",
+                collectionId = "chats",
+                documentId = chat.chatId,
+                data = chatMap
+            )
+        } catch (e: io.appwrite.exceptions.AppwriteException) {
+            if (e.code == 409) {
+                try {
+                    databases.updateDocument(
+                        databaseId = "qbase_db",
+                        collectionId = "chats",
+                        documentId = chat.chatId,
+                        data = chatMap
+                    )
+                } catch (ex: Exception) {
+                    Log.e("ChatFirestoreRepository", "Failed to update chat in Appwrite", ex)
+                }
+            } else {
+                Log.e("ChatFirestoreRepository", "Failed to create chat in Appwrite", e)
+            }
         } catch (e: Exception) {
-            Log.e("ChatFirestoreRepository", "Failed to create chat in Firestore", e)
+            Log.e("ChatFirestoreRepository", "Failed to create chat in Appwrite", e)
         }
     }
 
     suspend fun addParticipantToFirestore(chatId: String, userId: String) {
         try {
-            firestore.collection("chats")
-                .document(chatId)
-                .update("participantIds", FieldValue.arrayUnion(userId))
-                .await()
+            val doc = databases.getDocument(
+                databaseId = "qbase_db",
+                collectionId = "chats",
+                documentId = chatId
+            )
+            @Suppress("UNCHECKED_CAST")
+            val participants = (doc.data["participantIds"] as? List<String> ?: emptyList()).toMutableList()
+            if (!participants.contains(userId)) {
+                participants.add(userId)
+                databases.updateDocument(
+                    databaseId = "qbase_db",
+                    collectionId = "chats",
+                    documentId = chatId,
+                    data = mapOf("participantIds" to participants)
+                )
+            }
         } catch (e: Exception) {
-            Log.e("ChatFirestoreRepository", "Failed to add participant in Firestore", e)
+            Log.e("ChatFirestoreRepository", "Failed to add participant in Appwrite", e)
         }
     }
 
     suspend fun removeParticipantFromFirestore(chatId: String, userId: String) {
         try {
-            firestore.collection("chats")
-                .document(chatId)
-                .update("participantIds", FieldValue.arrayRemove(userId))
-                .await()
+            val doc = databases.getDocument(
+                databaseId = "qbase_db",
+                collectionId = "chats",
+                documentId = chatId
+            )
+            @Suppress("UNCHECKED_CAST")
+            val participants = (doc.data["participantIds"] as? List<String> ?: emptyList()).toMutableList()
+            if (participants.contains(userId)) {
+                participants.remove(userId)
+                databases.updateDocument(
+                    databaseId = "qbase_db",
+                    collectionId = "chats",
+                    documentId = chatId,
+                    data = mapOf("participantIds" to participants)
+                )
+            }
         } catch (e: Exception) {
-            Log.e("ChatFirestoreRepository", "Failed to remove participant in Firestore", e)
+            Log.e("ChatFirestoreRepository", "Failed to remove participant in Appwrite", e)
         }
     }
 
     suspend fun clearChatMessagesOnFirestore(chatId: String) {
         try {
-            val messagesRef = firestore.collection("chats").document(chatId).collection("messages")
-            val snapshot = messagesRef.get().await()
-            val batch = firestore.batch()
-            snapshot.documents.forEach { document -> batch.delete(document.reference) }
-            batch.commit().await()
+            val response = databases.listDocuments(
+                databaseId = "qbase_db",
+                collectionId = "messages",
+                queries = listOf(Query.equal("chatId", chatId))
+            )
+            response.documents.forEach { doc ->
+                try {
+                    databases.deleteDocument(
+                        databaseId = "qbase_db",
+                        collectionId = "messages",
+                        documentId = doc.id
+                    )
+                } catch (e: Exception) {
+                    Log.w("ChatFirestoreRepository", "Failed to delete message document ${doc.id}", e)
+                }
+            }
         } catch (e: Exception) {
-            Log.e("ChatFirestoreRepository", "Failed to clear messages on Firestore", e)
+            Log.e("ChatFirestoreRepository", "Failed to clear messages in Appwrite", e)
         }
     }
 
     suspend fun deleteChatOnFirestore(chatId: String) {
         try {
             clearChatMessagesOnFirestore(chatId)
-            firestore.collection("chats").document(chatId).delete().await()
+            databases.deleteDocument(
+                databaseId = "qbase_db",
+                collectionId = "chats",
+                documentId = chatId
+            )
         } catch (e: Exception) {
-            Log.e("ChatFirestoreRepository", "Failed to delete chat on Firestore", e)
+            Log.e("ChatFirestoreRepository", "Failed to delete chat in Appwrite", e)
         }
     }
 
     suspend fun reportGroup(group: ChatEntity, reason: String) {
-        val reporterId = currentUserId ?: throw IllegalStateException("User not authenticated")
-        val reportRef = firestore.collection("reported_groups").document()
-        val reportMap = hashMapOf(
-            "groupId" to group.chatId,
-            "groupName" to group.chatName,
-            "participantIds" to group.participantIds,
+        val reporterId = getCurrentUserId() ?: throw IllegalStateException("User not authenticated")
+        val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
-            "reportedAt" to System.currentTimeMillis()
+            "reportedAt" to System.currentTimeMillis(),
+            "groupId" to group.chatId
         )
         try {
-            reportRef.set(reportMap).await()
-            Log.d("ChatFirestoreRepository", "Group report submitted successfully: ${reportRef.id}")
+            databases.createDocument(
+                databaseId = "qbase_db",
+                collectionId = "reported_groups",
+                documentId = ID.unique(),
+                data = reportMap
+            )
         } catch (e: Exception) {
             Log.e("ChatFirestoreRepository", "Failed to submit reported group ${group.chatId}", e)
         }
     }
 
     suspend fun reportMessage(message: MessageEntity, reason: String) {
-        val reporterId = currentUserId ?: return
-        val reportRef = firestore.collection("reported_messages").document()
-        val reportMap = hashMapOf(
-            "messageId" to message.messageId,
-            "chatId" to message.chatId,
-            "senderId" to message.senderId,
-            "payload" to message.payload,
-            "type" to message.type,
+        val reporterId = getCurrentUserId() ?: return
+        val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
-            "reportedAt" to System.currentTimeMillis()
+            "reportedAt" to System.currentTimeMillis(),
+            "messageId" to message.messageId
         )
         try {
-            reportRef.set(reportMap).await()
-            Log.d("ChatFirestoreRepository", "Message report submitted successfully: ${reportRef.id}")
+            databases.createDocument(
+                databaseId = "qbase_db",
+                collectionId = "reported_messages",
+                documentId = ID.unique(),
+                data = reportMap
+            )
         } catch (e: Exception) {
             Log.e("ChatFirestoreRepository", "Failed to submit reported message ${message.messageId}", e)
         }

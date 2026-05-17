@@ -140,19 +140,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
         }
 
         entry<Screen.Collections> {
-            val viewModel: ExploreViewModel = hiltViewModel()
-            UnifiedExploreScreen(
-                viewModel = viewModel,
-                onCollectionClick = { id ->
-                    navigator.navigate(Screen.CollectionOverview(id))
-                },
-                onSetClick = { setId, _ ->
-                    navigator.navigate(Screen.ExploreSet(setId))
-                },
-                onNavigateToCreateNewCollection = { navigator.navigate(Screen.CreateNewCollection) },
-                onProfileClick = { navigator.navigate(Screen.Profile) },
-                onBack = { navigator.goBack() }
-            )
+            navigator.navigate(Screen.Explore)
         }
 
         entry<Screen.CollectionOverview> { key ->
