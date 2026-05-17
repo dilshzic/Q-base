@@ -34,7 +34,7 @@
 
         <!-- Appwrite OAuth Redirect Callback Receiver -->
         <activity
-            android:name="io.appwrite.keepalive.CallbackActivity"
+            android:name="io.appwrite.views.CallbackActivity"
             android:exported="true">
             <intent-filter android:label="Appwrite OAuth Callback">
                 <action android:name="android.intent.action.VIEW" />
