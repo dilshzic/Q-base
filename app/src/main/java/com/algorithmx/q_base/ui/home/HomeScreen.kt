@@ -17,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import com.algorithmx.q_base.ui.sessions.SessionsViewModel
-import com.algorithmx.q_base.ui.sessions.NewSessionWizard
 import androidx.compose.foundation.background
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier

@@ -202,13 +202,4 @@ class SessionsViewModel @Inject constructor(
             syncRepository.reportSession(sessionId, reason)
         }
     }
-
-    // Deprecated but kept for compatibility during migration if needed
-    fun createSession(categoryName: String, questionCount: Int, isTimed: Boolean) {
-        viewModelScope.launch {
-            val timeLimit = if (isTimed) 3600 else null
-            val sessionId = repository.createNewSessionSmart(categoryName, questionCount, timeLimit)
-            _sessionCreated.emit(sessionId)
-        }
-    }
 }

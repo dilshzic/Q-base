@@ -109,26 +109,6 @@ fun ExploreQuestionPagerScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                },
-                actions = {
-                    if (questionStates.isNotEmpty()) {
-                        var showMenu by remember { mutableStateOf(false) }
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "More Options")
-                        }
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Report Content") },
-                                onClick = {
-                                    showMenu = false
-                                    showReportDialog = true
-                                }
-                            )
-                        }
-                    }
                 }
             )
         },

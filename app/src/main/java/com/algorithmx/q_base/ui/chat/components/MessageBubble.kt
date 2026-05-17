@@ -161,11 +161,12 @@ fun MessageBubble(
                     shape = bubbleShape,
                     modifier = Modifier.widthIn(max = 280.dp)
                 ) {
-                    MessageContent(message, isMine, isAi, isSaved, onSaveCollection, onJoinSession, localCollections, onReportMessage, onDeleteChat, clipboard, scope)
-                }
-                
-                if (isLastInGroup) {
-                    MessageTimestampAndStatus(timeString, isMine, message.status)
+                    Column {
+                        MessageContent(message, isMine, isAi, isSaved, onSaveCollection, onJoinSession, localCollections, onReportMessage, onDeleteChat, clipboard, scope)
+                        if (isLastInGroup) {
+                            MessageTimestampAndStatus(timeString, isMine, message.status)
+                        }
+                    }
                 }
             }
         }
@@ -357,21 +358,24 @@ private fun DecryptionErrorContent(status: String, isMine: Boolean, onDeleteChat
 
 @Composable
 private fun MessageTimestampAndStatus(timeString: String, isMine: Boolean, status: String) {
-    Spacer(modifier = Modifier.height(4.dp))
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 4.dp)) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically, 
+        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 6.dp),
+        horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start
+    ) {
         Text(
             text = timeString,
-            style = MaterialTheme.typography.labelSmall,
-            color = if (isMine) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f) 
-                    else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+            color = if (isMine) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f) 
+                    else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.5f)
         )
         if (isMine) {
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(3.dp))
             Icon(
                 imageVector = if (status == "READ" || status == "DELIVERED") Icons.Rounded.DoneAll else Icons.Rounded.Done,
                 contentDescription = status,
-                modifier = Modifier.size(12.dp),
-                tint = if (status == "READ") Color(0xFF00E676) else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                modifier = Modifier.size(11.dp),
+                tint = if (status == "READ") Color(0xFF00E676) else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f)
             )
         }
     }

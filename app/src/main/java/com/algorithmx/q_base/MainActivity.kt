@@ -5,12 +5,16 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
@@ -19,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -125,24 +130,16 @@ class MainActivity : ComponentActivity() {
 
             QbaseTheme(themeMode = brainConfig.themeMode) {
                 val seeded by isSeeded.collectAsStateWithLifecycle()
+                val isSessionChecked by authRepository.isSessionChecked.collectAsStateWithLifecycle(initialValue = false)
                 
                 // Observe authentication state reactively
                 val userFlow = remember { authRepository.currentUser }
                 val user by userFlow.collectAsState(initial = null)
                 
-                // Use a derived state for the preferred start route based on current auth state.
-                // We use 'user' as a key for remember to ensure startRoute updates if the process is restored
-                // and the user state is eventually resolved.
-                val startRoute = remember(user == null) { 
-                    if (user == null) Screen.Login else Screen.Home 
-                }
-                
-                val topLevelRoutes = remember(user == null) {
-                    if (user == null) {
-                        setOf(Screen.Home, Screen.Explore, Screen.Connect, Screen.Sessions(), Screen.Login)
-                    } else {
-                        setOf(Screen.Home, Screen.Explore, Screen.Connect, Screen.Sessions())
-                    }
+                // We always start on Screen.Home as requested by the user
+                val startRoute = remember { Screen.Home }
+                val topLevelRoutes = remember {
+                    setOf(Screen.Home, Screen.Explore, Screen.Connect, Screen.Sessions())
                 }
                 
                 val navigationState = rememberNavigationState(
@@ -150,16 +147,19 @@ class MainActivity : ComponentActivity() {
                     topLevelRoutes = topLevelRoutes
                 )
                 val navigator = remember(navigationState) { Navigator(navigationState) }
+                val snackbarHostState = remember { SnackbarHostState() }
+
+
 
                 android.util.Log.d("MainActivity", "Composition: startRoute=$startRoute, currentTopLevel=${navigationState.topLevelRoute}")
 
-                // Sync navigation when user state changes
-                LaunchedEffect(user) {
-                    val currentRoute = navigationState.topLevelRoute
-                    if (user != null && currentRoute == Screen.Login) {
-                        navigator.navigate(Screen.Home)
-                    } else if (user == null && currentRoute != Screen.Login) {
-                        navigator.navigate(Screen.Login)
+                // Display a generic long-duration snackbar if background session check fails/user is guest
+                LaunchedEffect(isSessionChecked, user) {
+                    if (isSessionChecked && user == null) {
+                        snackbarHostState.showSnackbar(
+                            message = "Running in offline guest mode. Tap profile to log in.",
+                            duration = SnackbarDuration.Long
+                        )
                     }
                 }
 
@@ -177,20 +177,15 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                Crossfade(targetState = seeded, label = "loading_transition") { isReady ->
-                    if (isReady) {
-                        MainScreen(navigationState, navigator)
-                    } else {
-                        LoadingScreen()
-                    }
-                }
+                MainScreen(navigationState, navigator, snackbarHostState)
             }
         }
     }
 }
 
+/* ARCHIVED: Old Circular Loading Screen
 @Composable
-fun LoadingScreen() {
+fun LoadingScreenCircularArchive() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -203,16 +198,62 @@ fun LoadingScreen() {
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "Preparing Database",
-                style = MaterialTheme.typography.displaySmall,
+                text = "Initializing Q-Base...",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+*/
+
+@Composable
+fun LoadingScreen() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                contentDescription = "Q-Base Logo",
+                modifier = Modifier
+                    .size(180.dp)
+                    .padding(8.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(
+                text = "Q-Base",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Initializing...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
 
 @Composable
-fun MainScreen(navigationState: NavigationState, navigator: Navigator) {
+fun MainScreen(
+    navigationState: NavigationState, 
+    navigator: Navigator, 
+    snackbarHostState: SnackbarHostState
+) {
     val config = LocalConfiguration.current
     val isExpanded = config.screenWidthDp > 600
 
@@ -272,6 +313,7 @@ fun MainScreen(navigationState: NavigationState, navigator: Navigator) {
 
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             bottomBar = {
                 if (!isExpanded && showNav) {
                     NavigationBar(
@@ -323,20 +365,23 @@ fun MainScreen(navigationState: NavigationState, navigator: Navigator) {
 @Composable
 fun AppNavDisplay(navigationState: NavigationState, navigator: Navigator) {
     val entryProvider = rememberAppEntryProvider(navigator)
-    val currentRoute = navigationState.topLevelRoute
+    val entries = navigationState.toEntries(entryProvider)
     
-    // Animate between top-level destinations
-    AnimatedContent(
-        targetState = navigationState.toEntries(entryProvider),
-        transitionSpec = {
-            fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.95f) togetherWith 
-            fadeOut(animationSpec = tween(200))
-        },
-        label = "nav_display_transition"
-    ) { entries ->
-        NavDisplay(
-            entries = entries,
-            onBack = { navigator.goBack() }
-        )
+    android.util.Log.d("AppNavDisplay", "Recompose: currentRoute=${navigationState.topLevelRoute}, entries.size=${entries.size}, tabHistory.size=${navigationState.tabHistory.size}")
+    
+    // Tab-level back: only intercept when NavDisplay has nothing to pop (entries <= 1) but we have tab history
+    val canGoBackTab = entries.size <= 1 && navigationState.tabHistory.size > 1
+    androidx.activity.compose.BackHandler(enabled = canGoBackTab) {
+        android.util.Log.d("AppNavDisplay", "Tab BackHandler FIRED! tabHistory=${navigationState.tabHistory}")
+        navigator.goBack()
     }
+    
+    // NavDisplay handles sub-screen back internally via its own BackHandler
+    NavDisplay(
+        entries = entries,
+        onBack = { 
+            android.util.Log.d("AppNavDisplay", "NavDisplay.onBack FIRED!")
+            navigator.goBack() 
+        }
+    )
 }

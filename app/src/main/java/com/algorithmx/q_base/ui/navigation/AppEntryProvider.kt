@@ -300,9 +300,6 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onNewChat = {
                     navigator.navigate(Screen.NewChat)
                 },
-                onNewGroup = {
-                    navigator.navigate(Screen.NewGroup)
-                },
                 onNavigateToBlockedList = {
                     navigator.navigate(Screen.BlockedList)
                 },
@@ -454,16 +451,6 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
             )
         }
 
-        entry<Screen.CollectionWizard> {
-            val viewModel: ExploreViewModel = hiltViewModel()
-            val collections by viewModel.collections.collectAsStateWithLifecycle()
-            CollectionCreationWizard(
-                onDismiss = { navigator.goBack() },
-                categories = collections.map { it.collection },
-                viewModel = viewModel
-            )
-        }
-
         entry<Screen.ImportWizard> { key ->
             ImportWizardScreen(
                 viewModel = hiltViewModel(),
@@ -484,9 +471,6 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 },
                 onNewChat = {
                     navigator.navigate(Screen.NewChat)
-                },
-                onNewGroup = {
-                    navigator.navigate(Screen.NewGroup)
                 },
                 onNavigateToBlockedList = {
                     navigator.navigate(Screen.BlockedList)

@@ -25,23 +25,37 @@ class Navigator(val state: NavigationState) {
             } else {
                 // Switch tab
                 state.topLevelRoute = topLevelMatch
+                
+                // Track tab navigation history
+                state.tabHistory.remove(topLevelMatch)
+                state.tabHistory.add(topLevelMatch)
             }
         } else {
-            // Push to current stack
-            state.backStacks[state.topLevelRoute]?.add(route)
+            // Push to current stack (guard against double-push from rapid taps)
+            val currentStack = state.backStacks[state.topLevelRoute]
+            if (currentStack?.lastOrNull() != route) {
+                currentStack?.add(route)
+            }
         }
     }
 
     fun goBack() {
         val currentStack = state.backStacks[state.topLevelRoute] ?: error("Stack for ${state.topLevelRoute} not found")
-        val currentRoute = currentStack.last()
+        val currentRoute = currentStack.lastOrNull() ?: return
+        android.util.Log.d("Navigator", "goBack: topLevel=${state.topLevelRoute}, currentRoute=$currentRoute, stackSize=${currentStack.size}, tabHistorySize=${state.tabHistory.size}")
 
-        // If we're at the base of the current route, go back to the start route stack.
+        // If we're at the base of the current route, go back to the previously visited tab.
         if (currentRoute == state.topLevelRoute) {
-            if (state.topLevelRoute != state.startRoute) {
-                state.topLevelRoute = state.startRoute
+            if (state.tabHistory.size > 1) {
+                state.tabHistory.removeLastOrNull()
+                val prevTab = state.tabHistory.last()
+                android.util.Log.d("Navigator", "goBack: switching tab from ${state.topLevelRoute} to $prevTab")
+                state.topLevelRoute = prevTab
+            } else {
+                android.util.Log.d("Navigator", "goBack: at root of start tab, nothing to do")
             }
         } else {
+            android.util.Log.d("Navigator", "goBack: popping sub-screen $currentRoute")
             currentStack.removeLastOrNull()
         }
     }

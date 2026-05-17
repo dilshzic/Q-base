@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,7 +38,6 @@ import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
 fun ChatListScreen(
     onChatClick: (String) -> Unit,
     onNewChat: () -> Unit,
-    onNewGroup: () -> Unit,
     onNavigateToBlockedList: () -> Unit,
     onProfileClick: () -> Unit,
     viewModel: ChatViewModel = hiltViewModel()
@@ -79,7 +77,22 @@ fun ChatListScreen(
                     title = "Connect",
                     subtitle = "Connect with Groups and People",
                     currentUser = currentUser,
-                    onProfileClick = onProfileClick
+                    onProfileClick = onProfileClick,
+                    actions = {
+                        var showMenu by remember { mutableStateOf(false) }
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(Icons.Rounded.MoreVert, contentDescription = "More")
+                            }
+                            DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                                DropdownMenuItem(
+                                    text = { Text("Blocked List") },
+                                    onClick = { showMenu = false; onNavigateToBlockedList() },
+                                    leadingIcon = { Icon(Icons.Rounded.Block, contentDescription = null) }
+                                )
+                            }
+                        }
+                    }
                 )
             }
         },
@@ -106,14 +119,6 @@ fun ChatListScreen(
                     .padding(padding),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
-                item {
-                    ChatActionsPane(
-                        onNewChat = onNewChat,
-                        onNewGroup = onNewGroup,
-                        onNavigateToBlockedList = onNavigateToBlockedList
-                    )
-                }
-
                 item {
                     AiChatQuickAction(onClick = { viewModel.startAiChat() })
                 }
@@ -240,19 +245,6 @@ fun ChatItem(
                                 )
                             }
                         }
-                        
-                        // Online Status Badge (Expressive)
-                        if (!chat.isGroup) {
-                            Surface(
-                                modifier = Modifier
-                                    .size(14.dp)
-                                    .align(Alignment.BottomEnd)
-                                    .offset(x = (-2).dp, y = (-2).dp),
-                                shape = CircleShape,
-                                color = Color(0xFF4CAF50),
-                                border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.background)
-                            ) {}
-                        }
                     }
                 }
             }
@@ -293,7 +285,7 @@ fun ChatItem(
                         Text(
                             text = timeString,
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.outline
+                            color = if (chatUi.unreadCount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                         )
                     }
                 }
@@ -309,88 +301,21 @@ fun ChatItem(
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
-        }
-    }
-}
 
-@Composable
-fun ChatActionsPane(
-    onNewChat: () -> Unit,
-    onNewGroup: () -> Unit,
-    onNavigateToBlockedList: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ActionChip(
-            label = "New Chat",
-            icon = Icons.Rounded.PersonAdd,
-            onClick = onNewChat,
-            modifier = Modifier.weight(1f)
-        )
-        ActionChip(
-            label = "New Group",
-            icon = Icons.Rounded.GroupAdd,
-            onClick = onNewGroup,
-            modifier = Modifier.weight(1f)
-        )
-        
-        var showMenu by remember { mutableStateOf(false) }
-        Box {
-            IconButton(
-                onClick = { showMenu = true },
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
-            ) {
-                Icon(Icons.Rounded.MoreVert, contentDescription = "More")
-            }
-            DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Blocked List") },
-                    onClick = {
-                        showMenu = false
-                        onNavigateToBlockedList()
-                    },
-                    leadingIcon = { Icon(Icons.Rounded.Block, contentDescription = null) }
-                )
+            // Unread count badge
+            if (chatUi.unreadCount > 0) {
+                Badge(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Text(if (chatUi.unreadCount > 99) "99+" else chatUi.unreadCount.toString())
+                }
             }
         }
     }
 }
 
-@Composable
-fun ActionChip(
-    label: String,
-    icon: ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-        }
-    }
-}
+
 
 @Composable
 fun AiChatQuickAction(onClick: () -> Unit) {

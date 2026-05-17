@@ -42,6 +42,11 @@ fun NewGroupScreen(
     var selectedParticipants by remember { mutableStateOf<List<UserEntity>>(emptyList()) }
     var groupName by remember { mutableStateOf("") }
 
+    // Intercept OS back to go to previous step before exiting wizard
+    androidx.activity.compose.BackHandler(enabled = step > 1) {
+        step = 1
+    }
+
     Scaffold(
         topBar = {
             UnifiedTopAppBar(
@@ -60,89 +65,100 @@ fun NewGroupScreen(
             )
         }
     ) { padding ->
-        AnimatedContent(
-            targetState = step,
-            transitionSpec = {
-                if (targetState > initialState) {
-                    slideInHorizontally { it } + fadeIn() togetherWith
-                            slideOutHorizontally { -it } + fadeOut()
-                } else {
-                    slideInHorizontally { -it } + fadeIn() togetherWith
-                            slideOutHorizontally { it } + fadeOut()
-                }
-            },
-            label = "Group Creation Step"
-        ) { targetStep ->
-            when (targetStep) {
-                1 -> {
-                    ContactSelector(
-                        modifier = Modifier.padding(padding),
-                        multiSelectMode = true,
-                        onUsersSelected = {
-                            selectedParticipants = it
-                            step = 2
-                        }
-                    )
-                }
-                2 -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Surface(
-                            modifier = Modifier.size(80.dp),
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    Icons.Rounded.Group,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(40.dp),
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            val stepProgress by androidx.compose.animation.core.animateFloatAsState(
+                targetValue = step.toFloat() / 2f,
+                animationSpec = androidx.compose.animation.core.tween(400), label = "progress"
+            )
+            LinearProgressIndicator(
+                progress = { stepProgress },
+                modifier = Modifier.fillMaxWidth().height(3.dp),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+
+            AnimatedContent(
+                targetState = step,
+                transitionSpec = {
+                    if (targetState > initialState) {
+                        slideInHorizontally { it } + fadeIn() togetherWith
+                                slideOutHorizontally { -it } + fadeOut()
+                    } else {
+                        slideInHorizontally { -it } + fadeIn() togetherWith
+                                slideOutHorizontally { it } + fadeOut()
+                    }
+                },
+                label = "Group Creation Step",
+                modifier = Modifier.weight(1f)
+            ) { targetStep ->
+                when (targetStep) {
+                    1 -> {
+                        ContactSelector(
+                            multiSelectMode = true,
+                            onUsersSelected = {
+                                selectedParticipants = it
+                                step = 2
                             }
-                        }
-                        
-                        Spacer(modifier = Modifier.height(32.dp))
-                        
-                        OutlinedTextField(
-                            value = groupName,
-                            onValueChange = { groupName = it },
-                            modifier = Modifier.fillMaxWidth(),
-                            label = { Text("Group Name") },
-                            placeholder = { Text("Enter a descriptive name") },
-                            shape = RoundedCornerShape(16.dp),
-                            singleLine = true
                         )
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        Text(
-                            "${selectedParticipants.size + 1} participants (including you)",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.outline
-                        )
-                        
-                        Spacer(modifier = Modifier.weight(1f))
-                        Button(
-                            onClick = {
-                                viewModel.startNewGroup(
-                                    participantIds = selectedParticipants.map { it.userId },
-                                    groupName = groupName
-                                )
-                                // Navigation is handled via LaunchedEffect above
-                            },
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            enabled = groupName.isNotBlank(),
-                            shape = RoundedCornerShape(16.dp)
+                    }
+                    2 -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Icon(Icons.Rounded.Check, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Create Group")
+                            Surface(
+                                modifier = Modifier.size(80.dp),
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        Icons.Rounded.Group,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(40.dp),
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(32.dp))
+                            
+                            OutlinedTextField(
+                                value = groupName,
+                                onValueChange = { groupName = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text("Group Name") },
+                                placeholder = { Text("Enter a descriptive name") },
+                                shape = RoundedCornerShape(16.dp),
+                                singleLine = true
+                            )
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            Text(
+                                "${selectedParticipants.size + 1} participants (including you)",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                            
+                            Spacer(modifier = Modifier.weight(1f))
+                            Button(
+                                onClick = {
+                                    viewModel.startNewGroup(
+                                        participantIds = selectedParticipants.map { it.userId },
+                                        groupName = groupName
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth().height(56.dp),
+                                enabled = groupName.isNotBlank(),
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Icon(Icons.Rounded.Check, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Create Group")
+                            }
                         }
                     }
                 }

@@ -23,12 +23,10 @@ sealed class Screen : NavKey {
         val startIndex: Int = 0
     ) : Screen()
     @Serializable data class ExplorePager(val collectionName: String) : Screen()
-    @Serializable data object PinnedQuestions : Screen()
     @Serializable data object Collections : Screen() // Redundant with Explore but kept for deep links
     
     // --- Content Creation & Import ---
     @Serializable data object CreateNewCollection : Screen()
-    @Serializable data object CollectionWizard : Screen()
     @Serializable data class AiGeneration(val collectionId: String, val collectionName: String) : Screen()
     @Serializable data class ManualBuilder(val targetId: String? = null, val name: String? = null) : Screen()
     @Serializable data class QuestionEditor(val questionId: String?, val setId: String) : Screen()

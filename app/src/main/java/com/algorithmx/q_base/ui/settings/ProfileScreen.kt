@@ -1,6 +1,8 @@
 package com.algorithmx.q_base.ui.settings
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,6 +31,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,7 +43,14 @@ import coil.request.ImageRequest
 
 fun Modifier.bounceClick(onClick: () -> Unit = {}) = composed {
     var isPressed by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "bounce")
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "bounce"
+    )
     
     this
         .graphicsLayer {
@@ -114,6 +124,9 @@ fun ProfileContent(
     var showLogoutDialog by remember { mutableStateOf(false) }
     var clearCollections by remember { mutableStateOf(false) }
     var showBackupDialog by remember { mutableStateOf(false) }
+    
+    var isEditingName by remember { mutableStateOf(false) }
+    var editedName by remember { mutableStateOf(user?.displayName ?: "") }
 
     if (showBackupDialog) {
         SecureBackupDialog(onDismiss = { showBackupDialog = false })
@@ -168,380 +181,364 @@ fun ProfileContent(
         )
     }
 
-    Scaffold(
-        topBar = {
-            com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar(
-                title = "My Profile",
-                currentUser = null, // Hide profile icon in profile screen
-                onProfileClick = {},
-                showProfileIcon = false,
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            ProfileHeader(user = user, padding = padding)
-            
-            Spacer(modifier = Modifier.height(16.dp))
-
-            ProfileInfoCard(
-                user = user,
-                onUpdateDisplayName = onUpdateDisplayName,
-                onCopyFriendCode = { user?.friendCode?.let { onCopyFriendCode(it) } }
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Column(
-                modifier = Modifier.padding(horizontal = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                StatisticsSection(stats = stats)
-                
-                SecureBackupCard(
-                    hasSecureBackup = hasSecureBackup,
-                    onClick = { showBackupDialog = true }
-                )
-                
-                PrivacyCard(
-                    isPhotoVisible = user?.isPhotoVisible ?: true,
-                    onToggle = onTogglePhotoVisibility
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                LogoutButton(onClick = { showLogoutDialog = true })
-                
-                Spacer(modifier = Modifier.height(48.dp))
-            }
-        }
-    }
-}
-
-@Composable
-fun ProfileHeader(
-    user: com.algorithmx.q_base.data.core.UserEntity?,
-    padding: PaddingValues
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(240.dp)
-            .padding(top = padding.calculateTopPadding()),
-        contentAlignment = Alignment.BottomCenter
-    ) {
-        // Premium organic gradient backplate with a gorgeous multi-layered modern layout
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(180.dp)
-                .align(Alignment.TopCenter)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f),
-                            MaterialTheme.colorScheme.background
-                        )
-                    )
-                )
-        )
-        
-        // Multi-layered glassmorphic ring around avatar
-        Box(
-            modifier = Modifier
-                .size(140.dp)
-                .background(Color.White.copy(alpha = 0.15f), CircleShape)
-                .border(2.dp, Color.White.copy(alpha = 0.5f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Box(contentAlignment = Alignment.BottomEnd) {
-                if (user?.profilePictureUrl != null) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(user.profilePictureUrl)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = "Profile Picture",
-                        modifier = Modifier
-                            .size(130.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surface)
-                            .padding(4.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Surface(
-                        modifier = Modifier.size(130.dp).padding(4.dp),
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary,
-                        shadowElevation = 8.dp
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Default.Person,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun ProfileInfoCard(
-    user: com.algorithmx.q_base.data.core.UserEntity?,
-    onUpdateDisplayName: (String) -> Unit,
-    onCopyFriendCode: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .padding(horizontal = 24.dp)
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
-        shadowElevation = 2.dp
-    ) {
-        var isEditingName by remember { mutableStateOf(false) }
-        var editedName by remember { mutableStateOf(user?.displayName ?: "") }
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(24.dp)
-        ) {
-            if (isEditingName) {
+    if (isEditingName) {
+        AlertDialog(
+            onDismissRequest = { isEditingName = false },
+            title = { Text("Edit Display Name", fontWeight = FontWeight.Bold) },
+            text = {
                 OutlinedTextField(
                     value = editedName,
                     onValueChange = { editedName = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    trailingIcon = {
-                        IconButton(onClick = {
-                            onUpdateDisplayName(editedName)
-                            isEditingName = false
-                        }) {
-                            Icon(Icons.Default.Check, contentDescription = "Save")
-                        }
-                    },
+                    label = { Text("Display Name") },
                     shape = RoundedCornerShape(16.dp)
                 )
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = user?.displayName ?: "Knowledge Seeker",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    IconButton(
-                        onClick = { 
-                            editedName = user?.displayName ?: ""
-                            isEditingName = true 
-                        },
-                        modifier = Modifier.size(28.dp).bounceClick()
-                    ) {
-                        Icon(
-                            Icons.Default.Edit, 
-                            contentDescription = "Edit Name", 
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onUpdateDisplayName(editedName)
+                        isEditingName = false
                     }
+                ) {
+                    Text("Save Changes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { isEditingName = false }) {
+                    Text("Cancel")
                 }
             }
-            
-            user?.email?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        // Multi-colored radial glowing mesh overlays for premium styling consistent with Qbase
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                            Color.Transparent
+                        ),
+                        radius = 1200f
+                    )
+                )
+        )
+
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar(
+                    title = "My Profile",
+                    currentUser = null,
+                    onProfileClick = {},
+                    showProfileIcon = false,
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = onNavigateToSettings) {
+                            Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        }
+                    }
                 )
             }
-
-            user?.intro?.let {
-                Spacer(modifier = Modifier.height(12.dp))
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
-                ) {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodySmall,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                    )
-                }
-            }
-
-            user?.friendCode?.let { code ->
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+        ) { padding ->
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                        .clickable { onCopyFriendCode() }
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .fillMaxSize()
+                        .verticalScroll(scrollState),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "Friend Code:",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                        fontWeight = FontWeight.Medium
+                    // Jetchat Parallax Offset Header Photo
+                    ProfileParallaxHeader(
+                        user = user,
+                        scrollState = scrollState,
+                        padding = padding
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = code,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        letterSpacing = 1.sp
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(
-                        Icons.Default.ContentCopy,
-                        contentDescription = "Copy",
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Name and Position/Intro block matching Jetchat
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = user?.displayName ?: "Knowledge Seeker",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
+                        )
+                        
+                        Text(
+                            text = user?.email ?: "guest@qbase.io",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+
+                        user?.intro?.let {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
+                                    .padding(horizontal = 14.dp, vertical = 6.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Clean divided Profile properties matching Jetchat
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                    ) {
+                        // Display Name
+                        ProfilePropertyRow(
+                            label = "Display Name",
+                            value = user?.displayName ?: "Knowledge Seeker",
+                            onClick = {
+                                editedName = user?.displayName ?: ""
+                                isEditingName = true
+                            }
+                        )
+
+                        // Email
+                        ProfilePropertyRow(
+                            label = "Email Address",
+                            value = user?.email ?: "guest@qbase.io"
+                        )
+
+                        // Friend Code (primary link color, copy action)
+                        ProfilePropertyRow(
+                            label = "Friend Code",
+                            value = user?.friendCode ?: "Click to generate",
+                            isLink = true,
+                            onClick = { user?.friendCode?.let { onCopyFriendCode(it) } }
+                        )
+
+                        // Security Vault Status
+                        ProfilePropertyRow(
+                            label = "Cryptographic Backup Status",
+                            value = if (hasSecureBackup) "Verified (Encrypted Vault)" else "⚠️ Action Required (Click to backup)",
+                            isLink = !hasSecureBackup,
+                            onClick = { showBackupDialog = true }
+                        )
+
+                        // Privacy Mode
+                        ProfilePropertyToggleRow(
+                            label = "Public Profile Mode",
+                            valueText = if (user?.isPhotoVisible ?: true) "Visible to other users" else "Hidden from searches",
+                            checked = user?.isPhotoVisible ?: true,
+                            onToggle = onTogglePhotoVisibility
+                        )
+
+                        // Statistics
+                        ProfilePropertyRow(
+                            label = "Database Contribution Stats",
+                            value = "Created Questions: ${stats.userCreatedQuestions}   |   Shared Materials: ${stats.sharedQuestions}"
+                        )
+
+                        // Achievements Section consistent with Jetchat Dividers
+                        ProfileAchievementsProperty(stats = stats)
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // Jetchat styled clean logout trigger
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp)
+                                .bounceClick { showLogoutDialog = true },
+                            shape = RoundedCornerShape(20.dp),
+                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.08f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.2f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.Logout, 
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    "Log Out from Device", 
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(100.dp))
                 }
+
+                // Collapsible Jetchat-style Floating Action Button (FAB) at bottom right
+                val isFabExtended by remember { derivedStateOf { scrollState.value == 0 } }
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        editedName = user?.displayName ?: ""
+                        isEditingName = true
+                    },
+                    expanded = isFabExtended,
+                    icon = { Icon(Icons.Default.Edit, contentDescription = "Edit Profile") },
+                    text = { Text("Edit Profile") },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                        .navigationBarsPadding()
+                )
             }
         }
     }
 }
 
 @Composable
-fun StatisticsSection(stats: UserStats) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        StatCard(
-            label = "Created",
-            value = stats.userCreatedQuestions.toString(),
-            icon = Icons.Rounded.Create,
-            modifier = Modifier.weight(1f),
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-        )
-        StatCard(
-            label = "Shared",
-            value = stats.sharedQuestions.toString(),
-            icon = Icons.Rounded.Share,
-            modifier = Modifier.weight(1f),
-            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-        )
-    }
-}
-
-@Composable
-fun SecureBackupCard(
-    hasSecureBackup: Boolean,
-    onClick: () -> Unit
+fun ProfileParallaxHeader(
+    user: com.algorithmx.q_base.data.core.UserEntity?,
+    scrollState: androidx.compose.foundation.ScrollState,
+    padding: PaddingValues
 ) {
-    Surface(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .bounceClick { onClick() },
-        shape = RoundedCornerShape(24.dp),
-        color = if (!hasSecureBackup) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f) else MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.9f),
-        shadowElevation = 2.dp
+            .height(200.dp)
+            .padding(top = padding.calculateTopPadding()),
+        contentAlignment = Alignment.Center
     ) {
-        Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Surface(
+            modifier = Modifier.size(120.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            border = BorderStroke(3.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        color = if (!hasSecureBackup) MaterialTheme.colorScheme.error.copy(alpha=0.15f) else MaterialTheme.colorScheme.tertiary.copy(alpha=0.15f),
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (!hasSecureBackup) Icons.Rounded.Warning else Icons.Rounded.CheckCircle, 
-                    contentDescription = null, 
-                    tint = if (!hasSecureBackup) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.size(24.dp)
+            if (user?.profilePictureUrl != null) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(user.profilePictureUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
                 )
+            } else {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        modifier = Modifier.size(54.dp),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
             }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = if (!hasSecureBackup) "Action Required" else "Secure Backup",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (!hasSecureBackup) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onTertiaryContainer
-                )
-                Text(
-                    text = if (!hasSecureBackup) "Backup keys now" else "Keys are safely stored",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (!hasSecureBackup) MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
-                )
-            }
-            Icon(
-                Icons.Default.ChevronRight, 
-                contentDescription = null,
-                tint = if (!hasSecureBackup) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
-            )
         }
     }
 }
 
 @Composable
-fun PrivacyCard(
-    isPhotoVisible: Boolean,
+fun ProfilePropertyRow(
+    label: String,
+    value: String,
+    isLink: Boolean = false,
+    onClick: (() -> Unit)? = null
+) {
+    val isClickable = onClick != null
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (isClickable) Modifier.clickable { onClick?.invoke() }
+                else Modifier
+            )
+            .padding(vertical = 12.dp)
+    ) {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (isLink) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            fontWeight = if (isLink) FontWeight.Bold else FontWeight.Normal
+        )
+    }
+}
+
+@Composable
+fun ProfilePropertyToggleRow(
+    label: String,
+    valueText: String,
+    checked: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
-        shadowElevation = 1.dp
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp)
     ) {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+        Spacer(modifier = Modifier.height(6.dp))
         Row(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "Public Profile",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     fontWeight = FontWeight.Bold
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    "Visible to other users", 
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = valueText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
             Switch(
-                checked = isPhotoVisible,
+                checked = checked,
                 onCheckedChange = onToggle
             )
         }
@@ -549,33 +546,87 @@ fun PrivacyCard(
 }
 
 @Composable
-fun LogoutButton(onClick: () -> Unit) {
-    Surface(
+fun ProfileAchievementsProperty(stats: UserStats) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .bounceClick { onClick() },
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f))
+            .padding(vertical = 12.dp)
     ) {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = "Unlocked Milestones",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(12.dp))
         Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                Icons.AutoMirrored.Filled.Logout, 
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.error
+            BadgeBadge(
+                name = "Creator",
+                icon = Icons.Rounded.Star,
+                unlocked = stats.userCreatedQuestions >= 5,
+                color = Color(0xFFFFD700)
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                "Log Out", 
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.titleMedium
+            BadgeBadge(
+                name = "Synergy",
+                icon = Icons.Rounded.Group,
+                unlocked = stats.sharedQuestions >= 5,
+                color = Color(0xFFC0C0C0)
+            )
+            BadgeBadge(
+                name = "Innovator",
+                icon = Icons.Rounded.Lightbulb,
+                unlocked = stats.userCreatedQuestions >= 15,
+                color = Color(0xFFE5E4E2)
             )
         }
+    }
+}
+
+@Composable
+fun BadgeBadge(
+    name: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    unlocked: Boolean,
+    color: Color
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(52.dp)
+                .background(
+                    if (unlocked) color.copy(alpha = 0.15f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                    CircleShape
+                )
+                .border(
+                    width = 1.5.dp,
+                    color = if (unlocked) color else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = name,
+                tint = if (unlocked) color else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                modifier = Modifier.size(22.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = name,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = if (unlocked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+        )
     }
 }
 
@@ -588,7 +639,7 @@ fun ProfilePreview() {
                 userId = "123",
                 displayName = "John Doe",
                 email = "john.doe@example.com",
-                intro = "Passionate learner and knowledge seeker.",
+                intro = "Passionate learner.",
                 profilePictureUrl = null,
                 friendCode = "UOK-1234"
             ),
@@ -605,49 +656,5 @@ fun ProfilePreview() {
             onTogglePhotoVisibility = {},
             onSignOut = { _, _ -> }
         )
-    }
-}
-
-@Composable
-fun StatCard(
-    label: String,
-    value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    modifier: Modifier = Modifier,
-    containerColor: Color,
-    contentColor: Color
-) {
-    Surface(
-        modifier = modifier.bounceClick(),
-        shape = RoundedCornerShape(24.dp),
-        color = containerColor,
-        shadowElevation = 2.dp
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(contentColor.copy(alpha = 0.15f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(20.dp))
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.ExtraBold,
-                color = contentColor
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium,
-                color = contentColor.copy(alpha = 0.8f),
-                fontWeight = FontWeight.SemiBold
-            )
-        }
     }
 }

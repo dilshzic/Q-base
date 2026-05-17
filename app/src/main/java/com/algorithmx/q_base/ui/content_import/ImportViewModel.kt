@@ -29,22 +29,31 @@ data class ExtractionConfigData(
     val isResearchMode: Boolean = false
 )
 
+/**
+ * Redesigned import step flow:
+ *  1. NameAndDestination - Name, describe, choose new vs existing collection
+ *  2. ChooseMethod - Import media, AI generate, or manual build
+ *  3. MediaInput - OCR/PDF/text input (for import and AI generate paths)
+ *  4. Configure - AI configuration (types, difficulty, count, instructions)
+ *  5. Processing - AI generation in progress
+ *  6. Review - Show results, proceed to editor
+ *  7. Error - Error with retry
+ */
 sealed class ImportStep {
-    object Welcome : ImportStep()
-    object MediaSelection : ImportStep()
-    data class ActionSelection(val text: String) : ImportStep()
-    data class ImportConfig(val text: String) : ImportStep()
-    data class GenerateConfig(val text: String) : ImportStep()
+    data object NameAndDestination : ImportStep()
+    data object ChooseMethod : ImportStep()
+    data object MediaInput : ImportStep()
+    data class Configure(val mode: String) : ImportStep() // "IMPORT" or "GENERATE"
+    data class Processing(val message: String = "AI is structuring your questions...") : ImportStep()
+    data class Review(val questionCount: Int, val responseId: String) : ImportStep()
+    data class Error(val message: String) : ImportStep()
+
+    // Legacy states kept for internal processing
     data class Extracting(val source: String) : ImportStep()
-    data class Generating(val message: String = "AI is structuring your questions...") : ImportStep()
-    data class Overview(val questionCount: Int, val responseId: String) : ImportStep()
-    
-    // Legacy/Internal states
     data class Editing(val extractedText: String) : ImportStep()
     data class Config(val extractedText: String, val targetId: String? = null) : ImportStep()
     data class Preview(val responseId: String, val response: com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse) : ImportStep()
     data class Complete(val message: String) : ImportStep()
-    data class Error(val message: String) : ImportStep()
 }
 
 @HiltViewModel
@@ -57,7 +66,7 @@ class ImportViewModel @Inject constructor(
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    private val _uiState = MutableStateFlow<ImportStep>(ImportStep.Welcome)
+    private val _uiState = MutableStateFlow<ImportStep>(ImportStep.NameAndDestination)
     val uiState = _uiState.asStateFlow()
 
     private val _collections = MutableStateFlow<List<StudyCollection>>(emptyList())
@@ -68,11 +77,19 @@ class ImportViewModel @Inject constructor(
 
     private val _selectedCategoryId = MutableStateFlow<String?>(null)
     val selectedCategoryId = _selectedCategoryId.asStateFlow()
+    
     private val _extractedText = MutableStateFlow("")
     val extractedText = _extractedText.asStateFlow()
 
     private val _newCollectionName = MutableStateFlow("")
     val newCollectionName = _newCollectionName.asStateFlow()
+
+    private val _newCollectionDescription = MutableStateFlow("")
+    val newCollectionDescription = _newCollectionDescription.asStateFlow()
+
+    // Tracks which method the user chose for back-navigation
+    private val _selectedMethod = MutableStateFlow<String?>(null) // "IMPORT", "GENERATE", "MANUAL"
+    val selectedMethod = _selectedMethod.asStateFlow()
 
     val currentUser = authRepository.currentUser
         .map { firebaseUser ->
@@ -95,12 +112,10 @@ class ImportViewModel @Inject constructor(
         if (targetId != null) {
             _selectedCategoryId.value = targetId
         }
-
+        // If a source is pre-specified, skip ahead
         when (source?.uppercase()) {
-            "IMAGE" -> _uiState.value = ImportStep.MediaSelection // Let UI trigger picker
-            "PDF" -> _uiState.value = ImportStep.MediaSelection
-            "TOPIC" -> _uiState.value = ImportStep.MediaSelection
-            else -> _uiState.value = ImportStep.Welcome
+            "IMAGE", "PDF", "TOPIC" -> _uiState.value = ImportStep.MediaInput
+            else -> _uiState.value = ImportStep.NameAndDestination
         }
     }
 
@@ -120,8 +135,20 @@ class ImportViewModel @Inject constructor(
         _selectedCategoryId.value = categoryId
     }
 
+    fun updateNewCollectionName(name: String) {
+        _newCollectionName.value = name
+    }
+
+    fun updateNewCollectionDescription(desc: String) {
+        _newCollectionDescription.value = desc
+    }
+
     fun updateCustomInstructions(instructions: String) {
         _customInstructions.value = instructions
+    }
+
+    fun selectMethod(method: String) {
+        _selectedMethod.value = method
     }
 
     fun onImagePicked(uri: Uri) {
@@ -144,14 +171,10 @@ class ImportViewModel @Inject constructor(
         _extractedText.value = text
     }
 
-    fun updateNewCollectionName(name: String) {
-        _newCollectionName.value = name
-    }
-
     private fun handleExtractionResult(result: Result<String>) {
         if (result.isSuccess) {
             _extractedText.value = result.getOrDefault("")
-            _uiState.value = ImportStep.MediaSelection
+            _uiState.value = ImportStep.MediaInput
         } else {
             _uiState.value = ImportStep.Error(result.exceptionOrNull()?.message ?: "Extraction failed")
         }
@@ -159,10 +182,10 @@ class ImportViewModel @Inject constructor(
 
     fun startDirectImport(types: List<String>, instructions: String) {
         val catId = _selectedCategoryId.value ?: "new"
-        _uiState.value = ImportStep.Generating("AI is analyzing text for direct import...")
+        _uiState.value = ImportStep.Processing("AI is analyzing text for direct import...")
         
         viewModelScope.launch {
-            val catName = _collections.value.find { it.collectionId == catId }?.name ?: "Imported"
+            val catName = _collections.value.find { it.collectionId == catId }?.name ?: _newCollectionName.value.ifBlank { "Imported" }
             val result = aiRepository.extractQuestionsFromText(
                 text = _extractedText.value,
                 collectionId = catId,
@@ -177,13 +200,10 @@ class ImportViewModel @Inject constructor(
 
     fun startAiGeneration(config: ExtractionConfigData) {
         val catId = _selectedCategoryId.value ?: "new"
-        _uiState.value = ImportStep.Generating("AI is generating unique questions...")
+        _uiState.value = ImportStep.Processing("AI is generating unique questions...")
         
         viewModelScope.launch {
-            val catName = _collections.value.find { it.collectionId == catId }?.name ?: "Generated"
-            
-            // If extracted text is present, use it as context. Otherwise it's topic-based.
-            // For now, the user prompt implies generating FROM existing text.
+            val catName = _collections.value.find { it.collectionId == catId }?.name ?: _newCollectionName.value.ifBlank { "Generated" }
             val result = aiRepository.extractQuestionsFromText(
                 text = _extractedText.value,
                 collectionId = catId,
@@ -206,7 +226,7 @@ class ImportViewModel @Inject constructor(
                         .questions.size
                 } catch (e: Exception) { 0 }
                 
-                _uiState.value = ImportStep.Overview(count, responseId)
+                _uiState.value = ImportStep.Review(count, responseId)
             }
         } else {
             val error = result.exceptionOrNull()?.message ?: "Question generation failed"
@@ -236,7 +256,28 @@ class ImportViewModel @Inject constructor(
     }
 
     fun reset() {
-        _uiState.value = ImportStep.Welcome
+        _uiState.value = ImportStep.NameAndDestination
         _extractedText.value = ""
+        _selectedMethod.value = null
     }
+
+    /**
+     * Returns the current step number (1-based) for the progress indicator.
+     */
+    fun currentStepNumber(): Int = when (_uiState.value) {
+        is ImportStep.NameAndDestination -> 1
+        is ImportStep.ChooseMethod -> 2
+        is ImportStep.MediaInput -> 3
+        is ImportStep.Configure -> 4
+        is ImportStep.Processing -> 5
+        is ImportStep.Review -> 5
+        is ImportStep.Error -> 5
+        else -> 1
+    }
+
+    /**
+     * Total number of steps for progress indicator.
+     * Manual path exits at step 2, so max is 5 for AI paths.
+     */
+    fun totalSteps(): Int = 5
 }

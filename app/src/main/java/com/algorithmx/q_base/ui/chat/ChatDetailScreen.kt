@@ -14,6 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -108,23 +110,41 @@ fun ChatDetailScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column(
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { state.chat?.chatId?.let { onHeaderClick(it) } }
+                            .clickable { state.chat?.chatId?.let { onHeaderClick(it) } },
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = state.displayName,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = if (isAiLoading) "Typing..."
-                                   else if (state.chat?.isGroup == true) "${state.participants.size} participants" 
-                                   else if (state.chat?.isBlocked == true) "Blocked" else "Active now",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (state.chat?.isBlocked == true) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                        )
+                        Surface(
+                            modifier = Modifier.size(36.dp),
+                            shape = CircleShape,
+                            color = if (state.chat?.isGroup == true) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = if (state.chat?.isGroup == true) Icons.Default.Group else Icons.Default.Person,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = if (state.chat?.isGroup == true) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = state.displayName,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = if (isAiLoading) "Typing..."
+                                       else if (state.chat?.isGroup == true) "${state.participants.size} participants" 
+                                       else if (state.chat?.isBlocked == true) "Blocked" else "Active now",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (state.chat?.isBlocked == true) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 },
                 navigationIcon = {

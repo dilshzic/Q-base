@@ -1,5 +1,6 @@
 package com.algorithmx.q_base.data.auth
 
+import android.util.Log
 import androidx.activity.ComponentActivity
 import io.appwrite.enums.OAuthProvider
 import io.appwrite.Client
@@ -11,6 +12,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,6 +35,9 @@ class AuthRepository @Inject constructor(
     val currentUserId: String?
         get() = _currentUser.value?.uid
 
+    private val _isSessionChecked = MutableStateFlow(false)
+    val isSessionChecked: Flow<Boolean> = _isSessionChecked.asStateFlow()
+
     private val repositoryScope = CoroutineScope(Dispatchers.IO)
 
     init {
@@ -41,20 +48,60 @@ class AuthRepository @Inject constructor(
         repositoryScope.launch {
             try {
                 val user = appwriteAccount.get()
-                _currentUser.value = mapAppwriteUser(user)
+                val photoUrl = fetchGooglePhotoUrl()
+                _currentUser.value = mapAppwriteUser(user, photoUrl)
             } catch (e: Exception) {
                 _currentUser.value = null
+            } finally {
+                _isSessionChecked.value = true
             }
         }
     }
 
-    private fun mapAppwriteUser(user: User<*>): AppwriteUser {
+    private fun mapAppwriteUser(user: User<*>, photoUrl: String? = null): AppwriteUser {
         return AppwriteUser(
             uid = user.id,
             email = user.email,
             displayName = user.name,
-            photoUrl = null
+            photoUrl = photoUrl?.let { android.net.Uri.parse(it) }
         )
+    }
+
+    /**
+     * Fetches the Google profile picture URL using the OAuth session's providerAccessToken.
+     * Returns null if the session is not a Google OAuth session or if the fetch fails.
+     */
+    private suspend fun fetchGooglePhotoUrl(): String? {
+        return try {
+            val session = appwriteAccount.getSession("current")
+            val accessToken = session.providerAccessToken
+            if (accessToken.isNullOrBlank()) {
+                Log.d("AuthRepository", "No provider access token available")
+                return null
+            }
+
+            // Call Google's userinfo endpoint on IO dispatcher
+            val url = URL("https://www.googleapis.com/oauth2/v3/userinfo")
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.setRequestProperty("Authorization", "Bearer $accessToken")
+            connection.connectTimeout = 5000
+            connection.readTimeout = 5000
+
+            if (connection.responseCode == 200) {
+                val response = connection.inputStream.bufferedReader().use { it.readText() }
+                val json = JSONObject(response)
+                val picture = json.optString("picture", null)
+                Log.d("AuthRepository", "Fetched Google photo URL: $picture")
+                picture
+            } else {
+                Log.w("AuthRepository", "Google userinfo returned ${connection.responseCode}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.d("AuthRepository", "Could not fetch Google photo (non-OAuth session or expired): ${e.message}")
+            null
+        }
     }
 
     suspend fun signInWithEmail(email: String, pass: String): Result<AppwriteUser> {
@@ -93,7 +140,8 @@ class AuthRepository @Inject constructor(
                 provider = OAuthProvider.GOOGLE
             )
             val user = appwriteAccount.get()
-            val appUser = mapAppwriteUser(user)
+            val photoUrl = fetchGooglePhotoUrl()
+            val appUser = mapAppwriteUser(user, photoUrl)
             _currentUser.value = appUser
             Result.success(appUser)
         } catch (e: Exception) {
@@ -110,3 +158,4 @@ class AuthRepository @Inject constructor(
         }
     }
 }
+
