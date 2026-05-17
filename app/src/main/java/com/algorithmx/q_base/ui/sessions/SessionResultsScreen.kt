@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.*
@@ -59,7 +60,7 @@ fun SessionResultsScreen(
                 onProfileClick = { /* Or direct to profile */ },
                 navigationIcon = {
                     IconButton(onClick = onDone) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -117,7 +118,7 @@ fun SessionResultsScreen(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                         )
                     ) {
-                        Icon(Icons.Default.Close, contentDescription = "Close")
+                        Icon(Icons.Rounded.Close, contentDescription = "Close")
                     }
                 }
                 
@@ -322,7 +323,7 @@ fun ResultsContent(
                 contentColor = MaterialTheme.colorScheme.error
             )
         ) {
-            Icon(Icons.Default.Warning, contentDescription = null)
+            Icon(Icons.Rounded.Warning, contentDescription = null)
             Spacer(modifier = Modifier.width(12.dp))
             Text("Report Session Issues", style = MaterialTheme.typography.titleMedium)
         }

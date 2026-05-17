@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
@@ -51,7 +53,7 @@ fun ManualBuilderScreen(
                 titleCentered = true,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -59,7 +61,7 @@ fun ManualBuilderScreen(
                         onClick = onBack,
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Icon(Icons.Default.Check, contentDescription = null)
+                        Icon(Icons.Rounded.Check, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
                         Text("Finish")
                     }
@@ -71,7 +73,7 @@ fun ManualBuilderScreen(
                 onClick = { 
                     viewModel.getTargetSetId()?.let { onAddQuestion(it) }
                 },
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
                 text = { Text("Add Question") },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
@@ -85,7 +87,7 @@ fun ManualBuilderScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        Icons.Default.QuestionMark,
+                        Icons.Rounded.QuestionMark,
                         contentDescription = null,
                         modifier = Modifier.size(64.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)

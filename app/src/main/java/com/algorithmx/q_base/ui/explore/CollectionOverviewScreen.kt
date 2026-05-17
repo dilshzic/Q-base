@@ -82,13 +82,13 @@ fun CollectionOverviewScreen(
                 titleCentered = true,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
                     var showMoreMenu by remember { mutableStateOf(false) }
                     IconButton(onClick = { showMoreMenu = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More Options")
+                        Icon(Icons.Rounded.MoreVert, contentDescription = "More Options")
                     }
                     DropdownMenu(
                         expanded = showMoreMenu,
@@ -96,7 +96,7 @@ fun CollectionOverviewScreen(
                     ) {
                         DropdownMenuItem(
                             text = { Text("Report Collection") },
-                            leadingIcon = { Icon(Icons.Filled.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                            leadingIcon = { Icon(Icons.Rounded.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
                             onClick = {
                                 showMoreMenu = false
                                 showReportDialog = true

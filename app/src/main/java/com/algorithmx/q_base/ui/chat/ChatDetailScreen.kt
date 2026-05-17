@@ -11,6 +11,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.MoreVert
@@ -123,7 +125,7 @@ fun ChatDetailScreen(
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
-                                    imageVector = if (state.chat?.isGroup == true) Icons.Default.Group else Icons.Default.Person,
+                                    imageVector = if (state.chat?.isGroup == true) Icons.Rounded.Group else Icons.Rounded.Person,
                                     contentDescription = null,
                                     modifier = Modifier.size(20.dp),
                                     tint = if (state.chat?.isGroup == true) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onPrimaryContainer
@@ -149,7 +151,7 @@ fun ChatDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -167,7 +169,7 @@ fun ChatDetailScreen(
 
                     var showMenu by remember { mutableStateOf(false) }
                     IconButton(onClick = { showMenu = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Options")
+                        Icon(Icons.Rounded.MoreVert, contentDescription = "Options")
                     }
                     DropdownMenu(
                         expanded = showMenu,
@@ -259,7 +261,7 @@ fun ChatDetailScreen(
                             ) {
                                 IconButton(onClick = { showCollectionPicker = true }) {
                                     Icon(
-                                        Icons.Default.Add,
+                                        Icons.Rounded.Add,
                                         contentDescription = "Attach",
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(24.dp)
@@ -314,7 +316,7 @@ fun ChatDetailScreen(
                                     .background(MaterialTheme.colorScheme.primary, CircleShape)
                             ) {
                                 Icon(
-                                    Icons.AutoMirrored.Filled.Send, 
+                                    Icons.AutoMirrored.Rounded.Send, 
                                     contentDescription = "Send",
                                     tint = MaterialTheme.colorScheme.onPrimary,
                                     modifier = Modifier.size(20.dp)
@@ -556,7 +558,7 @@ fun ChatDetailScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Icon(
-                                            Icons.Filled.CollectionsBookmark, 
+                                            Icons.Rounded.CollectionsBookmark, 
                                             tint = MaterialTheme.colorScheme.primary,
                                             contentDescription = null
                                         )

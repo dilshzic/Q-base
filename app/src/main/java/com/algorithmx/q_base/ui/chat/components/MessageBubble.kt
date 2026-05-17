@@ -222,7 +222,7 @@ private fun SenderAvatar(avatarUrl: String?, onClick: () -> Unit) {
             )
         } else {
             Icon(
-                imageVector = Icons.Default.AccountCircle,
+                imageVector = Icons.Rounded.AccountCircle,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.outline,
                 modifier = Modifier

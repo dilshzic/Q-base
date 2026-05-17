@@ -74,14 +74,14 @@ fun UnifiedExploreScreen(
                 navigationIcon = {
                     if (isSelectionMode) {
                         IconButton(onClick = { viewModel.clearSelection() }) {
-                            Icon(Icons.Default.Close, contentDescription = "Clear Selection")
+                            Icon(Icons.Rounded.Close, contentDescription = "Clear Selection")
                         }
                     }
                 },
                 actions = {
                     if (isSelectionMode) {
                         IconButton(onClick = { viewModel.deleteSelectedSets() }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete Selected", tint = MaterialTheme.colorScheme.error)
+                            Icon(Icons.Rounded.Delete, contentDescription = "Delete Selected", tint = MaterialTheme.colorScheme.error)
                         }
                     }
                 },
@@ -114,11 +114,11 @@ fun UnifiedExploreScreen(
                         .fillMaxWidth()
                         .padding(start = 16.dp, end = 16.dp, top = 16.dp),
                     placeholder = { Text("Search collections...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
                             IconButton(onClick = { searchQuery = "" }) {
-                                Icon(Icons.Default.Close, contentDescription = null)
+                                Icon(Icons.Rounded.Close, contentDescription = null)
                             }
                         }
                     },

@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.rounded.ExitToApp
@@ -65,7 +66,7 @@ fun GroupOverviewScreen(
                 isLarge = false,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -107,7 +108,7 @@ fun GroupOverviewScreen(
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
-                                    Icons.Default.Group,
+                                    Icons.Rounded.Group,
                                     contentDescription = null,
                                     modifier = Modifier.size(64.dp),
                                     tint = MaterialTheme.colorScheme.onPrimaryContainer
@@ -274,7 +275,7 @@ fun ParticipantItem(user: UserEntity, isAdmin: Boolean) {
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    Icons.Default.Person,
+                    Icons.Rounded.Person,
                     contentDescription = null,
                     modifier = Modifier.size(24.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant

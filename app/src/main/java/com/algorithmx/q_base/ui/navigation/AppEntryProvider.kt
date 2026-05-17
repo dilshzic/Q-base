@@ -53,7 +53,10 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                     navigator.navigate(Screen.CollectionOverview(collectionId))
                 },
                 onProfileClick = { navigator.navigate(Screen.Profile) },
-                onNavigateToNotifications = { navigator.navigate(Screen.Notifications) }
+                onNavigateToNotifications = { navigator.navigate(Screen.Notifications) },
+                onNavigateToPinnedQuestions = { navigator.navigate(Screen.PinnedQuestions) },
+                onNavigateToConnect = { navigator.navigate(Screen.Connect) },
+                onNavigateToImport = { navigator.navigate(Screen.ImportWizard()) }
             )
         }
 
@@ -184,6 +187,28 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
             )
         }
 
+        entry<Screen.PinnedQuestions> {
+            val viewModel: ExploreViewModel = hiltViewModel()
+            val questionStates by viewModel.questionStates.collectAsStateWithLifecycle()
+            val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+
+            LaunchedEffect(Unit) {
+                viewModel.loadPinnedQuestions()
+            }
+
+            PinnedQuestionsScreen(
+                questionStates = questionStates,
+                onPinToggled = { index ->
+                    viewModel.togglePin(index)
+                },
+                onBack = { navigator.goBack() },
+                onNavigateToExplore = { navigator.navigate(Screen.Explore) },
+                currentUser = currentUser,
+                onProfileClick = { navigator.navigate(Screen.Profile) },
+                viewModel = viewModel
+            )
+        }
+
         entry<Screen.ExploreSet> { key ->
             val viewModel: ExploreViewModel = hiltViewModel()
             val questionStates by viewModel.questionStates.collectAsStateWithLifecycle()
@@ -303,7 +328,8 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onNavigateToBlockedList = {
                     navigator.navigate(Screen.BlockedList)
                 },
-                onProfileClick = { navigator.navigate(Screen.Profile) }
+                onProfileClick = { navigator.navigate(Screen.Profile) },
+                onNavigateToLogin = { navigator.navigate(Screen.Login) }
             )
         }
 
@@ -441,11 +467,14 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
 
         entry<Screen.Profile> {
             val viewModel: ProfileViewModel = hiltViewModel()
+            val context = androidx.compose.ui.platform.LocalContext.current
             ProfileScreen(
                 viewModel = viewModel,
                 onBack = { navigator.goBack() },
                 onNavigateToSettings = { navigator.navigate(Screen.Settings) },
                 onLoggedOut = { 
+                    val sharedPrefs = context.getSharedPreferences("qbase_prefs", android.content.Context.MODE_PRIVATE)
+                    sharedPrefs.edit().putBoolean("is_logged_in", false).apply()
                     navigator.navigate(Screen.Login)
                 }
             )
@@ -475,7 +504,8 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onNavigateToBlockedList = {
                     navigator.navigate(Screen.BlockedList)
                 },
-                onProfileClick = { navigator.navigate(Screen.Profile) }
+                onProfileClick = { navigator.navigate(Screen.Profile) },
+                onNavigateToLogin = { navigator.navigate(Screen.Login) }
             )
         }
 

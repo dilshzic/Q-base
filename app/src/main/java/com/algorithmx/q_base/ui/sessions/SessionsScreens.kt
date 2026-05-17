@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.AutoAwesome
@@ -82,14 +83,14 @@ fun SessionsListScreen(
                 navigationIcon = {
                     if (isSelectionMode) {
                         IconButton(onClick = { viewModel.clearSessionSelection() }) {
-                            Icon(Icons.Default.Close, contentDescription = "Clear Selection")
+                            Icon(Icons.Rounded.Close, contentDescription = "Clear Selection")
                         }
                     }
                 },
                 actions = {
                     if (isSelectionMode) {
                         IconButton(onClick = { viewModel.deleteSelectedSessions() }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete Selected", tint = MaterialTheme.colorScheme.error)
+                            Icon(Icons.Rounded.Delete, contentDescription = "Delete Selected", tint = MaterialTheme.colorScheme.error)
                         }
                     }
                 },
@@ -104,7 +105,7 @@ fun SessionsListScreen(
                 shape = RoundedCornerShape(16.dp),
                 elevation = FloatingActionButtonDefaults.elevation(8.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = null)
+                Icon(Icons.Rounded.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("New Session", fontWeight = FontWeight.Bold)
             }
@@ -205,7 +206,7 @@ fun CategoryChip(name: String) {
             )
             Spacer(modifier = Modifier.width(8.dp))
             Icon(
-                Icons.Default.ChevronRight, 
+                Icons.Rounded.ChevronRight, 
                 contentDescription = null, 
                 modifier = Modifier.size(16.dp),
                 tint = MaterialTheme.colorScheme.primary
@@ -297,7 +298,7 @@ fun SessionListItemExpressive(
             if (!selectionMode) {
                 IconButton(onClick = onReportClick) {
                     Icon(
-                        Icons.Default.Flag, 
+                        Icons.Rounded.Flag, 
                         contentDescription = "Report",
                         tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                         modifier = Modifier.size(20.dp)
@@ -306,7 +307,7 @@ fun SessionListItemExpressive(
             }
             
             Icon(
-                Icons.Default.ChevronRight, 
+                Icons.Rounded.ChevronRight, 
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.outlineVariant
             )

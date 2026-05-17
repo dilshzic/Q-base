@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Palette
@@ -46,7 +48,7 @@ fun AppThemeScreen(
                 titleCentered = true,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -111,7 +113,7 @@ fun ThemeCard(
             }
             if (isSelected) {
                 Icon(
-                    Icons.Default.Check, 
+                    Icons.Rounded.Check, 
                     contentDescription = null, 
                     tint = MaterialTheme.colorScheme.primary
                 )

@@ -122,6 +122,42 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun updateIntro(newIntro: String) {
+        val current = userState.value ?: return
+        viewModelScope.launch {
+            val updatedProfile = UserProfile(
+                userId = current.userId,
+                email = current.email ?: "",
+                displayName = current.displayName,
+                profilePictureUrl = current.profilePictureUrl,
+                friendCode = current.friendCode,
+                intro = newIntro,
+                publicKey = current.publicKey,
+                isBanned = current.isBanned,
+                isPhotoVisible = current.isPhotoVisible
+            )
+            profileRepository.updateProfile(updatedProfile)
+        }
+    }
+
+    fun updateProfilePictureUrl(url: String) {
+        val current = userState.value ?: return
+        viewModelScope.launch {
+            val updatedProfile = UserProfile(
+                userId = current.userId,
+                email = current.email ?: "",
+                displayName = current.displayName,
+                profilePictureUrl = url,
+                friendCode = current.friendCode,
+                intro = current.intro ?: "",
+                publicKey = current.publicKey,
+                isBanned = current.isBanned,
+                isPhotoVisible = current.isPhotoVisible
+            )
+            profileRepository.updateProfile(updatedProfile)
+        }
+    }
+
     fun togglePhotoVisibility(isVisible: Boolean) {
         val current = userState.value ?: return
         viewModelScope.launch {

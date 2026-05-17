@@ -136,8 +136,29 @@ class MainActivity : ComponentActivity() {
                 val userFlow = remember { authRepository.currentUser }
                 val user by userFlow.collectAsState(initial = null)
                 
-                // We always start on Screen.Home as requested by the user
-                val startRoute = remember { Screen.Home }
+                val context = androidx.compose.ui.platform.LocalContext.current
+                val sharedPrefs = remember(context) {
+                    context.getSharedPreferences("qbase_prefs", android.content.Context.MODE_PRIVATE)
+                }
+                
+                // Track if a persisted login instance exists
+                var isLoggedInInstancePersisted by remember {
+                    mutableStateOf(sharedPrefs.getBoolean("is_logged_in", false))
+                }
+
+                // If user becomes non-null, mark login instance as persisted reactively
+                LaunchedEffect(user) {
+                    if (user != null && !isLoggedInInstancePersisted) {
+                        sharedPrefs.edit().putBoolean("is_logged_in", true).apply()
+                        isLoggedInInstancePersisted = true
+                    }
+                }
+
+                // Decide the starting route based on login instance persistence (guests are not allowed)
+                val startRoute = remember(isLoggedInInstancePersisted) {
+                    if (isLoggedInInstancePersisted) Screen.Home else Screen.Login
+                }
+                
                 val topLevelRoutes = remember {
                     setOf(Screen.Home, Screen.Explore, Screen.Connect, Screen.Sessions())
                 }

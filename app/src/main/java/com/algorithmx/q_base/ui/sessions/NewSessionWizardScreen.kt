@@ -6,6 +6,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.LibraryAdd
 import androidx.compose.material3.*
@@ -61,7 +63,7 @@ fun NewSessionWizardScreen(
                         if (step > 1) viewModel.setWizardStep(step - 1) 
                         else onBack() 
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -143,7 +145,7 @@ fun EmptyCollectionsView() {
     ) {
         Surface(modifier = Modifier.size(80.dp), shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.LibraryAdd, contentDescription = null, modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.outline)
+                Icon(Icons.Rounded.LibraryAdd, contentDescription = null, modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.outline)
             }
         }
         Spacer(Modifier.height(16.dp))

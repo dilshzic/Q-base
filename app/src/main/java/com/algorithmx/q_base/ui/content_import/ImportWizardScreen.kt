@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.*
@@ -93,7 +94,7 @@ fun ImportWizardScreen(
                             }
                         } else onBack()
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -242,7 +243,7 @@ fun NameAndDestinationView(
                         Spacer(Modifier.width(8.dp))
                         Text(collections.find { it.collectionId == selectedCategoryId }?.name ?: "Select collection")
                         Spacer(Modifier.weight(1f))
-                        Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                        Icon(Icons.Rounded.ArrowDropDown, contentDescription = null)
                     }
                 }
                 DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -461,7 +462,7 @@ fun ReviewView(count: Int, collectionName: String, onFinished: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Surface(modifier = Modifier.size(100.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
-            Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp)) }
+            Box(contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Check, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp)) }
         }
         Spacer(Modifier.height(24.dp))
         Text("$count Questions Prepared!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
@@ -479,7 +480,7 @@ fun ReviewView(count: Int, collectionName: String, onFinished: () -> Unit) {
 @Composable
 fun ErrorView(message: String, onRetry: () -> Unit) {
     Column(modifier = Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(Icons.Default.ErrorOutline, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(64.dp))
+        Icon(Icons.Rounded.ErrorOutline, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(64.dp))
         Spacer(Modifier.height(16.dp))
         Text("Oops! Something went wrong", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))

@@ -18,6 +18,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
@@ -113,7 +115,7 @@ fun ActiveSessionScreen(
                 onProfileClick = { /* Navigate to profile? Or just icon */ },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -122,7 +124,7 @@ fun ActiveSessionScreen(
                     }
                     if (isCompleted) {
                         IconButton(onClick = { onViewResults(viewModel.getSessionId()) }) {
-                            Icon(Icons.Default.Assessment, contentDescription = "View Results", tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Rounded.Assessment, contentDescription = "View Results", tint = MaterialTheme.colorScheme.primary)
                         }
                     }
                     if (!isCompleted && !isReadOnly) {
@@ -154,7 +156,7 @@ fun ActiveSessionScreen(
                         enabled = currentIndex > 0,
                         shape = MaterialTheme.shapes.large
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("PREV")
                     }
@@ -166,7 +168,7 @@ fun ActiveSessionScreen(
                     ) {
                         Text("NEXT")
                         Spacer(modifier = Modifier.width(8.dp))
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null)
                     }
                 }
             }
@@ -186,7 +188,7 @@ fun ActiveSessionScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Lock,
+                            imageVector = Icons.Rounded.Lock,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onErrorContainer
                         )
@@ -224,7 +226,7 @@ fun ActiveSessionScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Default.Timer,
+                            imageVector = if (isCompleted) Icons.Rounded.CheckCircle else Icons.Rounded.Timer,
                             contentDescription = null,
                             modifier = Modifier.size(14.dp),
                             tint = MaterialTheme.colorScheme.primary
@@ -263,7 +265,7 @@ fun ActiveSessionScreen(
 
                     var showMenu by remember { mutableStateOf(false) }
                     IconButton(onClick = { showMenu = true }, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Options")
+                        Icon(Icons.Rounded.MoreVert, contentDescription = "Options")
                         DropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false }

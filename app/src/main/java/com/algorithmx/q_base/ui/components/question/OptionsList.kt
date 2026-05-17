@@ -6,6 +6,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Info
@@ -230,21 +231,21 @@ fun OptionsList(
 
                             if (userPickedCorrect) {
                                 Icon(
-                                    Icons.Default.CheckCircle,
+                                    Icons.Rounded.CheckCircle,
                                     contentDescription = "Correct",
                                     tint = successGreen,
                                     modifier = Modifier.size(24.dp)
                                 )
                             } else if (userPickedIncorrect) {
                                 Icon(
-                                    Icons.Default.Cancel,
+                                    Icons.Rounded.Cancel,
                                     contentDescription = "Incorrect",
                                     tint = MaterialTheme.colorScheme.error,
                                     modifier = Modifier.size(24.dp)
                                 )
                             } else if (userMissedCorrect) {
                                 Icon(
-                                    Icons.Default.Info,
+                                    Icons.Rounded.Info,
                                     contentDescription = "Missed",
                                     tint = warningOrange,
                                     modifier = Modifier.size(24.dp)
@@ -256,11 +257,13 @@ fun OptionsList(
                             }
                         }
 
-                        Text(
-                            text = "${option.optionLetter}. ${option.optionText}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            modifier = Modifier.weight(1f)
+                        MarkdownText(
+                            markdown = "**${option.optionLetter}.** ${option.optionText}",
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         if (!isMTF) {
@@ -314,7 +317,7 @@ fun OptionsList(
                     ) {
                         Row(modifier = Modifier.padding(12.dp)) {
                             Icon(
-                                Icons.Default.Info, 
+                                Icons.Rounded.Info, 
                                 contentDescription = null, 
                                 modifier = Modifier.size(18.dp),
                                 tint = MaterialTheme.colorScheme.secondary

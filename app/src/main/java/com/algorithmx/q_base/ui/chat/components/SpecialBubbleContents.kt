@@ -37,7 +37,7 @@ fun CollectionBubbleContent(
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Filled.CollectionsBookmark,
+                    imageVector = Icons.Rounded.CollectionsBookmark,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
                     tint = if (isMine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
@@ -52,7 +52,7 @@ fun CollectionBubbleContent(
                 enabled = !isSaved,
                 colors = if (isSaved) ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = MaterialTheme.colorScheme.secondary) else ButtonDefaults.buttonColors()
             ) {
-                Icon(if (isSaved) Icons.Rounded.CheckCircle else Icons.Default.Add, null, Modifier.size(16.dp))
+                Icon(if (isSaved) Icons.Rounded.CheckCircle else Icons.Rounded.Add, null, Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(if (isSaved) "Saved" else "Save")
             }
@@ -145,7 +145,7 @@ fun DecryptionErrorContent(status: String, isMine: Boolean, onDeleteChat: () -> 
     Column(modifier = Modifier.padding(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(2.dp)) {
             Icon(
-                imageVector = if (status == "FAILED") Icons.Default.Lock else Icons.Default.Sync,
+                imageVector = if (status == "FAILED") Icons.Rounded.Lock else Icons.Rounded.Sync,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
                 tint = if (isMine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.error
@@ -171,7 +171,7 @@ fun DecryptionErrorContent(status: String, isMine: Boolean, onDeleteChat: () -> 
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                Icon(Icons.Rounded.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text("Delete Chat & Restart")
             }

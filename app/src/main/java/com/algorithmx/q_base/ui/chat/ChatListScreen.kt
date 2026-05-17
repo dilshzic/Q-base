@@ -40,6 +40,7 @@ fun ChatListScreen(
     onNewChat: () -> Unit,
     onNavigateToBlockedList: () -> Unit,
     onProfileClick: () -> Unit,
+    onNavigateToLogin: () -> Unit,
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val state by viewModel.chatListState.collectAsState()
@@ -97,20 +98,27 @@ fun ChatListScreen(
             }
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onNewChat,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = RoundedCornerShape(16.dp),
-                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("New Message")
+            if (currentUser != null) {
+                ExtendedFloatingActionButton(
+                    onClick = onNewChat,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
+                ) {
+                    Icon(Icons.Rounded.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("New Message")
+                }
             }
         }
     ) { padding ->
-        if (state.chats.isEmpty() && !state.isLoading) {
+        if (currentUser == null) {
+            GuestConnectView(
+                onLoginClick = onNavigateToLogin,
+                modifier = Modifier.padding(padding)
+            )
+        } else if (state.chats.isEmpty() && !state.isLoading) {
             EmptyConnectView(modifier = Modifier.padding(padding))
         } else {
             LazyColumn(
@@ -238,7 +246,7 @@ fun ChatItem(
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
-                                    imageVector = if (chat.isGroup) Icons.Default.Group else Icons.Default.Person,
+                                    imageVector = if (chat.isGroup) Icons.Rounded.Group else Icons.Rounded.Person,
                                     contentDescription = null,
                                     modifier = Modifier.size(28.dp),
                                     tint = if (chat.isGroup) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onPrimaryContainer
@@ -398,6 +406,57 @@ fun EmptyConnectView(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.outline
             )
+        }
+    }
+}
+
+@Composable
+fun GuestConnectView(onLoginClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxSize().padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Surface(
+                modifier = Modifier.size(120.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Rounded.Forum, 
+                        contentDescription = null, 
+                        modifier = Modifier.size(54.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                "Chats & Groups",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                "Connect with peer learners, ask questions, and share study materials. Login is required to access peer chats and other cloud synchronised functions.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                lineHeight = 22.sp
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+            Button(
+                onClick = onLoginClick,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp)
+            ) {
+                Text("Log In or Sign Up", style = MaterialTheme.typography.titleMedium)
+            }
         }
     }
 }

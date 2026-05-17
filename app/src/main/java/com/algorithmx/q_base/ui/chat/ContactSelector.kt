@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
@@ -64,7 +66,7 @@ fun ContactSelector(
                     titleCentered = titleCentered,
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                         }
                     }
                 )
@@ -181,7 +183,7 @@ fun ContactSelector(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 placeholder = { Text("Search local contacts by name...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
                 shape = RoundedCornerShape(16.dp),
                 singleLine = true
             )
@@ -259,7 +261,7 @@ fun UserItem(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        Icons.Default.Person,
+                        Icons.Rounded.Person,
                         contentDescription = null,
                         tint = if (isSearchResult) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer
                     )

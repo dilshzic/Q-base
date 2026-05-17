@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -138,7 +139,7 @@ fun SessionCard(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        Icons.Default.PlayArrow, 
+                        Icons.Rounded.PlayArrow, 
                         contentDescription = null, 
                         tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(20.dp)
@@ -281,7 +282,7 @@ fun SectionHeaderPreview() {
         SectionHeader(
             title = "Recent Sessions",
             onActionClick = {},
-            icon = Icons.Default.Star
+            icon = Icons.Rounded.Star
         )
     }
 }

@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.rounded.Lock
@@ -84,7 +86,7 @@ fun SignupScreen(
                     titleCentered = true,
                     navigationIcon = {
                         IconButton(onClick = onBackToLogin) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                         }
                     }
                 )
@@ -143,7 +145,7 @@ fun SignupScreen(
                         tonalElevation = 4.dp
                     ) {
                         Icon(
-                            Icons.Default.Add,
+                            Icons.Rounded.Add,
                             contentDescription = null,
                             modifier = Modifier.padding(4.dp),
                             tint = Color.White

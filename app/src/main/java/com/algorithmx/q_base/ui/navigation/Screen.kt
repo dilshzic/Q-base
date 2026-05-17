@@ -51,6 +51,7 @@ sealed class Screen : NavKey {
     @Serializable data object AppTheme : Screen()
     @Serializable data object AiBrainManager : Screen()
     @Serializable data object Notifications : Screen()
+    @Serializable data object PinnedQuestions : Screen()
 }
 
 val Screen.isTopLevel: Boolean

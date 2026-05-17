@@ -1,45 +1,32 @@
 package com.algorithmx.q_base.ui.settings
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.BorderStroke
+import android.content.Intent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
+import com.algorithmx.q_base.ui.theme.QbaseTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,7 +37,6 @@ fun ProfileScreen(
     onLoggedOut: () -> Unit
 ) {
     val user by viewModel.userState.collectAsStateWithLifecycle()
-    val stats by viewModel.stats.collectAsStateWithLifecycle()
     val hasSecureBackup by viewModel.hasSecureBackup.collectAsStateWithLifecycle()
 
     val clipboardManager = LocalClipboardManager.current
@@ -58,17 +44,23 @@ fun ProfileScreen(
 
     ProfileContent(
         user = user,
-        stats = stats,
         hasSecureBackup = hasSecureBackup,
         onBack = onBack,
         onNavigateToSettings = onNavigateToSettings,
         onLoggedOut = onLoggedOut,
-        onUpdateDisplayName = { viewModel.updateDisplayName(it) },
         onCopyFriendCode = {
             clipboardManager.setText(AnnotatedString(it))
             android.widget.Toast.makeText(context, "Code copied!", android.widget.Toast.LENGTH_SHORT).show()
         },
-        onTogglePhotoVisibility = { viewModel.togglePhotoVisibility(it) },
+        onShareFriendCode = { friendCode ->
+            val sendIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, "Hey! Add me on Qbase! Here's my friend code: $friendCode")
+                type = "text/plain"
+            }
+            val shareIntent = Intent.createChooser(sendIntent, "Share Friend Code")
+            context.startActivity(shareIntent)
+        },
         onSignOut = { clearCollections, onComplete -> 
             viewModel.signOut(clearCollections) { onComplete() }
         }
@@ -79,23 +71,18 @@ fun ProfileScreen(
 @Composable
 fun ProfileContent(
     user: com.algorithmx.q_base.data.core.UserEntity?,
-    stats: UserStats,
     hasSecureBackup: Boolean,
     onBack: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onLoggedOut: () -> Unit,
-    onUpdateDisplayName: (String) -> Unit,
     onCopyFriendCode: (String) -> Unit,
-    onTogglePhotoVisibility: (Boolean) -> Unit,
+    onShareFriendCode: (String) -> Unit,
     onSignOut: (Boolean, () -> Unit) -> Unit
 ) {
     val scrollState = rememberScrollState()
     var showLogoutDialog by remember { mutableStateOf(false) }
     var clearCollections by remember { mutableStateOf(false) }
     var showBackupDialog by remember { mutableStateOf(false) }
-    
-    var isEditingName by remember { mutableStateOf(false) }
-    var editedName by remember { mutableStateOf(user?.displayName ?: "") }
 
     if (showBackupDialog) {
         SecureBackupDialog(onDismiss = { showBackupDialog = false })
@@ -150,44 +137,12 @@ fun ProfileContent(
         )
     }
 
-    if (isEditingName) {
-        AlertDialog(
-            onDismissRequest = { isEditingName = false },
-            title = { Text("Edit Display Name", fontWeight = FontWeight.Bold) },
-            text = {
-                OutlinedTextField(
-                    value = editedName,
-                    onValueChange = { editedName = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text("Display Name") },
-                    shape = RoundedCornerShape(16.dp)
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        onUpdateDisplayName(editedName)
-                        isEditingName = false
-                    }
-                ) {
-                    Text("Save Changes")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { isEditingName = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Multi-colored radial glowing mesh overlays for premium styling consistent with Qbase
+        // Dynamic decorative gradient backdrops consistent with Qbase app design language
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -205,190 +160,150 @@ fun ProfileContent(
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
-                com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar(
+                UnifiedTopAppBar(
                     title = "My Profile",
                     currentUser = null,
                     onProfileClick = {},
                     showProfileIcon = false,
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                         }
                     },
                     actions = {
                         IconButton(onClick = onNavigateToSettings) {
-                            Icon(Icons.Default.Settings, contentDescription = "Settings")
+                            Icon(Icons.Rounded.Settings, contentDescription = "Settings")
                         }
                     }
                 )
             }
         ) { padding ->
-            Box(modifier = Modifier.fillMaxSize()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scrollState),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Jetchat Parallax Offset Header Photo
-                    ProfileParallaxHeader(
-                        user = user,
-                        scrollState = scrollState,
-                        padding = padding
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(scrollState),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Profile Avatar
+                ProfileAvatar(
+                    imageUrl = user?.profilePictureUrl,
+                    modifier = Modifier.size(130.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Identity Block
+                Text(
+                    text = user?.displayName ?: "Knowledge Seeker",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+                
+                Text(
+                    text = user?.email ?: "guest@qbase.io",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Connect Section
+                ProfileCardSection(title = "Connect") {
+                    ProfilePropertyRow(
+                        label = "My Friend Code",
+                        value = user?.friendCode ?: "Click to generate",
+                        isLink = true,
+                        icon = Icons.Rounded.QrCode,
+                        trailingContent = {
+                            Row {
+                                IconButton(onClick = { user?.friendCode?.let { onCopyFriendCode(it) } }) {
+                                    Icon(Icons.Rounded.ContentCopy, contentDescription = "Copy")
+                                }
+                                IconButton(onClick = { user?.friendCode?.let { onShareFriendCode(it) } }) {
+                                    Icon(Icons.Rounded.Share, contentDescription = "Share")
+                                }
+                            }
+                        }
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Name and Position/Intro block matching Jetchat
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = user?.displayName ?: "Knowledge Seeker",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            textAlign = TextAlign.Center
-                        )
-                        
-                        Text(
-                            text = user?.email ?: "guest@qbase.io",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-
-                        user?.intro?.let {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = it,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Medium,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
-                                    .padding(horizontal = 14.dp, vertical = 6.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Clean divided Profile properties matching Jetchat
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp)
-                    ) {
-                        // Display Name
-                        ProfilePropertyRow(
-                            label = "Display Name",
-                            value = user?.displayName ?: "Knowledge Seeker",
-                            onClick = {
-                                editedName = user?.displayName ?: ""
-                                isEditingName = true
-                            }
-                        )
-
-                        // Email
-                        ProfilePropertyRow(
-                            label = "Email Address",
-                            value = user?.email ?: "guest@qbase.io"
-                        )
-
-                        // Friend Code (primary link color, copy action)
-                        ProfilePropertyRow(
-                            label = "Friend Code",
-                            value = user?.friendCode ?: "Click to generate",
-                            isLink = true,
-                            onClick = { user?.friendCode?.let { onCopyFriendCode(it) } }
-                        )
-
-                        // Security Vault Status
-                        ProfilePropertyRow(
-                            label = "Cryptographic Backup Status",
-                            value = if (hasSecureBackup) "Verified (Encrypted Vault)" else "⚠️ Action Required (Click to backup)",
-                            isLink = !hasSecureBackup,
-                            onClick = { showBackupDialog = true }
-                        )
-
-                        // Privacy Mode
-                        ProfilePropertyToggleRow(
-                            label = "Public Profile Mode",
-                            valueText = if (user?.isPhotoVisible ?: true) "Visible to other users" else "Hidden from searches",
-                            checked = user?.isPhotoVisible ?: true,
-                            onToggle = onTogglePhotoVisibility
-                        )
-
-                        // Statistics
-                        ProfilePropertyRow(
-                            label = "Database Contribution Stats",
-                            value = "Created Questions: ${stats.userCreatedQuestions}   |   Shared Materials: ${stats.sharedQuestions}"
-                        )
-
-                        // Achievements Section consistent with Jetchat Dividers
-                        ProfileAchievementsProperty(stats = stats)
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        // Jetchat styled clean logout trigger
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 12.dp)
-                                .bounceClick { showLogoutDialog = true },
-                            shape = RoundedCornerShape(20.dp),
-                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.08f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.2f))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.Logout, 
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    "Log Out from Device", 
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(100.dp))
                 }
 
-                // Collapsible Jetchat-style Floating Action Button (FAB) at bottom right
-                val isFabExtended by remember { derivedStateOf { scrollState.value == 0 } }
-                ExtendedFloatingActionButton(
-                    onClick = {
-                        editedName = user?.displayName ?: ""
-                        isEditingName = true
-                    },
-                    expanded = isFabExtended,
-                    icon = { Icon(Icons.Default.Edit, contentDescription = "Edit Profile") },
-                    text = { Text("Edit Profile") },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                // Security Section
+                ProfileCardSection(title = "Security & Encryption") {
+                    ProfilePropertyRow(
+                        label = "Encryption Key Backup",
+                        value = if (hasSecureBackup) "Keys backed Up" else "⚠️ Backup Keys (Recommended)",
+                        isLink = !hasSecureBackup,
+                        icon = Icons.Rounded.Security,
+                        valueColor = if (hasSecureBackup) null else MaterialTheme.colorScheme.error,
+                        onClick = { showBackupDialog = true }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Logout Button
+                Surface(
                     modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp)
-                        .navigationBarsPadding()
-                )
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .bounceClick { showLogoutDialog = true },
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Rounded.Logout, 
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            "Log Out from Device", 
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProfileContentPreview() {
+    QbaseTheme {
+        ProfileContent(
+            user = com.algorithmx.q_base.data.core.UserEntity(
+                userId = "123",
+                displayName = "John Doe",
+                email = "john.doe@example.com",
+                intro = "Passionate about learning and technology.",
+                profilePictureUrl = "emoji:🎓",
+                friendCode = "QBASE-1234",
+                isPhotoVisible = true
+            ),
+            hasSecureBackup = false,
+            onBack = {},
+            onNavigateToSettings = {},
+            onLoggedOut = {},
+            onCopyFriendCode = {},
+            onShareFriendCode = {},
+            onSignOut = { _, _ -> }
+        )
     }
 }

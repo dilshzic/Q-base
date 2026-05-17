@@ -16,6 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PushPin
@@ -89,7 +91,7 @@ fun QuestionHeader(
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 IconButton(onClick = onPinToggled, modifier = Modifier.size(32.dp)) {
                     Icon(
-                        imageVector = if (question.isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+                        imageVector = if (question.isPinned) Icons.Rounded.PushPin else Icons.Outlined.PushPin,
                         contentDescription = "Pin",
                         modifier = Modifier.size(18.dp),
                         tint = if (question.isPinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -131,7 +133,7 @@ fun QuestionHeader(
                 }
                 IconButton(onClick = { showMenu = true }, modifier = Modifier.size(32.dp)) {
                     Icon(
-                        imageVector = Icons.Default.MoreVert,
+                        imageVector = Icons.Rounded.MoreVert,
                         contentDescription = "More",
                         modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.outline
@@ -230,10 +232,10 @@ fun QuestionHeader(
 
     Spacer(modifier = Modifier.height(8.dp))
 
-    Text(
-        text = question.stem ?: "",
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold
+    dev.jeziellago.compose.markdowntext.MarkdownText(
+        markdown = question.stem ?: "",
+        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+        color = MaterialTheme.colorScheme.onSurface
     )
 }
 

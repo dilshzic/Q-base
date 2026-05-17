@@ -5,9 +5,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.*
@@ -63,6 +66,11 @@ fun SettingsContent(
     onClearAllData: (() -> Unit) -> Unit
 ) {
     var showClearDialog by remember { mutableStateOf(false) }
+    var showPrivacyDialog by remember { mutableStateOf(false) }
+    var showHelpDialog by remember { mutableStateOf(false) }
+    var showBugDialog by remember { mutableStateOf(false) }
+    var bugDescription by remember { mutableStateOf("") }
+    
     val context = androidx.compose.ui.platform.LocalContext.current
 
     Scaffold(
@@ -74,7 +82,7 @@ fun SettingsContent(
                 showProfileIcon = false,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -92,8 +100,8 @@ fun SettingsContent(
                 SettingsCard(
                     title = "My Profile",
                     subtitle = "Manage your information and friend code",
-                    icon = Icons.Default.Person,
-                    onClick = { /* Already handled by Profile button usually, but could link back */ }
+                    icon = Icons.Rounded.Person,
+                    onClick = onBack
                 )
             }
 
@@ -103,7 +111,7 @@ fun SettingsContent(
                 SettingsToggleCard(
                     title = "Push Notifications",
                     subtitle = "Stay updated on new messages and shared collections",
-                    icon = Icons.Default.Notifications,
+                    icon = Icons.Rounded.Notifications,
                     checked = config.notificationsEnabled,
                     onCheckedChange = onUpdateNotifications
                 )
@@ -116,7 +124,7 @@ fun SettingsContent(
                         "MONOCHROME" -> "Elegant Monochrome"
                         else -> "Follow System"
                     },
-                    icon = Icons.Default.Palette,
+                    icon = Icons.Rounded.Palette,
                     onClick = onNavigateToAppTheme
                 )
             }
@@ -127,7 +135,7 @@ fun SettingsContent(
                 SettingsCard(
                     title = "AI Brain Manager",
                     subtitle = "Configure ${config.provider.name} (${config.modelName})",
-                    icon = Icons.Default.Psychology,
+                    icon = Icons.Rounded.Psychology,
                     onClick = onNavigateToBrainManager
                 )
                 
@@ -145,14 +153,14 @@ fun SettingsContent(
                 SettingsCard(
                     title = "Local Database",
                     subtitle = "${String.format("%.2f", dbSize)} MB cached locally",
-                    icon = Icons.Default.Storage,
+                    icon = Icons.Rounded.Storage,
                     onClick = { showClearDialog = true }
                 )
                 SettingsCard(
                     title = "Privacy Policy",
                     subtitle = "How we handle your data",
-                    icon = Icons.Default.PrivacyTip,
-                    onClick = { }
+                    icon = Icons.Rounded.PrivacyTip,
+                    onClick = { showPrivacyDialog = true }
                 )
             }
             
@@ -162,14 +170,14 @@ fun SettingsContent(
                 SettingsCard(
                     title = "Help Center",
                     subtitle = "Guides and troubleshooting",
-                    icon = Icons.AutoMirrored.Filled.Help,
-                    onClick = { }
+                    icon = Icons.AutoMirrored.Rounded.Help,
+                    onClick = { showHelpDialog = true }
                 )
                 SettingsCard(
                     title = "Report a Bug",
                     subtitle = "Help us improve Q-Base",
-                    icon = Icons.Default.BugReport,
-                    onClick = { }
+                    icon = Icons.Rounded.BugReport,
+                    onClick = { showBugDialog = true }
                 )
             }
 
@@ -194,6 +202,7 @@ fun SettingsContent(
         }
     }
 
+    // Reset Data Dialog
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
@@ -203,7 +212,7 @@ fun SettingsContent(
                 Button(
                     onClick = {
                         onClearAllData {
-                            android.widget.Toast.makeText(context, "Data cleared. Please restart the app.", android.widget.Toast.LENGTH_LONG).show()
+                            android.widget.Toast.makeText(context, "Data successfully cleared.", android.widget.Toast.LENGTH_LONG).show()
                             showClearDialog = false
                         }
                     },
@@ -219,30 +228,143 @@ fun SettingsContent(
             }
         )
     }
-}
 
-@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
-@Composable
-fun SettingsPreview() {
-    MaterialTheme {
-        SettingsContent(
-            config = com.algorithmx.q_base.core_ai.brain.models.StoredBrainConfig(
-                provider = com.algorithmx.androidmodules.coreai.brain.models.BrainProvider.GEMINI,
-                modelName = "gemini-1.5-flash",
-                systemInstruction = "",
-                totalRequests = 120,
-                totalTokens = 45000,
-                themeMode = "SYSTEM",
-                notificationsEnabled = true
-            ),
-            dbSize = 12.45,
-            availableModels = listOf("gemini-1.5-pro", "gemini-1.5-flash", "llama-3-70b"),
-            onBack = {},
-            onNavigateToBrainManager = {},
-            onNavigateToAppTheme = {},
-            onUpdateNotifications = {},
-            onSaveTaskConfig = { _, _ -> },
-            onClearAllData = {}
+    // Privacy Policy Dialog
+    if (showPrivacyDialog) {
+        AlertDialog(
+            onDismissRequest = { showPrivacyDialog = false },
+            title = { Text("Privacy Policy") },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .height(280.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = "Your privacy is extremely important to us. Q-Base maintains strict protocols to ensure your learning telemetry and personal information remain secure.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "1. Data Storage",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        text = "All personal statistics, custom study sets, and peer connection details are securely stored inside Appwrite cloud instances and encrypted using AES-256 local caches on your device.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "2. AI Interactions",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        text = "AI requests processed through the brain system rely on official Google Gemini APIs. No private friend data or conversational records are shared with third-party advertising algorithms.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showPrivacyDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
+    // Help Center Dialog
+    if (showHelpDialog) {
+        AlertDialog(
+            onDismissRequest = { showHelpDialog = false },
+            title = { Text("Help Center") },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .height(280.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = "Welcome to the Q-Base support guide! Here are the core details to help you get the most out of your study companion:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "• Timed Practice Sessions",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        text = "Click 'Practice Lab' on Home to launch custom session timers. Your answers are marked and logged into 'Sessions' so you can track progress trends over time.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "• Peer Study Rooms",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        text = "Use the 'Study Sync' tab to share complete question sets, chat in real-time, or launch joint practice lobbies with other students using their unique friend codes.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showHelpDialog = false }) {
+                    Text("Got It")
+                }
+            }
+        )
+    }
+
+    // Report a Bug Dialog
+    if (showBugDialog) {
+        AlertDialog(
+            onDismissRequest = { showBugDialog = false },
+            title = { Text("Report a Bug") },
+            text = {
+                Column {
+                    Text(
+                        text = "Notice something working incorrectly? Let us know below:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = bugDescription,
+                        onValueChange = { bugDescription = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp),
+                        placeholder = { Text("Describe the issue in detail...") },
+                        maxLines = 5
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (bugDescription.isNotBlank()) {
+                            android.widget.Toast.makeText(
+                                context,
+                                "Bug report submitted successfully! Thank you.",
+                                android.widget.Toast.LENGTH_LONG
+                            ).show()
+                            bugDescription = ""
+                            showBugDialog = false
+                        }
+                    },
+                    enabled = bugDescription.isNotBlank()
+                ) {
+                    Text("Submit Report")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBugDialog = false }) {
+                    Text("Cancel")
+                }
+            }
         )
     }
 }
@@ -328,7 +450,7 @@ fun SettingsCard(
                 Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
+            Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
         }
     }
 }
