@@ -564,6 +564,7 @@ class ChatViewModel @Inject constructor(
                 val key = remainder.substringBefore("|UPDATED_AT|")
                 val isAdminOnly = remainder.contains("|ADMIN_ONLY|true")
                 val groupId = remainder.substringAfter("|GROUP_ID|", "").substringBefore("|")
+                val collectionId = remainder.substringAfter("|COLLECTION_ID|", "").substringBefore("|")
                 
                 _actionFeedback.emit("Downloading and importing collection...")
                 
@@ -576,20 +577,22 @@ class ChatViewModel @Inject constructor(
                 if (result.isSuccess) {
                     _actionFeedback.emit("Collection imported successfully to your library!")
                     
-                    // Cleanup: Delete the temporary file from Appwrite
-                    try {
-                        val fileId = url.substringAfter("/files/").substringBefore("/download")
-                        if (fileId.isNotEmpty() && fileId != url) {
-                            syncRepository.deleteQuestionBankZip(fileId)
-                            Log.d("ChatViewModel", "Deleted temporary file $fileId from Appwrite")
+                    if (collectionId.isNotEmpty()) {
+                        try {
+                            syncRepository.acknowledgeCollectionDownload(collectionId)
+                            Log.d("ChatViewModel", "Acknowledged collection download for $collectionId")
+                        } catch (ae: Exception) {
+                            Log.e("ChatViewModel", "Failed to acknowledge download receipt", ae)
                         }
-                    } catch (cleanupEx: Exception) {
-                        Log.e("ChatViewModel", "Failed to cleanup shared file", cleanupEx)
                     }
                 } else {
                     val error = result.exceptionOrNull()?.message ?: "Unknown error"
                     Log.e("ChatViewModel", "Import failed: $error")
-                    _actionFeedback.emit("Import failed: $error")
+                    if (error.contains("404") || error.contains("not found") || error.contains("NotFound")) {
+                        _actionFeedback.emit("Collection ZIP has been garbage-collected (zero-retention policy). Please request an admin or owner to Re-upload/Resend this collection.")
+                    } else {
+                        _actionFeedback.emit("Import failed: $error")
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Import exception", e)
@@ -646,6 +649,42 @@ class ChatViewModel @Inject constructor(
                 _actionFeedback.emit("Sharing failed: ${e.message}")
             } finally {
                 _isSharing.value = false
+            }
+        }
+    }
+
+    fun resendCollection(collectionId: String) {
+        val chatId = _currentChatId.value ?: return
+        viewModelScope.launch {
+            try {
+                _actionFeedback.emit("Re-packaging and re-uploading collection...")
+                val collection = collectionDao.getStudyCollectionByIdOnce(collectionId)
+                    ?: throw Exception("Collection not found in local library")
+                
+                val zipFile = mockExporter.exportCollection(collectionId)
+                    ?: throw Exception("Failed to export collection")
+                
+                val (downloadUrl, symmetricKey) = syncRepository.uploadQuestionBankZip(zipFile)
+                val updatedAt = collection.updatedAt
+                
+                val metadata = hashMapOf(
+                    "collectionId" to collectionId,
+                    "name" to collection.name,
+                    "description" to (collection.description ?: ""),
+                    "downloadUrl" to downloadUrl,
+                    "symmetricKey" to symmetricKey,
+                    "updatedAt" to updatedAt,
+                    "sharedBy" to (currentUserId ?: ""),
+                    "timestamp" to System.currentTimeMillis(),
+                    "isAdminOnly" to collection.isAdminOnly
+                )
+                syncRepository.shareCollectionToGroup(chatId, metadata)
+                mockExporter.cleanup(zipFile)
+                _actionFeedback.emit("Collection resent and re-uploaded successfully!")
+                sendMessage(chatId, "re-uploaded and updated collection in group library: ${collection.name}", type = "DB_CHANGE")
+            } catch (e: Exception) {
+                Log.e("ChatViewModel", "Resend failed", e)
+                _actionFeedback.emit("Resend failed: ${e.message}")
             }
         }
     }

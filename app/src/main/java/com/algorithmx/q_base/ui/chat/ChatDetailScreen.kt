@@ -359,6 +359,7 @@ fun ChatDetailScreen(
                     sessions = sharedSessions,
                     onImport = { payload -> viewModel.importSharedCollection(payload) },
                     onJoinSession = { sessionId -> viewModel.joinSession(sessionId, onJoinSession) },
+                    onResend = { collectionId -> viewModel.resendCollection(collectionId) },
                     localCollections = localCollections,
                     isAdmin = isAdmin,
                     accessRequests = accessRequests,

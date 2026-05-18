@@ -41,6 +41,9 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import com.algorithmx.q_base.data.collections.CollectionVersionLedgerDao
+import com.algorithmx.q_base.data.collections.CollectionVersionLedgerEntity
+
 @Singleton
 class SyncRepository @Inject constructor(
     private val appwriteClient: Client,
@@ -56,7 +59,8 @@ class SyncRepository @Inject constructor(
     private val sessionDao: SessionDao,
     private val problemReportDao: ProblemReportDao,
     private val collectionDao: CollectionDao,
-    private val questionDao: QuestionDao
+    private val questionDao: QuestionDao,
+    private val collectionVersionLedgerDao: CollectionVersionLedgerDao
 ) {
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val bucketId = BuildConfig.APPWRITE_BUCKET_ID
@@ -634,6 +638,10 @@ class SyncRepository @Inject constructor(
                                         )
                                     }
                                 } catch (e: Exception) {}
+                            }
+
+                            if (type == "COLLECTION_MICRO_UPDATE" && decryptionStatus == "SUCCESS") {
+                                applyCollectionMicroUpdate(payload)
                             }
                         }
                     }
@@ -1279,6 +1287,7 @@ class SyncRepository @Inject constructor(
                 "wrappedKeys" to wrappedKeysJsonStr,
                 "sharedBy" to (collectionMetadata["sharedBy"] as String),
                 "adminIds" to participants,
+                "pendingDownloads" to participants.filter { it != currentUserId },
                 "isAdminOnly" to (collectionMetadata["isAdminOnly"] as? Boolean ?: false),
                 "updatedAt" to (collectionMetadata["updatedAt"] as Long) / 1000
             )
@@ -1391,6 +1400,163 @@ class SyncRepository @Inject constructor(
             matchResult?.groupValues?.get(1)
         } catch (e: Exception) {
             null
+        }
+    }
+
+    suspend fun acknowledgeCollectionDownload(collectionId: String) {
+        withContext(Dispatchers.IO) {
+            try {
+                val doc = databases.getDocument("qbase_db", "shared_collections", collectionId)
+                val url = doc.data["downloadUrl"] as? String ?: ""
+                val pendingDownloadsList = (doc.data["pendingDownloads"] as? List<*>)?.mapNotNull { it?.toString() }?.toMutableList() ?: mutableListOf()
+                
+                if (currentUserId != null && pendingDownloadsList.contains(currentUserId)) {
+                    pendingDownloadsList.remove(currentUserId)
+                    
+                    databases.updateDocument(
+                        databaseId = "qbase_db",
+                        collectionId = "shared_collections",
+                        documentId = collectionId,
+                        data = mapOf(
+                            "pendingDownloads" to pendingDownloadsList
+                        )
+                    )
+                    
+                    if (pendingDownloadsList.isEmpty() && url.isNotBlank()) {
+                        val fileId = extractFileIdFromUrl(url)
+                        if (fileId != null) {
+                            try {
+                                deleteQuestionBankZip(fileId)
+                                Log.d("SyncRepository", "Zero-retention triggered: deleted ZIP file $fileId from Appwrite Storage")
+                            } catch (de: Exception) {
+                                Log.e("SyncRepository", "Failed to delete storage ZIP file", de)
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("SyncRepository", "Failed to acknowledge collection download", e)
+            }
+        }
+    }
+
+    suspend fun applyCollectionMicroUpdate(payload: String) {
+        withContext(Dispatchers.IO) {
+            try {
+                val json = JSONObject(payload)
+                val collectionId = json.getString("collectionId")
+                val revisionId = json.getInt("revisionId")
+                val diff = json.getJSONObject("diff")
+                
+                val ledger = collectionVersionLedgerDao.getLedgerForCollection(collectionId)
+                val localRevision = ledger?.currentRevisionId ?: 0
+                
+                if (revisionId <= localRevision) {
+                    Log.d("SyncRepository", "Micro-update redundant: received $revisionId, local is $localRevision. Skipping.")
+                    return@withContext
+                }
+                
+                if (revisionId > localRevision + 1) {
+                    Log.w("SyncRepository", "Sequence gap detected in collection micro-update: received $revisionId, expected ${localRevision + 1}. Buffering.")
+                    return@withContext
+                }
+                
+                val action = diff.optString("action", "UPSERT_QUESTION")
+                if (action == "UPSERT_QUESTION") {
+                    val questionObj = diff.getJSONObject("question")
+                    val qId = questionObj.getString("questionId")
+                    val stem = questionObj.getString("stem")
+                    
+                    val question = Question(
+                        questionId = qId,
+                        collection = null,
+                        category = "General",
+                        tags = "Group Synchronized",
+                        questionType = "SBA",
+                        stem = stem,
+                        isPinned = false
+                    )
+                    questionDao.insertQuestion(question)
+                    questionDao.deleteOptionsForQuestion(qId)
+                    
+                    val optionsArr = questionObj.getJSONArray("options")
+                    val options = mutableListOf<QuestionOption>()
+                    for (i in 0 until optionsArr.length()) {
+                        val optObj = optionsArr.getJSONObject(i)
+                        options.add(
+                            QuestionOption(
+                                questionId = qId,
+                                optionLetter = optObj.getString("optionLetter"),
+                                optionText = optObj.getString("optionText"),
+                                optionExplanation = null
+                            )
+                        )
+                    }
+                    questionDao.insertOptions(options)
+                    
+                    if (questionObj.has("answer")) {
+                        val ansObj = questionObj.getJSONObject("answer")
+                        val answer = Answer(
+                            questionId = qId,
+                            correctAnswerString = ansObj.getString("correctAnswerString"),
+                            generalExplanation = ansObj.optString("generalExplanation", ""),
+                            references = ansObj.optString("references", "")
+                        )
+                        questionDao.insertAnswer(answer)
+                    }
+                }
+                
+                collectionVersionLedgerDao.insertLedger(
+                    CollectionVersionLedgerEntity(
+                        collectionId = collectionId,
+                        currentRevisionId = revisionId,
+                        lastAppliedTimestamp = System.currentTimeMillis()
+                    )
+                )
+                Log.d("SyncRepository", "Successfully applied collection micro-update revision $revisionId for collection $collectionId")
+            } catch (e: Exception) {
+                Log.e("SyncRepository", "Failed to apply collection micro-update", e)
+            }
+        }
+    }
+
+    suspend fun broadcastCollectionMicroUpdate(chatId: String, collectionId: String, diff: JSONObject) {
+        withContext(Dispatchers.IO) {
+            try {
+                val ledger = collectionVersionLedgerDao.getLedgerForCollection(collectionId)
+                val newRevision = (ledger?.currentRevisionId ?: 0) + 1
+                
+                val payloadObj = JSONObject()
+                payloadObj.put("collectionId", collectionId)
+                payloadObj.put("revisionId", newRevision)
+                payloadObj.put("diff", diff)
+                
+                val payloadStr = payloadObj.toString()
+                
+                val message = MessageEntity(
+                    messageId = UUID.randomUUID().toString(),
+                    chatId = chatId,
+                    senderId = currentUserId ?: "",
+                    payload = payloadStr,
+                    type = "COLLECTION_MICRO_UPDATE",
+                    timestamp = System.currentTimeMillis(),
+                    decryptionStatus = "SUCCESS",
+                    keyFingerprint = "",
+                    wrappedKey = ""
+                )
+                sendMessage(message)
+                
+                collectionVersionLedgerDao.insertLedger(
+                    CollectionVersionLedgerEntity(
+                        collectionId = collectionId,
+                        currentRevisionId = newRevision,
+                        lastAppliedTimestamp = System.currentTimeMillis()
+                    )
+                )
+                Log.d("SyncRepository", "Broadcasted collection micro-update revision $newRevision for collection $collectionId")
+            } catch (e: Exception) {
+                Log.e("SyncRepository", "Failed to broadcast collection micro-update", e)
+            }
         }
     }
 

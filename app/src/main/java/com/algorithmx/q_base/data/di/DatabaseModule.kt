@@ -19,6 +19,7 @@ import com.algorithmx.q_base.data.auth.ProfileCache
 import com.algorithmx.q_base.data.core.HomeRepository
 import com.algorithmx.q_base.data.collections.ImportRepository
 import com.algorithmx.q_base.data.core.DataClearingRepository
+import com.algorithmx.q_base.data.collections.CollectionVersionLedgerDao
 import com.algorithmx.q_base.core_crypto.CryptoManager
 import dagger.Module
 import dagger.Provides
@@ -69,6 +70,9 @@ object DatabaseModule {
 
     @Provides
     fun provideBrainUsageDao(database: AppDatabase): BrainUsageDao = database.brainUsageDao()
+
+    @Provides
+    fun provideCollectionVersionLedgerDao(database: AppDatabase): CollectionVersionLedgerDao = database.collectionVersionLedgerDao()
 
     @Provides
     @Singleton

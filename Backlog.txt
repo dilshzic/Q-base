@@ -1,3 +1,7 @@
-# delete chats messages from appwrite db upon receiving
-
-# For chats deleting should be propergated
+The extraction pipiline
+    - NAvigated from common wizard ui 
+    - 1st - buttons for import pdf ocr clip board
+    - imports listed in a lazy column same as common wizard first screen
+    - next step button. Navigates to "AI extracting questions" screen.
+    -after completing overview number of questions extracted MTF,SBA.... count. Eror messages . List Skippped text. Collection title suggested by AI Editable text for user
+    - provide manual edit button to same as common wizard to manullay edit or review questions and answers.

@@ -30,6 +30,7 @@ fun SharedLibraryView(
     sessions: List<Map<String, Any>>,
     onImport: (String) -> Unit,
     onJoinSession: (String) -> Unit,
+    onResend: (String) -> Unit,
     localCollections: List<StudyCollection>,
     isAdmin: Boolean,
     accessRequests: List<Map<String, Any>>,
@@ -73,6 +74,7 @@ fun SharedLibraryView(
                     chatId = chatId,
                     collections = collections,
                     onImport = onImport,
+                    onResend = onResend,
                     localCollections = localCollections,
                     isAdmin = isAdmin,
                     accessRequests = accessRequests,
@@ -93,6 +95,7 @@ fun CollectionsTabContent(
     chatId: String,
     collections: List<Map<String, Any>>,
     onImport: (String) -> Unit,
+    onResend: (String) -> Unit,
     localCollections: List<StudyCollection>,
     isAdmin: Boolean,
     accessRequests: List<Map<String, Any>>,
@@ -125,7 +128,7 @@ fun CollectionsTabContent(
                 val isExpired = data["isExpired"] as? Boolean ?: false
                 val isRestricted = data["isRestricted"] as? Boolean ?: false
                 val isAdminOnly = data["isAdminOnly"] as? Boolean ?: false
-
+ 
                 val payload = "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId|ADMIN_ONLY|$isAdminOnly|GROUP_ID|$chatId"
                 
                 SharedCollectionCard(
@@ -136,6 +139,7 @@ fun CollectionsTabContent(
                     isRestricted = isRestricted || symmetricKey.isBlank(),
                     onImport = { onImport(payload) },
                     onRequestAccess = { onRequestAccess(collectionId) },
+                    onResend = { onResend(collectionId) },
                     localCollections = localCollections
                 )
             }
@@ -246,6 +250,7 @@ fun SharedCollectionCard(
     isRestricted: Boolean,
     onImport: () -> Unit,
     onRequestAccess: () -> Unit,
+    onResend: (() -> Unit)? = null,
     localCollections: List<StudyCollection>
 ) {
     val localCopy = localCollections.find { it.collectionId == collectionId }
@@ -342,6 +347,26 @@ fun SharedCollectionCard(
                     }
                 )
             }
+            
+            if (isImported && onResend != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = onResend,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(
+                        Icons.Rounded.CloudUpload, 
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Re-upload / Resend ZIP")
+                }
+            }
         }
     }
 }
@@ -421,6 +446,7 @@ fun SharedLibraryViewPreview() {
             sessions = mockSessions,
             onImport = {},
             onJoinSession = {},
+            onResend = {},
             localCollections = emptyList(),
             isAdmin = true,
             accessRequests = mockRequests,

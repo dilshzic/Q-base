@@ -164,6 +164,7 @@ collections = {
             {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "wrappedKeys", 16384, False]},
             {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "sharedBy", 36, True]},
             {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "adminIds", 36, True, None, True]},
+            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "pendingDownloads", 36, False, None, True]},
             {"method": db.create_boolean_column, "args": [DATABASE_ID, "shared_collections", "isAdminOnly", False, False]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "shared_collections", "updatedAt", True]}
         ],

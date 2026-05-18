@@ -29,5 +29,8 @@ data class AiAnswer(
 data class AiCollectionResponse(
     val collectionTitle: String,
     val collectionDescription: String,
-    val questions: List<AiQuestion>
+    val questions: List<AiQuestion>,
+    val parsingWarnings: List<String> = emptyList(),
+    val skippedSegments: List<String> = emptyList()
 )
+
