@@ -157,8 +157,14 @@ collections = {
         "attributes": [
             {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "collectionId", 36, True]},
             {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "chatId", 36, True]},
+            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "name", 128, True]},
+            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "description", 512, False]},
+            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "downloadUrl", 512, True]},
+            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "symmetricKey", 2048, False]},
+            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "wrappedKeys", 16384, False]},
             {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "sharedBy", 36, True]},
             {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "adminIds", 36, True, None, True]},
+            {"method": db.create_boolean_column, "args": [DATABASE_ID, "shared_collections", "isAdminOnly", False, False]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "shared_collections", "updatedAt", True]}
         ],
         "indexes": [

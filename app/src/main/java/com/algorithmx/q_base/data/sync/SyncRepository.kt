@@ -1196,6 +1196,7 @@ class SyncRepository @Inject constructor(
     suspend fun shareCollectionToGroup(chatId: String, collectionMetadata: Map<String, Any>) {
         try {
             val collectionId = collectionMetadata["collectionId"] as String
+            val symmetricKey = collectionMetadata["symmetricKey"] as? String ?: ""
             
             try {
                 val existingDoc = databases.getDocument("qbase_db", "shared_collections", collectionId)
@@ -1213,11 +1214,72 @@ class SyncRepository @Inject constructor(
             val chat = chatDao.getChatById(chatId)
             val participants = chat?.participantIds?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
 
+            // Asymmetric E2EE Key Wrapping for all current group participants
+            val wrappedKeysMap = mutableMapOf<String, String>()
+            if (symmetricKey.isNotBlank()) {
+                val deferredKeys = participants.map { targetId ->
+                    repositoryScope.async {
+                        val publicKeyBase64: String? = if (targetId == currentUserId) {
+                            cryptoManager.initializeAndGetPublicKey()
+                        } else {
+                            val local = userDao.getUserById(targetId)
+                            var candidateKey: String? = local?.publicKey
+                            try {
+                                val doc = databases.getDocument(
+                                    databaseId = "qbase_db",
+                                    collectionId = "users",
+                                    documentId = targetId
+                                )
+                                val remoteKey = doc.data["publicKey"] as? String
+                                if (!remoteKey.isNullOrBlank()) {
+                                    candidateKey = remoteKey
+                                    val cached = UserEntity(
+                                        userId = targetId,
+                                        displayName = (doc.data["displayName"] as? String) ?: (local?.displayName ?: "Unknown"),
+                                        email = local?.email,
+                                        intro = (doc.data["intro"] as? String) ?: local?.intro,
+                                        profilePictureUrl = (doc.data["profilePictureUrl"] as? String) ?: local?.profilePictureUrl,
+                                        friendCode = (doc.data["friendCode"] as? String) ?: (local?.friendCode ?: ""),
+                                        publicKey = remoteKey,
+                                        isBanned = (doc.data["isBanned"] as? Boolean) ?: (local?.isBanned ?: false),
+                                        isPhotoVisible = (doc.data["isPhotoVisible"] as? Boolean) ?: (local?.isPhotoVisible ?: true)
+                                    )
+                                    userDao.insertUser(cached)
+                                }
+                            } catch (e: Exception) {
+                                Log.w("SyncRepository", "Failed to refresh public key for $targetId during share", e)
+                            }
+                            candidateKey
+                        }
+                        targetId to publicKeyBase64
+                    }
+                }
+                
+                val resolvedKeys = deferredKeys.awaitAll()
+                resolvedKeys.forEach { (targetId, publicKeyBase64) ->
+                    if (!publicKeyBase64.isNullOrBlank()) {
+                        try {
+                            wrappedKeysMap[targetId] = cryptoManager.encryptMessage(symmetricKey, publicKeyBase64)
+                        } catch (e: Exception) {
+                            Log.e("SyncRepository", "Key wrap failed for $targetId in group sharing", e)
+                        }
+                    }
+                }
+            }
+
+            val wrappedKeysJsonStr = org.json.JSONObject(wrappedKeysMap as Map<*, *>).toString()
+
             val secureMetadata = mapOf(
                 "collectionId" to collectionId,
                 "chatId" to chatId,
+                "name" to (collectionMetadata["name"] as? String ?: "Group Collection"),
+                "description" to (collectionMetadata["description"] as? String ?: ""),
+                "downloadUrl" to (collectionMetadata["downloadUrl"] as? String ?: ""),
+                "symmetricKey" to "", // Leave public column blank for maximum E2EE security
+                "wrappedKeys" to wrappedKeysJsonStr,
                 "sharedBy" to (collectionMetadata["sharedBy"] as String),
                 "adminIds" to participants,
+                "isAdminOnly" to (collectionMetadata["isAdminOnly"] as? Boolean ?: false),
                 "updatedAt" to (collectionMetadata["updatedAt"] as Long) / 1000
             )
 
@@ -1369,10 +1431,32 @@ class SyncRepository @Inject constructor(
             val data = doc.toMutableMap()
             val collectionId = doc["collectionId"] as? String ?: ""
             val local = collectionDao.getStudyCollectionByIdOnce(collectionId)
-            data["name"] = local?.name ?: "Group Collection"
-            data["description"] = local?.description ?: "Shared by ${doc["sharedBy"]}"
+            
+            data["name"] = doc["name"] as? String ?: (local?.name ?: "Group Collection")
+            data["description"] = doc["description"] as? String ?: (local?.description ?: "Shared by ${doc["sharedBy"]}")
             data["isExpired"] = false
-            data["isRestricted"] = false
+            
+            // Resolve E2EE symmetric key locally
+            var decKey = ""
+            val wrappedKeysStr = doc["wrappedKeys"] as? String ?: ""
+            if (!wrappedKeysStr.isBlank()) {
+                try {
+                    val jsonObj = org.json.JSONObject(wrappedKeysStr)
+                    val encKey = jsonObj.optString(currentUserId ?: "")
+                    if (!encKey.isNullOrBlank()) {
+                        val decResult = cryptoManager.decryptMessage(encKey)
+                        if (decResult.isSuccess) {
+                            decKey = decResult.getOrNull() ?: ""
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("SyncRepository", "Failed to decrypt wrapped key in mapGroupLibrary", e)
+                }
+            }
+            
+            data["symmetricKey"] = decKey
+            data["isRestricted"] = decKey.isBlank()
+            
             val rawUpdatedAt = (doc["updatedAt"] as? Number)?.toLong() ?: 0L
             data["updatedAt"] = if (rawUpdatedAt < 1000000000000L) rawUpdatedAt * 1000 else rawUpdatedAt
             data
@@ -1589,6 +1673,39 @@ class SyncRepository @Inject constructor(
 
     suspend fun grantCollectionAccess(chatId: String, collectionId: String, requesterId: String) {
         try {
+            // 1. Fetch requester's public key from the remote profiles
+            val reqUserDoc = databases.getDocument("qbase_db", "users", requesterId)
+            val requesterPublicKey = reqUserDoc.data["publicKey"] as? String
+                ?: throw IllegalStateException("Requester's E2EE public key not found")
+
+            // 2. Fetch the existing shared collection record to update its wrappedKeys map
+            val sharedCollDoc = databases.getDocument("qbase_db", "shared_collections", collectionId)
+            val existingWrappedKeysStr = sharedCollDoc.data["wrappedKeys"] as? String ?: "{}"
+            
+            // 3. Find the plain symmetricKey from the admin's local collections database
+            val existingWrappedKeysObj = org.json.JSONObject(existingWrappedKeysStr)
+            val adminWrappedKey = existingWrappedKeysObj.optString(currentUserId ?: "")
+            if (adminWrappedKey.isNullOrBlank()) {
+                throw IllegalStateException("Owner's own wrapped key is missing; cannot wrap for requester")
+            }
+            
+            val decResult = cryptoManager.decryptMessage(adminWrappedKey)
+            val symmetricKey = decResult.getOrNull()
+                ?: throw IllegalStateException("Failed to decrypt collection key using owner keyset")
+
+            // 4. Wrap the symmetric key using the requester's public key
+            val newWrappedKeyForRequester = cryptoManager.encryptMessage(symmetricKey, requesterPublicKey)
+            
+            // 5. Append the new wrapped key to the wrappedKeys map and update Appwrite
+            existingWrappedKeysObj.put(requesterId, newWrappedKeyForRequester)
+            databases.updateDocument(
+                databaseId = "qbase_db",
+                collectionId = "shared_collections",
+                documentId = collectionId,
+                data = mapOf("wrappedKeys" to existingWrappedKeysObj.toString())
+            )
+
+            // 6. Finally, approve the access request document
             val requestId = "${requesterId}_$collectionId"
             databases.updateDocument(
                 databaseId = "qbase_db",
@@ -1596,6 +1713,7 @@ class SyncRepository @Inject constructor(
                 documentId = requestId,
                 data = mapOf("status" to "APPROVED")
             )
+            
             Log.d("SyncRepository", "Access granted to $requesterId for $collectionId")
         } catch (e: Exception) {
             Log.e("SyncRepository", "Failed to grant access", e)
