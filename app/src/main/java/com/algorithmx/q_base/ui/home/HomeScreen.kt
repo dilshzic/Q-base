@@ -41,11 +41,13 @@ fun HomeScreen(
     onNavigateToCollections: () -> Unit,
     onNavigateToSessions: () -> Unit,
     onNavigateToSession: (String) -> Unit,
+    onNavigateToSessionResults: (String) -> Unit,
     onNewSessionWizard: () -> Unit,
     onNavigateToCreateNewCollection: () -> Unit,
     onCollectionClick: (String) -> Unit,
     onProfileClick: () -> Unit,
     onNavigateToNotifications: () -> Unit,
+    onNavigateToPinnedQuestions: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
     sessionsViewModel: SessionsViewModel = hiltViewModel()
 ) {
@@ -151,12 +153,16 @@ fun HomeScreen(
             // Section: Pinned Questions
             if (pinnedQuestions.isNotEmpty()) {
                 item {
-                    SectionHeader("Pinned Questions", icon = Icons.Rounded.PushPin)
+                    SectionHeader(
+                        title = "Pinned Questions",
+                        icon = Icons.Rounded.PushPin,
+                        onActionClick = onNavigateToPinnedQuestions
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         pinnedQuestions.take(3).forEachIndexed { index, question ->
                             AnimatedHomeItem(index + 10) {
-                                PinnedQuestionItem(question)
+                                PinnedQuestionItem(question, onClick = onNavigateToPinnedQuestions)
                             }
                         }
                     }
@@ -171,7 +177,7 @@ fun HomeScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         recentSessions.take(3).forEachIndexed { index, session ->
                             AnimatedHomeItem(index + 20) {
-                                SessionListItem(session, onClick = { onNavigateToSession(session.sessionId) })
+                                SessionListItem(session, onClick = { onNavigateToSessionResults(session.sessionId) })
                             }
                         }
                     }
@@ -313,9 +319,14 @@ fun AnimatedHomeItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PinnedQuestionItem(question: com.algorithmx.q_base.data.collections.Question) {
+fun PinnedQuestionItem(
+    question: com.algorithmx.q_base.data.collections.Question,
+    onClick: () -> Unit
+) {
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(

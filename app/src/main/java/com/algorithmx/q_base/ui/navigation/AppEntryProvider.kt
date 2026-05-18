@@ -47,6 +47,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onNavigateToCollections = { navigator.navigate(Screen.Collections) },
                 onNavigateToSessions = { navigator.navigate(Screen.Sessions()) },
                 onNavigateToSession = { sessionId -> navigator.navigate(Screen.ActiveSession(sessionId)) },
+                onNavigateToSessionResults = { sessionId -> navigator.navigate(Screen.SessionResults(sessionId)) },
                 onNewSessionWizard = { navigator.navigate(Screen.NewSessionWizard) },
                 onNavigateToCreateNewCollection = { navigator.navigate(Screen.CreateNewCollection) },
                 onCollectionClick = { collectionId ->
@@ -54,9 +55,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 },
                 onProfileClick = { navigator.navigate(Screen.Profile) },
                 onNavigateToNotifications = { navigator.navigate(Screen.Notifications) },
-                onNavigateToPinnedQuestions = { navigator.navigate(Screen.PinnedQuestions) },
-                onNavigateToConnect = { navigator.navigate(Screen.Connect) },
-                onNavigateToImport = { navigator.navigate(Screen.ImportWizard()) }
+                onNavigateToPinnedQuestions = { navigator.navigate(Screen.PinnedQuestions) }
             )
         }
 
@@ -240,6 +239,12 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onSaveAiAsOfficial = { index -> viewModel.saveAiResponseToQuestion(index) },
                 onClearAiResponse = { index -> viewModel.clearAiResponse(index) },
                 onDeleteQuestion = { index -> viewModel.deleteQuestion(index) },
+                onEditQuestion = { index ->
+                    val questionId = questionStates.getOrNull(index)?.question?.questionId
+                    if (questionId != null) {
+                        navigator.navigate(Screen.QuestionEditor(questionId = questionId, setId = key.setId))
+                    }
+                },
                 onProfileClick = { navigator.navigate(Screen.Profile) },
                 onBack = { navigator.goBack() },
                 currentUser = currentUser,
@@ -409,6 +414,9 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 },
                 onJoinSession = { sessionId ->
                     navigator.navigate(Screen.ActiveSession(sessionId = sessionId, chatId = key.chatId))
+                },
+                onDeleteAndRestart = {
+                    navigator.navigate(Screen.NewChat)
                 }
             )
         }

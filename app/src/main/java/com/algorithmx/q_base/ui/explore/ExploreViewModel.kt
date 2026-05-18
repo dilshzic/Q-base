@@ -10,6 +10,7 @@ import com.algorithmx.q_base.data.sessions.StudySession
 import com.algorithmx.q_base.data.sessions.SessionAttempt
 import com.algorithmx.q_base.data.ai.AiRepository
 import com.algorithmx.q_base.data.auth.AuthRepository
+import com.algorithmx.q_base.data.chat.isAdmin
 import com.algorithmx.q_base.data.sync.SyncRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -156,7 +157,7 @@ class ExploreViewModel @Inject constructor(
         val groupId = collection.sharedWithGroupId ?: return true
         val chat = syncRepository.getChatById(groupId)
         val currentUid = authRepository.currentUser.first()?.uid
-        return chat?.adminId == currentUid
+        return chat?.isAdmin(currentUid ?: "") == true
     }
 
     fun loadPinnedQuestions() {
@@ -197,7 +198,7 @@ class ExploreViewModel @Inject constructor(
                     _sourceGroupName.value = chat?.chatName
                     
                     val currentUid = authRepository.currentUser.firstOrNull()?.uid
-                    _isUserGroupAdmin.value = chat == null || chat.adminId == currentUid
+                    _isUserGroupAdmin.value = chat == null || chat.isAdmin(currentUid ?: "")
                 } ?: run {
                     _sourceGroupName.value = null
                     _isUserGroupAdmin.value = true // Owners have full control over personal sets

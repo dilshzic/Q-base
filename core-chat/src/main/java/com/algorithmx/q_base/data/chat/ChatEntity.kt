@@ -9,10 +9,15 @@ data class ChatEntity(
     val chatName: String?,
     val isGroup: Boolean,
     val participantIds: String,
-    val adminId: String? = null,
+    val adminIds: String = "",
     val isBlocked: Boolean = false,
     val isReported: Boolean = false,
     val isMuted: Boolean = false,
     val unreadCount: Int = 0,
     val lastUsedKeyFingerprint: String? = null
 )
+
+fun ChatEntity.isAdmin(userId: String): Boolean {
+    return if (!isGroup) false
+    else adminIds.split(",").map { it.trim() }.contains(userId)
+}

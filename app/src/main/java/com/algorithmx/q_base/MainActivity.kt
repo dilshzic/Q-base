@@ -99,10 +99,19 @@ class MainActivity : ComponentActivity() {
         }
 
         // Start global sync for notifications reactively
+        var syncJob: kotlinx.coroutines.Job? = null
         lifecycleScope.launch {
             authRepository.currentUser.collect { user ->
+                syncJob?.cancel()
                 if (user != null) {
-                    syncRepository.observeAllIncomingEvents(notificationHelper).collect {}
+                    syncJob = launch {
+                        try {
+                            syncRepository.syncUserChatsFromRemote()
+                        } catch (e: Exception) {
+                            android.util.Log.e("MainActivity", "Failed to sync remote user chats", e)
+                        }
+                        syncRepository.observeAllIncomingMessages(notificationHelper).collect {}
+                    }
                 }
             }
         }

@@ -72,6 +72,7 @@ class AuthRepository @Inject constructor(
      * Returns null if the session is not a Google OAuth session or if the fetch fails.
      */
     private suspend fun fetchGooglePhotoUrl(): String? {
+        var connection: HttpURLConnection? = null
         return try {
             val session = appwriteAccount.getSession("current")
             val accessToken = session.providerAccessToken
@@ -82,7 +83,7 @@ class AuthRepository @Inject constructor(
 
             // Call Google's userinfo endpoint on IO dispatcher
             val url = URL("https://www.googleapis.com/oauth2/v3/userinfo")
-            val connection = url.openConnection() as HttpURLConnection
+            connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.setRequestProperty("Authorization", "Bearer $accessToken")
             connection.connectTimeout = 5000
@@ -91,16 +92,19 @@ class AuthRepository @Inject constructor(
             if (connection.responseCode == 200) {
                 val response = connection.inputStream.bufferedReader().use { it.readText() }
                 val json = JSONObject(response)
-                val picture = json.optString("picture", null)
+                val picture = if (json.has("picture")) json.getString("picture") else null
                 Log.d("AuthRepository", "Fetched Google photo URL: $picture")
                 picture
             } else {
                 Log.w("AuthRepository", "Google userinfo returned ${connection.responseCode}")
+                connection.errorStream?.use { it.readBytes() }
                 null
             }
         } catch (e: Exception) {
             Log.d("AuthRepository", "Could not fetch Google photo (non-OAuth session or expired): ${e.message}")
             null
+        } finally {
+            connection?.disconnect()
         }
     }
 

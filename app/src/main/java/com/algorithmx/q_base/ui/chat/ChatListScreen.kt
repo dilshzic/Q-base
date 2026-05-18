@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,10 +48,25 @@ fun ChatListScreen(
     val isSelectionMode by viewModel.isSelectionMode.collectAsState()
     val selectedChatIds by viewModel.selectedChatIds.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     androidx.activity.compose.BackHandler(enabled = isSelectionMode) {
         viewModel.clearSelection()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvents.collect { event ->
+            when (event) {
+                is ChatNavEvent.NavigateToChatDetail -> onChatClick(event.chatId)
+            }
+        }
+    }
+
+    LaunchedEffect(currentUser) {
+        if (currentUser != null) {
+            viewModel.syncChatsFromRemote()
+        }
     }
 
     Scaffold(
@@ -118,32 +134,40 @@ fun ChatListScreen(
                 onLoginClick = onNavigateToLogin,
                 modifier = Modifier.padding(padding)
             )
-        } else if (state.chats.isEmpty() && !state.isLoading) {
-            EmptyConnectView(modifier = Modifier.padding(padding))
         } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(bottom = 80.dp)
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { viewModel.syncChatsFromRemote() },
+                modifier = Modifier.padding(padding)
             ) {
-                item {
-                    AiChatQuickAction(onClick = { viewModel.startAiChat() })
-                }
-                
-                itemsIndexed(state.chats) { index, chatUi ->
-                    val isSelected = selectedChatIds.contains(chatUi.chat.chatId)
-                    AnimatedChatItem(
-                        chatUi = chatUi,
-                        index = index,
-                        isSelected = isSelected,
-                        selectionMode = isSelectionMode,
-                        onClick = { 
-                            if (isSelectionMode) viewModel.toggleChatSelection(chatUi.chat.chatId)
-                            else onChatClick(chatUi.chat.chatId) 
-                        },
-                        onLongClick = { viewModel.toggleChatSelection(chatUi.chat.chatId) }
-                    )
+                if (state.chats.isEmpty() && !state.isLoading) {
+                    EmptyConnectView(modifier = Modifier.fillMaxSize())
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 80.dp)
+                    ) {
+                        /*
+                        item {
+                            AiChatQuickAction(onClick = { viewModel.startAiChat() })
+                        }
+                        */
+                        
+                        itemsIndexed(state.chats) { index, chatUi ->
+                            val isSelected = selectedChatIds.contains(chatUi.chat.chatId)
+                            AnimatedChatItem(
+                                chatUi = chatUi,
+                                index = index,
+                                isSelected = isSelected,
+                                selectionMode = isSelectionMode,
+                                onClick = { 
+                                    if (isSelectionMode) viewModel.toggleChatSelection(chatUi.chat.chatId)
+                                    else onChatClick(chatUi.chat.chatId) 
+                                },
+                                onLongClick = { viewModel.toggleChatSelection(chatUi.chat.chatId) }
+                            )
+                        }
+                    }
                 }
             }
         }

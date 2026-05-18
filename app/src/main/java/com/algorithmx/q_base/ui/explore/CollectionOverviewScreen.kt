@@ -272,7 +272,7 @@ fun CollectionOverviewScreen(
                 }
 
                 val isUserGroupAdmin by viewModel?.isUserGroupAdmin?.collectAsState() ?: remember { mutableStateOf(false) }
-                if (isUserGroupAdmin) {
+                if (collection.isShared && isUserGroupAdmin) {
                     Spacer(modifier = Modifier.height(24.dp))
                     Card(
                         modifier = Modifier.fillMaxWidth(),

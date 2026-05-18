@@ -88,6 +88,7 @@ collections = {
             {"method": db.create_boolean_column, "args": [DATABASE_ID, "chats", "isGroup", False, False]},
             {"method": db.create_string_column, "args": [DATABASE_ID, "chats", "participantIds", 36, True, None, True]}, # array=True
             {"method": db.create_string_column, "args": [DATABASE_ID, "chats", "adminId", 36, True]},
+            {"method": db.create_string_column, "args": [DATABASE_ID, "chats", "adminIds", 36, False, None, True]}, # array=True
             {"method": db.create_integer_column, "args": [DATABASE_ID, "chats", "createdAt", True]}
         ],
         "indexes": [

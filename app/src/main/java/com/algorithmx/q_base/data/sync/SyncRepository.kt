@@ -5,7 +5,8 @@ import android.util.Log
 import com.algorithmx.q_base.BuildConfig
 import com.algorithmx.q_base.data.chat.ChatDao
 import com.algorithmx.q_base.data.chat.ChatEntity
-import com.algorithmx.q_base.data.chat.ChatFirestoreRepository
+import com.algorithmx.q_base.data.chat.isAdmin
+import com.algorithmx.q_base.data.chat.ChatRemoteRepository
 import com.algorithmx.q_base.data.chat.MessageDao
 import com.algorithmx.q_base.data.chat.MessageEntity
 import com.algorithmx.q_base.data.collections.*
@@ -45,7 +46,7 @@ class SyncRepository @Inject constructor(
     private val appwriteClient: Client,
     private val databases: Databases,
     private val authRepository: AuthRepository,
-    private val chatFirestoreRepository: ChatFirestoreRepository,
+    private val chatRemoteRepository: ChatRemoteRepository,
     private val chatDao: ChatDao,
     private val messageDao: MessageDao,
     private val userDao: UserDao,
@@ -86,7 +87,85 @@ class SyncRepository @Inject constructor(
         return map
     }
 
+    private suspend fun acknowledgeMessageDelivery(
+        messageId: String,
+        chatId: String,
+        senderId: String,
+        wrappedKeyStr: String
+    ) {
+        if (senderId == currentUserId) return // Senders never acknowledge their own sent messages
+
+        val chat = chatDao.getChatById(chatId) ?: return
+        if (!chat.isGroup) {
+            // For P2P: Delete immediately from Appwrite relay
+            try {
+                databases.deleteDocument("qbase_db", "messages", messageId)
+                Log.d("SyncRepository", "P2P Ephemeral: Cleared message $messageId")
+            } catch (e: Exception) {
+                Log.e("SyncRepository", "Failed to clear P2P ephemeral message", e)
+            }
+            return
+        }
+
+        // For Group Chats: Receipt-based self-healing cleanup
+        try {
+            val wrappedKeysMap = deserializeWrappedKeys(wrappedKeyStr).toMutableMap()
+            wrappedKeysMap.remove(currentUserId) // Remove self
+
+            // Filter out the sender to find pending receivers
+            val pendingReceivers = wrappedKeysMap.keys.filter { it != senderId }
+
+            if (pendingReceivers.isEmpty()) {
+                // We are the last recipient to fetch the message: delete completely
+                databases.deleteDocument("qbase_db", "messages", messageId)
+                Log.d("SyncRepository", "Group Ephemeral: All delivered! Deleted message $messageId")
+            } else {
+                // Other recipients are pending: Update document with our receipt checked off
+                val updatedWrappedKeyStr = serializeWrappedKeys(wrappedKeysMap)
+                databases.updateDocument(
+                    databaseId = "qbase_db",
+                    collectionId = "messages",
+                    documentId = messageId,
+                    data = mapOf("wrappedKey" to updatedWrappedKeyStr)
+                )
+                Log.d("SyncRepository", "Group Ephemeral: Acknowledged delivery for $messageId. Pending: $pendingReceivers")
+            }
+        } catch (e: Exception) {
+            Log.e("SyncRepository", "Error running group ephemeral acknowledgment for $messageId", e)
+        }
+    }
+
     fun observeAndSyncMessages(chatId: String): Flow<MessageEntity?> {
+        val uid = currentUserId
+        if (uid != null) {
+            repositoryScope.launch {
+                try {
+                    val localPk = cryptoManager.initializeAndGetPublicKey()
+                    val doc = databases.getDocument(
+                        databaseId = "qbase_db",
+                        collectionId = "users",
+                        documentId = uid
+                    )
+                    val remotePk = doc.data["publicKey"] as? String
+                    if (remotePk != localPk) {
+                        Log.d("SyncRepository", "Aligning E2EE public key on Appwrite for current user $uid. Remote: $remotePk, Local: $localPk")
+                        val updatedData = doc.data.toMutableMap()
+                        updatedData["publicKey"] = localPk
+                        val cleanData = updatedData.filterKeys { !it.startsWith("$") }
+                        databases.updateDocument(
+                            databaseId = "qbase_db",
+                            collectionId = "users",
+                            documentId = uid,
+                            data = cleanData
+                        )
+                        Log.d("SyncRepository", "E2EE public key alignment successful on Appwrite!")
+                    }
+                } catch (e: Exception) {
+                    Log.e("SyncRepository", "E2EE public key alignment failed", e)
+                }
+            }
+        }
+
         return callbackFlow {
             // Initial load of past messages from database
             repositoryScope.launch {
@@ -100,7 +179,8 @@ class SyncRepository @Inject constructor(
                         val payloadVal = doc.data["payload"] as? String ?: ""
                         val senderId = doc.data["senderId"] as? String ?: ""
                         val type = doc.data["type"] as? String ?: "TEXT"
-                        val timestamp = (doc.data["timestamp"] as? Number)?.toLong() ?: System.currentTimeMillis()
+                        val rawTimestamp = (doc.data["timestamp"] as? Number)?.toLong() ?: (System.currentTimeMillis() / 1000)
+                        val timestamp = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
                         val wrappedKeyStr = doc.data["wrappedKey"] as? String
                         val keyFingerprint = doc.data["keyFingerprint"] as? String
 
@@ -147,12 +227,15 @@ class SyncRepository @Inject constructor(
                             type = type,
                             timestamp = timestamp,
                             decryptionStatus = decryptionStatus,
-                            keyFingerprint = keyFingerprint,
-                            wrappedKey = wrappedKey
+                            keyFingerprint = keyFingerprint ?: "",
+                            wrappedKey = wrappedKey ?: ""
                         )
 
                         if (messageDao.getMessageById(doc.id) == null) {
                             messageDao.insertMessage(message)
+                            repositoryScope.launch {
+                                acknowledgeMessageDelivery(doc.id, chatId, senderId, wrappedKeyStr ?: "")
+                            }
                         }
                     }
                     trySend(null).isSuccess
@@ -171,12 +254,21 @@ class SyncRepository @Inject constructor(
                     }
                     val docChatId = payloadObj.optString("chatId")
                     if (docChatId == chatId) {
+                        val docId = payloadObj.optString("\$id").ifEmpty { payloadObj.optString("id") }
+                        if (event.events.any { it.contains(".delete") }) {
+                            // Cloud cleanup events are ignored to preserve permanent local Room DB storage
+                            return@subscribe
+                        }
+
                         repositoryScope.launch {
+                            val senderId = payloadObj.optString("senderId", "")
+                            ensureChatExistsLocally(chatId, senderId)
+
                             val docId = payloadObj.optString("\$id")
                             val type = payloadObj.optString("type", "TEXT")
                             val payloadVal = payloadObj.optString("payload", "")
-                            val senderId = payloadObj.optString("senderId", "")
-                            val timestamp = payloadObj.optLong("timestamp", System.currentTimeMillis())
+                            val rawTimestamp = payloadObj.optLong("timestamp", System.currentTimeMillis() / 1000)
+                            val timestamp = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
                             val wrappedKeyStr = payloadObj.optString("wrappedKey", "")
                             val keyFingerprint = payloadObj.optString("keyFingerprint", null)
 
@@ -223,8 +315,8 @@ class SyncRepository @Inject constructor(
                                 type = type,
                                 timestamp = timestamp,
                                 decryptionStatus = decryptionStatus,
-                                keyFingerprint = keyFingerprint,
-                                wrappedKey = wrappedKey
+                                keyFingerprint = keyFingerprint ?: "",
+                                wrappedKey = wrappedKey ?: ""
                             )
 
                             if (messageDao.getMessageById(docId) == null) {
@@ -246,17 +338,8 @@ class SyncRepository @Inject constructor(
                                     }
                                 }
 
-                                val chat = chatDao.getChatById(chatId)
-                                if (chat != null) {
-                                    if (!chat.isGroup) {
-                                        if (message.senderId != currentUserId) {
-                                            try {
-                                                databases.deleteDocument("qbase_db", "messages", docId)
-                                            } catch (e: Exception) {
-                                                Log.e("SyncRepository", "Failed to delete 1-1 ephemeral message", e)
-                                            }
-                                        }
-                                    }
+                                repositoryScope.launch {
+                                    acknowledgeMessageDelivery(docId, chatId, senderId, wrappedKeyStr)
                                 }
 
                                 if (message.senderId != currentUserId) {
@@ -375,15 +458,32 @@ class SyncRepository @Inject constructor(
             "payload" to ciphertextPayload,
             "wrappedKey" to serializeWrappedKeys(wrappedKeys),
             "keyFingerprint" to myFingerprint.orEmpty(),
-            "timestamp" to message.timestamp
+            "timestamp" to message.timestamp / 1000
         )
         
+        // Self-healing: Ensure chat document exists on remote Appwrite
+        repositoryScope.launch {
+            try {
+                chatDao.getChatById(message.chatId)?.let { chat ->
+                    createChatOnRemote(chat)
+                }
+            } catch (e: Exception) {
+                Log.w("SyncRepository", "Auto-ensure chat document exists failed", e)
+            }
+        }
+
         try {
             databases.createDocument(
                 databaseId = "qbase_db",
                 collectionId = "messages",
                 documentId = message.messageId,
-                data = messageMap
+                data = messageMap,
+                permissions = listOf(
+                    io.appwrite.Permission.read(io.appwrite.Role.users()),
+                    io.appwrite.Permission.write(io.appwrite.Role.users()),
+                    io.appwrite.Permission.update(io.appwrite.Role.users()),
+                    io.appwrite.Permission.delete(io.appwrite.Role.users())
+                )
             )
 
             repositoryScope.launch {
@@ -393,128 +493,328 @@ class SyncRepository @Inject constructor(
                     decryptionStatus = "SUCCESS"
                 ))
             }
-
-            repositoryScope.launch {
-                val chatMeta = chatDao.getChatById(message.chatId)
-                chatMeta?.let {
-                    val otherParticipants = it.participantIds.split(",").filter { id -> id != message.senderId && id.isNotEmpty() }
-                    otherParticipants.forEach { targetId ->
-                        sendNotification(
-                            targetUserId = targetId,
-                            title = "New Message",
-                            body = message.payload,
-                            data = mapOf(
-                                "chatId" to message.chatId,
-                                "type" to message.type,
-                                "senderId" to message.senderId
-                            )
-                        )
-                    }
-                }
-            }
+            // Chat message notifications are now handled by the receiver's
+            // observeAllIncomingMessages() — decrypted locally, never sent as plaintext
         } catch (e: Exception) {
             Log.e("SyncRepository", "Failed to send message to Appwrite", e)
             throw e
         }
     }
 
-    suspend fun addParticipantToFirestore(chatId: String, userId: String) {
-        chatFirestoreRepository.addParticipantToFirestore(chatId, userId)
+    suspend fun addParticipantToRemote(chatId: String, userId: String) {
+        chatRemoteRepository.addParticipantToRemote(chatId, userId)
     }
 
-    suspend fun removeParticipantFromFirestore(chatId: String, userId: String) {
-        chatFirestoreRepository.removeParticipantFromFirestore(chatId, userId)
+    suspend fun removeParticipantFromRemote(chatId: String, userId: String) {
+        chatRemoteRepository.removeParticipantFromRemote(chatId, userId)
     }
 
-    suspend fun sendNotification(targetUserId: String, title: String, body: String, data: Map<String, String> = emptyMap()) {
-        val notificationMap = mapOf(
-            "targetUserId" to targetUserId,
-            "senderId" to (currentUserId ?: ""),
-            "title" to title,
-            "body" to body,
-            "data" to JSONObject(data).toString(),
-            "timestamp" to System.currentTimeMillis()
-        )
-        
-        try {
-            databases.createDocument(
-                databaseId = "qbase_db",
-                collectionId = "notifications",
-                documentId = UUID.randomUUID().toString(),
-                data = notificationMap
-            )
-        } catch (e: Exception) {
-            Log.e("SyncRepository", "Failed to send notification in Appwrite", e)
-        }
+    suspend fun promoteParticipantToAdminOnRemote(chatId: String, userId: String) {
+        chatRemoteRepository.promoteParticipantToAdminOnRemote(chatId, userId)
     }
 
-    suspend fun createChatOnFirestore(chat: ChatEntity) {
-        chatFirestoreRepository.createChatOnFirestore(chat)
+    suspend fun demoteAdminOnRemote(chatId: String, userId: String) {
+        chatRemoteRepository.demoteAdminOnRemote(chatId, userId)
     }
 
-    fun observeAllIncomingEvents(notificationHelper: NotificationHelper): Flow<Unit> {
+    suspend fun createChatOnRemote(chat: ChatEntity) {
+        chatRemoteRepository.createChatOnRemote(chat)
+    }
+
+    fun observeAllIncomingMessages(notificationHelper: NotificationHelper): Flow<Unit> {
         val userId = currentUserId ?: return emptyFlow()
         return callbackFlow {
             val realtime = io.appwrite.services.Realtime(appwriteClient)
-            val subscription = realtime.subscribe("databases.qbase_db.collections.notifications.documents") { event ->
+            
+            val subscription = realtime.subscribe("databases.qbase_db.collections.messages.documents") { event ->
                 try {
                     val payloadObj = if (event.payload is Map<*, *>) {
                         org.json.JSONObject(event.payload as Map<*, *>)
                     } else {
                         org.json.JSONObject(event.payload.toString())
                     }
-                    val targetUserId = payloadObj.optString("targetUserId")
-                    if (targetUserId == userId) {
-                        val docId = payloadObj.optString("\$id")
-                        val title = payloadObj.optString("title", "New Notification")
-                        val body = payloadObj.optString("body", "")
-                        
-                        val dataStr = payloadObj.optString("data", "{}")
-                        val dataMap = mutableMapOf<String, String>()
-                        val dataJson = JSONObject(dataStr)
-                        val keys = dataJson.keys()
-                        while (keys.hasNext()) {
-                            val k = keys.next()
-                            dataMap[k] = dataJson.getString(k)
-                        }
-                        
-                        val chatId = dataMap["chatId"]
-                        val sessionId = dataMap["sessionId"]
+                    val docId = payloadObj.optString("\$id").ifEmpty { payloadObj.optString("id") }
+                    if (event.events.any { it.contains(".delete") }) {
+                        // Cloud cleanup events are ignored to preserve permanent local Room DB storage
+                        return@subscribe
+                    }
 
-                        if (chatId != null) {
+                    val docChatId = payloadObj.optString("chatId")
+                    val senderId = payloadObj.optString("senderId")
+                    if (senderId == userId) {
+                        return@subscribe
+                    }
+
+                    repositoryScope.launch {
+                        ensureChatExistsLocally(docChatId, senderId)
+
+                        val type = payloadObj.optString("type", "TEXT")
+                        val payloadVal = payloadObj.optString("payload", "")
+                        val rawTimestamp = payloadObj.optLong("timestamp", System.currentTimeMillis() / 1000)
+                        val timestamp = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
+                        val wrappedKeyStr = payloadObj.optString("wrappedKey", "")
+                        val keyFingerprint = payloadObj.optString("keyFingerprint", null)
+
+                        val wrappedKeyMap = deserializeWrappedKeys(wrappedKeyStr)
+                        val isEncrypted = wrappedKeyMap.isNotEmpty() && payloadVal.isNotEmpty()
+
+                        var wrappedKey: String? = null
+                        var payload = payloadVal
+                        var decryptionStatus = if (isEncrypted) "DECRYPTION_ERROR" else "NOT_ENCRYPTED"
+
+                        if (isEncrypted) {
+                            val uid = currentUserId
+                            if (uid != null) {
+                                wrappedKey = wrappedKeyMap[uid]
+                                if (wrappedKey != null) {
+                                    val unwrapResult = cryptoManager.decryptSessionKey(wrappedKey)
+                                    if (unwrapResult.isSuccess) {
+                                        val sessionKeyHandle = Base64.encodeToString(unwrapResult.getOrThrow(), Base64.NO_WRAP)
+                                        val decryptResult = cryptoManager.decryptWithSessionKey(payloadVal, sessionKeyHandle)
+                                        if (decryptResult.isSuccess) {
+                                            payload = decryptResult.getOrNull() ?: ""
+                                            decryptionStatus = "SUCCESS"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        val message = MessageEntity(
+                            messageId = docId,
+                            chatId = docChatId,
+                            senderId = senderId,
+                            payload = payload,
+                            type = type,
+                            timestamp = timestamp,
+                            decryptionStatus = decryptionStatus,
+                            keyFingerprint = keyFingerprint ?: "",
+                            wrappedKey = wrappedKey ?: ""
+                        )
+
+                        if (messageDao.getMessageById(docId) == null) {
+                            messageDao.insertMessage(message)
+                            chatDao.incrementUnreadCount(docChatId)
+
                             repositoryScope.launch {
-                                val localChat = chatDao.getChatById(chatId)
-                                if (localChat == null) {
-                                    fetchAndSyncChatMetadata(chatId)
+                                acknowledgeMessageDelivery(docId, docChatId, senderId, wrappedKeyStr)
+                            }
+
+                            // Show local notification using the locally-decrypted content
+                            // No plaintext ever leaves the device — true E2EE
+                            val localChat = chatDao.getChatById(docChatId)
+                            if (localChat?.isMuted != true && localChat?.isBlocked != true) {
+                                val senderUser = userDao.getUserById(senderId)
+                                val senderName = senderUser?.displayName 
+                                    ?: localChat?.chatName 
+                                    ?: "New Message"
+                                val notificationBody = when {
+                                    type != "TEXT" -> "Sent an attachment"
+                                    decryptionStatus == "SUCCESS" -> payload
+                                    else -> "New encrypted message"
                                 }
-                                chatDao.incrementUnreadCount(chatId)
-                                
-                                if (localChat?.isBlocked == true) {
-                                    return@launch
-                                }
-                                
                                 notificationHelper.showMessageNotification(
-                                    chatId = chatId, 
-                                    senderName = title, 
-                                    message = body
+                                    chatId = docChatId,
+                                    senderName = senderName,
+                                    message = notificationBody
                                 )
                             }
-                        } else if (sessionId != null) {
-                            notificationHelper.showSessionNotification(sessionId, title, body)
-                        }
-                        
-                        repositoryScope.launch {
-                            try {
-                                databases.deleteDocument("qbase_db", "notifications", docId)
-                            } catch (e: Exception) {}
+
+                            // Show session invite notification for SESSION_PATCH messages
+                            if (type == "SESSION_PATCH" && decryptionStatus == "SUCCESS") {
+                                try {
+                                    val patchJson = JSONObject(payload)
+                                    val sessionTitle = patchJson.optString("title", "Study Session")
+                                    val sessionId = patchJson.optString("sessionId", "")
+                                    if (sessionId.isNotEmpty()) {
+                                        notificationHelper.showSessionNotification(
+                                            sessionId = sessionId,
+                                            title = "Session Invite",
+                                            description = "You've been invited to $sessionTitle"
+                                        )
+                                    }
+                                } catch (e: Exception) {}
+                            }
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e("SyncRepository", "Observe events error", e)
+                    Log.e("SyncRepository", "Observe global messages error", e)
+                }
+            }
+
+            val chatsSubscription = realtime.subscribe("databases.qbase_db.collections.chats.documents") { event ->
+                try {
+                    val payloadObj = if (event.payload is Map<*, *>) {
+                        org.json.JSONObject(event.payload as Map<*, *>)
+                    } else {
+                        org.json.JSONObject(event.payload.toString())
+                    }
+                    val docId = payloadObj.optString("\$id").ifEmpty { payloadObj.optString("id") }
+                    val isGroup = payloadObj.optBoolean("isGroup", false)
+
+                    if (event.events.any { it.contains(".delete") }) {
+                        repositoryScope.launch {
+                            chatDao.deleteChatById(docId)
+                            messageDao.deleteMessagesByChatId(docId)
+                        }
+                        return@subscribe
+                    }
+
+                    if (event.events.any { it.contains(".update") }) {
+                        val participantsList = mutableListOf<String>()
+                        val participantsJson = payloadObj.optJSONArray("participantIds")
+                        if (participantsJson != null) {
+                            for (i in 0 until participantsJson.length()) {
+                                participantsList.add(participantsJson.getString(i))
+                            }
+                        }
+
+                        repositoryScope.launch {
+                            val currentUserId = currentUserId ?: return@launch
+                            if (!isGroup) {
+                                // For 1-1 / P2P chats: if either participant has deleted/left
+                                // (i.e. participantsList does not contain both of them anymore),
+                                // it must be deleted for the other user too!
+                                if (participantsList.size < 2 || !participantsList.contains(currentUserId)) {
+                                    chatDao.deleteChatById(docId)
+                                    messageDao.deleteMessagesByChatId(docId)
+
+                                    // Clean up from Appwrite completely if we are the remaining participant
+                                    try {
+                                        chatRemoteRepository.clearChatMessagesOnRemote(docId)
+                                        databases.deleteDocument("qbase_db", "chats", docId)
+                                    } catch (_: Exception) {}
+                                }
+                            } else {
+                                // For group chats: if current user was removed, clean up local DB
+                                if (!participantsList.contains(currentUserId)) {
+                                    chatDao.deleteChatById(docId)
+                                    messageDao.deleteMessagesByChatId(docId)
+                                }
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("SyncRepository", "Observe global chats delete/update error", e)
                 }
             }
         
-            awaitClose { subscription.close() }
+            awaitClose { 
+                subscription.close() 
+                chatsSubscription.close()
+            }
+        }
+    }
+
+    suspend fun syncUserChatsFromRemote() {
+        val uid = currentUserId ?: return
+        var success = false
+        var attempts = 0
+        while (!success && attempts < 3) {
+            try {
+                Log.d("SyncRepository", "Syncing user chats from remote (attempt ${attempts + 1}) for uid: $uid")
+                val response = databases.listDocuments(
+                    databaseId = "qbase_db",
+                    collectionId = "chats",
+                    queries = listOf(
+                        Query.contains("participantIds", uid)
+                    )
+                )
+                for (doc in response.documents) {
+                    @Suppress("UNCHECKED_CAST")
+                    val participantsList = doc.data["participantIds"] as? List<String> ?: emptyList()
+                    val remoteAdminIds = doc.data["adminIds"] as? List<String>
+                    val remoteAdminId = doc.data["adminId"] as? String
+                    val isGroupVal = doc.data["isGroup"] as? Boolean ?: false
+                    
+                    val chat = ChatEntity(
+                        chatId = doc.id,
+                        chatName = doc.data["chatName"] as? String,
+                        isGroup = isGroupVal,
+                        participantIds = participantsList.joinToString(","),
+                        adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds.joinToString(",") else (remoteAdminId ?: "")
+                    )
+                    chatDao.insertChat(chat)
+                    Log.d("SyncRepository", "Synced chat from remote: ${chat.chatId} (${chat.chatName})")
+                    
+                    // Fetch and sync messages for this chat
+                    fetchAndSyncMessages(chat.chatId)
+                }
+                success = true
+            } catch (e: Exception) {
+                attempts++
+                Log.e("SyncRepository", "Failed to sync user chats from remote (attempt $attempts)", e)
+                if (attempts < 3) {
+                    kotlinx.coroutines.delay(2000)
+                } else {
+                    throw e
+                }
+            }
+        }
+    }
+
+    suspend fun findExistingP2PChat(uid: String, userId: String): ChatEntity? {
+        try {
+            val localChats = chatDao.getAllChats().first()
+            val existing = localChats.find { chat ->
+                if (chat.isGroup) return@find false
+                val list = chat.participantIds.split(",").map { it.trim() }
+                list.contains(uid) && list.contains(userId)
+            }
+            if (existing != null) return existing
+        } catch (e: Exception) {
+            Log.e("SyncRepository", "Error fetching local chats", e)
+        }
+
+        try {
+            val response = databases.listDocuments(
+                databaseId = "qbase_db",
+                collectionId = "chats",
+                queries = listOf(
+                    Query.equal("isGroup", false)
+                )
+            )
+            for (doc in response.documents) {
+                @Suppress("UNCHECKED_CAST")
+                val participantsList = doc.data["participantIds"] as? List<String> ?: emptyList()
+                val trimmedParticipants = participantsList.map { it.trim() }
+                if (trimmedParticipants.contains(uid) && trimmedParticipants.contains(userId)) {
+                    val remoteAdminIds = doc.data["adminIds"] as? List<String>
+                    val remoteAdminId = doc.data["adminId"] as? String
+                    val chat = ChatEntity(
+                        chatId = doc.id,
+                        chatName = doc.data["chatName"] as? String,
+                        isGroup = false,
+                        participantIds = participantsList.joinToString(","),
+                        adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds.joinToString(",") else (remoteAdminId ?: "")
+                    )
+                    chatDao.insertChat(chat)
+                    return chat
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("SyncRepository", "Error querying Appwrite for existing P2P chat", e)
+        }
+        return null
+    }
+
+    private suspend fun ensureChatExistsLocally(chatId: String, senderId: String? = null) {
+        val localChat = chatDao.getChatById(chatId)
+        if (localChat == null) {
+            fetchAndSyncChatMetadata(chatId)
+            val updatedChat = chatDao.getChatById(chatId)
+            if (updatedChat == null) {
+                val userId = currentUserId ?: ""
+                val peerId = senderId ?: ""
+                val dummyChat = ChatEntity(
+                    chatId = chatId,
+                    chatName = "Secure Chat",
+                    isGroup = false,
+                    participantIds = if (peerId.isNotEmpty()) "$userId,$peerId" else userId,
+                    adminIds = ""
+                )
+                chatDao.insertChat(dummyChat)
+            }
         }
     }
 
@@ -527,16 +827,83 @@ class SyncRepository @Inject constructor(
             )
             @Suppress("UNCHECKED_CAST")
             val participantsList = doc.data["participantIds"] as? List<String> ?: emptyList()
+            val remoteAdminIds = doc.data["adminIds"] as? List<String>
+            val remoteAdminId = doc.data["adminId"] as? String
             val chat = ChatEntity(
                 chatId = chatId,
                 chatName = doc.data["chatName"] as? String,
                 isGroup = doc.data["isGroup"] as? Boolean ?: false,
                 participantIds = participantsList.joinToString(","),
-                adminId = doc.data["adminId"] as? String
+                adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds.joinToString(",") else (remoteAdminId ?: "")
             )
             chatDao.insertChat(chat)
         } catch (e: Exception) {
             Log.e("SyncRepository", "Failed to fetch chat metadata", e)
+        }
+    }
+
+    suspend fun fetchAndSyncMessages(chatId: String) {
+        try {
+            val response = databases.listDocuments(
+                databaseId = "qbase_db",
+                collectionId = "messages",
+                queries = listOf(
+                    Query.equal("chatId", chatId),
+                    Query.limit(100)
+                )
+            )
+            response.documents.forEach { doc ->
+                val payloadVal = doc.data["payload"] as? String ?: ""
+                val senderId = doc.data["senderId"] as? String ?: ""
+                val type = doc.data["type"] as? String ?: "TEXT"
+                val rawTimestamp = (doc.data["timestamp"] as? Number)?.toLong() ?: (System.currentTimeMillis() / 1000)
+                val timestamp = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
+                val wrappedKeyStr = doc.data["wrappedKey"] as? String
+                val keyFingerprint = doc.data["keyFingerprint"] as? String
+
+                val wrappedKeyMap = deserializeWrappedKeys(wrappedKeyStr)
+                val isEncrypted = wrappedKeyMap.isNotEmpty() && payloadVal.isNotEmpty()
+
+                var wrappedKey: String? = null
+                var payload = payloadVal
+                var decryptionStatus = if (isEncrypted) "DECRYPTION_ERROR" else "NOT_ENCRYPTED"
+
+                if (isEncrypted) {
+                    val uid = currentUserId
+                    if (uid != null) {
+                        wrappedKey = wrappedKeyMap[uid]
+                        if (wrappedKey != null) {
+                            val unwrapResult = cryptoManager.decryptSessionKey(wrappedKey)
+                            if (unwrapResult.isSuccess) {
+                                val sessionKeyHandle = Base64.encodeToString(unwrapResult.getOrThrow(), Base64.NO_WRAP)
+                                val decryptResult = cryptoManager.decryptWithSessionKey(payloadVal, sessionKeyHandle)
+                                if (decryptResult.isSuccess) {
+                                    payload = decryptResult.getOrNull() ?: ""
+                                    decryptionStatus = "SUCCESS"
+                                }
+                            }
+                        }
+                    }
+                }
+
+                val message = MessageEntity(
+                    messageId = doc.id,
+                    chatId = chatId,
+                    senderId = senderId,
+                    payload = payload,
+                    type = type,
+                    timestamp = timestamp,
+                    decryptionStatus = decryptionStatus,
+                    keyFingerprint = keyFingerprint ?: "",
+                    wrappedKey = wrappedKey ?: ""
+                )
+
+                if (messageDao.getMessageById(doc.id) == null) {
+                    messageDao.insertMessage(message)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("SyncRepository", "fetchAndSyncMessages error", e)
         }
     }
 
@@ -560,21 +927,8 @@ class SyncRepository @Inject constructor(
         )
         
         sendMessage(message)
-
-        repositoryScope.launch {
-            val chat = chatDao.getChatById(chatId)
-            chat?.let {
-                val otherParticipants = it.participantIds.split(",").filter { id -> id != senderId && id.isNotEmpty() }
-                otherParticipants.forEach { targetId ->
-                    sendNotification(
-                        targetUserId = targetId,
-                        title = "Session Invite",
-                        body = "You've been invited to $sessionTitle",
-                        data = mapOf("sessionId" to sessionId)
-                    )
-                }
-            }
-        }
+        // Session invite notifications are now handled by the receiver's
+        // observeAllIncomingMessages() via the SESSION_INVITE message type
     }
 
     suspend fun sendSyncRequest(targetUserId: String, targetCollectionId: String) {
@@ -593,7 +947,15 @@ class SyncRepository @Inject constructor(
                 databaseId = "qbase_db",
                 collectionId = "sync_requests",
                 documentId = requestRefId,
-                data = syncRequest
+                data = syncRequest,
+                permissions = listOf(
+                    io.appwrite.Permission.read(io.appwrite.Role.users()),
+                    io.appwrite.Permission.delete(io.appwrite.Role.users()),
+                    io.appwrite.Permission.read(io.appwrite.Role.user(senderId)),
+                    io.appwrite.Permission.write(io.appwrite.Role.user(senderId)),
+                    io.appwrite.Permission.update(io.appwrite.Role.user(senderId)),
+                    io.appwrite.Permission.delete(io.appwrite.Role.user(senderId))
+                )
             )
         } catch (e: Exception) {
             Log.e("SyncRepository", "Failed to send sync request in Appwrite", e)
@@ -681,12 +1043,52 @@ class SyncRepository @Inject constructor(
         }
     }
 
-    suspend fun clearChatMessagesOnFirestore(chatId: String) {
-        chatFirestoreRepository.clearChatMessagesOnFirestore(chatId)
+    suspend fun clearChatMessagesOnRemote(chatId: String) {
+        chatRemoteRepository.clearChatMessagesOnRemote(chatId)
     }
 
-    suspend fun deleteChatOnFirestore(chatId: String) {
-        chatFirestoreRepository.deleteChatOnFirestore(chatId)
+    suspend fun deleteChatOnRemote(chatId: String) {
+        chatRemoteRepository.deleteChatOnRemote(chatId)
+    }
+
+    fun deleteChatAndMessagesGlobally(chatId: String) {
+        repositoryScope.launch {
+            try {
+                Log.d("SyncRepository", "deleteChatAndMessagesGlobally: Starting for chatId=$chatId")
+                val chat = chatDao.getChatById(chatId)
+                Log.d("SyncRepository", "deleteChatAndMessagesGlobally: chat=$chat, isGroup=${chat?.isGroup}, adminIds=${chat?.adminIds}, currentUserId=$currentUserId")
+                
+                if (chat != null && !chat.isAdmin(currentUserId ?: "") && chat.isGroup) {
+                    // Non-admin leaving a group: remove from participants first, then local
+                    Log.d("SyncRepository", "deleteChatAndMessagesGlobally: Removing participant from group")
+                    removeParticipantFromRemote(chatId, currentUserId ?: "")
+                    chatDao.deleteChatById(chatId)
+                    messageDao.deleteMessagesByChatId(chatId)
+                    Log.d("SyncRepository", "deleteChatAndMessagesGlobally: Group leave complete")
+                } else {
+                    // Delete from Appwrite FIRST (before local), so the network call completes
+                    Log.d("SyncRepository", "deleteChatAndMessagesGlobally: Deleting from Appwrite FIRST...")
+                    try {
+                        chatRemoteRepository.clearChatMessagesOnRemote(chatId)
+                        Log.d("SyncRepository", "deleteChatAndMessagesGlobally: Messages cleared from Appwrite")
+                    } catch (e: Exception) {
+                        Log.e("SyncRepository", "deleteChatAndMessagesGlobally: Failed to clear messages from Appwrite", e)
+                    }
+                    try {
+                        chatRemoteRepository.deleteChatOnRemote(chatId)
+                        Log.d("SyncRepository", "deleteChatAndMessagesGlobally: Chat deleted from Appwrite")
+                    } catch (e: Exception) {
+                        Log.e("SyncRepository", "deleteChatAndMessagesGlobally: Failed to delete chat from Appwrite", e)
+                    }
+                    // Now delete locally
+                    chatDao.deleteChatById(chatId)
+                    messageDao.deleteMessagesByChatId(chatId)
+                    Log.d("SyncRepository", "deleteChatAndMessagesGlobally: Local deletion complete")
+                }
+            } catch (e: Exception) {
+                Log.e("SyncRepository", "deleteChatAndMessagesGlobally: FATAL ERROR", e)
+            }
+        }
     }
 
     suspend fun reportSession(sessionId: String, reason: String) {
@@ -697,7 +1099,7 @@ class SyncRepository @Inject constructor(
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
-            "reportedAt" to System.currentTimeMillis(),
+            "reportedAt" to System.currentTimeMillis() / 1000,
             "sessionId" to session.sessionId
         )
 
@@ -725,7 +1127,7 @@ class SyncRepository @Inject constructor(
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
-            "reportedAt" to System.currentTimeMillis(),
+            "reportedAt" to System.currentTimeMillis() / 1000,
             "questionId" to question.questionId
         )
 
@@ -742,7 +1144,7 @@ class SyncRepository @Inject constructor(
     }
 
     suspend fun reportGroup(group: ChatEntity, reason: String) {
-        chatFirestoreRepository.reportGroup(group, reason)
+        chatRemoteRepository.reportGroup(group, reason)
     }
 
     suspend fun reportUser(user: UserEntity, reason: String) {
@@ -751,7 +1153,7 @@ class SyncRepository @Inject constructor(
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
-            "reportedAt" to System.currentTimeMillis(),
+            "reportedAt" to System.currentTimeMillis() / 1000,
             "reportedUserId" to user.userId
         )
         try {
@@ -772,7 +1174,7 @@ class SyncRepository @Inject constructor(
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
-            "reportedAt" to System.currentTimeMillis(),
+            "reportedAt" to System.currentTimeMillis() / 1000,
             "collectionId" to collection.collectionId
         )
         try {
@@ -788,7 +1190,7 @@ class SyncRepository @Inject constructor(
     }
 
     suspend fun reportMessage(message: MessageEntity, reason: String) {
-        chatFirestoreRepository.reportMessage(message, reason)
+        chatRemoteRepository.reportMessage(message, reason)
     }
 
     suspend fun shareCollectionToGroup(chatId: String, collectionMetadata: Map<String, Any>) {
@@ -816,7 +1218,7 @@ class SyncRepository @Inject constructor(
                 "chatId" to chatId,
                 "sharedBy" to (collectionMetadata["sharedBy"] as String),
                 "adminIds" to participants,
-                "updatedAt" to (collectionMetadata["updatedAt"] as Long)
+                "updatedAt" to (collectionMetadata["updatedAt"] as Long) / 1000
             )
 
             try {
@@ -850,7 +1252,7 @@ class SyncRepository @Inject constructor(
                 "symmetricKey" to symmetricKey,
                 "adminIds" to listOf(currentUserId ?: "Unknown"),
                 "isAdminOnly" to false,
-                "timestamp" to System.currentTimeMillis()
+                "timestamp" to System.currentTimeMillis() / 1000
             )
 
             try {
@@ -887,7 +1289,13 @@ class SyncRepository @Inject constructor(
                         collectionId = "shared_sessions",
                         queries = listOf(Query.equal("chatId", chatId))
                     )
-                    trySend(response.documents.map { it.data }).isSuccess
+                    val mapped = response.documents.map { doc ->
+                        val data = doc.data.toMutableMap()
+                        val rawTimestamp = (data["timestamp"] as? Number)?.toLong() ?: 0L
+                        data["timestamp"] = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
+                        data
+                    }
+                    trySend(mapped).isSuccess
                 } catch (e: Exception) {}
             }
 
@@ -900,7 +1308,13 @@ class SyncRepository @Inject constructor(
                             collectionId = "shared_sessions",
                             queries = listOf(Query.equal("chatId", chatId))
                         )
-                        trySend(response.documents.map { it.data }).isSuccess
+                        val mapped = response.documents.map { doc ->
+                            val data = doc.data.toMutableMap()
+                            val rawTimestamp = (data["timestamp"] as? Number)?.toLong() ?: 0L
+                            data["timestamp"] = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
+                            data
+                        }
+                        trySend(mapped).isSuccess
                     } catch (e: Exception) {}
                 }
             }
@@ -959,6 +1373,8 @@ class SyncRepository @Inject constructor(
             data["description"] = local?.description ?: "Shared by ${doc["sharedBy"]}"
             data["isExpired"] = false
             data["isRestricted"] = false
+            val rawUpdatedAt = (doc["updatedAt"] as? Number)?.toLong() ?: 0L
+            data["updatedAt"] = if (rawUpdatedAt < 1000000000000L) rawUpdatedAt * 1000 else rawUpdatedAt
             data
         }
     }
@@ -1135,7 +1551,13 @@ class SyncRepository @Inject constructor(
                             Query.equal("status", "PENDING")
                         )
                     )
-                    trySend(response.documents.map { it.data }).isSuccess
+                    val mapped = response.documents.map { doc ->
+                        val data = doc.data.toMutableMap()
+                        val rawTimestamp = (data["timestamp"] as? Number)?.toLong() ?: 0L
+                        data["timestamp"] = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
+                        data
+                    }
+                    trySend(mapped).isSuccess
                 } catch (e: Exception) {}
             }
 
@@ -1151,7 +1573,13 @@ class SyncRepository @Inject constructor(
                                 Query.equal("status", "PENDING")
                             )
                         )
-                        trySend(response.documents.map { it.data }).isSuccess
+                        val mapped = response.documents.map { doc ->
+                            val data = doc.data.toMutableMap()
+                            val rawTimestamp = (data["timestamp"] as? Number)?.toLong() ?: 0L
+                            data["timestamp"] = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
+                            data
+                        }
+                        trySend(mapped).isSuccess
                     } catch (e: Exception) {}
                 }
             }

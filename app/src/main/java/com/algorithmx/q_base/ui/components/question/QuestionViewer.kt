@@ -12,6 +12,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.algorithmx.q_base.data.collections.Question
 import com.algorithmx.q_base.data.collections.QuestionOption
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AutoAwesome
 import com.algorithmx.q_base.ui.theme.QbaseTheme
 
 @Composable
@@ -33,7 +35,8 @@ fun QuestionViewer(
     onCopy: () -> Unit = {},
     showHeader: Boolean = true,
     isEditable: Boolean = true,
-    onEditQuestion: (() -> Unit)? = null
+    onEditQuestion: (() -> Unit)? = null,
+    onAskAi: (() -> Unit)? = null
 ) {
     val scrollState = rememberScrollState()
 
@@ -94,8 +97,34 @@ fun QuestionViewer(
                 onCheckAnswer = onCheckAnswer
             )
 
-            if (onCheckAnswer != null && !isAnswerRevealed) {
+            if (onAskAi != null) {
                 Spacer(modifier = Modifier.height(24.dp))
+                FilledTonalButton(
+                    onClick = onAskAi,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    ),
+                    contentPadding = PaddingValues(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Ask AI",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            if (onCheckAnswer != null && !isAnswerRevealed) {
+                Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = onCheckAnswer,
                     modifier = Modifier.fillMaxWidth(),

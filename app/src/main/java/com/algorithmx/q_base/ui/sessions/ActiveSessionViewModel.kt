@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import com.algorithmx.q_base.data.ai.AiRepository
 import com.algorithmx.q_base.data.auth.AuthRepository
+import com.algorithmx.q_base.data.chat.isAdmin
 import com.algorithmx.q_base.data.sync.SyncRepository
 import android.util.Log
 import javax.inject.Inject
@@ -141,7 +142,7 @@ class ActiveSessionViewModel @Inject constructor(
                         if (groupId != null) {
                             val chat = syncRepository.getChatById(groupId)
                             val currentUid = currentUser.value?.userId ?: authRepository.currentUser.firstOrNull()?.uid
-                            if (chat != null && chat.adminId != currentUid) {
+                            if (chat != null && !chat.isAdmin(currentUid ?: "")) {
                                 _isReadOnly.value = true
                                 Log.d("ActiveSessionViewModel", "Session is marked Admin-Only. Non-admin user is restricted to Read-Only access.")
                             }

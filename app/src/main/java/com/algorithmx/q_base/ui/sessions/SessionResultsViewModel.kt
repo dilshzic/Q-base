@@ -10,6 +10,7 @@ import com.algorithmx.q_base.data.sessions.*
 import com.algorithmx.q_base.data.core.UserEntity
 import com.algorithmx.q_base.data.sessions.SessionRepository
 import com.algorithmx.q_base.data.sync.SyncRepository
+import com.algorithmx.q_base.data.chat.isAdmin
 import com.algorithmx.q_base.data.auth.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -80,7 +81,7 @@ class SessionResultsViewModel @Inject constructor(
                     if (groupId != null) {
                         val chat = syncRepository.getChatById(groupId)
                         val currentUid = currentUser.value?.userId ?: authRepository.currentUser.firstOrNull()?.uid
-                        _isUserGroupAdmin.value = (chat != null && chat.adminId == currentUid)
+                        _isUserGroupAdmin.value = (chat != null && chat.isAdmin(currentUid ?: ""))
                     } else {
                         _isUserGroupAdmin.value = true
                     }

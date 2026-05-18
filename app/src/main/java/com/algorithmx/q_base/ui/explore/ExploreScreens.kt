@@ -114,6 +114,7 @@ fun ExploreQuestionPagerScreen(
                 }
             )
         },
+        /*
         floatingActionButton = {
             if (questionStates.isNotEmpty()) {
                 ExtendedFloatingActionButton(
@@ -126,6 +127,7 @@ fun ExploreQuestionPagerScreen(
                 )
             }
         }
+        */
     ) { padding ->
         if (questionStates.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
@@ -197,6 +199,7 @@ fun ExploreQuestionPagerScreen(
                         onDelete = { onDeleteQuestion(page) },
                         isEditable = state.isEditable,
                         onEditQuestion = { onEditQuestion(page) },
+                        onAskAi = { onAskAi(page, "EXPLAIN") },
                         onCopy = {
                             val content = buildString {
                                 appendLine("Q: ${state.question.stem}")

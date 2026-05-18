@@ -97,6 +97,7 @@ fun QuestionHeader(
                         tint = if (question.isPinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                /*
                 IconButton(onClick = onAddToSet, modifier = Modifier.size(32.dp)) {
                     Icon(
                         imageVector = Icons.Rounded.CollectionsBookmark,
@@ -113,6 +114,7 @@ fun QuestionHeader(
                         tint = MaterialTheme.colorScheme.secondary
                     )
                 }
+                */
                 IconButton(onClick = onCopy, modifier = Modifier.size(32.dp)) {
                     Icon(
                         imageVector = Icons.Rounded.ContentCopy,

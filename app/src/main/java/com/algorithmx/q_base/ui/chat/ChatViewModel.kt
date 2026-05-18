@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse
 import com.algorithmx.q_base.data.chat.ChatDao
 import com.algorithmx.q_base.data.chat.ChatEntity
+import com.algorithmx.q_base.data.chat.isAdmin
 import com.algorithmx.q_base.data.chat.MessageDao
 import com.algorithmx.q_base.data.chat.MessageEntity
 import com.algorithmx.q_base.data.collections.StudyCollection
@@ -21,7 +22,6 @@ import com.algorithmx.q_base.data.sessions.SessionDao
 import com.algorithmx.q_base.data.sessions.StudySession
 import com.algorithmx.q_base.data.sync.SyncRepository
 import com.algorithmx.q_base.data.util.MockExporter
-import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -81,6 +81,9 @@ class ChatViewModel @Inject constructor(
     private val _isSharing = MutableStateFlow(false)
     val isSharing = _isSharing.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing = _isRefreshing.asStateFlow()
+
     private val _isAiLoading = MutableStateFlow(false)
     val isAiLoading = _isAiLoading.asStateFlow()
 
@@ -98,7 +101,7 @@ class ChatViewModel @Inject constructor(
     }
 
     val currentUserId: String
-        get() = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+        get() = authRepository.currentUserId ?: ""
 
     companion object {
         const val QBASE_AI_BOT_ID = "qbase_ai_bot"
@@ -155,15 +158,17 @@ class ChatViewModel @Inject constructor(
             try {
                 idsToDelete.forEach { chatId ->
                     val chat = chatDao.getChatById(chatId)
-                    if (chat != null && chat.adminId != currentUserId && chat.isGroup) {
+                    if (chat != null && !chat.isAdmin(currentUserId ?: "") && chat.isGroup) {
                         val currentParticipants = chat.participantIds.split(",").toMutableList()
                         currentParticipants.remove(currentUserId)
                         val updatedParticipants = currentParticipants.joinToString(",")
                         chatDao.deleteChatById(chatId)
-                        syncRepository.removeParticipantFromFirestore(chatId, currentUserId ?: "")
+                        messageDao.deleteMessagesByChatId(chatId)
+                        syncRepository.removeParticipantFromRemote(chatId, currentUserId ?: "")
                     } else {
                         chatDao.deleteChatById(chatId)
-                        syncRepository.deleteChatOnFirestore(chatId)
+                        messageDao.deleteMessagesByChatId(chatId)
+                        syncRepository.deleteChatOnRemote(chatId)
                     }
                 }
                 _actionFeedback.emit("Deleted ${idsToDelete.size} chats")
@@ -272,6 +277,7 @@ class ChatViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _currentChatId = MutableStateFlow<String?>(null)
+    val currentChatId: StateFlow<String?> = _currentChatId.asStateFlow()
     
     private val _navigationEvents = MutableSharedFlow<ChatNavEvent>()
     val navigationEvents = _navigationEvents.asSharedFlow()
@@ -310,8 +316,8 @@ class ChatViewModel @Inject constructor(
             val chat = chatDao.getChatById(chatId) ?: return@launch
             
             // Admin Check
-            if (chat.isGroup && chat.adminId != currentUserId) {
-                _actionFeedback.emit("Only the admin can add participants")
+            if (chat.isGroup && !chat.isAdmin(currentUserId ?: "")) {
+                _actionFeedback.emit("Only an admin can add participants")
                 return@launch
             }
 
@@ -319,12 +325,91 @@ class ChatViewModel @Inject constructor(
             val updatedParticipants = if (currentParticipants.isEmpty()) userId else "$currentParticipants,$userId"
             
             chatDao.updateParticipants(chatId, updatedParticipants)
-            syncRepository.addParticipantToFirestore(chatId, userId)
+            syncRepository.addParticipantToRemote(chatId, userId)
             
             // System message for participant added
             sendMessage(chatId, "added a new participant", type = "DB_CHANGE")
             
             _actionFeedback.emit("Participant added successfully")
+        }
+    }
+
+    fun removeParticipant(chatId: String, userId: String) {
+        viewModelScope.launch {
+            val chat = chatDao.getChatById(chatId) ?: return@launch
+            
+            // Admin Check
+            if (!chat.isAdmin(currentUserId ?: "")) {
+                _actionFeedback.emit("Only an admin can remove participants")
+                return@launch
+            }
+
+            val currentParticipants = chat.participantIds.split(",").toMutableList()
+            if (currentParticipants.contains(userId)) {
+                currentParticipants.remove(userId)
+                val updatedParticipants = currentParticipants.joinToString(",")
+                
+                val currentAdmins = chat.adminIds.split(",").filter { it.isNotBlank() }.toMutableList()
+                currentAdmins.remove(userId)
+                val updatedAdmins = currentAdmins.joinToString(",")
+
+                chatDao.insertChat(chat.copy(
+                    participantIds = updatedParticipants,
+                    adminIds = updatedAdmins
+                ))
+                syncRepository.removeParticipantFromRemote(chatId, userId)
+                
+                sendMessage(chatId, "removed a participant", type = "DB_CHANGE")
+                _actionFeedback.emit("Participant removed successfully")
+            }
+        }
+    }
+
+    fun promoteParticipantToAdmin(chatId: String, userId: String) {
+        viewModelScope.launch {
+            val chat = chatDao.getChatById(chatId) ?: return@launch
+            
+            // Admin Check
+            if (!chat.isAdmin(currentUserId ?: "")) {
+                _actionFeedback.emit("Only an admin can promote members")
+                return@launch
+            }
+
+            val currentAdmins = chat.adminIds.split(",").filter { it.isNotBlank() }.toMutableList()
+            if (!currentAdmins.contains(userId)) {
+                currentAdmins.add(userId)
+                val updatedAdmins = currentAdmins.joinToString(",")
+                
+                chatDao.insertChat(chat.copy(adminIds = updatedAdmins))
+                syncRepository.promoteParticipantToAdminOnRemote(chatId, userId)
+                
+                sendMessage(chatId, "promoted a member to admin", type = "DB_CHANGE")
+                _actionFeedback.emit("Participant promoted to Admin successfully")
+            }
+        }
+    }
+
+    fun demoteAdmin(chatId: String, userId: String) {
+        viewModelScope.launch {
+            val chat = chatDao.getChatById(chatId) ?: return@launch
+            
+            // Admin Check
+            if (!chat.isAdmin(currentUserId ?: "")) {
+                _actionFeedback.emit("Only an admin can demote admins")
+                return@launch
+            }
+
+            val currentAdmins = chat.adminIds.split(",").filter { it.isNotBlank() }.toMutableList()
+            if (currentAdmins.contains(userId)) {
+                currentAdmins.remove(userId)
+                val updatedAdmins = currentAdmins.joinToString(",")
+                
+                chatDao.insertChat(chat.copy(adminIds = updatedAdmins))
+                syncRepository.demoteAdminOnRemote(chatId, userId)
+                
+                sendMessage(chatId, "demoted an admin to member", type = "DB_CHANGE")
+                _actionFeedback.emit("Admin demoted to member successfully")
+            }
         }
     }
 
@@ -337,10 +422,12 @@ class ChatViewModel @Inject constructor(
             
             if (updatedParticipants.isEmpty()) {
                 chatDao.deleteChatById(chatId)
-                syncRepository.deleteChatOnFirestore(chatId)
+                messageDao.deleteMessagesByChatId(chatId)
+                syncRepository.deleteChatOnRemote(chatId)
             } else {
-                chatDao.updateParticipants(chatId, updatedParticipants)
-                syncRepository.removeParticipantFromFirestore(chatId, currentUserId ?: "")
+                chatDao.deleteChatById(chatId)
+                messageDao.deleteMessagesByChatId(chatId)
+                syncRepository.removeParticipantFromRemote(chatId, currentUserId ?: "")
             }
             _actionFeedback.emit("You left the group")
         }
@@ -390,6 +477,19 @@ class ChatViewModel @Inject constructor(
             val chat = chatDao.getChatById(chatId)
             val label = if (chat?.isGroup == true) "Group" else "Chat"
             _actionFeedback.emit(if (isMuted) "$label muted" else "$label unmuted")
+        }
+    }
+
+    fun syncChatsFromRemote() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                syncRepository.syncUserChatsFromRemote()
+            } catch (e: Exception) {
+                Log.e("ChatViewModel", "Error syncing remote chats", e)
+            } finally {
+                _isRefreshing.value = false
+            }
         }
     }
 
@@ -507,8 +607,7 @@ class ChatViewModel @Inject constructor(
                 
                 // RESTRICTION: Non-sharable if admin-only and user is not admin
                 if (collection.isAdminOnly) {
-                    val groupAdminId = chat.adminId
-                    if (groupAdminId != currentUserId) {
+                    if (!chat.isAdmin(currentUserId ?: "")) {
                         _actionFeedback.emit("Cannot share: This collection is restricted to group admins only.")
                         _isSharing.value = false
                         return@launch
@@ -562,8 +661,7 @@ class ChatViewModel @Inject constructor(
                 
                 // RESTRICTION: Non-sharable if admin-only and user is not admin
                 if (session.isAdminOnly) {
-                    val groupAdminId = chat.adminId
-                    if (groupAdminId != currentUserId) {
+                    if (!chat.isAdmin(currentUserId ?: "")) {
                         _actionFeedback.emit("Cannot share: This session is restricted to group admins only.")
                         return@launch
                     }
@@ -648,15 +746,21 @@ class ChatViewModel @Inject constructor(
 
     fun startNewChat(userId: String, userName: String) {
         viewModelScope.launch {
-            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
-            // Check for existing P2P chat
-            val ids1 = "$uid,$userId"
-            val ids2 = "$userId,$uid"
-            val existingChat = chatDao.getP2PChat(ids1, ids2)
+            val uid = authRepository.currentUserId ?: return@launch
+            // Check for existing P2P chat locally or on the cloud
+            val existingChat = syncRepository.findExistingP2PChat(uid, userId)
             
             if (existingChat != null) {
                 _currentChatId.value = existingChat.chatId
                 _actionFeedback.emit("Opening existing conversation")
+                _navigationEvents.emit(ChatNavEvent.NavigateToChatDetail(existingChat.chatId))
+                if (userId != QBASE_AI_BOT_ID) {
+                    viewModelScope.launch {
+                        try {
+                            syncRepository.createChatOnRemote(existingChat)
+                        } catch (_: Exception) {}
+                    }
+                }
                 return@launch
             }
 
@@ -665,14 +769,14 @@ class ChatViewModel @Inject constructor(
                 chatId = chatId,
                 chatName = userName,
                 isGroup = false,
-                participantIds = ids1,
-                adminId = uid
+                participantIds = "$uid,$userId",
+                adminIds = uid
             )
             chatDao.insertChat(newChat)
             
             // Log onto Firestore as well (don't sync AI chats to global chat list if they are local)
             if (userId != QBASE_AI_BOT_ID) {
-                syncRepository.createChatOnFirestore(newChat)
+                syncRepository.createChatOnRemote(newChat)
             }
             
             val initialMessage = if (userId == QBASE_AI_BOT_ID) 
@@ -687,7 +791,7 @@ class ChatViewModel @Inject constructor(
 
     fun startNewGroup(participantIds: List<String>, groupName: String) {
         viewModelScope.launch {
-            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+            val uid = authRepository.currentUserId ?: return@launch
             val chatId = UUID.randomUUID().toString()
             val allParticipants = (participantIds + uid).filter { it.isNotBlank() }.distinct().joinToString(",")
             
@@ -696,11 +800,11 @@ class ChatViewModel @Inject constructor(
                 chatName = groupName,
                 isGroup = true,
                 participantIds = allParticipants,
-                adminId = uid
+                adminIds = uid
             )
             
             chatDao.insertChat(newChat)
-            syncRepository.createChatOnFirestore(newChat)
+            syncRepository.createChatOnRemote(newChat)
             
             sendMessage(chatId, "created the group \"$groupName\"", type = "DB_CHANGE", senderId = uid)
             _currentChatId.value = chatId
@@ -713,31 +817,14 @@ class ChatViewModel @Inject constructor(
     }
 
     fun deleteChat(chatId: String) {
-        viewModelScope.launch {
-            try {
-                val chat = chatDao.getChatById(chatId)
-                if (chat != null && chat.adminId != currentUserId && chat.isGroup) {
-                    val currentParticipants = chat.participantIds.split(",").toMutableList()
-                    currentParticipants.remove(currentUserId)
-                    val updatedParticipants = currentParticipants.joinToString(",")
-                    chatDao.deleteChatById(chatId)
-                    syncRepository.removeParticipantFromFirestore(chatId, currentUserId ?: "")
-                } else {
-                    chatDao.deleteChatById(chatId)
-                    syncRepository.deleteChatOnFirestore(chatId)
-                }
-                _actionFeedback.emit("Chat deleted successfully")
-            } catch (e: Exception) {
-                _actionFeedback.emit("Failed to delete chat: ${e.message}")
-            }
-        }
+        syncRepository.deleteChatAndMessagesGlobally(chatId)
     }
 
     fun clearChatMessages(chatId: String) {
         viewModelScope.launch {
             try {
                 messageDao.deleteMessagesByChatId(chatId)
-                syncRepository.clearChatMessagesOnFirestore(chatId)
+                syncRepository.clearChatMessagesOnRemote(chatId)
                 _actionFeedback.emit("Chat history cleared")
             } catch (e: Exception) {
                 _actionFeedback.emit("Failed to clear chat: ${e.message}")

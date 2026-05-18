@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.data.chat.isAdmin
 import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
 import kotlinx.coroutines.launch
 
@@ -138,7 +139,7 @@ fun GroupOverviewScreen(
                         .padding(24.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    val isAdmin = chat?.adminId == viewModel.currentUserId
+                    val isAdmin = chat?.isAdmin(viewModel.currentUserId ?: "") == true
                     
                     ActionButton(
                         icon = Icons.Rounded.PersonAdd,
@@ -177,8 +178,77 @@ fun GroupOverviewScreen(
             }
 
             items(participants) { participant ->
-                val isAdminOfGroup = participant.userId == chat?.adminId
-                ParticipantItem(participant, isAdminOfGroup)
+                val isAdminOfGroup = chat?.isAdmin(participant.userId) == true
+                val isCurrentUserAdmin = chat?.isAdmin(viewModel.currentUserId ?: "") == true
+                val isSelf = participant.userId == viewModel.currentUserId
+                
+                var showActionDialog by remember { mutableStateOf(false) }
+                
+                ParticipantItem(
+                    user = participant,
+                    isAdmin = isAdminOfGroup,
+                    onClick = {
+                        if (isCurrentUserAdmin && !isSelf) {
+                            showActionDialog = true
+                        }
+                    }
+                )
+                
+                if (showActionDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showActionDialog = false },
+                        title = { Text(text = participant.displayName, fontWeight = FontWeight.Bold) },
+                        text = { Text("Select an administrative action for this participant.") },
+                        confirmButton = {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalAlignment = Alignment.End
+                            ) {
+                                if (isAdminOfGroup) {
+                                    Button(
+                                        onClick = {
+                                            viewModel.demoteAdmin(chatId, participant.userId)
+                                            showActionDialog = false
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("Demote from Admin")
+                                    }
+                                } else {
+                                    Button(
+                                        onClick = {
+                                            viewModel.promoteParticipantToAdmin(chatId, participant.userId)
+                                            showActionDialog = false
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("Promote to Admin")
+                                    }
+                                }
+                                
+                                Button(
+                                    onClick = {
+                                        viewModel.removeParticipant(chatId, participant.userId)
+                                        showActionDialog = false
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Kick from Group")
+                                }
+                                
+                                TextButton(
+                                    onClick = { showActionDialog = false },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Cancel")
+                                }
+                            }
+                        }
+                    )
+                }
             }
 
             item {
@@ -261,10 +331,11 @@ fun GroupOverviewScreen(
 }
 
 @Composable
-fun ParticipantItem(user: UserEntity, isAdmin: Boolean) {
+fun ParticipantItem(user: UserEntity, isAdmin: Boolean, onClick: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

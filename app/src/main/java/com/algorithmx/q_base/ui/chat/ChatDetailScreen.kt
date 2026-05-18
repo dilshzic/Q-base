@@ -33,6 +33,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.data.chat.MessageEntity
+import com.algorithmx.q_base.data.chat.isAdmin
 import com.algorithmx.q_base.data.collections.StudyCollection
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.DeleteSweep
@@ -59,6 +60,7 @@ fun ChatDetailScreen(
     onHeaderClick: (String) -> Unit,
     onProfileClick: () -> Unit,
     onJoinSession: (String) -> Unit,
+    onDeleteAndRestart: () -> Unit,
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val state by viewModel.chatDetailState.collectAsState()
@@ -77,6 +79,14 @@ fun ChatDetailScreen(
     var reportingMessage by remember { mutableStateOf<MessageEntity?>(null) }
     var showReportGroupDialog by remember { mutableStateOf(false) }
     val collections by viewModel.allStudyCollections.collectAsStateWithLifecycle()
+
+    val currentChatId by viewModel.currentChatId.collectAsStateWithLifecycle()
+
+    LaunchedEffect(state.chat, currentChatId) {
+        if (currentChatId != null && state.chat == null) {
+            onBack()
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.actionFeedback.collect { message ->
@@ -339,7 +349,7 @@ fun ChatDetailScreen(
         ) {
             if (isLibraryMode && state.chat?.isGroup == true) {
                 val accessRequests by viewModel.accessRequests.collectAsStateWithLifecycle()
-                val isAdmin = state.chat?.adminId == state.currentUserId
+                val isAdmin = state.chat?.isAdmin(state.currentUserId ?: "") == true
                 
                 val sharedSessions by viewModel.sharedSessions.collectAsStateWithLifecycle()
                 
@@ -411,7 +421,7 @@ fun ChatDetailScreen(
                                         onDeleteChat = { 
                                             state.chat?.chatId?.let { chatId ->
                                                 viewModel.deleteChat(chatId)
-                                                onBack()
+                                                onDeleteAndRestart()
                                             }
                                         },
                                         isAiLoading = isAiLoading && index == state.messages.size - 1 && message.senderId == ChatViewModel.QBASE_AI_BOT_ID,
@@ -613,7 +623,7 @@ fun ChatDetailScreen(
                     onClick = {
                         state.chat?.chatId?.let { viewModel.deleteChat(it) }
                         showDeleteConfirm = false
-                        onBack()
+                        onDeleteAndRestart()
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {

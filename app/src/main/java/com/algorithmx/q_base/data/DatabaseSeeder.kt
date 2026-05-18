@@ -39,6 +39,12 @@ class DatabaseSeeder @Inject constructor(
         val seedApplied = dataStoreManager.isSeedAppliedFlow.first()
         val collectionCount = collectionDao.getStudyCollectionCount()
 
+        val chatList = chatDao.getAllChats().first()
+        if (chatList.isEmpty()) {
+            Log.d("DatabaseSeeder", "Chat database is empty. Seeding sample chats...")
+            seedSampleChats()
+        }
+
         if (seedApplied && collectionCount > 0) {
             Log.d("DatabaseSeeder", "Seed already applied and data exists. Skipping.")
             return@withContext
@@ -236,7 +242,8 @@ class DatabaseSeeder @Inject constructor(
                     chatId = "sample_p2p",
                     chatName = "Alice (Mentor)",
                     isGroup = false,
-                    participantIds = "mentor_1,$currentUserId"
+                    participantIds = "mentor_1,$currentUserId",
+                    adminIds = "mentor_1"
                 )
                 chatDao.insertChat(p2pChat)
                 
@@ -251,7 +258,8 @@ class DatabaseSeeder @Inject constructor(
                     chatId = "sample_group",
                     chatName = "Global Knowledge Exchange",
                     isGroup = true,
-                    participantIds = "mentor_1,peer_1,peer_2,$currentUserId"
+                    participantIds = "mentor_1,peer_1,peer_2,$currentUserId",
+                    adminIds = "mentor_1"
                 )
                 chatDao.insertChat(groupChat)
 
