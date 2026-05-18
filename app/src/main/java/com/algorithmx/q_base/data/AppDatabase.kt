@@ -23,9 +23,10 @@ import com.algorithmx.q_base.data.sessions.*
         com.algorithmx.q_base.data.collections.ProblemReport::class,
         com.algorithmx.q_base.data.core.UserEntity::class,
         com.algorithmx.q_base.data.ai.AiResponseEntity::class,
-        com.algorithmx.q_base.data.ai.BrainUsageEntity::class
+        com.algorithmx.q_base.data.ai.BrainUsageEntity::class,
+        com.algorithmx.q_base.data.collections.CollectionVersionLedgerEntity::class
     ],
-    version = 26,
+    version = 27,
     exportSchema = false
 )
 @TypeConverters(com.algorithmx.q_base.data.util.TypeConverters::class)
@@ -38,6 +39,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun aiResponseDao(): AiResponseDao
     abstract fun brainUsageDao(): BrainUsageDao
+    abstract fun collectionVersionLedgerDao(): CollectionVersionLedgerDao
 
     companion object {
         @Volatile

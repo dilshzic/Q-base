@@ -1,0 +1,3 @@
+# delete chats messages from appwrite db upon receiving
+
+# For chats deleting should be propergated
