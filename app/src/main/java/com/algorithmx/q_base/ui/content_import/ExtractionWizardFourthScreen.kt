@@ -1,6 +1,8 @@
 package com.algorithmx.q_base.ui.content_import
 
-import androidx.compose.animation.core.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,23 +15,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.algorithmx.q_base.data.collections.StudyCollection
-
-// ── Step 4: Finalizing Direct Extraction (Overview & Organizing) ─────
+import com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExtractionWizardFourthScreen(
-    count: Int,
+    response: AiCollectionResponse,
     collectionName: String,
-    collections: List<StudyCollection>,
-    selectedCategoryId: String?,
     onNameChanged: (String) -> Unit,
-    onCategorySelected: (String?) -> Unit,
+    onManualEditClick: () -> Unit,
     onFinished: () -> Unit
 ) {
     val scale = remember { androidx.compose.animation.core.Animatable(0f) }
@@ -43,7 +42,11 @@ fun ExtractionWizardFourthScreen(
         )
     }
 
-    var isNewCollection by remember { mutableStateOf(selectedCategoryId == null) }
+    val questions = response.questions
+    val sbaCount = questions.count { it.type.uppercase() == "SBA" }
+    val mtfCount = questions.count { it.type.uppercase() == "MTF" }
+    val emqCount = questions.count { it.type.uppercase() == "EMQ" }
+    val otherCount = questions.size - sbaCount - mtfCount - emqCount
 
     Column(
         modifier = Modifier
@@ -56,7 +59,7 @@ fun ExtractionWizardFourthScreen(
         // 1. Success Orb Badge
         Surface(
             modifier = Modifier
-                .size(100.dp)
+                .size(90.dp)
                 .graphicsLayer {
                     scaleX = scale.value
                     scaleY = scale.value
@@ -70,7 +73,7 @@ fun ExtractionWizardFourthScreen(
                     imageVector = Icons.Rounded.TaskAlt, 
                     contentDescription = null, 
                     tint = MaterialTheme.colorScheme.primary, 
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(44.dp)
                 ) 
             }
         }
@@ -78,7 +81,7 @@ fun ExtractionWizardFourthScreen(
         // 2. Collection Title & Questions Count
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "Extraction Finalized!", 
+                text = "Extraction Completed!", 
                 style = MaterialTheme.typography.headlineSmall, 
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center
@@ -90,7 +93,7 @@ fun ExtractionWizardFourthScreen(
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f))
             ) {
                 Text(
-                    text = "$count exam paper questions structured successfully",
+                    text = "${questions.size} questions extracted successfully as a new collection",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -108,14 +111,14 @@ fun ExtractionWizardFourthScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Suggested Title",
+                text = "Collection Title",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
             OutlinedTextField(
                 value = collectionName,
                 onValueChange = onNameChanged,
-                placeholder = { Text("e.g. Past Paper 2024") },
+                placeholder = { Text("e.g. Past Paper 2026") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 singleLine = true,
@@ -126,75 +129,66 @@ fun ExtractionWizardFourthScreen(
             )
         }
 
-        // 4. Save Location Selector (Category folders picker)
-        Column(
+        // 4. Extracted Question Counts Grid
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         ) {
-            Text(
-                text = "Save Destination Folder",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                FilterChip(
-                    selected = isNewCollection,
-                    onClick = { isNewCollection = true; onCategorySelected(null) },
-                    label = { Text("Create New Folder", fontWeight = FontWeight.Bold) },
-                    shape = RoundedCornerShape(12.dp)
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Extracted Formats Breakdown",
+                    fontWeight = FontWeight.ExtraBold,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary
                 )
-                FilterChip(
-                    selected = !isNewCollection,
-                    onClick = { isNewCollection = false },
-                    label = { Text("Add to Existing Folder", fontWeight = FontWeight.Bold) },
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = collections.isNotEmpty()
-                )
-            }
-
-            if (!isNewCollection && collections.isNotEmpty()) {
-                var expanded by remember { mutableStateOf(false) }
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedCard(
-                        onClick = { expanded = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Rounded.FolderOpen, 
-                                contentDescription = null, 
-                                modifier = Modifier.size(20.dp), 
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Text(
-                                text = collections.find { it.collectionId == selectedCategoryId }?.name ?: "Select Folder...",
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(Modifier.weight(1f))
-                            Icon(Icons.Rounded.ArrowDropDown, contentDescription = null)
-                        }
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CountBadge("SBA", sbaCount, Color(0xFF2196F3), Modifier.weight(1f))
+                    CountBadge("MTF", mtfCount, Color(0xFF4CAF50), Modifier.weight(1f))
+                    CountBadge("EMQ", emqCount, Color(0xFF9C27B0), Modifier.weight(1f))
+                    if (otherCount > 0) {
+                        CountBadge("Other", otherCount, Color(0xFF795548), Modifier.weight(1f))
                     }
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.fillMaxWidth(0.85f)
-                    ) {
-                        collections.forEach { col ->
-                            DropdownMenuItem(
-                                text = { Text(col.name, fontWeight = FontWeight.Medium) },
-                                onClick = { 
-                                    onCategorySelected(col.collectionId)
-                                    expanded = false 
-                                }
+                }
+            }
+        }
+
+        // 5. Ingestion Diagnostics & Parsing Warnings
+        if (response.parsingWarnings.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.15f)),
+                border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f))
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Rounded.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Parser Diagnostics / Warnings (${response.parsingWarnings.size})",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    response.parsingWarnings.forEach { warning ->
+                        Row(modifier = Modifier.padding(start = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("•", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = warning,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.85f)
                             )
                         }
                     }
@@ -202,21 +196,112 @@ fun ExtractionWizardFourthScreen(
             }
         }
 
-        Spacer(Modifier.weight(1f))
+        // 6. Skipped Content
+        if (response.skippedSegments.isNotEmpty() && response.skippedSegments.any { it.isNotBlank() }) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Rounded.ContentCut,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Skipped Text Segments",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    response.skippedSegments.filter { it.isNotBlank() }.forEach { segment ->
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                            border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = segment,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
 
-        // 5. Proceed Button (Edit Collection Screen)
-        Button(
-            onClick = onFinished, 
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp), 
-            shape = RoundedCornerShape(18.dp),
-            enabled = collectionName.isNotBlank(),
-            elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+        Spacer(Modifier.height(12.dp))
+
+        // 7. Core Buttons
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Icon(Icons.Rounded.EditNote, contentDescription = null, modifier = Modifier.size(22.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Proceed to Edit Collection", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+            Button(
+                onClick = onFinished, 
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp), 
+                shape = RoundedCornerShape(16.dp),
+                enabled = collectionName.isNotBlank(),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+            ) {
+                Icon(Icons.Rounded.CheckCircle, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Save & Finish", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+            }
+
+            OutlinedButton(
+                onClick = onManualEditClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                enabled = collectionName.isNotBlank(),
+                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+            ) {
+                Icon(Icons.Rounded.EditNote, contentDescription = null, modifier = Modifier.size(22.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Manual Edit & Review", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+            }
+        }
+    }
+}
+
+@Composable
+fun CountBadge(label: String, count: Int, color: Color, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier.height(48.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = color.copy(alpha = 0.08f),
+        border = BorderStroke(1.5.dp, color.copy(alpha = 0.25f))
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "$count",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.ExtraBold,
+                color = color
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = color.copy(alpha = 0.7f),
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

@@ -18,6 +18,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import java.util.UUID
 
 data class ExtractionConfigData(
     val count: Int,
@@ -47,6 +48,10 @@ sealed class ImportStep {
     data class Processing(val message: String = "AI is structuring your questions...") : ImportStep()
     data class Review(val questionCount: Int, val responseId: String) : ImportStep()
     data class Error(val message: String) : ImportStep()
+
+    // Direct Exam Paper Extraction pipeline states
+    data object ExtractionIngest : ImportStep()
+    data class ExtractionOverview(val responseId: String, val response: com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse) : ImportStep()
 
     // Legacy states kept for internal processing
     data class Extracting(val source: String) : ImportStep()
@@ -86,6 +91,12 @@ class ImportViewModel @Inject constructor(
 
     private val _newCollectionDescription = MutableStateFlow("")
     val newCollectionDescription = _newCollectionDescription.asStateFlow()
+
+    // Direct Exam Paper Extraction pipeline states
+    private val _extractedDocs = MutableStateFlow<List<ExtractedDocumentCard>>(emptyList())
+    val extractedDocs = _extractedDocs.asStateFlow()
+    
+    val docTexts = mutableMapOf<String, String>()
 
     // Tracks which method the user chose for back-navigation
     private val _selectedMethod = MutableStateFlow<String?>(null) // "IMPORT", "GENERATE", "MANUAL"
@@ -255,9 +266,112 @@ class ImportViewModel @Inject constructor(
         }
     }
 
+    fun addPdf(uri: Uri) {
+        _uiState.value = ImportStep.Processing("Extracting PDF content...")
+        viewModelScope.launch {
+            val result = importRepository.extractTextFromPdf(uri)
+            if (result.isSuccess) {
+                val text = result.getOrDefault("")
+                val id = UUID.randomUUID().toString()
+                val wordCount = text.split("\\s+".toRegex()).size
+                val card = ExtractedDocumentCard(
+                    id = id,
+                    name = uri.lastPathSegment ?: "PDF Document",
+                    wordCount = wordCount,
+                    type = "PDF"
+                )
+                docTexts[id] = text
+                _extractedDocs.value = _extractedDocs.value + card
+                _uiState.value = ImportStep.ExtractionIngest
+            } else {
+                _uiState.value = ImportStep.Error(result.exceptionOrNull()?.message ?: "PDF extraction failed")
+            }
+        }
+    }
+
+    fun addOcr(uri: Uri) {
+        _uiState.value = ImportStep.Processing("Analyzing image text...")
+        viewModelScope.launch {
+            val result = importRepository.recognizeTextFromImage(uri)
+            if (result.isSuccess) {
+                val text = result.getOrDefault("")
+                val id = UUID.randomUUID().toString()
+                val wordCount = text.split("\\s+".toRegex()).size
+                val card = ExtractedDocumentCard(
+                    id = id,
+                    name = "OCR Document",
+                    wordCount = wordCount,
+                    type = "OCR"
+                )
+                docTexts[id] = text
+                _extractedDocs.value = _extractedDocs.value + card
+                _uiState.value = ImportStep.ExtractionIngest
+            } else {
+                _uiState.value = ImportStep.Error(result.exceptionOrNull()?.message ?: "OCR failed")
+            }
+        }
+    }
+
+    fun addClipboard(text: String) {
+        val id = UUID.randomUUID().toString()
+        val wordCount = text.split("\\s+".toRegex()).size
+        val card = ExtractedDocumentCard(
+            id = id,
+            name = "Clipboard Content",
+            wordCount = wordCount,
+            type = "CLIPBOARD"
+        )
+        docTexts[id] = text
+        _extractedDocs.value = _extractedDocs.value + card
+    }
+
+    fun removeDoc(id: String) {
+        _extractedDocs.value = _extractedDocs.value.filterNot { it.id == id }
+        docTexts.remove(id)
+    }
+
+    fun startPaperExtraction() {
+        val combinedText = _extractedDocs.value.joinToString("\n\n---\n\n") { docTexts[it.id] ?: "" }
+        _uiState.value = ImportStep.Processing("AI is extracting exam questions...")
+        
+        viewModelScope.launch {
+            val catId = _selectedCategoryId.value ?: "new"
+            val catName = _collections.value.find { it.collectionId == catId }?.name ?: _newCollectionName.value.ifBlank { "Extracted Paper" }
+            
+            val result = aiRepository.extractQuestionsFromText(
+                text = combinedText,
+                collectionId = catId,
+                collectionName = catName,
+                difficulty = "Balanced",
+                types = listOf("SBA", "MTF", "EMQ"),
+                customInstructions = "Ensure questions are parsed correctly as SBA, MTF, or EMQ. List any skipped non-question blocks in skippedSegments and any parsing errors/warnings in parsingWarnings."
+            )
+            
+            if (result.isSuccess) {
+                val responseId = result.getOrThrow()
+                val entity = aiRepository.getAiResponseById(responseId)
+                val response = try {
+                    json.decodeFromString<com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse>(entity?.rawJson ?: "")
+                } catch (e: Exception) { null }
+                
+                if (response != null) {
+                    _newCollectionName.value = response.collectionTitle
+                    _newCollectionDescription.value = response.collectionDescription
+                    _uiState.value = ImportStep.ExtractionOverview(responseId, response)
+                } else {
+                    _uiState.value = ImportStep.Error("Failed to parse AI extraction results.")
+                }
+            } else {
+                _uiState.value = ImportStep.Error(result.exceptionOrNull()?.message ?: "Extraction failed")
+            }
+        }
+    }
+
     fun reset() {
         _uiState.value = ImportStep.NameAndDestination
         _extractedText.value = ""
+        _extractedDocs.value = emptyList()
+        docTexts.clear()
         _selectedMethod.value = null
     }
 
@@ -272,6 +386,8 @@ class ImportViewModel @Inject constructor(
         is ImportStep.Processing -> 5
         is ImportStep.Review -> 5
         is ImportStep.Error -> 5
+        is ImportStep.ExtractionIngest -> 3
+        is ImportStep.ExtractionOverview -> 5
         else -> 1
     }
 

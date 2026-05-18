@@ -38,11 +38,12 @@ fun ImportWizardScreen(
     }
 
     // BackHandler for wizard step navigation
-    val isNotAtStart = uiState !is ImportStep.NameAndDestination && uiState !is ImportStep.MediaInput
+    val isNotAtStart = uiState !is ImportStep.NameAndDestination && uiState !is ImportStep.MediaInput && uiState !is ImportStep.ExtractionIngest
     androidx.activity.compose.BackHandler(enabled = isNotAtStart) {
         when (uiState) {
             is ImportStep.Configure -> viewModel.navigateTo(ImportStep.NameAndDestination)
             is ImportStep.Review -> viewModel.navigateTo(ImportStep.NameAndDestination)
+            is ImportStep.ExtractionOverview -> viewModel.navigateTo(ImportStep.ExtractionIngest)
             is ImportStep.Error -> viewModel.reset()
             else -> onBack()
         }
@@ -67,6 +68,7 @@ fun ImportWizardScreen(
                             when (uiState) {
                                 is ImportStep.Configure -> viewModel.navigateTo(ImportStep.NameAndDestination)
                                 is ImportStep.Review -> viewModel.navigateTo(ImportStep.NameAndDestination)
+                                is ImportStep.ExtractionOverview -> viewModel.navigateTo(ImportStep.ExtractionIngest)
                                 is ImportStep.Error -> viewModel.reset()
                                 else -> onBack()
                             }
@@ -111,8 +113,7 @@ fun ImportWizardScreen(
                         onImagePicked = { viewModel.onImagePicked(it) },
                         onPdfPicked = { viewModel.onPdfPicked(it) },
                         onDirectExtractionClick = {
-                            viewModel.selectMethod("MANUAL")
-                            onNavigateToManualEditor(targetId ?: "new", collectionName.ifBlank { null })
+                            viewModel.navigateTo(ImportStep.ExtractionIngest)
                         },
                         onNext = {
                             viewModel.selectMethod("GENERATE")
@@ -130,7 +131,15 @@ fun ImportWizardScreen(
                             })
                         }
                     }
-                    is ImportStep.Processing -> WaitingView(step.message)
+                    is ImportStep.Processing -> {
+                        if (step.message.contains("extracting", ignoreCase = true) || 
+                            step.message.contains("Analyzing", ignoreCase = true) || 
+                            step.message.contains("Extracting", ignoreCase = true)) {
+                            ExtractionWizardSecondScreen(statusMessage = step.message)
+                        } else {
+                            WaitingView(step.message)
+                        }
+                    }
                     is ImportStep.Review -> ReviewView(
                         count = step.questionCount,
                         collectionName = collectionName,
@@ -144,6 +153,34 @@ fun ImportWizardScreen(
                             }
                         }
                     )
+                    is ImportStep.ExtractionIngest -> {
+                        val docs by viewModel.extractedDocs.collectAsStateWithLifecycle()
+                        ExtractionWizardFirstScreen(
+                            extractedDocs = docs,
+                            onAddPdf = { viewModel.addPdf(it) },
+                            onAddOcr = { viewModel.addOcr(it) },
+                            onAddClipboard = { viewModel.addClipboard(it) },
+                            onRemoveDoc = { viewModel.removeDoc(it) },
+                            onProceed = { viewModel.startPaperExtraction() }
+                        )
+                    }
+                    is ImportStep.ExtractionOverview -> {
+                        ExtractionWizardFourthScreen(
+                            response = step.response,
+                            collectionName = collectionName,
+                            onNameChanged = { viewModel.updateNewCollectionName(it) },
+                            onManualEditClick = {
+                                viewModel.promoteResponse(step.responseId, collectionName) { setId, finalName ->
+                                    onNavigateToManualEditor(setId, finalName)
+                                }
+                            },
+                            onFinished = {
+                                viewModel.promoteResponse(step.responseId, collectionName) { _, _ ->
+                                    onBack()
+                                }
+                            }
+                        )
+                    }
                     is ImportStep.Error -> ErrorView(
                         message = step.message,
                         onRetry = { viewModel.reset() }
