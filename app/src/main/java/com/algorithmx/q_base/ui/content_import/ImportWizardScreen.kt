@@ -155,8 +155,11 @@ fun ImportWizardScreen(
                     )
                     is ImportStep.ExtractionIngest -> {
                         val docs by viewModel.extractedDocs.collectAsStateWithLifecycle()
+                        val selectedPaperTypes by viewModel.selectedPaperTypes.collectAsStateWithLifecycle()
                         ExtractionWizardFirstScreen(
                             extractedDocs = docs,
+                            selectedPaperTypes = selectedPaperTypes,
+                            onTogglePaperType = { viewModel.togglePaperType(it) },
                             onAddPdf = { viewModel.addPdf(it) },
                             onAddOcr = { viewModel.addOcr(it) },
                             onAddClipboard = { viewModel.addClipboard(it) },
@@ -183,7 +186,7 @@ fun ImportWizardScreen(
                     }
                     is ImportStep.Error -> ErrorView(
                         message = step.message,
-                        onRetry = { viewModel.reset() }
+                        onRetry = { viewModel.handleRetry() }
                     )
                     is ImportStep.Extracting -> WaitingView("Extracting text from ${step.source}...")
                     else -> Box(Modifier.fillMaxSize())
