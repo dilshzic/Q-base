@@ -43,7 +43,7 @@ fun MessageSyncRepository.observeAllIncomingMessages(notificationHelper: Notific
                     val rawTimestamp = payloadObj.optLong("timestamp", System.currentTimeMillis() / 1000)
                     val timestamp = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
                     val wrappedKeyStr = payloadObj.optString("wrappedKey", "")
-                    val keyFingerprint = payloadObj.optString("keyFingerprint", null)
+                    val keyFingerprint = payloadObj.optString("keyFingerprint", "")
 
                     val wrappedKeyMap = deserializeWrappedKeys(wrappedKeyStr)
                     val isEncrypted = wrappedKeyMap.isNotEmpty() && payloadVal.isNotEmpty()
@@ -125,7 +125,7 @@ fun MessageSyncRepository.observeAllIncomingMessages(notificationHelper: Notific
                     }
 
                     repositoryScope.launch {
-                        acknowledgeMessageDelivery(docId, docChatId, senderId, wrappedKeyStr)
+                        acknowledgeMessageDelivery(docId, docChatId, senderId, wrappedKeyStr ?: "")
                     }
                 }
             } catch (e: Exception) {
@@ -181,7 +181,7 @@ fun MessageSyncRepository.observeAllIncomingMessages(notificationHelper: Notific
                             } ?: emptyList()
                             val remoteAdminId = payloadObj.optString("adminId")
                             val updatedChat = localChat.copy(
-                                chatName = payloadObj.optString("chatName", localChat.chatName),
+                                chatName = payloadObj.optString("chatName", localChat.chatName ?: ""),
                                 participantIds = participantsList.joinToString(","),
                                 adminIds = if (remoteAdminIds.isNotEmpty()) remoteAdminIds.joinToString(",") else remoteAdminId
                             )

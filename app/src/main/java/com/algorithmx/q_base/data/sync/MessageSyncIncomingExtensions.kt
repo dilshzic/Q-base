@@ -161,7 +161,7 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
                         val rawTimestamp = payloadObj.optLong("timestamp", System.currentTimeMillis() / 1000)
                         val timestamp = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
                         val wrappedKeyStr = payloadObj.optString("wrappedKey", "")
-                        val keyFingerprint = payloadObj.optString("keyFingerprint", null)
+                        val keyFingerprint = payloadObj.optString("keyFingerprint", "")
 
                         val wrappedKeyMap = deserializeWrappedKeys(wrappedKeyStr)
                         val isEncrypted = wrappedKeyMap.isNotEmpty() && payloadVal.isNotEmpty()
