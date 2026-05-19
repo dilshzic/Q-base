@@ -138,9 +138,10 @@ class MockDownloader @Inject constructor(
     ) {
         // 1. Generate new UUIDs for questions to avoid conflicts
         val oldToNewQuestionIds = mutableMapOf<String, String>()
+        val isShared = sharedWithGroupId != null
         
         val newQuestions = exportData.questions.map { qData ->
-            val newId = java.util.UUID.randomUUID().toString()
+            val newId = if (isShared) qData.question.questionId else java.util.UUID.randomUUID().toString()
             oldToNewQuestionIds[qData.question.questionId] = newId
             qData.question.copy(questionId = newId)
         }

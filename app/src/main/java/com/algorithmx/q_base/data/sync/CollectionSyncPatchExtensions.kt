@@ -7,6 +7,7 @@ import com.algorithmx.q_base.data.collections.CollectionVersionLedgerEntity
 import com.algorithmx.q_base.data.collections.Question
 import com.algorithmx.q_base.data.collections.QuestionOption
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.util.UUID
@@ -28,7 +29,40 @@ suspend fun CollectionSyncRepository.applyCollectionMicroUpdate(payload: String)
             }
             
             if (revisionId > localRevision + 1) {
-                Log.w("CollectionSyncRepository", "Sequence gap detected in collection micro-update: received $revisionId, expected ${localRevision + 1}. Buffering.")
+                Log.w("CollectionSyncRepository", "Sequence gap detected in collection micro-update: received $revisionId, expected ${localRevision + 1}. Triggering full library re-sync.")
+                repositoryScope.launch {
+                    try {
+                        val doc = databases.getDocument("qbase_db", "shared_collections", collectionId)
+                        val url = doc.data["downloadUrl"] as? String
+                        val wrappedKeysStr = doc.data["wrappedKeys"] as? String ?: ""
+                        val isAdminOnly = doc.data["isAdminOnly"] as? Boolean ?: false
+                        val chatId = doc.data["chatId"] as? String ?: ""
+                        
+                        if (!url.isNullOrBlank() && wrappedKeysStr.isNotBlank()) {
+                            val jsonObj = org.json.JSONObject(wrappedKeysStr)
+                            val encKey = jsonObj.optString(currentUserId ?: "")
+                            if (!encKey.isNullOrBlank()) {
+                                val decResult = cryptoManager.decryptMessage(encKey)
+                                if (decResult.isSuccess) {
+                                    val symmetricKey = decResult.getOrNull()
+                                    val result = mockDownloader.downloadAndImportMock(
+                                        url = url,
+                                        symmetricKeyBase64 = symmetricKey,
+                                        sharedWithGroupId = chatId,
+                                        isAdminOnly = isAdminOnly
+                                    )
+                                    if (result.isSuccess) {
+                                        Log.d("CollectionSyncRepository", "Full sync completed successfully for collection $collectionId after sequence gap.")
+                                    } else {
+                                        Log.e("CollectionSyncRepository", "Full sync failed during sequence gap resolution: ${result.exceptionOrNull()?.message}")
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("CollectionSyncRepository", "Full sync failed during sequence gap resolution", e)
+                    }
+                }
                 return@withContext
             }
             
