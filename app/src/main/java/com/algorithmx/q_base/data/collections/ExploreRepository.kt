@@ -101,6 +101,10 @@ class ExploreRepository @Inject constructor(
         return collectionDao.getStudyCollectionByIdOnce(collectionId)
     }
 
+    suspend fun getStudyCollectionByNameOnce(name: String): StudyCollection? {
+        return collectionDao.getStudyCollectionByNameOnce(name)
+    }
+
     suspend fun getSetIdForQuestion(questionId: String): String? {
         return questionDao.getSetIdForQuestion(questionId)
     }

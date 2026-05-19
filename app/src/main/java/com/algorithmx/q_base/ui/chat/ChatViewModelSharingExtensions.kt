@@ -141,6 +141,14 @@ fun ChatViewModel.resendCollection(collectionId: String) {
             _actionFeedback.emit("Re-packaging and re-uploading collection...")
             val collection = collectionDao.getStudyCollectionByIdOnce(collectionId)
                 ?: throw Exception("Collection not found in local library")
+            // RESTRICTION: Non-resendable if admin-only and user is not admin
+            val chat = chatDao.getChatById(chatId)
+            if (collection.isAdminOnly) {
+                if (chat == null || !chat.isAdmin(currentUserId)) {
+                    _actionFeedback.emit("Cannot resend: This collection is restricted to group admins only.")
+                    return@launch
+                }
+            }
             
             val zipFile = mockExporter.exportCollection(collectionId)
                 ?: throw Exception("Failed to export collection")

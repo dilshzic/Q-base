@@ -165,7 +165,7 @@ fun MessageSyncRepository.observeAllIncomingMessages(notificationHelper: Notific
                                     chatName = payloadObj.optString("chatName", "Group Chat"),
                                     isGroup = true,
                                     participantIds = participantsList.joinToString(","),
-                                    adminIds = if (remoteAdminIds.isNotEmpty()) remoteAdminIds.joinToString(",") else remoteAdminId
+                                    adminIds = if (remoteAdminIds.isNotEmpty()) remoteAdminIds else (if (remoteAdminId.isNotBlank()) listOf(remoteAdminId) else emptyList())
                                 )
                                 chatDao.insertChat(chat)
                             } else {
@@ -183,7 +183,7 @@ fun MessageSyncRepository.observeAllIncomingMessages(notificationHelper: Notific
                             val updatedChat = localChat.copy(
                                 chatName = payloadObj.optString("chatName", localChat.chatName ?: ""),
                                 participantIds = participantsList.joinToString(","),
-                                adminIds = if (remoteAdminIds.isNotEmpty()) remoteAdminIds.joinToString(",") else remoteAdminId
+                                adminIds = if (remoteAdminIds.isNotEmpty()) remoteAdminIds else (if (remoteAdminId.isNotBlank()) listOf(remoteAdminId) else emptyList())
                             )
                             chatDao.insertChat(updatedChat)
                         }

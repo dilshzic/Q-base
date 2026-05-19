@@ -82,7 +82,7 @@ class ChatManagerRepository @Inject constructor(
                         chatName = doc.data["chatName"] as? String,
                         isGroup = isGroupVal,
                         participantIds = participantsList.joinToString(","),
-                        adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds.joinToString(",") else (remoteAdminId ?: "")
+                        adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList())
                     )
                     chatDao.insertChat(chat)
                     Log.d("ChatManagerRepository", "Synced chat from remote: ${chat.chatId} (${chat.chatName})")
@@ -136,7 +136,7 @@ class ChatManagerRepository @Inject constructor(
                         chatName = doc.data["chatName"] as? String,
                         isGroup = false,
                         participantIds = participantsList.joinToString(","),
-                        adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds.joinToString(",") else (remoteAdminId ?: "")
+                        adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList())
                     )
                     chatDao.insertChat(chat)
                     return chat
@@ -161,7 +161,7 @@ class ChatManagerRepository @Inject constructor(
                     chatName = "Secure Chat",
                     isGroup = false,
                     participantIds = if (peerId.isNotEmpty()) "$userId,$peerId" else userId,
-                    adminIds = ""
+                    adminIds = emptyList()
                 )
                 chatDao.insertChat(dummyChat)
             }
@@ -184,7 +184,7 @@ class ChatManagerRepository @Inject constructor(
                 chatName = doc.data["chatName"] as? String,
                 isGroup = doc.data["isGroup"] as? Boolean ?: false,
                 participantIds = participantsList.joinToString(","),
-                adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds.joinToString(",") else (remoteAdminId ?: "")
+                adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList())
             )
             chatDao.insertChat(chat)
         } catch (e: Exception) {

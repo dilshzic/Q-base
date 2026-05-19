@@ -172,6 +172,17 @@ class ExploreViewModel @Inject constructor(
     fun updateCollectionAdminOnly(collectionId: String, isAdminOnly: Boolean) {
         viewModelScope.launch {
             repository.getStudyCollectionByIdOnce(collectionId)?.let { col ->
+                // If this collection is shared with a group, ensure caller is an admin
+                val groupId = col.sharedWithGroupId
+                if (groupId != null) {
+                    val chat = syncRepository.getChatById(groupId)
+                    val currentUid = authRepository.currentUser.firstOrNull()?.uid
+                    if (chat != null && (currentUid == null || !chat.isAdmin(currentUid))) {
+                        _actionFeedback.emit("Only a group admin can change collection access settings")
+                        return@launch
+                    }
+                }
+
                 val updated = col.copy(isAdminOnly = isAdminOnly)
                 repository.updateStudyCollection(updated)
                 _selectedCollection.value = updated
@@ -289,6 +300,21 @@ class ExploreViewModel @Inject constructor(
         val updatedQuestion = state.question.copy(isPinned = !state.question.isPinned)
         
         viewModelScope.launch {
+            // Verify admin-only restrictions for this question's collection
+            val collectionName = state.question.collection
+            val collection = if (!collectionName.isNullOrBlank()) repository.getStudyCollectionByNameOnce(collectionName) else null
+            if (collection != null && collection.isAdminOnly) {
+                val groupId = collection.sharedWithGroupId
+                if (groupId != null) {
+                    val chat = syncRepository.getChatById(groupId)
+                    val currentUid = authRepository.currentUser.firstOrNull()?.uid
+                    if (chat == null || currentUid == null || !chat.isAdmin(currentUid)) {
+                        _actionFeedback.emit("Only a group admin can modify this collection")
+                        return@launch
+                    }
+                }
+            }
+
             repository.updateQuestion(updatedQuestion)
             _questionStates.update { current ->
                 current.mapIndexed { i, s ->

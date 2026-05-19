@@ -32,7 +32,7 @@ fun ChatViewModel.startNewChat(userId: String, userName: String) {
             chatName = userName,
             isGroup = false,
             participantIds = "$uid,$userId",
-            adminIds = uid
+            adminIds = listOf(uid)
         )
         chatDao.insertChat(newChat)
         
@@ -62,7 +62,7 @@ fun ChatViewModel.startNewGroup(participantIds: List<String>, groupName: String)
             chatName = groupName,
             isGroup = true,
             participantIds = allParticipants,
-            adminIds = uid
+            adminIds = listOf(uid)
         )
         
         chatDao.insertChat(newChat)
