@@ -2,6 +2,8 @@ package com.algorithmx.q_base.ui.explore
 
 import androidx.lifecycle.viewModelScope
 import com.algorithmx.q_base.data.collections.QuestionSet
+import com.algorithmx.q_base.data.chat.ChatEntity
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
