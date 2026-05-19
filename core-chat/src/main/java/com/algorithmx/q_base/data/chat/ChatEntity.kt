@@ -2,14 +2,16 @@ package com.algorithmx.q_base.data.chat
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
 
 @Entity(tableName = "chats")
+@TypeConverters(ChatTypeConverters::class)
 data class ChatEntity(
     @PrimaryKey val chatId: String,
     val chatName: String?,
     val isGroup: Boolean,
     val participantIds: String,
-    val adminIds: String = "",
+    val adminIds: List<String> = emptyList(),
     val isBlocked: Boolean = false,
     val isReported: Boolean = false,
     val isMuted: Boolean = false,
@@ -19,5 +21,5 @@ data class ChatEntity(
 
 fun ChatEntity.isAdmin(userId: String): Boolean {
     return if (!isGroup) false
-    else adminIds.split(",").map { it.trim() }.contains(userId)
+    else adminIds.contains(userId)
 }

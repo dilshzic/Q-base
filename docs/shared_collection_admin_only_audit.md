@@ -43,3 +43,16 @@ Next steps
 - Optionally I can: (a) scan for any server-side security rules in the repo, (b) create a short PR adding server-side checks or example Appwrite rule snippets, or (c) produce a one-page risk memo for stakeholders.
 
 Prepared by: Qbase codebase audit tooling
+
+Implementation status (changes applied)
+- `core-chat`: `ChatEntity` now stores `adminIds` as `List<String>` with Room type converters and `isAdmin()` updated to use the list. Files:
+   - `core-chat/src/main/java/com/algorithmx/q_base/data/chat/ChatEntity.kt`
+   - `core-chat/src/main/java/com/algorithmx/q_base/data/chat/ChatTypeConverters.kt`
+- `Q_base appwrite`: added `audit_logs` collection to `app_write.py` to record server-side audit events.
+   - `Q_base appwrite/app_write.py`
+- Appwrite function stub: added `validate_admin_writes` best-effort function which logs unauthorized writes and attempts to delete offending documents. Deploy this to Appwrite and configure triggers to enforce admin-only writes server-side.
+   - `Q_base appwrite/functions/validate_admin_writes/main.py`
+
+How to deploy the enforcement function (summary)
+1. Create an Appwrite Function (runtime: python-3.10). 2. Paste `main.py` contents. 3. Provide an API key via `APPWRITE_FUNCTION_API_KEY` or set the function key. 4. Configure the function to trigger on `collections.shared_collections.documents.create`, `collections.shared_collections.documents.update`, `collections.shared_sessions.documents.create`, and `...update` events. 5. Ensure the function has permission to read `chats` and write `audit_logs` (use service API key in env).
+
