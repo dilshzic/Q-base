@@ -33,10 +33,14 @@ import com.google.firebase.auth.FirebaseAuth
 import com.algorithmx.q_base.data.DatabaseSeeder
 import com.algorithmx.q_base.data.auth.AuthRepository
 import com.algorithmx.q_base.data.sync.SyncRepository
+import com.algorithmx.q_base.ui.state.AppAccessState
+import com.algorithmx.q_base.ui.state.LocalAppAccessState
 import com.algorithmx.q_base.ui.navigation.*
 import com.algorithmx.q_base.ui.theme.QbaseTheme
+import com.algorithmx.q_base.util.NetworkMonitor
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -84,6 +88,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var authRepository: AuthRepository
 
+    @Inject
+    lateinit var networkMonitor: NetworkMonitor
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         checkNotificationPermission()
@@ -101,19 +108,23 @@ class MainActivity : ComponentActivity() {
         // Start global sync for notifications reactively
         var syncJob: kotlinx.coroutines.Job? = null
         lifecycleScope.launch {
-            authRepository.currentUser.collect { user ->
-                syncJob?.cancel()
-                if (user != null) {
-                    syncJob = launch {
-                        try {
-                            syncRepository.syncUserChatsFromRemote()
-                        } catch (e: Exception) {
-                            android.util.Log.e("MainActivity", "Failed to sync remote user chats", e)
+            combine(
+                authRepository.currentUser,
+                networkMonitor.isOnline
+            ) { user, isOnline -> user to isOnline }
+                .collect { (user, isOnline) ->
+                    syncJob?.cancel()
+                    if (user != null && isOnline) {
+                        syncJob = launch {
+                            try {
+                                syncRepository.syncUserChatsFromRemote()
+                            } catch (e: Exception) {
+                                android.util.Log.e("MainActivity", "Failed to sync remote user chats", e)
+                            }
+                            syncRepository.observeAllIncomingMessages(notificationHelper).collect {}
                         }
-                        syncRepository.observeAllIncomingMessages(notificationHelper).collect {}
                     }
                 }
-            }
         }
 
         lifecycleScope.launch {
@@ -140,6 +151,7 @@ class MainActivity : ComponentActivity() {
             QbaseTheme(themeMode = brainConfig.themeMode) {
                 val seeded by isSeeded.collectAsStateWithLifecycle()
                 val isSessionChecked by authRepository.isSessionChecked.collectAsStateWithLifecycle(initialValue = false)
+                val isOnline by networkMonitor.isOnline.collectAsStateWithLifecycle(initialValue = false)
                 
                 // Observe authentication state reactively
                 val userFlow = remember { authRepository.currentUser }
@@ -167,9 +179,19 @@ class MainActivity : ComponentActivity() {
                 val startRoute = remember(isLoggedInInstancePersisted) {
                     if (isLoggedInInstancePersisted) Screen.Home else Screen.Login
                 }
+
+                val appAccessState = remember(isSessionChecked, user, isOnline) {
+                    when {
+                        !isSessionChecked -> AppAccessState.RestoringSession
+                        user != null && isOnline -> AppAccessState.OnlineReady
+                        user != null && !isOnline -> AppAccessState.SignedInOffline
+                        user == null && isOnline -> AppAccessState.GuestOnline
+                        else -> AppAccessState.OfflineGuest
+                    }
+                }
                 
                 val topLevelRoutes = remember {
-                    setOf(Screen.Home, Screen.Explore, Screen.Connect, Screen.Sessions())
+                    setOf(Screen.Login, Screen.Home, Screen.Explore, Screen.Connect, Screen.Sessions())
                 }
                 
                 val navigationState = rememberNavigationState(
@@ -207,7 +229,9 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                MainScreen(navigationState, navigator, snackbarHostState)
+                CompositionLocalProvider(LocalAppAccessState provides appAccessState) {
+                    MainScreen(navigationState, navigator, snackbarHostState)
+                }
             }
         }
     }
