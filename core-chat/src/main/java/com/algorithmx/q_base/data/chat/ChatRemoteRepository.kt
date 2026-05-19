@@ -2,16 +2,17 @@ package com.algorithmx.q_base.data.chat
 
 import android.util.Log
 import io.appwrite.Client
-import io.appwrite.services.Databases
 import io.appwrite.services.Account
-import io.appwrite.Query
 import io.appwrite.ID
+import com.algorithmx.q_base.data.backend.CoreDatabase
+import com.algorithmx.q_base.data.backend.CoreQuery
+import com.algorithmx.q_base.data.backend.CoreQueryOperator
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ChatRemoteRepository @Inject constructor(
-    private val databases: Databases,
+    private val databases: CoreDatabase,
     private val appwriteAccount: Account
 ) {
     private suspend fun getCurrentUserId(): String? {
@@ -40,31 +41,20 @@ class ChatRemoteRepository @Inject constructor(
             "createdAt" to System.currentTimeMillis() / 1000
         )
 
-        val chatPermissions = listOf(
-            io.appwrite.Permission.read(io.appwrite.Role.users()),
-            io.appwrite.Permission.write(io.appwrite.Role.users()),
-            io.appwrite.Permission.update(io.appwrite.Role.users()),
-            io.appwrite.Permission.delete(io.appwrite.Role.users())
-        )
-
         try {
             databases.createDocument(
-                databaseId = "qbase_db",
                 collectionId = "chats",
                 documentId = chat.chatId,
-                data = chatMap,
-                permissions = chatPermissions
-            )
+                data = chatMap
+            ).getOrThrow()
         } catch (e: io.appwrite.exceptions.AppwriteException) {
             if (e.code == 409) {
                 try {
                     databases.updateDocument(
-                        databaseId = "qbase_db",
                         collectionId = "chats",
                         documentId = chat.chatId,
-                        data = chatMap,
-                        permissions = chatPermissions
-                    )
+                        data = chatMap
+                    ).getOrThrow()
                 } catch (ex: Exception) {
                     Log.e("ChatRemoteRepository", "Failed to update chat in Appwrite", ex)
                 }
@@ -72,27 +62,38 @@ class ChatRemoteRepository @Inject constructor(
                 Log.e("ChatRemoteRepository", "Failed to create chat in Appwrite", e)
             }
         } catch (e: Exception) {
-            Log.e("ChatRemoteRepository", "Failed to create chat in Appwrite", e)
+            val unwrapped = (e as? java.lang.reflect.InvocationTargetException)?.targetException ?: e
+            if (unwrapped is io.appwrite.exceptions.AppwriteException && unwrapped.code == 409) {
+                try {
+                    databases.updateDocument(
+                        collectionId = "chats",
+                        documentId = chat.chatId,
+                        data = chatMap
+                    ).getOrThrow()
+                } catch (ex: Exception) {
+                    Log.e("ChatRemoteRepository", "Failed to update chat in Appwrite", ex)
+                }
+            } else {
+                Log.e("ChatRemoteRepository", "Failed to create chat in Appwrite", e)
+            }
         }
     }
 
     suspend fun addParticipantToRemote(chatId: String, userId: String) {
         try {
             val doc = databases.getDocument(
-                databaseId = "qbase_db",
                 collectionId = "chats",
                 documentId = chatId
-            )
+            ).getOrThrow() ?: throw IllegalStateException("Chat not found")
             @Suppress("UNCHECKED_CAST")
-            val participants = (doc.data["participantIds"] as? List<String> ?: emptyList()).toMutableList()
+            val participants = (doc["participantIds"] as? List<String> ?: emptyList()).toMutableList()
             if (!participants.contains(userId)) {
                 participants.add(userId)
                 databases.updateDocument(
-                    databaseId = "qbase_db",
                     collectionId = "chats",
                     documentId = chatId,
                     data = mapOf("participantIds" to participants)
-                )
+                ).getOrThrow()
             }
         } catch (e: Exception) {
             Log.e("ChatRemoteRepository", "Operation failed in Appwrite", e)
@@ -103,20 +104,18 @@ class ChatRemoteRepository @Inject constructor(
     suspend fun removeParticipantFromRemote(chatId: String, userId: String) {
         try {
             val doc = databases.getDocument(
-                databaseId = "qbase_db",
                 collectionId = "chats",
                 documentId = chatId
-            )
+            ).getOrThrow() ?: throw IllegalStateException("Chat not found")
             @Suppress("UNCHECKED_CAST")
-            val participants = (doc.data["participantIds"] as? List<String> ?: emptyList()).toMutableList()
+            val participants = (doc["participantIds"] as? List<String> ?: emptyList()).toMutableList()
             if (participants.contains(userId)) {
                 participants.remove(userId)
                 databases.updateDocument(
-                    databaseId = "qbase_db",
                     collectionId = "chats",
                     documentId = chatId,
                     data = mapOf("participantIds" to participants)
-                )
+                ).getOrThrow()
             }
         } catch (e: Exception) {
             Log.e("ChatRemoteRepository", "Operation failed in Appwrite", e)
@@ -127,20 +126,18 @@ class ChatRemoteRepository @Inject constructor(
     suspend fun promoteParticipantToAdminOnRemote(chatId: String, userId: String) {
         try {
             val doc = databases.getDocument(
-                databaseId = "qbase_db",
                 collectionId = "chats",
                 documentId = chatId
-            )
+            ).getOrThrow() ?: throw IllegalStateException("Chat not found")
             @Suppress("UNCHECKED_CAST")
-            val admins = (doc.data["adminIds"] as? List<String> ?: emptyList()).toMutableList()
+            val admins = (doc["adminIds"] as? List<String> ?: emptyList()).toMutableList()
             if (!admins.contains(userId)) {
                 admins.add(userId)
                 databases.updateDocument(
-                    databaseId = "qbase_db",
                     collectionId = "chats",
                     documentId = chatId,
                     data = mapOf("adminIds" to admins)
-                )
+                ).getOrThrow()
             }
         } catch (e: Exception) {
             Log.e("ChatRemoteRepository", "Operation failed in Appwrite", e)
@@ -151,20 +148,18 @@ class ChatRemoteRepository @Inject constructor(
     suspend fun demoteAdminOnRemote(chatId: String, userId: String) {
         try {
             val doc = databases.getDocument(
-                databaseId = "qbase_db",
                 collectionId = "chats",
                 documentId = chatId
-            )
+            ).getOrThrow() ?: throw IllegalStateException("Chat not found")
             @Suppress("UNCHECKED_CAST")
-            val admins = (doc.data["adminIds"] as? List<String> ?: emptyList()).toMutableList()
+            val admins = (doc["adminIds"] as? List<String> ?: emptyList()).toMutableList()
             if (admins.contains(userId)) {
                 admins.remove(userId)
                 databases.updateDocument(
-                    databaseId = "qbase_db",
                     collectionId = "chats",
                     documentId = chatId,
                     data = mapOf("adminIds" to admins)
-                )
+                ).getOrThrow()
             }
         } catch (e: Exception) {
             Log.e("ChatRemoteRepository", "Operation failed in Appwrite", e)
@@ -176,29 +171,27 @@ class ChatRemoteRepository @Inject constructor(
         try {
             var hasMore = true
             while (hasMore) {
-                val response = databases.listDocuments(
-                    databaseId = "qbase_db",
-                    collectionId = "messages",
-                    queries = listOf(
-                        Query.equal("chatId", chatId),
-                        Query.limit(100)
-                    )
+                val queries = listOf(
+                    CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId)
                 )
-                if (response.documents.isEmpty()) {
+                val documents = databases.queryDocuments(
+                    collectionId = "messages",
+                    queries = queries
+                ).getOrThrow()
+                if (documents.isEmpty()) {
                     hasMore = false
                 } else {
-                    response.documents.forEach { doc ->
+                    documents.forEach { doc ->
                         try {
                             databases.deleteDocument(
-                                databaseId = "qbase_db",
                                 collectionId = "messages",
-                                documentId = doc.id
-                            )
+                                documentId = doc["$id"] as String
+                            ).getOrThrow()
                         } catch (e: Exception) {
-                            Log.w("ChatRemoteRepository", "Failed to delete message document ${doc.id}", e)
+                            Log.w("ChatRemoteRepository", "Failed to delete message document ${doc["$id"]}", e)
                         }
                     }
-                    if (response.documents.size < 100) {
+                    if (documents.size < 25) {
                         hasMore = false
                     }
                 }
@@ -212,26 +205,24 @@ class ChatRemoteRepository @Inject constructor(
         try {
             clearChatMessagesOnRemote(chatId)
             databases.deleteDocument(
-                databaseId = "qbase_db",
                 collectionId = "chats",
                 documentId = chatId
-            )
+            ).getOrThrow()
             Log.d("ChatRemoteRepository", "Successfully deleted chat document from Appwrite")
         } catch (e: Exception) {
             Log.e("ChatRemoteRepository", "Failed to delete chat in Appwrite, trying fallback to remove self", e)
             try {
-                val doc = databases.getDocument("qbase_db", "chats", chatId)
+                val doc = databases.getDocument("chats", chatId).getOrThrow() ?: throw IllegalStateException("Chat not found")
                 @Suppress("UNCHECKED_CAST")
-                val participants = (doc.data["participantIds"] as? List<String> ?: emptyList()).toMutableList()
+                val participants = (doc["participantIds"] as? List<String> ?: emptyList()).toMutableList()
                 val currentUserId = getCurrentUserId()
                 if (currentUserId != null && participants.contains(currentUserId)) {
                     participants.remove(currentUserId)
                     databases.updateDocument(
-                        databaseId = "qbase_db",
                         collectionId = "chats",
                         documentId = chatId,
                         data = mapOf("participantIds" to participants)
-                    )
+                    ).getOrThrow()
                     Log.d("ChatRemoteRepository", "Fallback: Successfully removed current user from chat participants list")
                 }
             } catch (ex: Exception) {
@@ -250,11 +241,10 @@ class ChatRemoteRepository @Inject constructor(
         )
         try {
             databases.createDocument(
-                databaseId = "qbase_db",
                 collectionId = "reported_groups",
                 documentId = ID.unique(),
                 data = reportMap
-            )
+            ).getOrThrow()
         } catch (e: Exception) {
             Log.e("ChatRemoteRepository", "Operation failed in Appwrite", e)
             throw e
@@ -271,11 +261,10 @@ class ChatRemoteRepository @Inject constructor(
         )
         try {
             databases.createDocument(
-                databaseId = "qbase_db",
                 collectionId = "reported_messages",
                 documentId = ID.unique(),
                 data = reportMap
-            )
+            ).getOrThrow()
         } catch (e: Exception) {
             Log.e("ChatRemoteRepository", "Operation failed in Appwrite", e)
             throw e

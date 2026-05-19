@@ -158,6 +158,23 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideAppwriteTables(client: Client): Any? {
+        return try {
+            val cls = try {
+                Class.forName("io.appwrite.services.Tables")
+            } catch (e: ClassNotFoundException) {
+                Class.forName("io.appwrite.services.TablesDB")
+            }
+            val constructor = cls.getConstructor(io.appwrite.Client::class.java)
+            constructor.newInstance(client)
+        } catch (e: Exception) {
+            android.util.Log.w("QbaseReflection", "Tables client not available in SDK", e)
+            null
+        }
+    }
+
+    @Provides
+    @Singleton
     fun provideNetworkMonitor(@ApplicationContext context: Context): NetworkMonitor {
         return NetworkMonitor(context)
     }

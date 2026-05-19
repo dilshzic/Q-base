@@ -6,9 +6,10 @@ import com.algorithmx.q_base.data.chat.MessageEntity
 import com.algorithmx.q_base.data.sessions.SessionDao
 import com.algorithmx.q_base.data.sessions.SessionAttempt
 import com.algorithmx.q_base.data.auth.AuthRepository
+import com.algorithmx.q_base.data.backend.CoreDatabase
+import com.algorithmx.q_base.data.backend.CoreQuery
+import com.algorithmx.q_base.data.backend.CoreQueryOperator
 import io.appwrite.Client
-import io.appwrite.Query
-import io.appwrite.services.Databases
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,7 +26,7 @@ import dagger.Lazy
 @Singleton
 class SessionSyncRepository @Inject constructor(
     private val appwriteClient: Client,
-    private val databases: Databases,
+    private val databases: CoreDatabase,
     private val authRepository: AuthRepository,
     private val chatDao: ChatDao,
     private val sessionDao: SessionDao,
@@ -79,19 +80,28 @@ class SessionSyncRepository @Inject constructor(
 
             try {
                 databases.createDocument(
-                    databaseId = "qbase_db",
                     collectionId = "shared_sessions",
                     documentId = sessionId,
                     data = sessionMetadata
-                )
+                ).getOrThrow()
             } catch (e: io.appwrite.exceptions.AppwriteException) {
                 if (e.code == 409) {
                     databases.updateDocument(
-                        databaseId = "qbase_db",
                         collectionId = "shared_sessions",
                         documentId = sessionId,
                         data = sessionMetadata
-                    )
+                    ).getOrThrow()
+                } else {
+                    throw e
+                }
+            } catch (e: Exception) {
+                val unwrapped = (e as? java.lang.reflect.InvocationTargetException)?.targetException ?: e
+                if (unwrapped is io.appwrite.exceptions.AppwriteException && unwrapped.code == 409) {
+                    databases.updateDocument(
+                        collectionId = "shared_sessions",
+                        documentId = sessionId,
+                        data = sessionMetadata
+                    ).getOrThrow()
                 } else {
                     throw e
                 }
@@ -106,13 +116,13 @@ class SessionSyncRepository @Inject constructor(
         return callbackFlow {
             repositoryScope.launch {
                 try {
-                    val response = databases.listDocuments(
-                        databaseId = "qbase_db",
+                    val queries = listOf(CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId))
+                    val docs = databases.queryDocuments(
                         collectionId = "shared_sessions",
-                        queries = listOf(Query.equal("chatId", chatId))
-                    )
-                    val mapped = response.documents.map { doc ->
-                        val data = doc.data.toMutableMap()
+                        queries = queries
+                    ).getOrThrow()
+                    val mapped = docs.map { doc ->
+                        val data = doc.toMutableMap()
                         val rawTimestamp = (data["timestamp"] as? Number)?.toLong() ?: 0L
                         data["timestamp"] = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
                         data
@@ -125,13 +135,13 @@ class SessionSyncRepository @Inject constructor(
             val subscription = realtime.subscribe("databases.qbase_db.collections.shared_sessions.documents") { event ->
                 repositoryScope.launch {
                     try {
-                        val response = databases.listDocuments(
-                            databaseId = "qbase_db",
+                        val queries = listOf(CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId))
+                        val docs = databases.queryDocuments(
                             collectionId = "shared_sessions",
-                            queries = listOf(Query.equal("chatId", chatId))
-                        )
-                        val mapped = response.documents.map { doc ->
-                            val data = doc.data.toMutableMap()
+                            queries = queries
+                        ).getOrThrow()
+                        val mapped = docs.map { doc ->
+                            val data = doc.toMutableMap()
                             val rawTimestamp = (data["timestamp"] as? Number)?.toLong() ?: 0L
                             data["timestamp"] = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
                             data

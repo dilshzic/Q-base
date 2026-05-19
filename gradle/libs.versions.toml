@@ -33,13 +33,16 @@ datastorePreferences = "1.1.7"
 retrofit = "2.12.0"
 okhttp = "4.12.0"
 moshi = "1.15.2"
-appwrite = "22.2.0"
+appwrite = "24.1.1"
 
 # Coroutines
 kotlinxCoroutines = "1.10.2"
 
 # Serialization
 kotlinxSerializationJson = "1.7.3"
+
+# JSON
+gson = "2.10.1"
 
 # Firebase
 firebaseBom = "34.10.0"
@@ -122,6 +125,7 @@ logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-intercep
 moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
 moshi-kotlin-codegen = { group = "com.squareup.moshi", name = "moshi-kotlin-codegen", version.ref = "moshi" }
 appwrite-sdk = { group = "io.appwrite", name = "sdk-for-android", version.ref = "appwrite" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 
 # Firebase
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }

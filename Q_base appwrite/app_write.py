@@ -301,11 +301,11 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "audit_logs", "eventType", 64, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "audit_logs", "collection", 64, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "audit_logs", "documentId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "audit_logs", "actorId", 36, False]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "audit_logs", "details", 8192, False]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "audit_logs", "eventType", 64, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "audit_logs", "collection", 64, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "audit_logs", "documentId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "audit_logs", "actorId", 36, False]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "audit_logs", "details", 8192, False]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "audit_logs", "timestamp", True]}
         ],
         "indexes": []

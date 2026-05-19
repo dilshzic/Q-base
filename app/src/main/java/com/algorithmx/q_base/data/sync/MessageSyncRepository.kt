@@ -7,8 +7,8 @@ import com.algorithmx.q_base.data.chat.MessageDao
 import com.algorithmx.q_base.data.core.UserDao
 import com.algorithmx.q_base.data.auth.AuthRepository
 import com.algorithmx.q_base.core_crypto.CryptoManager
+import com.algorithmx.q_base.data.backend.CoreDatabase
 import io.appwrite.Client
-import io.appwrite.services.Databases
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,7 +20,7 @@ import dagger.Lazy
 @Singleton
 class MessageSyncRepository @Inject constructor(
     internal val appwriteClient: Client,
-    internal val databases: Databases,
+    internal val databases: CoreDatabase,
     internal val authRepository: AuthRepository,
     internal val chatRemoteRepository: ChatRemoteRepository,
     internal val chatDao: ChatDao,
@@ -69,7 +69,7 @@ class MessageSyncRepository @Inject constructor(
         val chat = chatDao.getChatById(chatId) ?: return
         if (!chat.isGroup) {
             try {
-                databases.deleteDocument("qbase_db", "messages", messageId)
+                databases.deleteDocument("messages", messageId).getOrThrow()
                 Log.d("MessageSyncRepository", "P2P Ephemeral: Cleared message $messageId")
             } catch (e: Exception) {
                 Log.e("MessageSyncRepository", "Failed to clear P2P ephemeral message", e)
@@ -88,16 +88,15 @@ class MessageSyncRepository @Inject constructor(
             val pendingReceivers = wrappedKeysMap.keys.filter { it != senderId }
 
             if (pendingReceivers.isEmpty()) {
-                databases.deleteDocument("qbase_db", "messages", messageId)
+                databases.deleteDocument("messages", messageId).getOrThrow()
                 Log.d("MessageSyncRepository", "Group Ephemeral: All delivered! Deleted message $messageId")
             } else {
                 val updatedWrappedKeyStr = serializeWrappedKeys(wrappedKeysMap)
                 databases.updateDocument(
-                    databaseId = "qbase_db",
                     collectionId = "messages",
                     documentId = messageId,
                     data = mapOf("wrappedKey" to updatedWrappedKeyStr)
-                )
+                ).getOrThrow()
                 Log.d("MessageSyncRepository", "Group Ephemeral: Acknowledged delivery for $messageId. Pending: $pendingReceivers")
             }
         } catch (e: Exception) {

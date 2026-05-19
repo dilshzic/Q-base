@@ -11,14 +11,14 @@ import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.data.core.UserEntity
 import com.algorithmx.q_base.data.sessions.SessionDao
 import com.algorithmx.q_base.data.auth.AuthRepository
-import io.appwrite.services.Databases
+import com.algorithmx.q_base.data.backend.CoreDatabase
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ReportSyncRepository @Inject constructor(
-    private val databases: Databases,
+    private val databases: CoreDatabase,
     private val authRepository: AuthRepository,
     private val chatRemoteRepository: ChatRemoteRepository,
     private val sessionDao: SessionDao
@@ -40,11 +40,10 @@ class ReportSyncRepository @Inject constructor(
 
         try {
             databases.createDocument(
-                databaseId = "qbase_db",
                 collectionId = "reported_sessions",
                 documentId = reportRefId,
                 data = reportMap
-            )
+            ).getOrThrow()
         } catch (e: Exception) {
             Log.e("ReportSyncRepository", "Failed to submit reported session for $sessionId", e)
         }
@@ -68,11 +67,10 @@ class ReportSyncRepository @Inject constructor(
 
         try {
             databases.createDocument(
-                databaseId = "qbase_db",
                 collectionId = "reported_questions",
                 documentId = reportRefId,
                 data = reportMap
-            )
+            ).getOrThrow()
         } catch (e: Exception) {
             Log.e("ReportSyncRepository", "Failed to submit reported question", e)
         }
@@ -93,11 +91,10 @@ class ReportSyncRepository @Inject constructor(
         )
         try {
             databases.createDocument(
-                databaseId = "qbase_db",
                 collectionId = "reported_users",
                 documentId = reportRefId,
                 data = reportMap
-            )
+            ).getOrThrow()
         } catch (e: Exception) {
             Log.e("ReportSyncRepository", "Failed to submit reported user ${user.userId}", e)
         }
@@ -114,11 +111,10 @@ class ReportSyncRepository @Inject constructor(
         )
         try {
             databases.createDocument(
-                databaseId = "qbase_db",
                 collectionId = "reported_collections",
                 documentId = reportRefId,
                 data = reportMap
-            )
+            ).getOrThrow()
         } catch (e: Exception) {
             Log.e("ReportSyncRepository", "Failed to submit reported collection", e)
         }
