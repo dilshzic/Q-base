@@ -1,0 +1,99 @@
+package com.algorithmx.q_base.ui.explore
+
+import androidx.lifecycle.viewModelScope
+import com.algorithmx.q_base.data.collections.QuestionSet
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+fun ExploreViewModel.toggleSetSelection(setId: String) {
+    val current = _selectedSetIds.value.toMutableSet()
+    if (current.contains(setId)) {
+        current.remove(setId)
+    } else {
+        current.add(setId)
+    }
+    _selectedSetIds.value = current
+    _isSelectionMode.value = current.isNotEmpty()
+}
+
+fun ExploreViewModel.clearSelection() {
+    _selectedSetIds.value = emptySet()
+    _isSelectionMode.value = false
+}
+
+fun ExploreViewModel.deleteCollectionSet(setId: String) {
+    viewModelScope.launch {
+        questionDao.deleteSetById(setId)
+        loadSetsAndSessions()
+    }
+}
+
+suspend fun ExploreViewModel.getSetIdForQuestion(questionId: String): String? {
+    return repository.getSetIdForQuestion(questionId)
+}
+
+fun ExploreViewModel.deleteSelectedSets() {
+    val idsToDelete = _selectedSetIds.value.toList()
+    if (idsToDelete.isEmpty()) return
+    
+    viewModelScope.launch {
+        questionDao.deleteCrossRefsForSets(idsToDelete)
+        questionDao.deleteSetsByIds(idsToDelete)
+        clearSelection()
+        loadSetsAndSessions()
+    }
+}
+
+fun ExploreViewModel.addQuestionToSet(index: Int, setId: String) {
+    val state = _questionStates.value.getOrNull(index) ?: return
+    viewModelScope.launch {
+        repository.addQuestionToSet(setId, state.question.questionId)
+    }
+}
+
+fun ExploreViewModel.addQuestionToSession(index: Int, sessionId: String) {
+    val state = _questionStates.value.getOrNull(index) ?: return
+    viewModelScope.launch {
+        repository.addQuestionToSession(sessionId, state.question.questionId)
+    }
+}
+
+fun ExploreViewModel.createSet(title: String, description: String, collectionId: String) {
+    viewModelScope.launch {
+        repository.saveSet(
+            QuestionSet(
+                setId = java.util.UUID.randomUUID().toString(),
+                title = title,
+                description = description,
+                parentCollectionId = collectionId,
+                createdTimestamp = System.currentTimeMillis(),
+                isUserCreated = true
+            )
+        )
+        loadSetsAndSessions()
+    }
+}
+
+fun ExploreViewModel.deleteQuestion(index: Int) {
+    val state = _questionStates.value.getOrNull(index) ?: return
+    viewModelScope.launch {
+        questionDao.deleteQuestionById(state.question.questionId)
+        _questionStates.update { current ->
+            val mutableList = current.toMutableList()
+            mutableList.removeAt(index)
+            mutableList
+        }
+    }
+}
+
+fun ExploreViewModel.deleteQuestionFromSet(index: Int, setId: String) {
+    val state = _questionStates.value.getOrNull(index) ?: return
+    viewModelScope.launch {
+        questionDao.removeQuestionFromSet(setId, state.question.questionId)
+        _questionStates.update { current ->
+            val mutableList = current.toMutableList()
+            mutableList.removeAt(index)
+            mutableList
+        }
+    }
+}
