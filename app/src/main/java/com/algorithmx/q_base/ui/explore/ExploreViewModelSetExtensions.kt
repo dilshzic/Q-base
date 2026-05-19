@@ -58,7 +58,7 @@ fun ExploreViewModel.addQuestionToSet(index: Int, setId: String) {
             if (groupId != null) {
                 val chat = syncRepository.getChatById(groupId)
                 val currentUid = authRepository.currentUser.firstOrNull()?.uid
-                if (chat == null || currentUid == null || !chat.isAdmin(currentUid)) {
+                if (chat == null || currentUid == null || !chat.adminIds.contains(currentUid)) {
                     _actionFeedback.emit("Only a group admin can modify this collection")
                     return@launch
                 }
@@ -80,7 +80,7 @@ fun ExploreViewModel.addQuestionToSession(index: Int, sessionId: String) {
             if (groupId != null) {
                 val chat = syncRepository.getChatById(groupId)
                 val currentUid = authRepository.currentUser.firstOrNull()?.uid
-                if (chat == null || currentUid == null || !chat.isAdmin(currentUid)) {
+                if (chat == null || currentUid == null || !chat.adminIds.contains(currentUid)) {
                     _actionFeedback.emit("Only a group admin can modify this collection")
                     return@launch
                 }
@@ -118,7 +118,7 @@ fun ExploreViewModel.deleteQuestion(index: Int) {
             if (groupId != null) {
                 val chat = syncRepository.getChatById(groupId)
                 val currentUid = authRepository.currentUser.firstOrNull()?.uid
-                if (chat == null || currentUid == null || !chat.isAdmin(currentUid)) {
+                if (chat == null || currentUid == null || !chat.adminIds.contains(currentUid)) {
                     _actionFeedback.emit("Only a group admin can modify this collection")
                     return@launch
                 }
@@ -145,7 +145,7 @@ fun ExploreViewModel.deleteQuestionFromSet(index: Int, setId: String) {
             if (groupId != null) {
                 val chat = syncRepository.getChatById(groupId)
                 val currentUid = authRepository.currentUser.firstOrNull()?.uid
-                if (chat == null || currentUid == null || !chat.isAdmin(currentUid)) {
+                if (chat == null || currentUid == null || !chat.adminIds.contains(currentUid)) {
                     _actionFeedback.emit("Only a group admin can modify this collection")
                     return@launch
                 }
