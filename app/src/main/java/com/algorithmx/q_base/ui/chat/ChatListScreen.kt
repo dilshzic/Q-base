@@ -29,6 +29,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.data.chat.ChatEntity
 import com.algorithmx.q_base.data.chat.MessageEntity
 import com.algorithmx.q_base.ui.components.reusable.ProfileIconButton
+import com.algorithmx.q_base.ui.state.AppAccessState
+import com.algorithmx.q_base.ui.state.LocalAppAccessState
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.delay
@@ -49,6 +51,7 @@ fun ChatListScreen(
     val selectedChatIds by viewModel.selectedChatIds.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val appAccessState = LocalAppAccessState.current
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     androidx.activity.compose.BackHandler(enabled = isSelectionMode) {
@@ -129,7 +132,24 @@ fun ChatListScreen(
             }
         }
     ) { padding ->
-        if (currentUser == null) {
+        if (appAccessState is AppAccessState.RestoringSession) {
+            Box(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Restoring your session…",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else if (currentUser == null) {
             GuestConnectView(
                 onLoginClick = onNavigateToLogin,
                 modifier = Modifier.padding(padding)

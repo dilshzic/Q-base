@@ -50,6 +50,8 @@ import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.rounded.RocketLaunch
 import com.algorithmx.q_base.ui.components.reusable.ReportDialog
 import com.algorithmx.q_base.ui.components.reusable.ProfileIconButton
+import com.algorithmx.q_base.ui.state.AppAccessState
+import com.algorithmx.q_base.ui.state.LocalAppAccessState
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -79,6 +81,7 @@ fun ChatDetailScreen(
     var reportingMessage by remember { mutableStateOf<MessageEntity?>(null) }
     var showReportGroupDialog by remember { mutableStateOf(false) }
     val collections by viewModel.allStudyCollections.collectAsStateWithLifecycle()
+    val appAccessState = LocalAppAccessState.current
 
     val currentChatId by viewModel.currentChatId.collectAsStateWithLifecycle()
     var hasLoadedActiveChat by remember(currentChatId) { mutableStateOf(false) }
@@ -152,13 +155,25 @@ fun ChatDetailScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
-                            Text(
-                                text = if (isAiLoading) "Typing..."
-                                       else if (state.chat?.isGroup == true) "${state.participants.size} participants" 
-                                       else if (state.chat?.isBlocked == true) "Blocked" else "Active now",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (state.chat?.isBlocked == true) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = if (isAiLoading) "Typing..."
+                                    else if (state.chat?.isGroup == true) "${state.participants.size} participants"
+                                    else if (state.chat?.isBlocked == true) "Blocked" else "Active now",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (state.chat?.isBlocked == true) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "• ${accessStateLabel(appAccessState)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = when (appAccessState) {
+                                        AppAccessState.OnlineReady, AppAccessState.GuestOnline -> MaterialTheme.colorScheme.primary
+                                        AppAccessState.RestoringSession -> MaterialTheme.colorScheme.tertiary
+                                        AppAccessState.SignedInOffline, AppAccessState.OfflineGuest -> MaterialTheme.colorScheme.error
+                                    }
+                                )
+                            }
                         }
                     }
                 },
@@ -667,6 +682,14 @@ fun ChatDetailScreen(
             )
         }
     }
+}
+
+private fun accessStateLabel(state: AppAccessState): String = when (state) {
+    AppAccessState.RestoringSession -> "Restoring"
+    AppAccessState.OnlineReady -> "Online"
+    AppAccessState.SignedInOffline -> "Offline"
+    AppAccessState.GuestOnline -> "Guest Online"
+    AppAccessState.OfflineGuest -> "Guest Offline"
 }
 
 private fun formatDateRelatively(timestamp: Long): String {
