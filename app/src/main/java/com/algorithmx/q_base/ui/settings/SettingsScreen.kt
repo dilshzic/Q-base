@@ -96,89 +96,92 @@ fun SettingsContent(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
-                SettingsSectionHeader("ACCOUNT")
-                SettingsCard(
-                    title = "My Profile",
-                    subtitle = "Manage your information and friend code",
-                    icon = Icons.Rounded.Person,
-                    onClick = onBack
-                )
+                SettingsSection(title = "ACCOUNT") {
+                    SettingsCard(
+                        title = "My Profile",
+                        subtitle = "Manage your information and friend code",
+                        icon = Icons.Rounded.Person,
+                        onClick = onBack
+                    )
+                }
             }
 
             item {
-                Spacer(modifier = Modifier.height(8.dp))
-                SettingsSectionHeader("PREFERENCES")
-                SettingsToggleCard(
-                    title = "Push Notifications",
-                    subtitle = "Stay updated on new messages and shared collections",
-                    icon = Icons.Rounded.Notifications,
-                    checked = config.notificationsEnabled,
-                    onCheckedChange = onUpdateNotifications
-                )
-                
-                SettingsCard(
-                    title = "App Theme",
-                    subtitle = when(config.themeMode) {
-                        "LIGHT" -> "Always Light"
-                        "DARK" -> "Always Dark"
-                        "MONOCHROME" -> "Elegant Monochrome"
-                        else -> "Follow System"
-                    },
-                    icon = Icons.Rounded.Palette,
-                    onClick = onNavigateToAppTheme
-                )
+                SettingsSection(title = "PREFERENCES") {
+                    SettingsToggleCard(
+                        title = "Push Notifications",
+                        subtitle = "Stay updated on new messages and shared collections",
+                        icon = Icons.Rounded.Notifications,
+                        checked = config.notificationsEnabled,
+                        onCheckedChange = onUpdateNotifications
+                    )
+
+                    SettingsCard(
+                        title = "App Theme",
+                        subtitle = when(config.themeMode) {
+                            "LIGHT" -> "Always Light"
+                            "DARK" -> "Always Dark"
+                            "MONOCHROME" -> "Elegant Monochrome"
+                            else -> "Follow System"
+                        },
+                        icon = Icons.Rounded.Palette,
+                        onClick = onNavigateToAppTheme
+                    )
+                }
             }
 
             item {
-                Spacer(modifier = Modifier.height(8.dp))
-                SettingsSectionHeader("AI ENGINE")
-                SettingsCard(
-                    title = "AI Brain Manager",
-                    subtitle = "Configure ${config.provider.name} (${config.modelName})",
-                    icon = Icons.Rounded.Psychology,
-                    onClick = onNavigateToBrainManager
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                SettingsSectionHeader("USAGE TELEMETRY")
-                UsageStatsCard(
-                    requests = config.totalRequests,
-                    tokens = config.totalTokens
-                )
+                SettingsSection(title = "AI ENGINE") {
+                    SettingsCard(
+                        title = "AI Brain Manager",
+                        subtitle = "Configure ${config.provider.name} (${config.modelName})",
+                        icon = Icons.Rounded.Psychology,
+                        onClick = onNavigateToBrainManager
+                    )
+                }
+            }
+
+            item {
+                SettingsSection(title = "USAGE TELEMETRY") {
+                    UsageStatsCard(
+                        requests = config.totalRequests,
+                        tokens = config.totalTokens
+                    )
+                }
             }
             
             item {
-                Spacer(modifier = Modifier.height(8.dp))
-                SettingsSectionHeader("DATA & PRIVACY")
-                SettingsCard(
-                    title = "Local Database",
-                    subtitle = "${String.format("%.2f", dbSize)} MB cached locally",
-                    icon = Icons.Rounded.Storage,
-                    onClick = { showClearDialog = true }
-                )
-                SettingsCard(
-                    title = "Privacy Policy",
-                    subtitle = "How we handle your data",
-                    icon = Icons.Rounded.PrivacyTip,
-                    onClick = { showPrivacyDialog = true }
-                )
+                SettingsSection(title = "DATA & PRIVACY") {
+                    SettingsCard(
+                        title = "Local Database",
+                        subtitle = "${String.format("%.2f", dbSize)} MB cached locally",
+                        icon = Icons.Rounded.Storage,
+                        onClick = { showClearDialog = true }
+                    )
+                    SettingsCard(
+                        title = "Privacy Policy",
+                        subtitle = "How we handle your data",
+                        icon = Icons.Rounded.PrivacyTip,
+                        onClick = { showPrivacyDialog = true }
+                    )
+                }
             }
             
             item {
-                Spacer(modifier = Modifier.height(8.dp))
-                SettingsSectionHeader("SUPPORT")
-                SettingsCard(
-                    title = "Help Center",
-                    subtitle = "Guides and troubleshooting",
-                    icon = Icons.AutoMirrored.Rounded.Help,
-                    onClick = { showHelpDialog = true }
-                )
-                SettingsCard(
-                    title = "Report a Bug",
-                    subtitle = "Help us improve Q-Base",
-                    icon = Icons.Rounded.BugReport,
-                    onClick = { showBugDialog = true }
-                )
+                SettingsSection(title = "SUPPORT") {
+                    SettingsCard(
+                        title = "Help Center",
+                        subtitle = "Guides and troubleshooting",
+                        icon = Icons.AutoMirrored.Rounded.Help,
+                        onClick = { showHelpDialog = true }
+                    )
+                    SettingsCard(
+                        title = "Report a Bug",
+                        subtitle = "Help us improve Q-Base",
+                        icon = Icons.Rounded.BugReport,
+                        onClick = { showBugDialog = true }
+                    )
+                }
             }
 
             item {
@@ -366,6 +369,19 @@ fun SettingsContent(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun SettingsSection(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        SettingsSectionHeader(title)
+        content()
     }
 }
 

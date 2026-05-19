@@ -2,6 +2,7 @@ package com.algorithmx.q_base.data.di
 
 import android.content.Context
 import com.algorithmx.q_base.BuildConfig
+import com.algorithmx.q_base.util.NetworkMonitor
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
@@ -153,5 +154,11 @@ object NetworkModule {
     @Singleton
     fun provideAppwriteDatabases(client: Client): Databases {
         return Databases(client)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNetworkMonitor(@ApplicationContext context: Context): NetworkMonitor {
+        return NetworkMonitor(context)
     }
 }
