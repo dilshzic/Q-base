@@ -82,6 +82,9 @@ fun ChatDetailScreen(
     var showReportGroupDialog by remember { mutableStateOf(false) }
     val collections by viewModel.allStudyCollections.collectAsStateWithLifecycle()
     val appAccessState = LocalAppAccessState.current
+    val canSend by remember(state.chat?.chatId) {
+        state.chat?.chatId?.let { viewModel.canSendToChat(it) } ?: kotlinx.coroutines.flow.flowOf(false)
+    }.collectAsState(initial = false)
 
     val currentChatId by viewModel.currentChatId.collectAsStateWithLifecycle()
     var hasLoadedActiveChat by remember(currentChatId) { mutableStateOf(false) }
@@ -287,11 +290,14 @@ fun ChatDetailScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                             ) {
-                                IconButton(onClick = { showCollectionPicker = true }) {
+                                IconButton(
+                                    onClick = { showCollectionPicker = true },
+                                    enabled = canSend
+                                ) {
                                     Icon(
                                         Icons.Rounded.Add,
                                         contentDescription = "Attach",
-                                        tint = MaterialTheme.colorScheme.primary,
+                                        tint = if (canSend) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
                                         modifier = Modifier.size(24.dp)
                                     )
                                 }
@@ -307,17 +313,21 @@ fun ChatDetailScreen(
                                         unfocusedIndicatorColor = Color.Transparent,
                                         disabledIndicatorColor = Color.Transparent,
                                         focusedContainerColor = Color.Transparent,
-                                        unfocusedContainerColor = Color.Transparent
+                                        unfocusedContainerColor = Color.Transparent,
+                                        disabledContainerColor = Color.Transparent
                                     ),
                                     textStyle = MaterialTheme.typography.bodyMedium
                                 )
                                 
                                 AnimatedVisibility(visible = messageText.isEmpty()) {
-                                    IconButton(onClick = { showSessionPicker = true }) {
+                                    IconButton(
+                                        onClick = { showSessionPicker = true },
+                                        enabled = canSend
+                                    ) {
                                         Icon(
                                             Icons.Rounded.RocketLaunch,
                                             contentDescription = "Session",
-                                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                            tint = if (canSend) MaterialTheme.colorScheme.primary.copy(alpha = 0.7f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.26f),
                                             modifier = Modifier.size(22.dp)
                                         )
                                     }

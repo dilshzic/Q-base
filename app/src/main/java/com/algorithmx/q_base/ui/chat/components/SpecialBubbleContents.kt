@@ -194,11 +194,22 @@ fun MessageTimestampAndStatus(timeString: String, isMine: Boolean, status: Strin
         )
         if (isMine) {
             Spacer(modifier = Modifier.width(3.dp))
+            val iconVector = when (status) {
+                "PENDING" -> Icons.Rounded.Schedule
+                "FAILED" -> Icons.Rounded.ErrorOutline
+                "READ", "DELIVERED" -> Icons.Rounded.DoneAll
+                else -> Icons.Rounded.Done
+            }
+            val iconTint = when (status) {
+                "READ" -> Color(0xFF00E676)
+                "FAILED" -> MaterialTheme.colorScheme.errorContainer
+                else -> MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f)
+            }
             Icon(
-                imageVector = if (status == "READ" || status == "DELIVERED") Icons.Rounded.DoneAll else Icons.Rounded.Done,
+                imageVector = iconVector,
                 contentDescription = status,
                 modifier = Modifier.size(11.dp),
-                tint = if (status == "READ") Color(0xFF00E676) else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f)
+                tint = iconTint
             )
         }
     }

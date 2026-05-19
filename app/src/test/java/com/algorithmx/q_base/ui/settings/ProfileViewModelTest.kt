@@ -32,6 +32,7 @@ class ProfileViewModelTest {
     private val authRepository: AuthRepository = mockk()
     private val profileRepository: ProfileRepository = mockk()
     private val dataClearingRepository: DataClearingRepository = mockk()
+    private val actionQueueDao: com.algorithmx.q_base.data.sync.ActionQueueDao = mockk()
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
@@ -56,7 +57,8 @@ class ProfileViewModelTest {
             questionDao,
             authRepository,
             profileRepository,
-            dataClearingRepository
+            dataClearingRepository,
+            actionQueueDao
         )
     }
 
@@ -87,7 +89,8 @@ class ProfileViewModelTest {
             questionDao,
             authRepository,
             profileRepository,
-            dataClearingRepository
+            dataClearingRepository,
+            actionQueueDao
         )
 
         // Ensure userState is collected so it updates
@@ -129,7 +132,8 @@ class ProfileViewModelTest {
             questionDao,
             authRepository,
             profileRepository,
-            dataClearingRepository
+            dataClearingRepository,
+            actionQueueDao
         )
 
         backgroundScope.launch { viewModel.userState.collect {} }

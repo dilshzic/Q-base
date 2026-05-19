@@ -91,6 +91,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var networkMonitor: NetworkMonitor
 
+    @Inject
+    lateinit var universalQueueManager: com.algorithmx.q_base.data.sync.UniversalQueueManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         checkNotificationPermission()
@@ -117,9 +120,15 @@ class MainActivity : ComponentActivity() {
                     if (user != null && isOnline) {
                         syncJob = launch {
                             try {
+                                // Flush pending offline messages first
+                                syncRepository.flushQueue()
+                                
+                                // Flush universal background actions (Profile updates, Moderation, Admin changes)
+                                universalQueueManager.flushUniversalQueue()
+                                
                                 syncRepository.syncUserChatsFromRemote()
                             } catch (e: Exception) {
-                                android.util.Log.e("MainActivity", "Failed to sync remote user chats", e)
+                                android.util.Log.e("MainActivity", "Failed to sync or flush on network restore", e)
                             }
                             syncRepository.observeAllIncomingMessages(notificationHelper).collect {}
                         }

@@ -32,6 +32,8 @@ import java.util.UUID
 import javax.inject.Inject
 
 
+import com.algorithmx.q_base.util.NetworkMonitor
+
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val chatDao: ChatDao,
@@ -43,8 +45,26 @@ class ChatViewModel @Inject constructor(
     private val collectionDao: CollectionDao,
     private val sessionDao: SessionDao,
     private val mockExporter: MockExporter,
-    private val mockDownloader: MockDownloader
+    private val mockDownloader: MockDownloader,
+    private val networkMonitor: NetworkMonitor
 ) : ViewModel() {
+
+    val isOnline: StateFlow<Boolean> = networkMonitor.isOnline
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun canSendToChat(chatId: String): Flow<Boolean> {
+        return combine(
+            chatDao.getChatByIdFlow(chatId),
+            isOnline
+        ) { chat, online ->
+            if (chat == null) false
+            else {
+                val isAi = chat.participantIds.contains(QBASE_AI_BOT_ID)
+                isAi || online
+            }
+        }
+    }
+
 
     private val json = Json { ignoreUnknownKeys = true }
     
@@ -872,31 +892,44 @@ class ChatViewModel @Inject constructor(
     }
 
     fun sendMessage(chatId: String, text: String, type: String = "TEXT", senderId: String = currentUserId) {
-        val message = MessageEntity(
-            messageId = UUID.randomUUID().toString(),
-            chatId = chatId,
-            senderId = senderId,
-            payload = text,
-            type = type,
-            timestamp = System.currentTimeMillis()
-        )
+        val messageId = UUID.randomUUID().toString()
+        val timestamp = System.currentTimeMillis()
         
         viewModelScope.launch {
-            messageDao.insertMessage(message)
-            
-            // Only sync to Firestore if it's not a message from/to the local AI bot
-            // Note: If both users are human, currentUserId and senderId are same.
-            // If it's a bot message being inserted, senderId is botId.
             val chat = chatDao.getChatById(chatId)
             val isAiChat = chat?.participantIds?.contains(QBASE_AI_BOT_ID) == true
             
+            val isOffline = !isAiChat && !isOnline.value
+            
+            val message = MessageEntity(
+                messageId = messageId,
+                chatId = chatId,
+                senderId = senderId,
+                payload = text,
+                type = type,
+                timestamp = timestamp,
+                status = if (isOffline) "PENDING" else "SENT"
+            )
+            
+            messageDao.insertMessage(message)
+            
             if (!isAiChat) {
+                if (isOffline) {
+                    _actionFeedback.emit("Offline: Message queued.")
+                    return@launch
+                }
+                
                 try {
                     syncRepository.sendMessage(message)
                 } catch (e: Exception) {
-                    // Remove the optimistic local message if encryption/sync fails
-                    messageDao.deleteMessage(message)
-                    _actionFeedback.emit("Message not sent: ${e.message ?: "Unknown error"}")
+                    if (e.message?.contains("missing encryption keys") == true || e.message?.contains("Security abort") == true || e.message?.contains("failed to encrypt") == true) {
+                        messageDao.updateMessageStatus(message.messageId, "FAILED")
+                        _actionFeedback.emit("Message failed: Missing security keys.")
+                    } else {
+                        // Generic network/timeout error during sending
+                        messageDao.updateMessageStatus(message.messageId, "PENDING")
+                        _actionFeedback.emit("Network error: Message queued.")
+                    }
                 }
             } else if (senderId == currentUserId) {
                 // Trigger AI response if user sent a message to the bot

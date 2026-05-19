@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
+import com.algorithmx.q_base.ui.state.LocalAppAccessState
+import com.algorithmx.q_base.ui.state.AppAccessState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,6 +28,8 @@ fun AiGenerationScreen(
     var selectedType by remember { mutableStateOf("SBA") }
     val uiState by viewModel.uiState.collectAsState()
     val previewResponse by viewModel.currentResponse.collectAsState()
+    
+    val accessState = LocalAppAccessState.current
 
     Scaffold(
         topBar = {
@@ -52,6 +56,20 @@ fun AiGenerationScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            if (accessState != AppAccessState.OnlineReady) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "AI Generation is unavailable while offline. Please connect to the internet to generate new study collections.",
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+
             Text(
                 "Create a custom question collection using AI. Describe the topic in detail for better results.",
                 style = MaterialTheme.typography.bodyMedium
@@ -62,7 +80,8 @@ fun AiGenerationScreen(
                 onValueChange = { topic = it },
                 label = { Text("Topic (e.g. Early signs of Heart Failure)") },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 3
+                minLines = 3,
+                enabled = accessState == AppAccessState.OnlineReady
             )
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -70,14 +89,15 @@ fun AiGenerationScreen(
                     value = count,
                     onValueChange = { count = it },
                     label = { Text("Count") },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    enabled = accessState == AppAccessState.OnlineReady
                 )
                 
                 // Simplified type selector
                 var expanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(
                     expanded = expanded,
-                    onExpandedChange = { expanded = !expanded },
+                    onExpandedChange = { if (accessState == AppAccessState.OnlineReady) expanded = !expanded },
                     modifier = Modifier.weight(1f)
                 ) {
                     OutlinedTextField(
@@ -86,7 +106,8 @@ fun AiGenerationScreen(
                         readOnly = true,
                         label = { Text("Type") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                        modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                        enabled = accessState == AppAccessState.OnlineReady
                     )
                     ExposedDropdownMenu(
                         expanded = expanded,
@@ -110,7 +131,7 @@ fun AiGenerationScreen(
                     viewModel.generateCollection(topic, count.toIntOrNull() ?: 5, selectedType, collectionId, collectionName)
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = topic.isNotBlank() && uiState !is AiUiState.Loading
+                enabled = topic.isNotBlank() && uiState !is AiUiState.Loading && accessState == AppAccessState.OnlineReady
             ) {
                 if (uiState is AiUiState.Loading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)

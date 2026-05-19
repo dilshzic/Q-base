@@ -29,6 +29,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.data.core.UserEntity
 import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
+import com.algorithmx.q_base.ui.state.AppAccessState
+import com.algorithmx.q_base.ui.state.LocalAppAccessState
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +52,10 @@ fun ContactSelector(
     var friendCodeQuery by remember { mutableStateOf("") }
     val selectedUsers = remember { mutableStateOf(setOf<UserEntity>()) }
     val excludedUserId = currentUser?.userId
+    
+    val context = LocalContext.current
+    val appAccessState = LocalAppAccessState.current
+    val isOffline = appAccessState == AppAccessState.SignedInOffline || appAccessState == AppAccessState.OfflineGuest
 
     val filteredContacts = remember(nameQuery, state.localContacts, excludedUserId) {
         state.localContacts.filter { 
@@ -76,13 +83,44 @@ fun ContactSelector(
         }
     ) { padding ->
         Column(modifier = modifier.fillMaxWidth().padding(padding)) {
+            if (isOffline) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.CloudOff,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Offline Mode: Some functions are restricted.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                }
+            }
+
             if (!multiSelectMode && onNavigateToNewGroup != null) {
                 // New Group Option
+                val containerColor = if (isOffline) {
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                } else {
+                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+                }
                 Surface(
-                    onClick = onNavigateToNewGroup,
+                    onClick = { if (!isOffline) onNavigateToNewGroup() },
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
                     shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+                    color = containerColor,
+                    enabled = !isOffline
                 ) {
                     Row(
                         modifier = Modifier.padding(16.dp),
@@ -91,23 +129,33 @@ fun ContactSelector(
                         Surface(
                             modifier = Modifier.size(40.dp),
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.secondary
+                            color = if (isOffline) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.secondary
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Rounded.Group,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSecondary,
+                                    tint = if (isOffline) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSecondary,
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
                         }
                         Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            "New Group",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Column {
+                            Text(
+                                "New Group",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isOffline) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface
+                            )
+                            if (isOffline) {
+                                Text(
+                                    "Unavailable offline",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -122,13 +170,19 @@ fun ContactSelector(
             Card(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isOffline) {
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                    } else {
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    }
+                )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         "Search by Friend Code",
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = if (isOffline) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -137,19 +191,21 @@ fun ContactSelector(
                             value = friendCodeQuery,
                             onValueChange = { friendCodeQuery = it.uppercase() },
                             modifier = Modifier.weight(1f),
-                            placeholder = { Text("e.g. QBS-A1B2-C3D4") },
+                            enabled = !isOffline,
+                            placeholder = { Text(if (isOffline) "Unavailable offline" else "e.g. QBS-A1B2-C3D4") },
                             leadingIcon = { Icon(Icons.Rounded.QrCodeScanner, contentDescription = null) },
                             shape = RoundedCornerShape(16.dp),
                             singleLine = true,
                             colors = TextFieldDefaults.colors(
                                 unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                                focusedContainerColor = MaterialTheme.colorScheme.surface
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                             )
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
                             onClick = { viewModel.searchByFriendCode(friendCodeQuery, excludedUserId) },
-                            enabled = friendCodeQuery.isNotBlank() && !state.isSearching,
+                            enabled = friendCodeQuery.isNotBlank() && !state.isSearching && !isOffline,
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             if (state.isSearching) {
@@ -216,7 +272,11 @@ fun ContactSelector(
                                     selectedUsers.value = selectedUsers.value + user
                                 }
                             } else {
-                                onUserSelected(user)
+                                if (isOffline) {
+                                    android.widget.Toast.makeText(context, "Cannot start new chats while offline", android.widget.Toast.LENGTH_SHORT).show()
+                                } else {
+                                    onUserSelected(user)
+                                }
                             }
                         }
                     )

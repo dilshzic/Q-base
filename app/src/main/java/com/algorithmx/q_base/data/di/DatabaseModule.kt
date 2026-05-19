@@ -75,6 +75,9 @@ object DatabaseModule {
     fun provideCollectionVersionLedgerDao(database: AppDatabase): CollectionVersionLedgerDao = database.collectionVersionLedgerDao()
 
     @Provides
+    fun provideActionQueueDao(database: AppDatabase): com.algorithmx.q_base.data.sync.ActionQueueDao = database.actionQueueDao()
+
+    @Provides
     @Singleton
     fun provideExploreRepository(
         collectionDao: CollectionDao,

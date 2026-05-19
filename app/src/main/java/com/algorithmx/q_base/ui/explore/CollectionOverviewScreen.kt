@@ -125,13 +125,16 @@ fun CollectionOverviewScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { viewModel?.askAiAboutCollection(collection) },
-                containerColor = MaterialTheme.colorScheme.tertiary,
-                contentColor = MaterialTheme.colorScheme.onTertiary,
-                icon = { Icon(Icons.Rounded.AutoAwesome, contentDescription = null) },
-                text = { Text("Ask AI") }
-            )
+            val accessState = com.algorithmx.q_base.ui.state.LocalAppAccessState.current
+            if (accessState == com.algorithmx.q_base.ui.state.AppAccessState.OnlineReady) {
+                ExtendedFloatingActionButton(
+                    onClick = { viewModel?.askAiAboutCollection(collection) },
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary,
+                    icon = { Icon(Icons.Rounded.AutoAwesome, contentDescription = null) },
+                    text = { Text("Ask AI") }
+                )
+            }
         }
     ) { padding ->
         Box(
