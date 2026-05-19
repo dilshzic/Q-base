@@ -22,7 +22,7 @@ sealed class Screen : NavKey {
         val sessionId: String? = null, 
         val startIndex: Int = 0
     ) : Screen()
-    @Serializable data class ExplorePager(val collectionName: String) : Screen()
+    @Serializable data class ExplorePager(val collectionId: String) : Screen()
     @Serializable data object Collections : Screen() // Redundant with Explore but kept for deep links
     
     // --- Content Creation & Import ---

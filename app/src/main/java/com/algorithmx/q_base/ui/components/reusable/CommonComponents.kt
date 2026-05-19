@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.sp
 import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.data.sessions.StudySession
 import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.ui.state.AppAccessState
+import com.algorithmx.q_base.ui.state.LocalAppAccessState
 import com.algorithmx.q_base.ui.theme.QbaseTheme
 import java.util.Locale
 
@@ -38,7 +40,8 @@ fun UnifiedTopAppBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     showProfileIcon: Boolean = true,
     isLarge: Boolean = true,
-    titleCentered: Boolean = false
+    titleCentered: Boolean = false,
+    appAccessState: AppAccessState = LocalAppAccessState.current
 ) {
     val titleContent: @Composable () -> Unit = {
         Column(
@@ -60,6 +63,7 @@ fun UnifiedTopAppBar(
                     letterSpacing = 2.sp
                 )
             }
+            AppAccessStateBadge(appAccessState = appAccessState)
         }
     }
 
@@ -114,6 +118,30 @@ fun UnifiedTopAppBar(
                 modifier = modifier
             )
         }
+    }
+}
+
+@Composable
+private fun AppAccessStateBadge(appAccessState: AppAccessState) {
+    val (label, color) = when (appAccessState) {
+        AppAccessState.RestoringSession -> "Restoring" to MaterialTheme.colorScheme.tertiary
+        AppAccessState.OnlineReady -> "Online" to Color(0xFF2E7D32)
+        AppAccessState.SignedInOffline -> "Offline" to MaterialTheme.colorScheme.error
+        AppAccessState.GuestOnline -> "Guest • Online" to MaterialTheme.colorScheme.secondary
+        AppAccessState.OfflineGuest -> "Guest • Offline" to MaterialTheme.colorScheme.error
+    }
+
+    Surface(
+        shape = CircleShape,
+        color = color.copy(alpha = 0.15f),
+        modifier = Modifier.padding(top = 6.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = color,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+        )
     }
 }
 

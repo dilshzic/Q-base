@@ -1,5 +1,7 @@
 package com.algorithmx.q_base.ui.state
 
-import com.algorithmx.q_base.ui.state.AppAccessState
+import androidx.compose.runtime.compositionLocalOf
 
-data class LocalAppAccessState(val accessState: AppAccessState = AppAccessState.UNKNOWN)
+val LocalAppAccessState = compositionLocalOf<AppAccessState> {
+    AppAccessState.RestoringSession
+}
