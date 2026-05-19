@@ -27,7 +27,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
         entry<Screen.Login> {
             val viewModel: AuthViewModel = hiltViewModel()
             LoginScreen(
-                onLoginSuccess = { navigator.navigate(Screen.Home) },
+                onLoginSuccess = { navigator.resetTo(Screen.Home) },
                 onNavigateToSignup = { navigator.navigate(Screen.Signup) },
                 viewModel = viewModel
             )
@@ -36,7 +36,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
         entry<Screen.Signup> {
             val viewModel: AuthViewModel = hiltViewModel()
             SignupScreen(
-                onSignupSuccess = { navigator.navigate(Screen.Home) },
+                onSignupSuccess = { navigator.resetTo(Screen.Home) },
                 onBackToLogin = { navigator.goBack() },
                 viewModel = viewModel
             )
@@ -44,7 +44,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
 
         entry<Screen.Home> {
             HomeScreen(
-                onNavigateToCollections = { navigator.navigate(Screen.Collections) },
+                onNavigateToCollections = { navigator.navigate(Screen.Explore) },
                 onNavigateToSessions = { navigator.navigate(Screen.Sessions()) },
                 onNavigateToSession = { sessionId -> navigator.navigate(Screen.ActiveSession(sessionId)) },
                 onNavigateToSessionResults = { sessionId -> navigator.navigate(Screen.SessionResults(sessionId)) },
@@ -78,19 +78,19 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
         entry<Screen.ExplorePager> { key ->
             val viewModel: ExploreViewModel = hiltViewModel()
             val questionStates by viewModel.questionStates.collectAsStateWithLifecycle()
-            val collections by viewModel.collections.collectAsStateWithLifecycle()
+            val studyCollections by viewModel.collections.collectAsStateWithLifecycle()
             val sets by viewModel.sets.collectAsStateWithLifecycle()
             val sessions by viewModel.sessions.collectAsStateWithLifecycle()
             val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
             
-            LaunchedEffect(key.collectionName) {
-                viewModel.loadQuestionsByStudyCollection(key.collectionName)
+            LaunchedEffect(key.collectionId) {
+                viewModel.loadQuestionsByStudyCollection(key.collectionId)
             }
             
             val coroutineScope = rememberCoroutineScope()
             
             ExploreQuestionPagerScreen(
-                collectionName = key.collectionName,
+                collectionName = studyCollections.find { it.collection.collectionId == key.collectionId }?.collection?.name ?: "Questions",
                 questionStates = questionStates,
                 collections = sets,
                 sessions = sessions,
@@ -139,10 +139,6 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 collectionName = key.collectionName,
                 onBack = { navigator.goBack() }
             )
-        }
-
-        entry<Screen.Collections> {
-            navigator.navigate(Screen.Explore)
         }
 
         entry<Screen.CollectionOverview> { key ->
@@ -334,7 +330,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                     navigator.navigate(Screen.BlockedList)
                 },
                 onProfileClick = { navigator.navigate(Screen.Profile) },
-                onNavigateToLogin = { navigator.navigate(Screen.Login) }
+                onNavigateToLogin = { navigator.resetTo(Screen.Login) }
             )
         }
 
@@ -483,7 +479,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onLoggedOut = { 
                     val sharedPrefs = context.getSharedPreferences("qbase_prefs", android.content.Context.MODE_PRIVATE)
                     sharedPrefs.edit().putBoolean("is_logged_in", false).apply()
-                    navigator.navigate(Screen.Login)
+                    navigator.resetTo(Screen.Login)
                 }
             )
         }
@@ -513,7 +509,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                     navigator.navigate(Screen.BlockedList)
                 },
                 onProfileClick = { navigator.navigate(Screen.Profile) },
-                onNavigateToLogin = { navigator.navigate(Screen.Login) }
+                onNavigateToLogin = { navigator.resetTo(Screen.Login) }
             )
         }
 
@@ -524,4 +520,3 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
         }
     }
 }
-

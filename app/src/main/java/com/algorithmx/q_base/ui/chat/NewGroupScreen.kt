@@ -97,6 +97,7 @@ fun NewGroupScreen(
                     1 -> {
                         ContactSelector(
                             multiSelectMode = true,
+                            currentUser = currentUser,
                             onUsersSelected = {
                                 selectedParticipants = it
                                 step = 2
