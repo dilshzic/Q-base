@@ -20,6 +20,7 @@ import time
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 from appwrite.exception import AppwriteException
+from appwrite.id import ID
 
 def read_stdin():
     try:
@@ -79,13 +80,19 @@ def main():
         print('Event not for shared collections/sessions; skipping enforcement')
         # Still attempt to log
         try:
-            db.create_document(os.getenv('APPWRITE_DATABASE_ID'), 'audit_logs', json.dumps({
-                'eventType': str(event_type),
-                'collection': str(collection),
-                'documentId': str(document_id),
-                'actorId': str(actor_id),
-                'details': json.dumps(data)
-            }), permissions=[])
+            db.create_row(
+                os.getenv('APPWRITE_DATABASE_ID'),
+                'audit_logs',
+                ID.unique(),
+                {
+                    'eventType': str(event_type),
+                    'collection': str(collection),
+                    'documentId': str(document_id),
+                    'actorId': str(actor_id),
+                    'details': json.dumps(data)
+                },
+                permissions=[]
+            )
         except Exception:
             pass
         return
@@ -94,21 +101,28 @@ def main():
     if not actor_id or not chat_id:
         print('Missing actor_id or chat_id; logging and skipping enforcement')
         try:
-            db.create_document(os.getenv('APPWRITE_DATABASE_ID'), 'audit_logs', json.dumps({
-                'eventType': 'missing_fields',
-                'collection': str(collection),
-                'documentId': str(document_id),
-                'actorId': str(actor_id),
-                'details': json.dumps(data)
-            }), permissions=[])
+            db.create_row(
+                os.getenv('APPWRITE_DATABASE_ID'),
+                'audit_logs',
+                ID.unique(),
+                {
+                    'eventType': 'missing_fields',
+                    'collection': str(collection),
+                    'documentId': str(document_id),
+                    'actorId': str(actor_id),
+                    'details': json.dumps(data)
+                },
+                permissions=[]
+            )
         except Exception:
             pass
         return
 
     # Fetch chat document and check adminIds
     try:
-        chat_doc = db.get_document(os.getenv('APPWRITE_DATABASE_ID'), 'chats', chat_id)
-        chat_admins = getattr(chat_doc, 'adminIds', None) or chat_doc.get('adminIds') if isinstance(chat_doc, dict) else None
+        chat_doc = db.get_row(os.getenv('APPWRITE_DATABASE_ID'), 'chats', chat_id)
+        doc_data = chat_doc.data if hasattr(chat_doc, 'data') else (chat_doc if isinstance(chat_doc, dict) else {})
+        chat_admins = doc_data.get('adminIds')
         # Normalize admin list
         if isinstance(chat_admins, str):
             try:
@@ -130,21 +144,27 @@ def main():
             'payload': data
         }
         try:
-            db.create_document(os.getenv('APPWRITE_DATABASE_ID'), 'audit_logs', json.dumps({
-                'eventType': 'unauthorized_write',
-                'collection': collection,
-                'documentId': document_id,
-                'actorId': actor_id,
-                'details': json.dumps(details),
-                'timestamp': int(time.time() * 1000)
-            }), permissions=[])
+            db.create_row(
+                os.getenv('APPWRITE_DATABASE_ID'),
+                'audit_logs',
+                ID.unique(),
+                {
+                    'eventType': 'unauthorized_write',
+                    'collection': collection,
+                    'documentId': document_id,
+                    'actorId': actor_id,
+                    'details': json.dumps(details),
+                    'timestamp': int(time.time() * 1000)
+                },
+                permissions=[]
+            )
         except Exception as e:
             print('Failed to write audit log:', e)
 
         # Attempt to delete the offending document
         try:
             if document_id:
-                db.delete_document(os.getenv('APPWRITE_DATABASE_ID'), collection, document_id)
+                db.delete_row(os.getenv('APPWRITE_DATABASE_ID'), collection, document_id)
                 print('Deleted unauthorized document', document_id)
         except Exception as e:
             print('Failed to delete unauthorized document:', e)

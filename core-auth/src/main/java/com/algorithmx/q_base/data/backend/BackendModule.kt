@@ -63,9 +63,10 @@ object BackendModule {
     @AppwriteBackend
     fun provideAppwriteDatabaseImpl(
         client: io.appwrite.Client,
-        databases: io.appwrite.services.Databases
+        databases: io.appwrite.services.Databases,
+        tablesClient: Any?
     ): CoreDatabase {
-        return AppwriteDatabaseImpl(client, databases)
+        return AppwriteDatabaseImpl(client, databases, tablesClient)
     }
 
     @Provides

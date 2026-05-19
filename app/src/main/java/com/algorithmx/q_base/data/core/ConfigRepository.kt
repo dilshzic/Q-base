@@ -6,7 +6,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.algorithmx.q_base.BuildConfig
 import com.algorithmx.q_base.core_crypto.CryptoManager
-import io.appwrite.services.Databases
+import com.algorithmx.q_base.data.backend.CoreDatabase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -18,7 +18,7 @@ private val Context.dataStore by preferencesDataStore(name = "app_config")
 @Singleton
 class ConfigRepository @Inject constructor(
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context,
-    private val databases: Databases,
+    private val databases: CoreDatabase,
     private val cryptoManager: CryptoManager
 ) {
     private val GEMINI_KEY = stringPreferencesKey("gemini_api_key")
@@ -67,15 +67,14 @@ class ConfigRepository @Inject constructor(
             if (now - lastFetch < 3600000 && lastFetch != 0L) return
 
             val response = databases.getDocument(
-                databaseId = BuildConfig.APPWRITE_DATABASE_ID,
                 collectionId = "app_config",
                 documentId = "global_keys"
-            )
+            ).getOrThrow() ?: throw IllegalStateException("Config not found")
 
             context.dataStore.edit { prefs ->
-                val gemini = response.data["gemini_api_key"] as? String
-                val groq = response.data["groq_api_key"] as? String
-                val deepseek = response.data["deepseek_api_key"] as? String
+                val gemini = response["gemini_api_key"] as? String
+                val groq = response["groq_api_key"] as? String
+                val deepseek = response["deepseek_api_key"] as? String
 
                 if (gemini != null) {
                     // Global Decryption: if the database key is GCM-encrypted, decrypt it with the static binary key first, then encrypt with local AEAD
@@ -124,11 +123,10 @@ class ConfigRepository @Inject constructor(
             
             if (updateData.isNotEmpty()) {
                 databases.updateDocument(
-                    databaseId = BuildConfig.APPWRITE_DATABASE_ID,
                     collectionId = "user_private_settings",
                     documentId = userId,
                     data = updateData
-                )
+                ).getOrThrow()
                 android.util.Log.d("ConfigRepository", "Successfully backed up E2EE API keys to Appwrite Cloud.")
             }
         } catch (e: Exception) {
@@ -139,13 +137,12 @@ class ConfigRepository @Inject constructor(
     suspend fun restoreKeysFromCloud(userId: String) {
         try {
             val response = databases.getDocument(
-                databaseId = BuildConfig.APPWRITE_DATABASE_ID,
                 collectionId = "user_private_settings",
                 documentId = userId
-            )
+            ).getOrThrow() ?: throw IllegalStateException("Settings not found")
             
-            val encryptedGemini = response.data["geminiKeyEncrypted"] as? String
-            val encryptedGroq = response.data["groqKeyEncrypted"] as? String
+            val encryptedGemini = response["geminiKeyEncrypted"] as? String
+            val encryptedGroq = response["groqKeyEncrypted"] as? String
             
             if (!encryptedGemini.isNullOrBlank()) {
                 cryptoManager.decryptMessage(encryptedGemini).onSuccess { decrypted ->

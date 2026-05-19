@@ -9,8 +9,8 @@ import com.algorithmx.q_base.data.core.UserDao
 import com.algorithmx.q_base.data.auth.AuthRepository
 import com.algorithmx.q_base.core_crypto.CryptoManager
 import com.algorithmx.q_base.data.util.MockDownloader
+import com.algorithmx.q_base.data.backend.CoreDatabase
 import io.appwrite.Client
-import io.appwrite.services.Databases
 import io.appwrite.services.Storage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +22,7 @@ import dagger.Lazy
 @Singleton
 class CollectionSyncRepository @Inject constructor(
     internal val appwriteClient: Client,
-    internal val databases: Databases,
+    internal val databases: CoreDatabase,
     internal val authRepository: AuthRepository,
     internal val storage: Storage,
     internal val chatDao: ChatDao,

@@ -7,8 +7,9 @@ import com.algorithmx.q_base.data.chat.isAdmin
 import com.algorithmx.q_base.data.chat.ChatRemoteRepository
 import com.algorithmx.q_base.data.chat.MessageDao
 import com.algorithmx.q_base.data.auth.AuthRepository
-import io.appwrite.Query
-import io.appwrite.services.Databases
+import com.algorithmx.q_base.data.backend.CoreDatabase
+import com.algorithmx.q_base.data.backend.CoreQuery
+import com.algorithmx.q_base.data.backend.CoreQueryOperator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,7 +21,7 @@ import dagger.Lazy
 
 @Singleton
 class ChatManagerRepository @Inject constructor(
-    private val databases: Databases,
+    private val databases: CoreDatabase,
     private val authRepository: AuthRepository,
     private val chatRemoteRepository: ChatRemoteRepository,
     private val chatDao: ChatDao,
@@ -63,23 +64,24 @@ class ChatManagerRepository @Inject constructor(
         while (!success && attempts < 3) {
             try {
                 Log.d("ChatManagerRepository", "Syncing user chats from remote (attempt ${attempts + 1}) for uid: $uid")
-                val response = databases.listDocuments(
-                    databaseId = "qbase_db",
-                    collectionId = "chats",
-                    queries = listOf(
-                        Query.contains("participantIds", uid)
-                    )
+                val queries = listOf(
+                    CoreQuery("participantIds", CoreQueryOperator.ARRAY_CONTAINS, uid)
                 )
-                for (doc in response.documents) {
+                val docs = databases.queryDocuments(
+                    collectionId = "chats",
+                    queries = queries
+                ).getOrThrow()
+
+                for (doc in docs) {
                     @Suppress("UNCHECKED_CAST")
-                    val participantsList = doc.data["participantIds"] as? List<String> ?: emptyList()
-                    val remoteAdminIds = doc.data["adminIds"] as? List<String>
-                    val remoteAdminId = doc.data["adminId"] as? String
-                    val isGroupVal = doc.data["isGroup"] as? Boolean ?: false
+                    val participantsList = doc["participantIds"] as? List<String> ?: emptyList()
+                    val remoteAdminIds = doc["adminIds"] as? List<String>
+                    val remoteAdminId = doc["adminId"] as? String
+                    val isGroupVal = doc["isGroup"] as? Boolean ?: false
                     
                     val chat = ChatEntity(
-                        chatId = doc.id,
-                        chatName = doc.data["chatName"] as? String,
+                        chatId = doc["$id"] as String,
+                        chatName = doc["chatName"] as? String,
                         isGroup = isGroupVal,
                         participantIds = participantsList.joinToString(","),
                         adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList())
@@ -117,23 +119,24 @@ class ChatManagerRepository @Inject constructor(
         }
 
         try {
-            val response = databases.listDocuments(
-                databaseId = "qbase_db",
-                collectionId = "chats",
-                queries = listOf(
-                    Query.equal("isGroup", false)
-                )
+            val queries = listOf(
+                CoreQuery("isGroup", CoreQueryOperator.EQUAL, false)
             )
-            for (doc in response.documents) {
+            val docs = databases.queryDocuments(
+                collectionId = "chats",
+                queries = queries
+            ).getOrThrow()
+
+            for (doc in docs) {
                 @Suppress("UNCHECKED_CAST")
-                val participantsList = doc.data["participantIds"] as? List<String> ?: emptyList()
+                val participantsList = doc["participantIds"] as? List<String> ?: emptyList()
                 val trimmedParticipants = participantsList.map { it.trim() }
                 if (trimmedParticipants.contains(uid) && trimmedParticipants.contains(userId)) {
-                    val remoteAdminIds = doc.data["adminIds"] as? List<String>
-                    val remoteAdminId = doc.data["adminId"] as? String
+                    val remoteAdminIds = doc["adminIds"] as? List<String>
+                    val remoteAdminId = doc["adminId"] as? String
                     val chat = ChatEntity(
-                        chatId = doc.id,
-                        chatName = doc.data["chatName"] as? String,
+                        chatId = doc["$id"] as String,
+                        chatName = doc["chatName"] as? String,
                         isGroup = false,
                         participantIds = participantsList.joinToString(","),
                         adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList())
@@ -171,18 +174,17 @@ class ChatManagerRepository @Inject constructor(
     suspend fun fetchAndSyncChatMetadata(chatId: String) {
         try {
             val doc = databases.getDocument(
-                databaseId = "qbase_db",
                 collectionId = "chats",
                 documentId = chatId
-            )
+            ).getOrThrow() ?: throw IllegalStateException("Chat not found")
             @Suppress("UNCHECKED_CAST")
-            val participantsList = doc.data["participantIds"] as? List<String> ?: emptyList()
-            val remoteAdminIds = doc.data["adminIds"] as? List<String>
-            val remoteAdminId = doc.data["adminId"] as? String
+            val participantsList = doc["participantIds"] as? List<String> ?: emptyList()
+            val remoteAdminIds = doc["adminIds"] as? List<String>
+            val remoteAdminId = doc["adminId"] as? String
             val chat = ChatEntity(
                 chatId = chatId,
-                chatName = doc.data["chatName"] as? String,
-                isGroup = doc.data["isGroup"] as? Boolean ?: false,
+                chatName = doc["chatName"] as? String,
+                isGroup = doc["isGroup"] as? Boolean ?: false,
                 participantIds = participantsList.joinToString(","),
                 adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList())
             )

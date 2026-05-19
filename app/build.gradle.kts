@@ -108,6 +108,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
     implementation(libs.moshi.kotlin)
+    implementation(libs.gson)
     ksp(libs.moshi.kotlin.codegen)
 
     // Serialization
