@@ -48,10 +48,12 @@ fun ContactSelector(
     var nameQuery by remember { mutableStateOf("") }
     var friendCodeQuery by remember { mutableStateOf("") }
     val selectedUsers = remember { mutableStateOf(setOf<UserEntity>()) }
+    val excludedUserId = currentUser?.userId
 
-    val filteredContacts = remember(nameQuery, state.localContacts) {
+    val filteredContacts = remember(nameQuery, state.localContacts, excludedUserId) {
         state.localContacts.filter { 
-            it.displayName.contains(nameQuery, ignoreCase = true)
+            it.userId != excludedUserId &&
+                it.displayName.contains(nameQuery, ignoreCase = true)
         }
     }
 
@@ -146,7 +148,7 @@ fun ContactSelector(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
-                            onClick = { viewModel.searchByFriendCode(friendCodeQuery) },
+                            onClick = { viewModel.searchByFriendCode(friendCodeQuery, excludedUserId) },
                             enabled = friendCodeQuery.isNotBlank() && !state.isSearching,
                             shape = RoundedCornerShape(16.dp)
                         ) {
@@ -159,7 +161,7 @@ fun ContactSelector(
                     }
                     
                     // Search Result from Firestore
-                    state.searchResult?.let { user ->
+                    state.searchResult?.takeIf { it.userId != excludedUserId }?.let { user ->
                         Spacer(modifier = Modifier.height(12.dp))
                         UserItem(
                             user = user, 
