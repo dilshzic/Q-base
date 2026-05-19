@@ -46,7 +46,7 @@ class CollectionSyncRepository @Inject constructor(
     private val collectionDao: CollectionDao,
     private val questionDao: QuestionDao,
     private val collectionVersionLedgerDao: CollectionVersionLedgerDao,
-    private val chatSyncRepository: Lazy<ChatSyncRepository>
+    private val messageSyncRepository: Lazy<MessageSyncRepository>
 ) {
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val bucketId = BuildConfig.APPWRITE_BUCKET_ID
@@ -424,7 +424,7 @@ class CollectionSyncRepository @Inject constructor(
                     keyFingerprint = "",
                     wrappedKey = ""
                 )
-                chatSyncRepository.get().sendMessage(message)
+                messageSyncRepository.get().sendMessage(message)
                 
                 collectionVersionLedgerDao.insertLedger(
                     CollectionVersionLedgerEntity(
@@ -523,7 +523,7 @@ class CollectionSyncRepository @Inject constructor(
             type = "COLLECTION_PATCH",
             timestamp = System.currentTimeMillis()
         )
-        chatSyncRepository.get().sendMessage(message)
+        messageSyncRepository.get().sendMessage(message)
     }
 
     suspend fun applyCollectionPatch(jsonString: String) {

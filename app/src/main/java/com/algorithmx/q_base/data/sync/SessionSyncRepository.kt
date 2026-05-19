@@ -29,7 +29,7 @@ class SessionSyncRepository @Inject constructor(
     private val authRepository: AuthRepository,
     private val chatDao: ChatDao,
     private val sessionDao: SessionDao,
-    private val chatSyncRepository: Lazy<ChatSyncRepository>
+    private val messageSyncRepository: Lazy<MessageSyncRepository>
 ) {
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -55,7 +55,7 @@ class SessionSyncRepository @Inject constructor(
             timestamp = System.currentTimeMillis()
         )
         
-        chatSyncRepository.get().sendMessage(message)
+        messageSyncRepository.get().sendMessage(message)
     }
 
     suspend fun addSharedSessionToGroup(
@@ -158,7 +158,7 @@ class SessionSyncRepository @Inject constructor(
             type = "SESSION_PATCH",
             timestamp = System.currentTimeMillis()
         )
-        chatSyncRepository.get().sendMessage(message)
+        messageSyncRepository.get().sendMessage(message)
     }
 
     suspend fun applySessionPatch(jsonString: String) {
