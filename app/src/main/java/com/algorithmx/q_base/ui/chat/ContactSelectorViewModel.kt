@@ -38,7 +38,7 @@ class ContactSelectorViewModel @Inject constructor(
         }
     }
 
-    fun searchByFriendCode(code: String) {
+    fun searchByFriendCode(code: String, excludedUserId: String? = null) {
         if (code.isBlank()) return
         
         viewModelScope.launch {
@@ -47,7 +47,11 @@ class ContactSelectorViewModel @Inject constructor(
             // Check local first
             val localUser = _state.value.localContacts.find { it.friendCode.equals(code, ignoreCase = true) }
             if (localUser != null) {
-                _state.update { it.copy(searchResult = localUser, isSearching = false) }
+                if (localUser.userId == excludedUserId) {
+                    _state.update { it.copy(isSearching = false, searchError = "You can't start a chat with yourself") }
+                } else {
+                    _state.update { it.copy(searchResult = localUser, isSearching = false) }
+                }
                 return@launch
             }
 
@@ -55,6 +59,10 @@ class ContactSelectorViewModel @Inject constructor(
             profileRepository.findUserByFriendCode(code)
                 .onSuccess { profile ->
                     if (profile != null) {
+                        if (profile.userId == excludedUserId) {
+                            _state.update { it.copy(isSearching = false, searchError = "You can't start a chat with yourself") }
+                            return@onSuccess
+                        }
                         val userEntity = UserEntity(
                             userId = profile.userId,
                             displayName = profile.displayName,
