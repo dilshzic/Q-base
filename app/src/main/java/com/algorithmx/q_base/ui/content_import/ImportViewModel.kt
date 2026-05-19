@@ -102,6 +102,19 @@ class ImportViewModel @Inject constructor(
     private val _selectedMethod = MutableStateFlow<String?>(null) // "IMPORT", "GENERATE", "MANUAL"
     val selectedMethod = _selectedMethod.asStateFlow()
 
+    // Dynamic question type selection for paper extraction
+    private val _selectedPaperTypes = MutableStateFlow<List<String>>(listOf("SBA", "MTF", "EMQ"))
+    val selectedPaperTypes = _selectedPaperTypes.asStateFlow()
+
+    fun togglePaperType(type: String) {
+        val current = _selectedPaperTypes.value
+        _selectedPaperTypes.value = if (current.contains(type)) {
+            if (current.size > 1) current - type else current // Keep at least one
+        } else {
+            current + type
+        }
+    }
+
     val currentUser = authRepository.currentUser
         .map { firebaseUser ->
             firebaseUser?.let {
@@ -343,7 +356,7 @@ class ImportViewModel @Inject constructor(
                 collectionId = catId,
                 collectionName = catName,
                 difficulty = "Balanced",
-                types = listOf("SBA", "MTF", "EMQ"),
+                types = _selectedPaperTypes.value,
                 customInstructions = "Ensure questions are parsed correctly as SBA, MTF, or EMQ. List any skipped non-question blocks in skippedSegments and any parsing errors/warnings in parsingWarnings."
             )
             
@@ -364,6 +377,14 @@ class ImportViewModel @Inject constructor(
             } else {
                 _uiState.value = ImportStep.Error(result.exceptionOrNull()?.message ?: "Extraction failed")
             }
+        }
+    }
+
+    fun handleRetry() {
+        if (_extractedDocs.value.isNotEmpty()) {
+            _uiState.value = ImportStep.ExtractionIngest
+        } else {
+            reset()
         }
     }
 

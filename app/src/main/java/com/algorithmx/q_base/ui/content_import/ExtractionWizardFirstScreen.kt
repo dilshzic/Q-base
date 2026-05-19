@@ -29,6 +29,8 @@ data class ExtractedDocumentCard(
 @Composable
 fun ExtractionWizardFirstScreen(
     extractedDocs: List<ExtractedDocumentCard>,
+    selectedPaperTypes: List<String>,
+    onTogglePaperType: (String) -> Unit,
     onAddPdf: (Uri) -> Unit,
     onAddOcr: (Uri) -> Unit,
     onAddClipboard: (String) -> Unit,
@@ -132,6 +134,49 @@ fun ExtractionWizardFirstScreen(
                         onClearClick = { onRemoveDoc(doc.id) }
                     )
                 }
+            }
+        }
+
+        // Question formats selection row
+        Text(
+            text = "Select formats to extract",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            listOf("SBA", "MTF", "EMQ").forEach { format ->
+                val isSelected = selectedPaperTypes.contains(format)
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { onTogglePaperType(format) },
+                    label = { Text(format, fontWeight = FontWeight.Bold) },
+                    leadingIcon = if (isSelected) {
+                        {
+                            Icon(
+                                imageVector = Icons.Rounded.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    } else null,
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        selectedLabelColor = MaterialTheme.colorScheme.primary,
+                        selectedLeadingIconColor = MaterialTheme.colorScheme.primary
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = isSelected,
+                        borderColor = MaterialTheme.colorScheme.outlineVariant,
+                        selectedBorderColor = MaterialTheme.colorScheme.primary,
+                        borderWidth = 1.dp,
+                        selectedBorderWidth = 1.5.dp
+                    )
+                )
             }
         }
 
