@@ -68,23 +68,6 @@ fun AiBrainManagerScreen(
                     )
                 ) {
                     AiConfigSelector(
-                        task = BrainTask.CHAT_BOT,
-                        currentConfig = config.taskConfigs[BrainTask.CHAT_BOT],
-                        availableModels = availableModels,
-                        onConfigChange = { viewModel.saveTaskConfig(BrainTask.CHAT_BOT, it) }
-                    )
-                }
-            }
-
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                    )
-                ) {
-                    AiConfigSelector(
                         task = BrainTask.COLLECTION_GEN,
                         currentConfig = config.taskConfigs[BrainTask.COLLECTION_GEN],
                         availableModels = availableModels,
