@@ -25,4 +25,10 @@ interface MessageDao {
 
     @Query("DELETE FROM messages")
     suspend fun deleteAllMessages()
+
+    @Query("SELECT * FROM messages WHERE status = 'PENDING' ORDER BY timestamp ASC")
+    suspend fun getPendingMessages(): List<MessageEntity>
+
+    @Query("UPDATE messages SET status = :status WHERE messageId = :messageId")
+    suspend fun updateMessageStatus(messageId: String, status: String)
 }

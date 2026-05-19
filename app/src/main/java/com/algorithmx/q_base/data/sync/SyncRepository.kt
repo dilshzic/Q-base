@@ -114,6 +114,14 @@ class SyncRepository @Inject constructor(
         // For Group Chats: Receipt-based self-healing cleanup
         try {
             val wrappedKeysMap = deserializeWrappedKeys(wrappedKeyStr).toMutableMap()
+            
+            // SECURITY/RACE CONDITION AUDIT FIX:
+            // Check if we are actually in the pending recipients list.
+            // If not, we already acknowledged this message or were not a recipient.
+            if (!wrappedKeysMap.containsKey(currentUserId)) {
+                return
+            }
+            
             wrappedKeysMap.remove(currentUserId) // Remove self
 
             // Filter out the sender to find pending receivers
@@ -237,9 +245,9 @@ class SyncRepository @Inject constructor(
 
                         if (messageDao.getMessageById(doc.id) == null) {
                             messageDao.insertMessage(message)
-                            repositoryScope.launch {
-                                acknowledgeMessageDelivery(doc.id, chatId, senderId, wrappedKeyStr ?: "")
-                            }
+                        }
+                        repositoryScope.launch {
+                            acknowledgeMessageDelivery(doc.id, chatId, senderId, wrappedKeyStr ?: "")
                         }
                     }
                     trySend(null).isSuccess
@@ -342,13 +350,13 @@ class SyncRepository @Inject constructor(
                                     }
                                 }
 
-                                repositoryScope.launch {
-                                    acknowledgeMessageDelivery(docId, chatId, senderId, wrappedKeyStr)
-                                }
-
                                 if (message.senderId != currentUserId) {
                                     trySend(message).isSuccess
                                 }
+                            }
+
+                            repositoryScope.launch {
+                                acknowledgeMessageDelivery(docId, chatId, senderId, wrappedKeyStr)
                             }
                         }
                     }
@@ -599,10 +607,11 @@ class SyncRepository @Inject constructor(
                         if (messageDao.getMessageById(docId) == null) {
                             messageDao.insertMessage(message)
                             chatDao.incrementUnreadCount(docChatId)
+                        }
 
-                            repositoryScope.launch {
-                                acknowledgeMessageDelivery(docId, docChatId, senderId, wrappedKeyStr)
-                            }
+                        repositoryScope.launch {
+                            acknowledgeMessageDelivery(docId, docChatId, senderId, wrappedKeyStr)
+                        }
 
                             // Show local notification using the locally-decrypted content
                             // No plaintext ever leaves the device — true E2EE
@@ -908,6 +917,9 @@ class SyncRepository @Inject constructor(
 
                 if (messageDao.getMessageById(doc.id) == null) {
                     messageDao.insertMessage(message)
+                }
+                repositoryScope.launch {
+                    acknowledgeMessageDelivery(doc.id, chatId, senderId, wrappedKeyStr ?: "")
                 }
             }
         } catch (e: Exception) {

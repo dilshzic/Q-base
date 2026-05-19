@@ -95,7 +95,8 @@ class ChatRemoteRepository @Inject constructor(
                 )
             }
         } catch (e: Exception) {
-            Log.e("ChatRemoteRepository", "Failed to add participant in Appwrite", e)
+            Log.e("ChatRemoteRepository", "Operation failed in Appwrite", e)
+            throw e
         }
     }
 
@@ -118,7 +119,8 @@ class ChatRemoteRepository @Inject constructor(
                 )
             }
         } catch (e: Exception) {
-            Log.e("ChatRemoteRepository", "Failed to remove participant in Appwrite", e)
+            Log.e("ChatRemoteRepository", "Operation failed in Appwrite", e)
+            throw e
         }
     }
 
@@ -141,7 +143,8 @@ class ChatRemoteRepository @Inject constructor(
                 )
             }
         } catch (e: Exception) {
-            Log.e("ChatRemoteRepository", "Failed to promote participant to admin in Appwrite", e)
+            Log.e("ChatRemoteRepository", "Operation failed in Appwrite", e)
+            throw e
         }
     }
 
@@ -164,7 +167,8 @@ class ChatRemoteRepository @Inject constructor(
                 )
             }
         } catch (e: Exception) {
-            Log.e("ChatRemoteRepository", "Failed to demote admin in Appwrite", e)
+            Log.e("ChatRemoteRepository", "Operation failed in Appwrite", e)
+            throw e
         }
     }
 
@@ -252,7 +256,8 @@ class ChatRemoteRepository @Inject constructor(
                 data = reportMap
             )
         } catch (e: Exception) {
-            Log.e("ChatRemoteRepository", "Failed to submit reported group ${group.chatId}", e)
+            Log.e("ChatRemoteRepository", "Operation failed in Appwrite", e)
+            throw e
         }
     }
 
@@ -272,7 +277,8 @@ class ChatRemoteRepository @Inject constructor(
                 data = reportMap
             )
         } catch (e: Exception) {
-            Log.e("ChatRemoteRepository", "Failed to submit reported message ${message.messageId}", e)
+            Log.e("ChatRemoteRepository", "Operation failed in Appwrite", e)
+            throw e
         }
     }
 }

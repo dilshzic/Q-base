@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.data.core.UserEntity
 import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
+import com.algorithmx.q_base.ui.state.AppAccessState
+import com.algorithmx.q_base.ui.state.LocalAppAccessState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +33,8 @@ fun NewGroupScreen(
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
+    val appAccessState = LocalAppAccessState.current
+    val isOffline = appAccessState == AppAccessState.SignedInOffline || appAccessState == AppAccessState.OfflineGuest
     
     LaunchedEffect(Unit) {
         viewModel.navigationEvents.collect { event ->
@@ -111,6 +115,30 @@ fun NewGroupScreen(
                                 .padding(24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
+                            if (isOffline) {
+                                Surface(
+                                    color = MaterialTheme.colorScheme.errorContainer,
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.CloudOff,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            text = "Offline Mode: Cannot create group.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                    }
+                                }
+                            }
                             Surface(
                                 modifier = Modifier.size(80.dp),
                                 shape = CircleShape,
@@ -155,7 +183,7 @@ fun NewGroupScreen(
                                     )
                                 },
                                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                                enabled = groupName.isNotBlank(),
+                                enabled = groupName.isNotBlank() && !isOffline,
                                 shape = RoundedCornerShape(16.dp)
                             ) {
                                 Icon(Icons.Rounded.Check, contentDescription = null)

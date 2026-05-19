@@ -34,7 +34,8 @@ class ProfileViewModel @Inject constructor(
     private val questionDao: QuestionDao,
     private val authRepository: AuthRepository,
     private val profileRepository: ProfileRepository,
-    private val dataClearingRepository: DataClearingRepository
+    private val dataClearingRepository: DataClearingRepository,
+    private val actionQueueDao: com.algorithmx.q_base.data.sync.ActionQueueDao
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -104,6 +105,18 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    private suspend fun tryUpdateProfile(updatedProfile: UserProfile) {
+        val result = profileRepository.updateProfile(updatedProfile)
+        if (result.isFailure) {
+            actionQueueDao.insertAction(
+                com.algorithmx.q_base.data.sync.OfflineActionEntity(
+                    actionType = "UPDATE_PROFILE",
+                    payloadJson = """{"userId":"${updatedProfile.userId}"}"""
+                )
+            )
+        }
+    }
+
     fun updateDisplayName(newName: String) {
         val current = userState.value ?: return
         viewModelScope.launch {
@@ -118,7 +131,7 @@ class ProfileViewModel @Inject constructor(
                 isBanned = current.isBanned,
                 isPhotoVisible = current.isPhotoVisible
             )
-            profileRepository.updateProfile(updatedProfile)
+            tryUpdateProfile(updatedProfile)
         }
     }
 
@@ -136,7 +149,7 @@ class ProfileViewModel @Inject constructor(
                 isBanned = current.isBanned,
                 isPhotoVisible = current.isPhotoVisible
             )
-            profileRepository.updateProfile(updatedProfile)
+            tryUpdateProfile(updatedProfile)
         }
     }
 
@@ -154,7 +167,7 @@ class ProfileViewModel @Inject constructor(
                 isBanned = current.isBanned,
                 isPhotoVisible = current.isPhotoVisible
             )
-            profileRepository.updateProfile(updatedProfile)
+            tryUpdateProfile(updatedProfile)
         }
     }
 
@@ -172,7 +185,7 @@ class ProfileViewModel @Inject constructor(
                 isBanned = current.isBanned,
                 isPhotoVisible = isVisible
             )
-            profileRepository.updateProfile(updatedProfile)
+            tryUpdateProfile(updatedProfile)
         }
     }
 
