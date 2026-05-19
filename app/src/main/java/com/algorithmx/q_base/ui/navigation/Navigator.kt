@@ -6,13 +6,27 @@ import androidx.navigation3.runtime.NavKey
  * Handles navigation events (forward and back) by updating the navigation state.
  */
 class Navigator(val state: NavigationState) {
-    fun navigate(route: NavKey) {
-        android.util.Log.d("Navigator", "Navigating to: $route")
-        
-        // Find if this route is a top-level destination
-        val topLevelMatch = state.backStacks.keys.find { 
+    private fun normalizeRoute(route: NavKey): NavKey = when (route) {
+        Screen.Collections -> Screen.Explore
+        else -> route
+    }
+
+    private fun findTopLevelMatch(route: NavKey): NavKey? =
+        state.backStacks.keys.find {
             it == route || (it::class == route::class && it is Screen.Sessions && route is Screen.Sessions)
         }
+
+    private fun resetStack(root: NavKey, stack: androidx.navigation3.runtime.NavBackStack<NavKey>) {
+        stack.clear()
+        stack.add(root)
+    }
+
+    fun navigate(route: NavKey) {
+        val normalizedRoute = normalizeRoute(route)
+        android.util.Log.d("Navigator", "Navigating to: $normalizedRoute")
+        
+        // Find if this route is a top-level destination
+        val topLevelMatch = findTopLevelMatch(normalizedRoute)
         
         if (topLevelMatch != null) {
             if (state.topLevelRoute == topLevelMatch) {
@@ -33,9 +47,31 @@ class Navigator(val state: NavigationState) {
         } else {
             // Push to current stack (guard against double-push from rapid taps)
             val currentStack = state.backStacks[state.topLevelRoute]
-            if (currentStack?.lastOrNull() != route) {
-                currentStack?.add(route)
+            if (currentStack?.lastOrNull() != normalizedRoute) {
+                currentStack?.add(normalizedRoute)
             }
+        }
+    }
+
+    fun resetTo(route: NavKey) {
+        val normalizedRoute = normalizeRoute(route)
+        val topLevelMatch = findTopLevelMatch(normalizedRoute)
+
+        state.backStacks.forEach { (root, stack) ->
+            resetStack(root, stack)
+        }
+
+        if (topLevelMatch != null) {
+            state.topLevelRoute = topLevelMatch
+            state.tabHistory.clear()
+            state.tabHistory.add(topLevelMatch)
+        } else {
+            val currentStack = state.backStacks[state.topLevelRoute]
+                ?: error("Stack for ${state.topLevelRoute} not found")
+            currentStack.clear()
+            currentStack.add(normalizedRoute)
+            state.tabHistory.clear()
+            state.tabHistory.add(state.topLevelRoute)
         }
     }
 
