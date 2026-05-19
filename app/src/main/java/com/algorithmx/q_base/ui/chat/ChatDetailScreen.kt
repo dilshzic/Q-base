@@ -81,9 +81,12 @@ fun ChatDetailScreen(
     val collections by viewModel.allStudyCollections.collectAsStateWithLifecycle()
 
     val currentChatId by viewModel.currentChatId.collectAsStateWithLifecycle()
+    var hasLoadedActiveChat by remember(currentChatId) { mutableStateOf(false) }
 
     LaunchedEffect(state.chat, currentChatId) {
-        if (currentChatId != null && state.chat == null) {
+        if (state.chat != null) {
+            hasLoadedActiveChat = true
+        } else if (currentChatId != null && hasLoadedActiveChat) {
             onBack()
         }
     }

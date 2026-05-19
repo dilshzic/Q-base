@@ -169,7 +169,7 @@ class MainActivity : ComponentActivity() {
                 }
                 
                 val topLevelRoutes = remember {
-                    setOf(Screen.Home, Screen.Explore, Screen.Connect, Screen.Sessions())
+                    setOf(Screen.Login, Screen.Home, Screen.Explore, Screen.Connect, Screen.Sessions())
                 }
                 
                 val navigationState = rememberNavigationState(
