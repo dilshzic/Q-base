@@ -488,240 +488,56 @@ fun ChatDetailScreen(
             }
         }
     }
-
+    
     if (showSessionPicker) {
         val sessions by viewModel.allSessions.collectAsStateWithLifecycle()
-        ModalBottomSheet(
-            onDismissRequest = { showSessionPicker = false },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-            dragHandle = { BottomSheetDefaults.DragHandle() },
-            containerColor = MaterialTheme.colorScheme.surface
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 32.dp)
-            ) {
-                Text(
-                    text = "Share Session",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(24.dp)
-                )
-
-                if (sessions.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-                        Text("No sessions to share", color = MaterialTheme.colorScheme.outline)
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(horizontal = 16.dp)
-                    ) {
-                        sessions.forEach { session ->
-                            item {
-                                Surface(
-                                    onClick = {
-                                        state.chat?.chatId?.let { 
-                                            viewModel.shareSession(it, session.sessionId)
-                                        }
-                                        showSessionPicker = false
-                                    },
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                    shape = RoundedCornerShape(16.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(16.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(Icons.Rounded.Event, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                                        Spacer(modifier = Modifier.width(16.dp))
-                                        Column {
-                                            Text(session.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                            Text("Active Session", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+        SessionPickerSheet(
+            sessions = sessions,
+            onDismiss = { showSessionPicker = false },
+            onSessionSelected = { sessionId ->
+                state.chat?.chatId?.let { viewModel.shareSession(it, sessionId) }
+                showSessionPicker = false
             }
-        }
+        )
     }
     
     if (showCollectionPicker) {
-        ModalBottomSheet(
-            onDismissRequest = { showCollectionPicker = false },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-            dragHandle = { BottomSheetDefaults.DragHandle() },
-            containerColor = MaterialTheme.colorScheme.surface
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 32.dp)
-            ) {
-                Text(
-                    text = "Share Collection",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(24.dp)
-                )
-
-                if (collections.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-                        Text("No collections to share", color = MaterialTheme.colorScheme.outline)
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(horizontal = 16.dp)
-                    ) {
-                        collections.forEach { collection: StudyCollection ->
-                            item {
-                                Surface(
-                                    onClick = {
-                                        state.chat?.chatId?.let { 
-                                            viewModel.shareCollection(it, collection.collectionId)
-                                        }
-                                        showCollectionPicker = false
-                                    },
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                    shape = RoundedCornerShape(16.dp),
-                                    color = Color.Transparent
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(16.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            Icons.Rounded.CollectionsBookmark, 
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            contentDescription = null
-                                        )
-                                        Spacer(modifier = Modifier.width(16.dp))
-                                        Column {
-                                            Text(collection.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                            collection.description?.let { desc: String -> 
-                                                Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline, maxLines = 1) 
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+        CollectionPickerSheet(
+            collections = collections,
+            onDismiss = { showCollectionPicker = false },
+            onCollectionSelected = { collectionId ->
+                state.chat?.chatId?.let { viewModel.shareCollection(it, collectionId) }
+                showCollectionPicker = false
             }
+        )
+    }
+
+    ChatDetailConfirmDialogs(
+        showClearConfirm = showClearConfirm,
+        onClearDismiss = { showClearConfirm = false },
+        onClearConfirm = {
+            state.chat?.chatId?.let { viewModel.clearChatMessages(it) }
+            showClearConfirm = false
+        },
+        showDeleteConfirm = showDeleteConfirm,
+        onDeleteDismiss = { showDeleteConfirm = false },
+        onDeleteConfirm = {
+            state.chat?.chatId?.let { viewModel.deleteChat(it) }
+            showDeleteConfirm = false
+            onDeleteAndRestart()
+        },
+        reportingMessage = reportingMessage,
+        onReportMessageDismiss = { reportingMessage = null },
+        onReportMessageConfirm = { reason ->
+            reportingMessage?.let { viewModel.reportMessage(it, reason) }
+            reportingMessage = null
+        },
+        showReportGroupDialog = showReportGroupDialog,
+        groupName = state.displayName,
+        onReportGroupDismiss = { showReportGroupDialog = false },
+        onReportGroupConfirm = { reason ->
+            state.chat?.let { viewModel.reportGroup(it.chatId, reason) }
+            showReportGroupDialog = false
         }
-    }
-
-    if (showClearConfirm) {
-        AlertDialog(
-            onDismissRequest = { showClearConfirm = false },
-            title = { Text("Clear Chat History?") },
-            text = { Text("This will permanently remove all messages from this chat for all participants.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        state.chat?.chatId?.let { viewModel.clearChatMessages(it) }
-                        showClearConfirm = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Clear All")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showClearConfirm = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete Chat?") },
-            text = { Text("This will permanently delete this chat and its history for everyone.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        state.chat?.chatId?.let { viewModel.deleteChat(it) }
-                        showDeleteConfirm = false
-                        onDeleteAndRestart()
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Delete")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    reportingMessage?.let { message ->
-        ReportDialog(
-            itemType = "Message",
-            itemName = message.payload.take(20) + if(message.payload.length > 20) "..." else "",
-            onDismiss = { reportingMessage = null },
-            onConfirm = { reason ->
-                viewModel.reportMessage(message, reason)
-                reportingMessage = null
-            }
-        )
-    }
-
-    if (showReportGroupDialog) {
-        state.chat?.let { chat ->
-            ReportDialog(
-                itemType = "Group",
-                itemName = state.displayName,
-                onDismiss = { showReportGroupDialog = false },
-                onConfirm = { reason ->
-                    viewModel.reportGroup(chat.chatId, reason)
-                    showReportGroupDialog = false
-                }
-            )
-        }
-    }
-}
-
-private fun accessStateLabel(state: AppAccessState): String = when (state) {
-    AppAccessState.RestoringSession -> "Restoring"
-    AppAccessState.OnlineReady -> "Online"
-    AppAccessState.SignedInOffline -> "Offline"
-    AppAccessState.GuestOnline -> "Guest Online"
-    AppAccessState.OfflineGuest -> "Guest Offline"
-}
-
-private fun formatDateRelatively(timestamp: Long): String {
-    val now = Calendar.getInstance()
-    val messageDate = Calendar.getInstance().apply { timeInMillis = timestamp }
-    
-    return when {
-        isSameDay(now, messageDate) -> "Today"
-        isYesterday(now, messageDate) -> "Yesterday"
-        else -> SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(Date(timestamp))
-    }
-}
-
-private fun isSameDay(cal1: Calendar, cal2: Calendar): Boolean {
-    return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
-           cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
-}
-
-private fun isYesterday(now: Calendar, date: Calendar): Boolean {
-    val yesterday = Calendar.getInstance().apply { 
-        timeInMillis = now.timeInMillis
-        add(Calendar.DAY_OF_YEAR, -1)
-    }
-    return isSameDay(yesterday, date)
+    )
 }

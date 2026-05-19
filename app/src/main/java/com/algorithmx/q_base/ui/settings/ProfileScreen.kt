@@ -28,6 +28,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
 import com.algorithmx.q_base.ui.theme.QbaseTheme
 
+import com.algorithmx.q_base.ui.settings.components.*
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
