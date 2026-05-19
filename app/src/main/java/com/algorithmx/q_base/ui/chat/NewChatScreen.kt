@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
 import com.algorithmx.q_base.data.core.UserEntity
