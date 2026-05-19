@@ -104,6 +104,21 @@ class SessionResultsViewModel @Inject constructor(
     fun updateSessionAdminOnly(sessionId: String, isAdminOnly: Boolean) {
         viewModelScope.launch {
             val sessionVal = _session.value ?: return@launch
+
+            // If the session is associated with a collection shared to a group, ensure caller is an admin
+            val colId = sessionVal.collectionId
+            if (colId != null) {
+                val collection = repository.getStudyCollectionByIdOnce(colId)
+                val groupId = collection?.sharedWithGroupId
+                if (groupId != null) {
+                    val chat = syncRepository.getChatById(groupId)
+                    val currentUid = currentUser.value?.userId ?: authRepository.currentUser.firstOrNull()?.uid
+                    if (chat != null && (currentUid == null || !chat.isAdmin(currentUid))) {
+                        return@launch
+                    }
+                }
+            }
+
             val updated = sessionVal.copy(isAdminOnly = isAdminOnly)
             repository.updateSession(updated)
             _session.value = updated

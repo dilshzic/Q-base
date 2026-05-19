@@ -44,13 +44,12 @@ fun ChatViewModel.removeParticipant(chatId: String, userId: String) {
             currentParticipants.remove(userId)
             val updatedParticipants = currentParticipants.joinToString(",")
             
-            val currentAdmins = chat.adminIds.split(",").filter { it.isNotBlank() }.toMutableList()
+            val currentAdmins = chat.adminIds.toMutableList()
             currentAdmins.remove(userId)
-            val updatedAdmins = currentAdmins.joinToString(",")
 
             chatDao.insertChat(chat.copy(
                 participantIds = updatedParticipants,
-                adminIds = updatedAdmins
+                adminIds = currentAdmins
             ))
             syncRepository.removeParticipantFromRemote(chatId, userId)
             
@@ -70,12 +69,11 @@ fun ChatViewModel.promoteParticipantToAdmin(chatId: String, userId: String) {
             return@launch
         }
 
-        val currentAdmins = chat.adminIds.split(",").filter { it.isNotBlank() }.toMutableList()
+        val currentAdmins = chat.adminIds.toMutableList()
         if (!currentAdmins.contains(userId)) {
             currentAdmins.add(userId)
-            val updatedAdmins = currentAdmins.joinToString(",")
-            
-            chatDao.insertChat(chat.copy(adminIds = updatedAdmins))
+
+            chatDao.insertChat(chat.copy(adminIds = currentAdmins))
             syncRepository.promoteParticipantToAdminOnRemote(chatId, userId)
             
             sendMessage(chatId, "promoted a member to admin", type = "DB_CHANGE")
@@ -94,12 +92,11 @@ fun ChatViewModel.demoteAdmin(chatId: String, userId: String) {
             return@launch
         }
 
-        val currentAdmins = chat.adminIds.split(",").filter { it.isNotBlank() }.toMutableList()
+        val currentAdmins = chat.adminIds.toMutableList()
         if (currentAdmins.contains(userId)) {
             currentAdmins.remove(userId)
-            val updatedAdmins = currentAdmins.joinToString(",")
-            
-            chatDao.insertChat(chat.copy(adminIds = updatedAdmins))
+
+            chatDao.insertChat(chat.copy(adminIds = currentAdmins))
             syncRepository.demoteAdminOnRemote(chatId, userId)
             
             sendMessage(chatId, "demoted an admin to member", type = "DB_CHANGE")

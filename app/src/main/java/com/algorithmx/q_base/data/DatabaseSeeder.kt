@@ -243,7 +243,7 @@ class DatabaseSeeder @Inject constructor(
                     chatName = "Alice (Mentor)",
                     isGroup = false,
                     participantIds = "mentor_1,$currentUserId",
-                    adminIds = "mentor_1"
+                    adminIds = listOf("mentor_1")
                 )
                 chatDao.insertChat(p2pChat)
                 
@@ -259,7 +259,7 @@ class DatabaseSeeder @Inject constructor(
                     chatName = "Global Knowledge Exchange",
                     isGroup = true,
                     participantIds = "mentor_1,peer_1,peer_2,$currentUserId",
-                    adminIds = "mentor_1"
+                    adminIds = listOf("mentor_1")
                 )
                 chatDao.insertChat(groupChat)
 

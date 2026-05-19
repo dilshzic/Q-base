@@ -34,12 +34,12 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "users", "userId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "users", "displayName", 128, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "users", "profilePictureUrl", 512, False]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "users", "friendCode", 20, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "users", "intro", 256, False]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "users", "publicKey", 2048, False]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "users", "userId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "users", "displayName", 128, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "users", "profilePictureUrl", 512, False]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "users", "friendCode", 20, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "users", "intro", 256, False]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "users", "publicKey", 2048, False]},
             {"method": db.create_boolean_column, "args": [DATABASE_ID, "users", "isBanned", False, False]},
             {"method": db.create_boolean_column, "args": [DATABASE_ID, "users", "isPhotoVisible", False, True]}
         ],
@@ -55,9 +55,9 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "user_private_settings", "userId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "user_private_settings", "email", 128, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "user_private_settings", "e2eeBackup", 16384, False]}
+            {"method": db.create_text_column, "args": [DATABASE_ID, "user_private_settings", "userId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "user_private_settings", "email", 128, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "user_private_settings", "e2eeBackup", 16384, False]}
         ],
         "indexes": [
             {"key": "key_userId", "type": "unique", "attrs": ["userId"]}
@@ -70,9 +70,9 @@ collections = {
             Permission.read(Role.any())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "app_config", "gemini_api_key", 4096, False]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "app_config", "groq_api_key", 4096, False]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "app_config", "deepseek_api_key", 4096, False]}
+            {"method": db.create_text_column, "args": [DATABASE_ID, "app_config", "gemini_api_key", 4096, False]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "app_config", "groq_api_key", 4096, False]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "app_config", "deepseek_api_key", 4096, False]}
         ],
         "indexes": []
     },
@@ -83,12 +83,12 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "chats", "chatId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "chats", "chatName", 128, False]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "chats", "chatId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "chats", "chatName", 128, False]},
             {"method": db.create_boolean_column, "args": [DATABASE_ID, "chats", "isGroup", False, False]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "chats", "participantIds", 36, True, None, True]}, # array=True
-            {"method": db.create_string_column, "args": [DATABASE_ID, "chats", "adminId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "chats", "adminIds", 36, False, None, True]}, # array=True
+            {"method": db.create_text_column, "args": [DATABASE_ID, "chats", "participantIds", 36, True, None, True]}, # array=True
+            {"method": db.create_text_column, "args": [DATABASE_ID, "chats", "adminId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "chats", "adminIds", 36, False, None, True]}, # array=True
             {"method": db.create_integer_column, "args": [DATABASE_ID, "chats", "createdAt", True]}
         ],
         "indexes": [
@@ -102,12 +102,12 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "messages", "chatId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "messages", "senderId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "messages", "type", 32, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "messages", "payload", 16384, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "messages", "wrappedKey", 16384, False]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "messages", "keyFingerprint", 64, False]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "messages", "chatId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "messages", "senderId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "messages", "type", 32, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "messages", "payload", 16384, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "messages", "wrappedKey", 16384, False]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "messages", "keyFingerprint", 64, False]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "messages", "timestamp", True]}
         ],
         "indexes": [
@@ -121,11 +121,11 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "notifications", "targetUserId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "notifications", "senderId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "notifications", "title", 128, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "notifications", "body", 256, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "notifications", "data", 4096, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "notifications", "targetUserId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "notifications", "senderId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "notifications", "title", 128, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "notifications", "body", 256, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "notifications", "data", 4096, True]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "notifications", "timestamp", True]}
         ],
         "indexes": [
@@ -139,10 +139,10 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "sync_requests", "senderId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "sync_requests", "targetUserId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "sync_requests", "targetCollectionId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "sync_requests", "status", 20, False, "PENDING"]}
+            {"method": db.create_text_column, "args": [DATABASE_ID, "sync_requests", "senderId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "sync_requests", "targetUserId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "sync_requests", "targetCollectionId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "sync_requests", "status", 20, False, "PENDING"]}
         ],
         "indexes": [
             {"key": "key_targetUser_status", "type": "key", "attrs": ["targetUserId", "status"]}
@@ -155,16 +155,16 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "collectionId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "chatId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "name", 128, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "description", 512, False]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "downloadUrl", 512, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "symmetricKey", 2048, False]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "wrappedKeys", 16384, False]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "sharedBy", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "adminIds", 36, True, None, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_collections", "pendingDownloads", 36, False, None, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_collections", "collectionId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_collections", "chatId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_collections", "name", 128, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_collections", "description", 512, False]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_collections", "downloadUrl", 512, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_collections", "symmetricKey", 2048, False]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_collections", "wrappedKeys", 16384, False]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_collections", "sharedBy", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_collections", "adminIds", 36, True, None, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_collections", "pendingDownloads", 36, False, None, True]},
             {"method": db.create_boolean_column, "args": [DATABASE_ID, "shared_collections", "isAdminOnly", False, False]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "shared_collections", "updatedAt", True]}
         ],
@@ -179,10 +179,10 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "access_requests", "chatId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "access_requests", "collectionId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "access_requests", "requesterId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "access_requests", "status", 20, False, "PENDING"]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "access_requests", "chatId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "access_requests", "collectionId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "access_requests", "requesterId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "access_requests", "status", 20, False, "PENDING"]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "access_requests", "timestamp", True]}
         ],
         "indexes": [
@@ -196,12 +196,12 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_sessions", "sessionId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_sessions", "chatId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_sessions", "title", 128, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_sessions", "downloadUrl", 512, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_sessions", "symmetricKey", 2048, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "shared_sessions", "adminIds", 36, True, None, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_sessions", "sessionId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_sessions", "chatId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_sessions", "title", 128, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_sessions", "downloadUrl", 512, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_sessions", "symmetricKey", 2048, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "shared_sessions", "adminIds", 36, True, None, True]},
             {"method": db.create_boolean_column, "args": [DATABASE_ID, "shared_sessions", "isAdminOnly", False, False]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "shared_sessions", "timestamp", True]}
         ],
@@ -216,10 +216,10 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_questions", "reporterId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_questions", "reason", 1024, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_questions", "reporterId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_questions", "reason", 1024, True]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "reported_questions", "reportedAt", True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_questions", "questionId", 36, True]}
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_questions", "questionId", 36, True]}
         ],
         "indexes": []
     },
@@ -230,10 +230,10 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_collections", "reporterId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_collections", "reason", 1024, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_collections", "reporterId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_collections", "reason", 1024, True]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "reported_collections", "reportedAt", True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_collections", "collectionId", 36, True]}
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_collections", "collectionId", 36, True]}
         ],
         "indexes": []
     },
@@ -244,10 +244,10 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_users", "reporterId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_users", "reason", 1024, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_users", "reporterId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_users", "reason", 1024, True]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "reported_users", "reportedAt", True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_users", "reportedUserId", 36, True]}
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_users", "reportedUserId", 36, True]}
         ],
         "indexes": []
     },
@@ -258,10 +258,10 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_groups", "reporterId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_groups", "reason", 1024, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_groups", "reporterId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_groups", "reason", 1024, True]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "reported_groups", "reportedAt", True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_groups", "groupId", 36, True]}
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_groups", "groupId", 36, True]}
         ],
         "indexes": []
     },
@@ -272,10 +272,10 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_messages", "reporterId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_messages", "reason", 1024, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_messages", "reporterId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_messages", "reason", 1024, True]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "reported_messages", "reportedAt", True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_messages", "messageId", 36, True]}
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_messages", "messageId", 36, True]}
         ],
         "indexes": []
     },
@@ -286,10 +286,10 @@ collections = {
             Permission.create(Role.users())
         ],
         "attributes": [
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_sessions", "reporterId", 36, True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_sessions", "reason", 1024, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_sessions", "reporterId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_sessions", "reason", 1024, True]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "reported_sessions", "reportedAt", True]},
-            {"method": db.create_string_column, "args": [DATABASE_ID, "reported_sessions", "sessionId", 36, True]}
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_sessions", "sessionId", 36, True]}
         ],
         "indexes": []
     }

@@ -47,6 +47,21 @@ fun ExploreViewModel.deleteSelectedSets() {
 fun ExploreViewModel.addQuestionToSet(index: Int, setId: String) {
     val state = _questionStates.value.getOrNull(index) ?: return
     viewModelScope.launch {
+        // Verify admin-only restrictions for this question's collection
+        val collectionName = state.question.collection
+        val collection = if (!collectionName.isNullOrBlank()) repository.getStudyCollectionByNameOnce(collectionName) else null
+        if (collection != null && collection.isAdminOnly) {
+            val groupId = collection.sharedWithGroupId
+            if (groupId != null) {
+                val chat = syncRepository.getChatById(groupId)
+                val currentUid = authRepository.currentUser.firstOrNull()?.uid
+                if (chat == null || currentUid == null || !chat.isAdmin(currentUid)) {
+                    _actionFeedback.emit("Only a group admin can modify this collection")
+                    return@launch
+                }
+            }
+        }
+
         repository.addQuestionToSet(setId, state.question.questionId)
     }
 }
@@ -54,6 +69,21 @@ fun ExploreViewModel.addQuestionToSet(index: Int, setId: String) {
 fun ExploreViewModel.addQuestionToSession(index: Int, sessionId: String) {
     val state = _questionStates.value.getOrNull(index) ?: return
     viewModelScope.launch {
+        // Verify admin-only restrictions for this question's collection
+        val collectionName = state.question.collection
+        val collection = if (!collectionName.isNullOrBlank()) repository.getStudyCollectionByNameOnce(collectionName) else null
+        if (collection != null && collection.isAdminOnly) {
+            val groupId = collection.sharedWithGroupId
+            if (groupId != null) {
+                val chat = syncRepository.getChatById(groupId)
+                val currentUid = authRepository.currentUser.firstOrNull()?.uid
+                if (chat == null || currentUid == null || !chat.isAdmin(currentUid)) {
+                    _actionFeedback.emit("Only a group admin can modify this collection")
+                    return@launch
+                }
+            }
+        }
+
         repository.addQuestionToSession(sessionId, state.question.questionId)
     }
 }
@@ -77,6 +107,21 @@ fun ExploreViewModel.createSet(title: String, description: String, collectionId:
 fun ExploreViewModel.deleteQuestion(index: Int) {
     val state = _questionStates.value.getOrNull(index) ?: return
     viewModelScope.launch {
+        // Verify admin-only restrictions for this question's collection
+        val collectionName = state.question.collection
+        val collection = if (!collectionName.isNullOrBlank()) repository.getStudyCollectionByNameOnce(collectionName) else null
+        if (collection != null && collection.isAdminOnly) {
+            val groupId = collection.sharedWithGroupId
+            if (groupId != null) {
+                val chat = syncRepository.getChatById(groupId)
+                val currentUid = authRepository.currentUser.firstOrNull()?.uid
+                if (chat == null || currentUid == null || !chat.isAdmin(currentUid)) {
+                    _actionFeedback.emit("Only a group admin can modify this collection")
+                    return@launch
+                }
+            }
+        }
+
         questionDao.deleteQuestionById(state.question.questionId)
         _questionStates.update { current ->
             val mutableList = current.toMutableList()
@@ -89,6 +134,21 @@ fun ExploreViewModel.deleteQuestion(index: Int) {
 fun ExploreViewModel.deleteQuestionFromSet(index: Int, setId: String) {
     val state = _questionStates.value.getOrNull(index) ?: return
     viewModelScope.launch {
+        // Verify admin-only restrictions for this question's collection
+        val collectionName = state.question.collection
+        val collection = if (!collectionName.isNullOrBlank()) repository.getStudyCollectionByNameOnce(collectionName) else null
+        if (collection != null && collection.isAdminOnly) {
+            val groupId = collection.sharedWithGroupId
+            if (groupId != null) {
+                val chat = syncRepository.getChatById(groupId)
+                val currentUid = authRepository.currentUser.firstOrNull()?.uid
+                if (chat == null || currentUid == null || !chat.isAdmin(currentUid)) {
+                    _actionFeedback.emit("Only a group admin can modify this collection")
+                    return@launch
+                }
+            }
+        }
+
         questionDao.removeQuestionFromSet(setId, state.question.questionId)
         _questionStates.update { current ->
             val mutableList = current.toMutableList()

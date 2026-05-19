@@ -35,8 +35,8 @@ class ChatRemoteRepository @Inject constructor(
             "chatName" to chat.chatName.orEmpty(),
             "isGroup" to chat.isGroup,
             "participantIds" to participants,
-            "adminId" to (chat.adminIds.split(",").firstOrNull { it.isNotBlank() } ?: getCurrentUserId().orEmpty()),
-            "adminIds" to chat.adminIds.split(",").filter { it.isNotBlank() },
+            "adminId" to (chat.adminIds.firstOrNull() ?: getCurrentUserId().orEmpty()),
+            "adminIds" to chat.adminIds,
             "createdAt" to System.currentTimeMillis() / 1000
         )
 
