@@ -154,7 +154,6 @@ fun ChatListScreen(
             }
         } else if (currentUser == null) {
             GuestConnectView(
-                onLoginClick = onNavigateToLogin,
                 modifier = Modifier.padding(padding)
             )
         } else {
