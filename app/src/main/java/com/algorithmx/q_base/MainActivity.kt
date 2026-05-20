@@ -95,6 +95,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+        } else {
+            @Suppress("DEPRECATION")
+            window.addFlags(
+                android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                        or android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            )
+        }
         checkNotificationPermission()
         enableEdgeToEdge()
 
@@ -212,6 +222,7 @@ class MainActivity : ComponentActivity() {
 
 
                 android.util.Log.d("MainActivity", "Composition: startRoute=$startRoute, currentTopLevel=${navigationState.topLevelRoute}")
+                android.util.Log.d("MainActivity", "Compose state: seeded=$seeded, isSessionChecked=$isSessionChecked, appAccessState=$appAccessState, user=$user, isOnline=$isOnline")
 
                 // Display a generic long-duration snackbar if background session check fails/user is guest
                 LaunchedEffect(isSessionChecked, user) {
