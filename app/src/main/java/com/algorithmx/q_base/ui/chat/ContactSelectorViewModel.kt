@@ -39,13 +39,17 @@ class ContactSelectorViewModel @Inject constructor(
     }
 
     fun searchByFriendCode(code: String, excludedUserId: String? = null) {
-        if (code.isBlank()) return
-        
+        // Normalize: trim whitespace and uppercase for consistent matching
+        val normalizedCode = code.trim().uppercase()
+        if (normalizedCode.isBlank()) return
+
         viewModelScope.launch {
             _state.update { it.copy(isSearching = true, searchError = null, searchResult = null) }
-            
-            // Check local first
-            val localUser = _state.value.localContacts.find { it.friendCode.equals(code, ignoreCase = true) }
+
+            // Check local Room cache first (trim + uppercase normalized comparison)
+            val localUser = _state.value.localContacts.find {
+                it.friendCode.trim().uppercase() == normalizedCode
+            }
             if (localUser != null) {
                 if (localUser.userId == excludedUserId) {
                     _state.update { it.copy(isSearching = false, searchError = "You can't start a chat with yourself") }
@@ -55,8 +59,8 @@ class ContactSelectorViewModel @Inject constructor(
                 return@launch
             }
 
-            // If not found locally, check Firestore
-            profileRepository.findUserByFriendCode(code)
+            // Not found locally — query Appwrite
+            profileRepository.findUserByFriendCode(normalizedCode)
                 .onSuccess { profile ->
                     if (profile != null) {
                         if (profile.userId == excludedUserId) {
@@ -66,12 +70,18 @@ class ContactSelectorViewModel @Inject constructor(
                         val userEntity = UserEntity(
                             userId = profile.userId,
                             displayName = profile.displayName,
+                            email = profile.email.ifBlank { null },
                             profilePictureUrl = profile.profilePictureUrl,
-                            friendCode = profile.friendCode
+                            friendCode = profile.friendCode,
+                            publicKey = profile.publicKey,
+                            isBanned = profile.isBanned,
+                            isPhotoVisible = profile.isPhotoVisible
                         )
+                        // Cache locally so subsequent searches hit Room instead of Appwrite
+                        userDao.insertUser(userEntity)
                         _state.update { it.copy(searchResult = userEntity, isSearching = false) }
                     } else {
-                        _state.update { it.copy(isSearching = false, searchError = "User not found") }
+                        _state.update { it.copy(isSearching = false, searchError = "No user found with code \"$normalizedCode\"") }
                     }
                 }
                 .onFailure { error ->

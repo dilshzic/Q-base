@@ -388,13 +388,17 @@ class AppwriteDatabaseImpl @Inject constructor(
 
     override suspend fun queryDocuments(collectionId: String, queries: List<CoreQuery>): Result<List<Map<String, Any>>> {
         return try {
+            // Appwrite SDK requires query values to be List<Any> for typed operators.
+            // Wrapping raw scalar values ensures correct serialisation regardless of SDK version.
+            fun wrapValue(v: Any): List<Any> = if (v is List<*>) v.filterNotNull() else listOf(v)
+
             val appwriteQueries = queries.map { q ->
                 when (q.operator) {
-                    CoreQueryOperator.EQUAL -> Query.equal(q.key, q.value)
-                    CoreQueryOperator.NOTEQUAL -> Query.notEqual(q.key, q.value)
-                    CoreQueryOperator.GREATER_THAN -> Query.greaterThan(q.key, q.value)
-                    CoreQueryOperator.LESS_THAN -> Query.lessThan(q.key, q.value)
-                    CoreQueryOperator.ARRAY_CONTAINS -> Query.contains(q.key, q.value)
+                    CoreQueryOperator.EQUAL -> Query.equal(q.key, wrapValue(q.value))
+                    CoreQueryOperator.NOTEQUAL -> Query.notEqual(q.key, wrapValue(q.value))
+                    CoreQueryOperator.GREATER_THAN -> Query.greaterThan(q.key, wrapValue(q.value).first())
+                    CoreQueryOperator.LESS_THAN -> Query.lessThan(q.key, wrapValue(q.value).first())
+                    CoreQueryOperator.ARRAY_CONTAINS -> Query.contains(q.key, wrapValue(q.value))
                 }
             }
 
