@@ -58,11 +58,14 @@ class ChatViewModel @Inject constructor(
                 authRepository.currentUser,
                 isOnline
             ) { user, online ->
-                if (user != null && online) {
+                user != null && online
+            }
+            .distinctUntilChanged()
+            .collect { shouldSync ->
+                if (shouldSync) {
                     syncChatsFromRemote()
                 }
             }
-            .collect()
         }
     }
 
