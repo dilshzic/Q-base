@@ -16,8 +16,24 @@ fun ChatViewModel.addParticipant(chatId: String, userId: String) {
             return@launch
         }
 
-        val currentParticipants = chat.participantIds
-        val updatedParticipants = if (currentParticipants.isEmpty()) userId else "$currentParticipants,$userId"
+        if (userId.isBlank()) {
+            _actionFeedback.emit("Invalid participant")
+            return@launch
+        }
+
+        val participants = chat.participantIds
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .toMutableList()
+
+        if (participants.contains(userId)) {
+            _actionFeedback.emit("Participant is already in the group")
+            return@launch
+        }
+
+        participants.add(userId)
+        val updatedParticipants = participants.joinToString(",")
         
         chatDao.updateParticipants(chatId, updatedParticipants)
         syncRepository.addParticipantToRemote(chatId, userId)
@@ -39,12 +55,20 @@ fun ChatViewModel.removeParticipant(chatId: String, userId: String) {
             return@launch
         }
 
-        val currentParticipants = chat.participantIds.split(",").toMutableList()
+        val currentParticipants = chat.participantIds
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .toMutableList()
         if (currentParticipants.contains(userId)) {
             currentParticipants.remove(userId)
             val updatedParticipants = currentParticipants.joinToString(",")
             
             val currentAdmins = chat.adminIds.toMutableList()
+            if (currentAdmins.contains(userId) && currentAdmins.size == 1) {
+                _actionFeedback.emit("Group must have at least one admin")
+                return@launch
+            }
             currentAdmins.remove(userId)
 
             chatDao.insertChat(chat.copy(
@@ -94,6 +118,10 @@ fun ChatViewModel.demoteAdmin(chatId: String, userId: String) {
 
         val currentAdmins = chat.adminIds.toMutableList()
         if (currentAdmins.contains(userId)) {
+            if (currentAdmins.size == 1) {
+                _actionFeedback.emit("Group must have at least one admin")
+                return@launch
+            }
             currentAdmins.remove(userId)
 
             chatDao.insertChat(chat.copy(adminIds = currentAdmins))

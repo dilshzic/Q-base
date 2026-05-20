@@ -6,18 +6,13 @@ import com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse
 import com.algorithmx.q_base.data.chat.isAdmin
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import java.util.UUID
 
 fun ChatViewModel.addSharedCollection(jsonPayload: String) {
     viewModelScope.launch {
         try {
             Log.d("ChatViewModel", "Attempting to add AI collection from JSON")
             val response = Json { ignoreUnknownKeys = true }.decodeFromString<AiCollectionResponse>(jsonPayload)
-            
-            // Save to Cache first (optional but keeps a record)
-            val responseId = UUID.randomUUID().toString()
-            aiRepository.getAiResponseById(responseId) // Just to ensure visibility if we were using a different flow
-            
+
             // Since this is already triggered by a "Save" button in the bubble, it represents explicit consent.
             aiRepository.saveAsCollection(response)
             
