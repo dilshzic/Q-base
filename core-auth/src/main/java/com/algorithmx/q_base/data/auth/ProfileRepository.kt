@@ -20,7 +20,7 @@ class ProfileRepository @Inject constructor(
 
     private fun mapToUserProfile(map: Map<String, Any>): UserProfile {
         return UserProfile(
-            userId = map["userId"] as? String ?: "",
+            userId = map["userId"] as? String ?: map["\$id"] as? String ?: "",
             email = map["email"] as? String ?: "",
             displayName = map["displayName"] as? String ?: "",
             profilePictureUrl = map["profilePictureUrl"] as? String,
@@ -154,7 +154,7 @@ class ProfileRepository @Inject constructor(
             Log.d("ProfileRepository", "User doc fetched, exists: ${doc != null}")
             
             val profile = if (doc != null && doc.isNotEmpty()) {
-                val p = mapToUserProfile(doc)
+                val p = mapToUserProfile(doc).copy(userId = userId)
                 Log.d("ProfileRepository", "Fetching private settings...")
                 val privateDocResult = coreDatabase.getDocument("user_private_settings", userId)
                 val privateDoc = privateDocResult.getOrNull()

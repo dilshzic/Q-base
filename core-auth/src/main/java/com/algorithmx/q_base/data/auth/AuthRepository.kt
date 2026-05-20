@@ -30,8 +30,11 @@ data class AppwriteUser(
 @Singleton
 class AuthRepository @Inject constructor(
     private val appwriteClient: Client,
-    private val appwriteAccount: Account
+    private val appwriteAccount: Account,
+    @ApplicationContext private val context: Context
 ) {
+    private val prefs = context.getSharedPreferences("qbase_prefs", Context.MODE_PRIVATE)
+
     private val _currentUser = MutableStateFlow<AppwriteUser?>(null)
     val currentUser: Flow<AppwriteUser?> = _currentUser.asStateFlow()
     val currentUserId: String?
@@ -46,14 +49,51 @@ class AuthRepository @Inject constructor(
         checkCurrentSession()
     }
 
+    private fun saveUserToPrefs(user: AppwriteUser) {
+        prefs.edit()
+            .putString("cached_user_uid", user.uid)
+            .putString("cached_user_email", user.email)
+            .putString("cached_user_name", user.displayName)
+            .putString("cached_user_photo", user.photoUrl?.toString())
+            .putBoolean("is_logged_in", true)
+            .apply()
+    }
+
+    private fun getUserFromPrefs(): AppwriteUser? {
+        val uid = prefs.getString("cached_user_uid", null) ?: return null
+        val email = prefs.getString("cached_user_email", null)
+        val name = prefs.getString("cached_user_name", null)
+        val photoUrlString = prefs.getString("cached_user_photo", null)
+        val photoUrl = if (photoUrlString != null) android.net.Uri.parse(photoUrlString) else null
+        return AppwriteUser(uid, email, name, photoUrl)
+    }
+
+    private fun clearUserFromPrefs() {
+        prefs.edit()
+            .remove("cached_user_uid")
+            .remove("cached_user_email")
+            .remove("cached_user_name")
+            .remove("cached_user_photo")
+            .putBoolean("is_logged_in", false)
+            .apply()
+    }
+
     fun checkCurrentSession() {
         repositoryScope.launch {
             try {
                 val user = appwriteAccount.get()
                 val photoUrl = fetchGooglePhotoUrl()
-                _currentUser.value = mapAppwriteUser(user, photoUrl)
+                val appUser = mapAppwriteUser(user, photoUrl)
+                saveUserToPrefs(appUser)
+                _currentUser.value = appUser
             } catch (e: Exception) {
-                _currentUser.value = null
+                if (e is io.appwrite.exceptions.AppwriteException && e.code == 401) {
+                    clearUserFromPrefs()
+                    _currentUser.value = null
+                } else {
+                    val cachedUser = getUserFromPrefs()
+                    _currentUser.value = cachedUser
+                }
             } finally {
                 _isSessionChecked.value = true
             }
@@ -117,6 +157,7 @@ class AuthRepository @Inject constructor(
             appwriteAccount.createEmailPasswordSession(email, pass)
             val user = appwriteAccount.get()
             val appUser = mapAppwriteUser(user)
+            saveUserToPrefs(appUser)
             _currentUser.value = appUser
             Result.success(appUser)
         } catch (e: Exception) {
@@ -132,6 +173,7 @@ class AuthRepository @Inject constructor(
             appwriteAccount.createEmailPasswordSession(email, pass)
             val user = appwriteAccount.get()
             val appUser = mapAppwriteUser(user)
+            saveUserToPrefs(appUser)
             _currentUser.value = appUser
             Result.success(appUser)
         } catch (e: Exception) {
@@ -148,6 +190,7 @@ class AuthRepository @Inject constructor(
             val user = appwriteAccount.get()
             val photoUrl = fetchGooglePhotoUrl()
             val appUser = mapAppwriteUser(user, photoUrl)
+            saveUserToPrefs(appUser)
             _currentUser.value = appUser
             Result.success(appUser)
         } catch (e: Exception) {
@@ -161,6 +204,7 @@ class AuthRepository @Inject constructor(
             try {
                 appwriteAccount.deleteSession("current")
             } catch (e: Exception) {}
+            clearUserFromPrefs()
             _currentUser.value = null
             _isSessionChecked.value = true
         }

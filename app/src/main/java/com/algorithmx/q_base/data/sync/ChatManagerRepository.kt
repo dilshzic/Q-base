@@ -23,6 +23,7 @@ import dagger.Lazy
 class ChatManagerRepository @Inject constructor(
     private val databases: CoreDatabase,
     private val authRepository: AuthRepository,
+    private val profileRepository: com.algorithmx.q_base.data.auth.ProfileRepository,
     private val chatRemoteRepository: ChatRemoteRepository,
     private val chatDao: ChatDao,
     private val messageDao: MessageDao,
@@ -89,6 +90,20 @@ class ChatManagerRepository @Inject constructor(
                     chatDao.insertChat(chat)
                     Log.d("ChatManagerRepository", "Synced chat from remote: ${chat.chatId} (${chat.chatName})")
                     
+                    // Fetch and sync profiles for all participants
+                    participantsList.forEach { participantId ->
+                        if (participantId.isNotBlank() && participantId != uid) {
+                            // Run this without throwing exceptions to ensure it doesn't block message sync
+                            repositoryScope.launch {
+                                try {
+                                    profileRepository.syncUserProfile(participantId)
+                                } catch (e: Exception) {
+                                    Log.e("ChatManagerRepository", "Failed to sync profile for $participantId", e)
+                                }
+                            }
+                        }
+                    }
+
                     // Fetch and sync messages for this chat
                     messageSyncRepository.get().fetchAndSyncMessages(chat.chatId)
                 }

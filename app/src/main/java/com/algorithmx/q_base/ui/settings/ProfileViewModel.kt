@@ -18,6 +18,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+import com.algorithmx.q_base.util.NetworkMonitor
+
 data class UserStats(
     val totalQuestions: Int = 0,
     val userCreatedQuestions: Int = 0,
@@ -34,14 +36,27 @@ class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val profileRepository: ProfileRepository,
     private val dataClearingRepository: DataClearingRepository,
-    private val actionQueueDao: com.algorithmx.q_base.data.sync.ActionQueueDao
+    private val actionQueueDao: com.algorithmx.q_base.data.sync.ActionQueueDao,
+    private val networkMonitor: NetworkMonitor
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val userState: StateFlow<UserEntity?> = authRepository.currentUser
         .flatMapLatest { user ->
             if (user != null) {
-                userDao.getCurrentUser(user.uid)
+                userDao.getCurrentUser(user.uid).map { dbUser ->
+                    dbUser ?: UserEntity(
+                        userId = user.uid,
+                        email = user.email ?: "",
+                        displayName = user.displayName ?: "Learner",
+                        profilePictureUrl = user.photoUrl?.toString(),
+                        friendCode = "",
+                        isBanned = false,
+                        isPhotoVisible = true,
+                        publicKey = null,
+                        intro = null
+                    )
+                }
             } else {
                 flowOf(null)
             }
@@ -66,21 +81,29 @@ class ProfileViewModel @Inject constructor(
 
     private fun loadUser() {
         viewModelScope.launch {
-            authRepository.currentUser.collectLatest { user ->
-                if (user != null) {
+            combine(
+                authRepository.currentUser,
+                networkMonitor.isOnline
+            ) { user, isOnline ->
+                if (user != null && isOnline) {
                     profileRepository.syncUserProfile(user.uid)
                 }
             }
+            .collect()
         }
     }
 
     private fun loadBackupStatus() {
         viewModelScope.launch {
-            authRepository.currentUser.collectLatest { user ->
+            combine(
+                authRepository.currentUser,
+                networkMonitor.isOnline
+            ) { user, isOnline ->
                 if (user != null) {
                     _hasSecureBackup.value = profileRepository.checkHasSecureBackup(user.uid)
                 }
             }
+            .collect()
         }
     }
 

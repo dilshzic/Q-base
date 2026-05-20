@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun GuestConnectView(onLoginClick: () -> Unit, modifier: Modifier = Modifier) {
+fun GuestConnectView(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.fillMaxSize().padding(24.dp),
         contentAlignment = Alignment.Center
@@ -46,20 +46,12 @@ fun GuestConnectView(onLoginClick: () -> Unit, modifier: Modifier = Modifier) {
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                "Connect with peer learners, ask questions, and share study materials. Login is required to access peer chats and other cloud synchronised functions.",
+                "Connect with peer learners, ask questions, and share study materials. Please log in from the Profile menu to access peer chats and cloud synchronized features.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center,
                 lineHeight = 22.sp
             )
-            Spacer(modifier = Modifier.height(32.dp))
-            Button(
-                onClick = onLoginClick,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth().height(56.dp)
-            ) {
-                Text("Log In or Sign Up", style = MaterialTheme.typography.titleMedium)
-            }
         }
     }
 }

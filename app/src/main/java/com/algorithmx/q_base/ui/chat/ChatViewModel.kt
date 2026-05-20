@@ -47,6 +47,20 @@ class ChatViewModel @Inject constructor(
     val isOnline: StateFlow<Boolean> = networkMonitor.isOnline
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    init {
+        viewModelScope.launch {
+            combine(
+                authRepository.currentUser,
+                isOnline
+            ) { user, online ->
+                if (user != null && online) {
+                    syncChatsFromRemote()
+                }
+            }
+            .collect()
+        }
+    }
+
     fun canSendToChat(chatId: String): Flow<Boolean> {
         return combine(
             chatDao.getChatByIdFlow(chatId),
