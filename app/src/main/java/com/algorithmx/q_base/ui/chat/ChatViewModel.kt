@@ -73,7 +73,9 @@ class ChatViewModel @Inject constructor(
         ) { chat, online ->
             if (chat == null) false
             else {
-                val isAi = chat.participantIds.contains(QBASE_AI_BOT_ID)
+                val isAi = chat.participantIds
+                    .split(",")
+                    .any { it.trim() == QBASE_AI_BOT_ID }
                 isAi || online
             }
         }
