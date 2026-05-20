@@ -26,7 +26,8 @@ class DatabaseSeeder @Inject constructor(
     private val chatDao: ChatDao,
     private val messageDao: MessageDao,
     private val userDao: UserDao,
-    private val dataStoreManager: com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager
+    private val dataStoreManager: com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager,
+    private val authRepository: com.algorithmx.q_base.data.auth.AuthRepository
 ) {
     private fun getColumnString(cursor: android.database.Cursor, index: Int): String? {
         return if (index != -1 && !cursor.isNull(index)) cursor.getString(index) else null
@@ -226,7 +227,7 @@ class DatabaseSeeder @Inject constructor(
     }
 
     private suspend fun seedSampleChats() {
-        val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "current_user"
+        val currentUserId = authRepository.currentUserId ?: "current_user"
 
         try {
             chatDatabase.withTransaction {

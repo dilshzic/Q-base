@@ -29,7 +29,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
-import com.google.firebase.auth.FirebaseAuth
 import com.algorithmx.q_base.data.DatabaseSeeder
 import com.algorithmx.q_base.data.auth.AuthRepository
 import com.algorithmx.q_base.data.sync.SyncRepository
@@ -164,7 +163,7 @@ class MainActivity : ComponentActivity() {
                 
                 // Observe authentication state reactively
                 val userFlow = remember { authRepository.currentUser }
-                val user by userFlow.collectAsState(initial = null)
+                val user by userFlow.collectAsStateWithLifecycle(initialValue = null)
                 
                 val context = androidx.compose.ui.platform.LocalContext.current
                 val sharedPrefs = remember(context) {
@@ -224,6 +223,16 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                // Redirect to Login if session expired (SharedPrefs says logged in but auth says otherwise)
+                LaunchedEffect(isSessionChecked, user, isLoggedInInstancePersisted) {
+                    if (isSessionChecked && user == null && isLoggedInInstancePersisted) {
+                        android.util.Log.w("MainActivity", "Session expired: clearing persisted login flag, redirecting to Login")
+                        sharedPrefs.edit().putBoolean("is_logged_in", false).apply()
+                        isLoggedInInstancePersisted = false
+                        navigator.resetTo(Screen.Login)
+                    }
+                }
+
                 LaunchedEffect(seeded) {
                     android.util.Log.d("MainActivity", "Seeded changed: $seeded")
                     if (seeded) {
@@ -239,7 +248,11 @@ class MainActivity : ComponentActivity() {
                 }
 
                 CompositionLocalProvider(LocalAppAccessState provides appAccessState) {
-                    MainScreen(navigationState, navigator, snackbarHostState)
+                    if (!seeded || appAccessState == AppAccessState.RestoringSession) {
+                        LoadingScreen()
+                    } else {
+                        MainScreen(navigationState, navigator, snackbarHostState)
+                    }
                 }
             }
         }

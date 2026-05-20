@@ -155,10 +155,12 @@ class AuthRepository @Inject constructor(
 
     fun signOut() {
         repositoryScope.launch {
+            _isSessionChecked.value = false
             try {
                 appwriteAccount.deleteSession("current")
             } catch (e: Exception) {}
             _currentUser.value = null
+            _isSessionChecked.value = true
         }
     }
 }

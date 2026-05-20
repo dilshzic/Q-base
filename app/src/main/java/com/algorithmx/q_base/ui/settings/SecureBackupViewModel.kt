@@ -2,8 +2,8 @@ package com.algorithmx.q_base.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.algorithmx.q_base.data.auth.AuthRepository
 import com.algorithmx.q_base.data.auth.ProfileRepository
-import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +20,8 @@ data class SecureBackupState(
 
 @HiltViewModel
 class SecureBackupViewModel @Inject constructor(
-    private val profileRepository: ProfileRepository
+    private val profileRepository: ProfileRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SecureBackupState(isLoading = true))
@@ -31,7 +32,7 @@ class SecureBackupViewModel @Inject constructor(
     }
 
     fun checkBackupStatus() {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val userId = authRepository.currentUserId ?: return
         _state.value = _state.value.copy(isLoading = true, error = null)
         viewModelScope.launch {
             val hasBackup = profileRepository.checkHasSecureBackup(userId)
@@ -40,7 +41,7 @@ class SecureBackupViewModel @Inject constructor(
     }
 
     fun setupBackup(passphrase: String) {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val userId = authRepository.currentUserId ?: return
         if (passphrase.length < 6) {
             _state.value = _state.value.copy(error = "Passphrase must be at least 6 characters")
             return
@@ -61,7 +62,7 @@ class SecureBackupViewModel @Inject constructor(
     }
 
     fun restoreBackup(passphrase: String) {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val userId = authRepository.currentUserId ?: return
         _state.value = _state.value.copy(isLoading = true, error = null)
         viewModelScope.launch {
             val result = profileRepository.restoreSecureBackup(userId, passphrase)

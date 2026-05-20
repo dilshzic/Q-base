@@ -98,7 +98,13 @@ class NavigationState(
 fun NavigationState.toEntries(
     entryProvider: (NavKey) -> NavEntry<NavKey>
 ): SnapshotStateList<NavEntry<NavKey>> {
-    val activeStack = backStacks[topLevelRoute] ?: error("Stack for $topLevelRoute not found")
+    val activeStack = backStacks[topLevelRoute] ?: run {
+        // Fallback: if the back stack for the current top-level route is missing
+        // (e.g. during auth transitions), fall back to the start route's stack.
+        android.util.Log.w("NavigationState", "Stack for $topLevelRoute not found, falling back to startRoute=$startRoute")
+        topLevelRoute = startRoute
+        backStacks[startRoute] ?: error("Stack for startRoute $startRoute not found")
+    }
 
     val decorators = listOf(
         rememberSaveableStateHolderNavEntryDecorator<NavKey>(),

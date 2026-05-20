@@ -234,19 +234,11 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
         }
 
         entry<Screen.Notifications> {
-            ChatListScreen(
-                onChatClick = { chatId ->
-                    navigator.navigate(Screen.ChatDetail(chatId))
-                },
-                onNewChat = {
-                    navigator.navigate(Screen.NewChat)
-                },
-                onNavigateToBlockedList = {
-                    navigator.navigate(Screen.BlockedList)
-                },
-                onProfileClick = { navigator.navigate(Screen.Profile) },
-                onNavigateToLogin = { navigator.resetTo(Screen.Login) }
-            )
+            // Notifications are surfaced via unread badges on the Connect tab.
+            // Redirect there instead of rendering a duplicate ChatListScreen.
+            androidx.compose.runtime.LaunchedEffect(Unit) {
+                navigator.navigate(Screen.Connect)
+            }
         }
 
         entry<Screen.BlockedList> {

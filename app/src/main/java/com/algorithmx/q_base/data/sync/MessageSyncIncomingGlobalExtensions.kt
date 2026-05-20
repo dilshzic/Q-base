@@ -5,7 +5,8 @@ import android.util.Log
 import com.algorithmx.q_base.data.chat.ChatEntity
 import com.algorithmx.q_base.data.chat.MessageEntity
 import com.algorithmx.q_base.util.NotificationHelper
-import io.appwrite.Query
+import com.algorithmx.q_base.data.backend.CoreQuery
+import com.algorithmx.q_base.data.backend.CoreQueryOperator
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -203,19 +204,23 @@ fun MessageSyncRepository.observeAllIncomingMessages(notificationHelper: Notific
 
 suspend fun MessageSyncRepository.fetchAndSyncMessages(chatId: String) {
     try {
-        val response = databases.listDocuments(
-            databaseId = "qbase_db",
-            collectionId = "messages",
-            queries = listOf(Query.equal("chatId", chatId))
+        val queries = listOf(
+            CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId)
         )
-        response.documents.forEach { doc ->
-            val payloadVal = doc.data["payload"] as? String ?: ""
-            val senderId = doc.data["senderId"] as? String ?: ""
-            val type = doc.data["type"] as? String ?: "TEXT"
-            val rawTimestamp = (doc.data["timestamp"] as? Number)?.toLong() ?: (System.currentTimeMillis() / 1000)
+        val docs = databases.queryDocuments(
+            collectionId = "messages",
+            queries = queries
+        ).getOrThrow()
+
+        for (doc in docs) {
+            val docId = doc["\$id"] as? String ?: continue
+            val payloadVal = doc["payload"] as? String ?: ""
+            val senderId = doc["senderId"] as? String ?: ""
+            val type = doc["type"] as? String ?: "TEXT"
+            val rawTimestamp = (doc["timestamp"] as? Number)?.toLong() ?: (System.currentTimeMillis() / 1000)
             val timestamp = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
-            val wrappedKeyStr = doc.data["wrappedKey"] as? String
-            val keyFingerprint = doc.data["keyFingerprint"] as? String
+            val wrappedKeyStr = doc["wrappedKey"] as? String
+            val keyFingerprint = doc["keyFingerprint"] as? String
 
             val wrappedKeyMap = deserializeWrappedKeys(wrappedKeyStr)
             val isEncrypted = wrappedKeyMap.isNotEmpty() && payloadVal.isNotEmpty()
@@ -243,7 +248,7 @@ suspend fun MessageSyncRepository.fetchAndSyncMessages(chatId: String) {
             }
 
             val message = MessageEntity(
-                messageId = doc.id,
+                messageId = docId,
                 chatId = chatId,
                 senderId = senderId,
                 payload = payload,
@@ -254,11 +259,11 @@ suspend fun MessageSyncRepository.fetchAndSyncMessages(chatId: String) {
                 wrappedKey = wrappedKey ?: ""
             )
 
-            if (messageDao.getMessageById(doc.id) == null) {
+            if (messageDao.getMessageById(docId) == null) {
                 messageDao.insertMessage(message)
             }
             repositoryScope.launch {
-                acknowledgeMessageDelivery(doc.id, chatId, senderId, wrappedKeyStr ?: "")
+                acknowledgeMessageDelivery(docId, chatId, senderId, wrappedKeyStr ?: "")
             }
         }
     } catch (e: Exception) {

@@ -1,7 +1,8 @@
 package com.algorithmx.q_base.data.sync
 
 import android.util.Log
-import io.appwrite.Query
+import com.algorithmx.q_base.data.backend.CoreQuery
+import com.algorithmx.q_base.data.backend.CoreQueryOperator
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -21,18 +22,9 @@ suspend fun CollectionSyncRepository.sendSyncRequest(targetUserId: String, targe
 
     try {
         databases.createDocument(
-            databaseId = "qbase_db",
             collectionId = "sync_requests",
             documentId = requestRefId,
-            data = syncRequest,
-            permissions = listOf(
-                io.appwrite.Permission.read(io.appwrite.Role.users()),
-                io.appwrite.Permission.delete(io.appwrite.Role.users()),
-                io.appwrite.Permission.read(io.appwrite.Role.user(senderId)),
-                io.appwrite.Permission.write(io.appwrite.Role.user(senderId)),
-                io.appwrite.Permission.update(io.appwrite.Role.user(senderId)),
-                io.appwrite.Permission.delete(io.appwrite.Role.user(senderId))
-            )
+            data = syncRequest
         )
     } catch (e: Exception) {
         Log.e("CollectionSyncRepository", "Failed to send sync request in Appwrite", e)
@@ -44,20 +36,20 @@ fun CollectionSyncRepository.observeIncomingRequests(): Flow<List<SyncRequest>> 
     
     repositoryScope.launch {
         try {
-            val response = databases.listDocuments(
-                databaseId = "qbase_db",
-                collectionId = "sync_requests",
-                queries = listOf(
-                    Query.equal("targetUserId", userId),
-                    Query.equal("status", "PENDING")
-                )
+            val queries = listOf(
+                CoreQuery("targetUserId", CoreQueryOperator.EQUAL, userId),
+                CoreQuery("status", CoreQueryOperator.EQUAL, "PENDING")
             )
-            val list = response.documents.map { doc ->
+            val docs = databases.queryDocuments(
+                collectionId = "sync_requests",
+                queries = queries
+            ).getOrThrow()
+            val list = docs.map { doc ->
                 SyncRequest(
-                    requestId = doc.id,
-                    senderId = (doc.data["senderId"] as? String) ?: "",
-                    targetCollectionId = (doc.data["targetCollectionId"] as? String) ?: "",
-                    status = (doc.data["status"] as? String) ?: "PENDING"
+                    requestId = (doc["\$id"] as? String) ?: "",
+                    senderId = (doc["senderId"] as? String) ?: "",
+                    targetCollectionId = (doc["targetCollectionId"] as? String) ?: "",
+                    status = (doc["status"] as? String) ?: "PENDING"
                 )
             }
             trySend(list).isSuccess
@@ -68,20 +60,20 @@ fun CollectionSyncRepository.observeIncomingRequests(): Flow<List<SyncRequest>> 
     val subscription = realtime.subscribe("databases.qbase_db.collections.sync_requests.documents") { event ->
         repositoryScope.launch {
             try {
-                val response = databases.listDocuments(
-                    databaseId = "qbase_db",
-                    collectionId = "sync_requests",
-                    queries = listOf(
-                        Query.equal("targetUserId", userId),
-                        Query.equal("status", "PENDING")
-                    )
+                val queries = listOf(
+                    CoreQuery("targetUserId", CoreQueryOperator.EQUAL, userId),
+                    CoreQuery("status", CoreQueryOperator.EQUAL, "PENDING")
                 )
-                val list = response.documents.map { doc ->
+                val docs = databases.queryDocuments(
+                    collectionId = "sync_requests",
+                    queries = queries
+                ).getOrThrow()
+                val list = docs.map { doc ->
                     SyncRequest(
-                        requestId = doc.id,
-                        senderId = (doc.data["senderId"] as? String) ?: "",
-                        targetCollectionId = (doc.data["targetCollectionId"] as? String) ?: "",
-                        status = (doc.data["status"] as? String) ?: "PENDING"
+                        requestId = (doc["\$id"] as? String) ?: "",
+                        senderId = (doc["senderId"] as? String) ?: "",
+                        targetCollectionId = (doc["targetCollectionId"] as? String) ?: "",
+                        status = (doc["status"] as? String) ?: "PENDING"
                     )
                 }
                 trySend(list).isSuccess
@@ -103,7 +95,6 @@ suspend fun CollectionSyncRepository.requestCollectionAccess(chatId: String, col
     
     try {
         databases.createDocument(
-            databaseId = "qbase_db",
             collectionId = "access_requests",
             documentId = requestId,
             data = requestData
@@ -117,16 +108,16 @@ fun CollectionSyncRepository.observeAccessRequests(chatId: String): Flow<List<Ma
     return callbackFlow {
         repositoryScope.launch {
             try {
-                val response = databases.listDocuments(
-                    databaseId = "qbase_db",
-                    collectionId = "access_requests",
-                    queries = listOf(
-                        Query.equal("chatId", chatId),
-                        Query.equal("status", "PENDING")
-                    )
+                val queries = listOf(
+                    CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId),
+                    CoreQuery("status", CoreQueryOperator.EQUAL, "PENDING")
                 )
-                val mapped = response.documents.map { doc ->
-                    val data = doc.data.toMutableMap()
+                val docs = databases.queryDocuments(
+                    collectionId = "access_requests",
+                    queries = queries
+                ).getOrThrow()
+                val mapped = docs.map { doc ->
+                    val data = doc.toMutableMap()
                     val rawTimestamp = (data["timestamp"] as? Number)?.toLong() ?: 0L
                     data["timestamp"] = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
                     data
@@ -139,16 +130,16 @@ fun CollectionSyncRepository.observeAccessRequests(chatId: String): Flow<List<Ma
         val subscription = realtime.subscribe("databases.qbase_db.collections.access_requests.documents") { event ->
             repositoryScope.launch {
                 try {
-                    val response = databases.listDocuments(
-                        databaseId = "qbase_db",
-                        collectionId = "access_requests",
-                        queries = listOf(
-                            Query.equal("chatId", chatId),
-                            Query.equal("status", "PENDING")
-                        )
+                    val queries = listOf(
+                        CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId),
+                        CoreQuery("status", CoreQueryOperator.EQUAL, "PENDING")
                     )
-                    val mapped = response.documents.map { doc ->
-                        val data = doc.data.toMutableMap()
+                    val docs = databases.queryDocuments(
+                        collectionId = "access_requests",
+                        queries = queries
+                    ).getOrThrow()
+                    val mapped = docs.map { doc ->
+                        val data = doc.toMutableMap()
                         val rawTimestamp = (data["timestamp"] as? Number)?.toLong() ?: 0L
                         data["timestamp"] = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
                         data
@@ -164,13 +155,15 @@ fun CollectionSyncRepository.observeAccessRequests(chatId: String): Flow<List<Ma
 suspend fun CollectionSyncRepository.grantCollectionAccess(chatId: String, collectionId: String, requesterId: String) {
     try {
         // 1. Fetch requester's public key from the remote profiles
-        val reqUserDoc = databases.getDocument("qbase_db", "users", requesterId)
-        val requesterPublicKey = reqUserDoc.data["publicKey"] as? String
+        val reqUserDoc = databases.getDocument("users", requesterId).getOrNull()
+            ?: throw IllegalStateException("Requester user document not found")
+        val requesterPublicKey = reqUserDoc["publicKey"] as? String
             ?: throw IllegalStateException("Requester's E2EE public key not found")
 
         // 2. Fetch the existing shared collection record to update its wrappedKeys map
-        val sharedCollDoc = databases.getDocument("qbase_db", "shared_collections", collectionId)
-        val existingWrappedKeysStr = sharedCollDoc.data["wrappedKeys"] as? String ?: "{}"
+        val sharedCollDoc = databases.getDocument("shared_collections", collectionId).getOrNull()
+            ?: throw IllegalStateException("Shared collection record not found")
+        val existingWrappedKeysStr = sharedCollDoc["wrappedKeys"] as? String ?: "{}"
         
         // 3. Find the plain symmetricKey from the admin's local collections database
         val existingWrappedKeysObj = org.json.JSONObject(existingWrappedKeysStr)
@@ -189,20 +182,18 @@ suspend fun CollectionSyncRepository.grantCollectionAccess(chatId: String, colle
         // 5. Append the new wrapped key to the wrappedKeys map and update Appwrite
         existingWrappedKeysObj.put(requesterId, newWrappedKeyForRequester)
         databases.updateDocument(
-            databaseId = "qbase_db",
             collectionId = "shared_collections",
             documentId = collectionId,
             data = mapOf("wrappedKeys" to existingWrappedKeysObj.toString())
-        )
+        ).getOrThrow()
 
         // 6. Finally, approve the access request document
         val requestId = "${requesterId}_$collectionId"
         databases.updateDocument(
-            databaseId = "qbase_db",
             collectionId = "access_requests",
             documentId = requestId,
             data = mapOf("status" to "APPROVED")
-        )
+        ).getOrThrow()
         
         Log.d("CollectionSyncRepository", "Access granted to $requesterId for $collectionId")
     } catch (e: Exception) {
