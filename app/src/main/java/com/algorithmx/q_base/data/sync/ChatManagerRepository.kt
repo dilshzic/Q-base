@@ -80,6 +80,7 @@ class ChatManagerRepository @Inject constructor(
                     val remoteAdminId = doc["adminId"] as? String
                     val isGroupVal = doc["isGroup"] as? Boolean ?: false
                     
+                    Log.d("ChatManagerRepository", "Synced chat doc keys: ${doc.keys}, values: ${doc.values}")
                     val chat = ChatEntity(
                         chatId = doc["\$id"] as String,
                         chatName = doc["chatName"] as? String,
@@ -88,11 +89,13 @@ class ChatManagerRepository @Inject constructor(
                         adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList())
                     )
                     chatDao.insertChat(chat)
-                    Log.d("ChatManagerRepository", "Synced chat from remote: ${chat.chatId} (${chat.chatName})")
+                    Log.d("ChatManagerRepository", "Synced chat from remote: ${chat.chatId} (${chat.chatName}), participants: ${chat.participantIds}")
                     
                     // Fetch and sync profiles for all participants
                     participantsList.forEach { participantId ->
+                        Log.d("ChatManagerRepository", "Checking participant: '$participantId' against uid: '$uid'")
                         if (participantId.isNotBlank() && participantId != uid) {
+                            Log.d("ChatManagerRepository", "Syncing profile for other participant: $participantId")
                             // Run this without throwing exceptions to ensure it doesn't block message sync
                             repositoryScope.launch {
                                 try {

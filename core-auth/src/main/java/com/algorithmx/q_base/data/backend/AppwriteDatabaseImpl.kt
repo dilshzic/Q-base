@@ -34,6 +34,14 @@ class AppwriteDatabaseImpl @Inject constructor(
     ): Any? = suspendCoroutineUninterceptedOrReturn { uCont ->
         val tables = tablesClient ?: return@suspendCoroutineUninterceptedOrReturn null
         try {
+            android.util.Log.d("QbaseReflection", "=== Tables Client Methods ===")
+            tables.javaClass.methods.forEach { method ->
+                if (method.name in listOf("listRows", "getRow", "createRow", "updateRow")) {
+                    val params = method.parameterTypes.map { it.name }.joinToString(", ")
+                    android.util.Log.d("QbaseReflection", "  method ${method.name}($params) returning ${method.returnType.name}")
+                }
+            }
+            
             val typesWithContinuation = parameterTypes + Continuation::class.java
             val method = tables.javaClass.getMethod(methodName, *typesWithContinuation)
             val argsWithContinuation = args + uCont
@@ -49,12 +57,47 @@ class AppwriteDatabaseImpl @Inject constructor(
         return try {
             val dataField = row.javaClass.getMethod("getData")
             val idField = row.javaClass.getMethod("getId")
-            val rawData = dataField.invoke(row) as? Map<String, Any> ?: emptyMap<String, Any>()
+            val rawData = dataField.invoke(row)
             val id = idField.invoke(row) as? String ?: ""
-            val mutableData = rawData.toMutableMap()
+            
+            android.util.Log.d("QbaseReflection", "=== Row Class: ${row.javaClass.name} ===")
+            row.javaClass.declaredFields.forEach {
+                try {
+                    it.isAccessible = true
+                    android.util.Log.d("QbaseReflection", "  field ${it.name} (${it.type.name}) = ${it.get(row)}")
+                } catch (e: Exception) {}
+            }
+            row.javaClass.methods.forEach {
+                android.util.Log.d("QbaseReflection", "  method ${it.name} returning ${it.returnType.name}")
+            }
+            
+            android.util.Log.d("QbaseReflection", "mapRow: row class = ${row.javaClass.name}, id = $id, rawData class = ${rawData?.javaClass?.name}, rawData value = $rawData")
+            
+            val mappedData = when (rawData) {
+                is Map<*, *> -> rawData.entries.associate { it.key.toString() to (it.value ?: "") }
+                else -> {
+                    // Try to inspect fields of rawData if it is a custom class, or parse if it is something else
+                    val map = mutableMapOf<String, Any>()
+                    rawData?.javaClass?.declaredFields?.forEach { field ->
+                        try {
+                            field.isAccessible = true
+                            val value = field.get(rawData)
+                            if (value != null) {
+                                map[field.name] = value
+                            }
+                        } catch (e: Exception) {
+                            // Ignore
+                        }
+                    }
+                    map
+                }
+            }
+            
+            val mutableData = mappedData.toMutableMap()
             mutableData["\$id"] = id
             mutableData
         } catch (e: Exception) {
+            android.util.Log.e("QbaseReflection", "Failed to map row", e)
             emptyMap<String, Any>()
         }
     }
