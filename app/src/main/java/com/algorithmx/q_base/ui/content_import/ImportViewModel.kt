@@ -106,6 +106,13 @@ class ImportViewModel @Inject constructor(
     private val _selectedPaperTypes = MutableStateFlow<List<String>>(listOf("SBA", "MTF", "EMQ"))
     val selectedPaperTypes = _selectedPaperTypes.asStateFlow()
 
+    // Loading flag for in-place doc ingest (PDF/OCR) — avoids transient step jumps
+    private val _isAddingDoc = MutableStateFlow(false)
+    val isAddingDoc = _isAddingDoc.asStateFlow()
+
+    // Tracks last meaningful wizard step for freezing progress bar on Error
+    private var _lastMeaningfulStep = 1
+
     fun togglePaperType(type: String) {
         val current = _selectedPaperTypes.value
         _selectedPaperTypes.value = if (current.contains(type)) {
@@ -152,6 +159,12 @@ class ImportViewModel @Inject constructor(
     }
 
     fun navigateTo(step: ImportStep) {
+        // Track the last meaningful step so the progress bar can freeze there on Error
+        if (step !is ImportStep.Error &&
+            step !is ImportStep.Extracting &&
+            step !is ImportStep.Processing) {
+            _lastMeaningfulStep = currentStepNumber()
+        }
         _uiState.value = step
     }
 
@@ -176,7 +189,7 @@ class ImportViewModel @Inject constructor(
     }
 
     fun onImagePicked(uri: Uri) {
-        _uiState.value = ImportStep.Extracting("Image (OCR)")
+        // No transient state change — loading is handled inside CommonWizardFirstScreen
         viewModelScope.launch {
             val result = importRepository.recognizeTextFromImage(uri)
             handleExtractionResult(result)
@@ -184,7 +197,7 @@ class ImportViewModel @Inject constructor(
     }
 
     fun onPdfPicked(uri: Uri) {
-        _uiState.value = ImportStep.Extracting("PDF Document")
+        // No transient state change — loading is handled inside CommonWizardFirstScreen
         viewModelScope.launch {
             val result = importRepository.extractTextFromPdf(uri)
             handleExtractionResult(result)
@@ -280,7 +293,9 @@ class ImportViewModel @Inject constructor(
     }
 
     fun addPdf(uri: Uri) {
-        _uiState.value = ImportStep.Processing("Extracting PDF content...")
+        // Use isAddingDoc flag instead of transitioning to Processing
+        // so the progress bar doesn't shoot to step 5 and snap back
+        _isAddingDoc.value = true
         viewModelScope.launch {
             val result = importRepository.extractTextFromPdf(uri)
             if (result.isSuccess) {
@@ -299,11 +314,13 @@ class ImportViewModel @Inject constructor(
             } else {
                 _uiState.value = ImportStep.Error(result.exceptionOrNull()?.message ?: "PDF extraction failed")
             }
+            _isAddingDoc.value = false
         }
     }
 
     fun addOcr(uri: Uri) {
-        _uiState.value = ImportStep.Processing("Analyzing image text...")
+        // Use isAddingDoc flag instead of transitioning to Processing
+        _isAddingDoc.value = true
         viewModelScope.launch {
             val result = importRepository.recognizeTextFromImage(uri)
             if (result.isSuccess) {
@@ -322,6 +339,7 @@ class ImportViewModel @Inject constructor(
             } else {
                 _uiState.value = ImportStep.Error(result.exceptionOrNull()?.message ?: "OCR failed")
             }
+            _isAddingDoc.value = false
         }
     }
 
@@ -398,23 +416,39 @@ class ImportViewModel @Inject constructor(
 
     /**
      * Returns the current step number (1-based) for the progress indicator.
+     *
+     * Standard AI-generate path (5 total steps):
+     *   NameAndDestination / MediaInput → 1
+     *   Configure → 2
+     *   Processing → 3
+     *   Review → 4
+     *   (complete) → 5
+     *
+     * Direct Extraction path (3 total steps):
+     *   NameAndDestination → 1
+     *   ExtractionIngest → 2
+     *   ExtractionOverview → 3
+     *
+     * Error: frozen at last meaningful step via _lastMeaningfulStep.
+     * Transient states (Extracting, legacy) never change the bar.
      */
-    fun currentStepNumber(): Int = when (_uiState.value) {
-        is ImportStep.NameAndDestination -> 1
-        is ImportStep.ChooseMethod -> 2
-        is ImportStep.MediaInput -> 3
-        is ImportStep.Configure -> 4
-        is ImportStep.Processing -> 5
-        is ImportStep.Review -> 5
-        is ImportStep.Error -> 5
-        is ImportStep.ExtractionIngest -> 3
-        is ImportStep.ExtractionOverview -> 5
-        else -> 1
+    fun currentStepNumber(): Int = when (val s = _uiState.value) {
+        is ImportStep.NameAndDestination,
+        is ImportStep.MediaInput -> 1
+        is ImportStep.Configure -> 2
+        is ImportStep.Processing -> 3
+        is ImportStep.Review -> 4
+        is ImportStep.ExtractionIngest -> 2
+        is ImportStep.ExtractionOverview -> 3
+        is ImportStep.Error -> _lastMeaningfulStep
+        // Legacy / transient states — don't move the bar
+        else -> _lastMeaningfulStep
     }
 
     /**
      * Total number of steps for progress indicator.
-     * Manual path exits at step 2, so max is 5 for AI paths.
+     * The extraction path has 3 steps; the AI-generate path has 5.
+     * We use 5 as the denominator so both paths display proportionally.
      */
     fun totalSteps(): Int = 5
 }

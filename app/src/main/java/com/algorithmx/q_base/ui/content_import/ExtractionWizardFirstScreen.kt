@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,6 +31,7 @@ data class ExtractedDocumentCard(
 fun ExtractionWizardFirstScreen(
     extractedDocs: List<ExtractedDocumentCard>,
     selectedPaperTypes: List<String>,
+    isAddingDoc: Boolean = false,
     onTogglePaperType: (String) -> Unit,
     onAddPdf: (Uri) -> Unit,
     onAddOcr: (Uri) -> Unit,
@@ -41,156 +43,198 @@ fun ExtractionWizardFirstScreen(
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { it?.let { onAddOcr(it) } }
     val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
-        // Header
-        Text(
-            text = "Direct Paper Extraction",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Black
-        )
-        Text(
-            text = "Ingest structured exam papers, question sheets, or past textbooks to extract formatted practice tests instantly.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        // Cohesive primary-tinted channel buttons
-        val buttonsColor = MaterialTheme.colorScheme.primary
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            SmallSourceButton(
-                icon = Icons.Rounded.PictureAsPdf,
-                title = "Import PDF",
-                color = buttonsColor,
-                modifier = Modifier.weight(1f)
-            ) { pdfPicker.launch("application/pdf") }
+            // Header
+            Text(
+                text = "Direct Paper Extraction",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Black
+            )
+            Text(
+                text = "Ingest structured exam papers, question sheets, or past textbooks to extract formatted practice tests instantly.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
-            SmallSourceButton(
-                icon = Icons.Rounded.CameraAlt,
-                title = "Text/OCR",
-                color = buttonsColor,
-                modifier = Modifier.weight(1f)
-            ) { imagePicker.launch("image/*") }
-
-            SmallSourceButton(
-                icon = Icons.Rounded.ContentPaste,
-                title = "Clipboard",
-                color = buttonsColor,
-                modifier = Modifier.weight(1f)
+            // Cohesive primary-tinted channel buttons
+            val buttonsColor = MaterialTheme.colorScheme.primary
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val clipText = clipboardManager.getText()?.text
-                if (!clipText.isNullOrBlank()) {
-                    onAddClipboard(clipText)
+                SmallSourceButton(
+                    icon = Icons.Rounded.PictureAsPdf,
+                    title = "Import PDF",
+                    color = buttonsColor,
+                    modifier = Modifier.weight(1f)
+                ) { pdfPicker.launch("application/pdf") }
+
+                SmallSourceButton(
+                    icon = Icons.Rounded.CameraAlt,
+                    title = "Text/OCR",
+                    color = buttonsColor,
+                    modifier = Modifier.weight(1f)
+                ) { imagePicker.launch("image/*") }
+
+                SmallSourceButton(
+                    icon = Icons.Rounded.ContentPaste,
+                    title = "Clipboard",
+                    color = buttonsColor,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    val clipText = clipboardManager.getText()?.text
+                    if (!clipText.isNullOrBlank()) {
+                        onAddClipboard(clipText)
+                    }
                 }
+            }
+
+            Text(
+                text = "Ingested Reference Materials (${extractedDocs.size})",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            // Ingested Documents Lazy Column
+            if (extractedDocs.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            Icons.Rounded.CloudUpload,
+                            contentDescription = null,
+                            modifier = Modifier.size(54.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            "No documents added yet.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(extractedDocs, key = { it.id }) { doc ->
+                        ExtractedDocItem(
+                            doc = doc,
+                            onClearClick = { onRemoveDoc(doc.id) }
+                        )
+                    }
+                }
+            }
+
+            // Question formats selection row
+            Text(
+                text = "Select formats to extract",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf("SBA", "MTF", "EMQ").forEach { format ->
+                    val isSelected = selectedPaperTypes.contains(format)
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { onTogglePaperType(format) },
+                        label = { Text(format, fontWeight = FontWeight.Bold) },
+                        leadingIcon = if (isSelected) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Rounded.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        } else null,
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                            selectedLabelColor = MaterialTheme.colorScheme.primary,
+                            selectedLeadingIconColor = MaterialTheme.colorScheme.primary
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = isSelected,
+                            borderColor = MaterialTheme.colorScheme.outlineVariant,
+                            selectedBorderColor = MaterialTheme.colorScheme.primary,
+                            borderWidth = 1.dp,
+                            selectedBorderWidth = 1.5.dp
+                        )
+                    )
+                }
+            }
+
+            // Proceed Button
+            Button(
+                onClick = onProceed,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(58.dp),
+                shape = RoundedCornerShape(18.dp),
+                enabled = extractedDocs.isNotEmpty() && !isAddingDoc,
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+            ) {
+                Text("Begin Document Extraction", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
             }
         }
 
-        Text(
-            text = "Ingested Reference Materials (${extractedDocs.size})",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        // Ingested Documents Lazy Column
-        if (extractedDocs.isEmpty()) {
+        // Loading overlay — shown while a PDF/OCR is being extracted in-place
+        // Avoids transitioning to Processing step and causing a progress bar jump
+        if (isAddingDoc) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        Icons.Rounded.CloudUpload,
-                        contentDescription = null,
-                        modifier = Modifier.size(54.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        "No documents added yet.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(extractedDocs, key = { it.id }) { doc ->
-                    ExtractedDocItem(
-                        doc = doc,
-                        onClearClick = { onRemoveDoc(doc.id) }
-                    )
-                }
-            }
-        }
-
-        // Question formats selection row
-        Text(
-            text = "Select formats to extract",
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            listOf("SBA", "MTF", "EMQ").forEach { format ->
-                val isSelected = selectedPaperTypes.contains(format)
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { onTogglePaperType(format) },
-                    label = { Text(format, fontWeight = FontWeight.Bold) },
-                    leadingIcon = if (isSelected) {
-                        {
-                            Icon(
-                                imageVector = Icons.Rounded.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    } else null,
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                        selectedLabelColor = MaterialTheme.colorScheme.primary,
-                        selectedLeadingIconColor = MaterialTheme.colorScheme.primary
+                Card(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
                     ),
-                    border = FilterChipDefaults.filterChipBorder(
-                        enabled = true,
-                        selected = isSelected,
-                        borderColor = MaterialTheme.colorScheme.outlineVariant,
-                        selectedBorderColor = MaterialTheme.colorScheme.primary,
-                        borderWidth = 1.dp,
-                        selectedBorderWidth = 1.5.dp
-                    )
-                )
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 40.dp, vertical = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp),
+                            strokeWidth = 3.dp
+                        )
+                        Text(
+                            text = "Extracting document...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "This may take a moment for large files",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
-        }
-
-        // Proceed Button
-        Button(
-            onClick = onProceed,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp),
-            shape = RoundedCornerShape(18.dp),
-            enabled = extractedDocs.isNotEmpty(),
-            elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
-        ) {
-            Text("Begin Document Extraction", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
         }
     }
 }

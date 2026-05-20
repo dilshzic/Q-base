@@ -42,11 +42,26 @@ class ImportRepository @Inject constructor(
         try {
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
                 val document = PDDocument.load(inputStream)
+                val pageCount = document.numberOfPages
+                if (pageCount > 80) {
+                    document.close()
+                    return@withContext Result.failure(
+                        Exception("PDF too large ($pageCount pages). Please import max 80 pages at a time.")
+                    )
+                }
                 val stripper = PDFTextStripper()
                 val text = stripper.getText(document)
                 document.close()
-                Result.success(cleanRecognizedText(text))
+                val cleaned = cleanRecognizedText(text)
+                if (cleaned.isBlank()) {
+                    Result.failure(Exception("No readable text found. The PDF may be image-based — try OCR instead."))
+                } else {
+                    Result.success(cleaned)
+                }
             } ?: Result.failure(Exception("Could not open PDF stream"))
+        } catch (e: OutOfMemoryError) {
+            Log.e(TAG, "PDF OOM: ${e.message}")
+            Result.failure(Exception("PDF is too large to process. Please try a smaller file."))
         } catch (e: Exception) {
             Log.e(TAG, "PDF extraction failed: ${e.message}")
             Result.failure(e)
@@ -54,13 +69,13 @@ class ImportRepository @Inject constructor(
     }
 
     fun cleanRecognizedText(rawText: String): String {
-        // Regex patterns for common cleanup
-        var cleaned = rawText
-            .replace(Regex("\\s+"), " ") // Normalize whitespace
-            .replace(Regex("(?i)page \\d+"), "") // Remove page numbers
+        return rawText
+            // Remove isolated page-number lines (e.g. a line that is just "Page 4" or "4")
+            .replace(Regex("(?m)^\\s*[Pp]age\\s+\\d+\\s*$"), "")
+            // Normalize horizontal whitespace only — preserve newlines for question structure
+            .replace(Regex("[ \\t]+"), " ")
+            // Collapse 3+ consecutive blank lines into a single blank line
+            .replace(Regex("\\n{3,}"), "\n\n")
             .trim()
-            
-        // Add more specific regex as needed based on educational textbook patterns
-        return cleaned
     }
 }

@@ -32,6 +32,7 @@ fun ImportWizardScreen(
     val collectionName by viewModel.newCollectionName.collectAsStateWithLifecycle()
     val collectionDesc by viewModel.newCollectionDescription.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val isAddingDoc by viewModel.isAddingDoc.collectAsStateWithLifecycle()
     
     LaunchedEffect(Unit) {
         viewModel.setInitialSource(source, targetId)
@@ -159,6 +160,7 @@ fun ImportWizardScreen(
                         ExtractionWizardFirstScreen(
                             extractedDocs = docs,
                             selectedPaperTypes = selectedPaperTypes,
+                            isAddingDoc = isAddingDoc,
                             onTogglePaperType = { viewModel.togglePaperType(it) },
                             onAddPdf = { viewModel.addPdf(it) },
                             onAddOcr = { viewModel.addOcr(it) },
