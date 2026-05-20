@@ -55,46 +55,72 @@ class AppwriteDatabaseImpl @Inject constructor(
     @Suppress("UNCHECKED_CAST")
     private fun mapRow(row: Any): Map<String, Any> {
         return try {
-            val dataField = row.javaClass.getMethod("getData")
             val idField = row.javaClass.getMethod("getId")
-            val rawData = dataField.invoke(row)
             val id = idField.invoke(row) as? String ?: ""
-            
-            android.util.Log.d("QbaseReflection", "=== Row Class: ${row.javaClass.name} ===")
-            row.javaClass.declaredFields.forEach {
-                try {
-                    it.isAccessible = true
-                    android.util.Log.d("QbaseReflection", "  field ${it.name} (${it.type.name}) = ${it.get(row)}")
-                } catch (e: Exception) {}
-            }
-            row.javaClass.methods.forEach {
-                android.util.Log.d("QbaseReflection", "  method ${it.name} returning ${it.returnType.name}")
-            }
-            
-            android.util.Log.d("QbaseReflection", "mapRow: row class = ${row.javaClass.name}, id = $id, rawData class = ${rawData?.javaClass?.name}, rawData value = $rawData")
-            
-            val mappedData = when (rawData) {
-                is Map<*, *> -> rawData.entries.associate { it.key.toString() to (it.value ?: "") }
-                else -> {
-                    // Try to inspect fields of rawData if it is a custom class, or parse if it is something else
+
+            // Strategy 1: getData() returns a Map directly — ideal case
+            val dataMap: Map<String, Any>? = try {
+                val dataField = row.javaClass.getMethod("getData")
+                val rawData = dataField.invoke(row)
+                when (rawData) {
+                    is Map<*, *> -> rawData.entries
+                        .associate { it.key.toString() to (it.value ?: "") }
+                    else -> null
+                }
+            } catch (e: Exception) { null }
+
+            val mappedData: Map<String, Any> = if (dataMap != null) {
+                dataMap
+            } else {
+                // Strategy 2: getData() returned a typed object — try toMap() if available
+                val toMapResult: Map<String, Any>? = try {
+                    val dataField = row.javaClass.getMethod("getData")
+                    val rawData = dataField.invoke(row)
+                    val toMap = rawData?.javaClass?.getMethod("toMap")
+                    toMap?.invoke(rawData) as? Map<String, Any>
+                } catch (e: Exception) { null }
+
+                if (toMapResult != null) {
+                    toMapResult
+                } else {
+                    // Strategy 3: getter method reflection, stripping get/is prefix and
+                    // lowercasing the first char to recover camelCase field names
                     val map = mutableMapOf<String, Any>()
-                    rawData?.javaClass?.declaredFields?.forEach { field ->
-                        try {
-                            field.isAccessible = true
-                            val value = field.get(rawData)
-                            if (value != null) {
-                                map[field.name] = value
-                            }
-                        } catch (e: Exception) {
-                            // Ignore
+                    row.javaClass.methods.forEach { method ->
+                        val mName = method.name
+                        val key = when {
+                            mName.startsWith("get") && mName.length > 3 ->
+                                mName[3].lowercaseChar() + mName.substring(4)
+                            mName.startsWith("is") && mName.length > 2 ->
+                                mName[2].lowercaseChar() + mName.substring(3)
+                            else -> null
+                        }
+                        if (key != null &&
+                            key !in setOf("class", "hashCode") &&
+                            method.parameterCount == 0) {
+                            try {
+                                val value = method.invoke(row)
+                                if (value != null) map[key] = value
+                            } catch (e: Exception) { /* ignore */ }
+                        }
+                    }
+                    // Strategy 4: declared field reflection as final fallback
+                    if (map.isEmpty()) {
+                        row.javaClass.declaredFields.forEach { field ->
+                            try {
+                                field.isAccessible = true
+                                val value = field.get(row)
+                                if (value != null) map[field.name] = value
+                            } catch (e: Exception) { /* ignore */ }
                         }
                     }
                     map
                 }
             }
-            
+
             val mutableData = mappedData.toMutableMap()
             mutableData["\$id"] = id
+            android.util.Log.d("QbaseReflection", "mapRow result: id=$id keys=${mutableData.keys}")
             mutableData
         } catch (e: Exception) {
             android.util.Log.e("QbaseReflection", "Failed to map row", e)

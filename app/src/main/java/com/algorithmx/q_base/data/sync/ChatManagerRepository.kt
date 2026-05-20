@@ -172,20 +172,26 @@ class ChatManagerRepository @Inject constructor(
     suspend fun ensureChatExistsLocally(chatId: String, senderId: String? = null) {
         val localChat = chatDao.getChatById(chatId)
         if (localChat == null) {
+            // Try to fetch the real metadata first
             fetchAndSyncChatMetadata(chatId)
             val updatedChat = chatDao.getChatById(chatId)
             if (updatedChat == null) {
+                // Insert a minimal placeholder with null chatName so a later real sync
+                // can overwrite it cleanly without a hardcoded name poisoning the cache
                 val userId = currentUserId ?: ""
                 val peerId = senderId ?: ""
                 val dummyChat = ChatEntity(
                     chatId = chatId,
-                    chatName = "Secure Chat",
+                    chatName = null,  // never hardcode a name here
                     isGroup = false,
                     participantIds = if (peerId.isNotEmpty()) "$userId,$peerId" else userId,
                     adminIds = emptyList()
                 )
                 chatDao.insertChat(dummyChat)
             }
+        } else if (localChat.chatName.isNullOrBlank()) {
+            // Local chat exists but has no name yet — refresh metadata from remote
+            fetchAndSyncChatMetadata(chatId)
         }
     }
 
@@ -199,16 +205,32 @@ class ChatManagerRepository @Inject constructor(
             val participantsList = doc["participantIds"] as? List<String> ?: emptyList()
             val remoteAdminIds = doc["adminIds"] as? List<String>
             val remoteAdminId = doc["adminId"] as? String
-            val chat = ChatEntity(
-                chatId = chatId,
-                chatName = doc["chatName"] as? String,
-                isGroup = doc["isGroup"] as? Boolean ?: false,
-                participantIds = participantsList.joinToString(","),
-                adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList())
-            )
+            val remoteName = doc["chatName"] as? String
+
+            val localChat = chatDao.getChatById(chatId)
+            val chat = if (localChat != null) {
+                // Always apply remote name if present, preserving all other local fields
+                localChat.copy(
+                    chatName = remoteName?.takeIf { it.isNotBlank() } ?: localChat.chatName,
+                    isGroup = doc["isGroup"] as? Boolean ?: localChat.isGroup,
+                    participantIds = participantsList.joinToString(",").ifBlank { localChat.participantIds },
+                    adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds
+                               else (remoteAdminId?.let { listOf(it) } ?: localChat.adminIds)
+                )
+            } else {
+                ChatEntity(
+                    chatId = chatId,
+                    chatName = remoteName,
+                    isGroup = doc["isGroup"] as? Boolean ?: false,
+                    participantIds = participantsList.joinToString(","),
+                    adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds
+                               else (remoteAdminId?.let { listOf(it) } ?: emptyList())
+                )
+            }
             chatDao.insertChat(chat)
+            Log.d("ChatManagerRepository", "fetchAndSyncChatMetadata: chatId=$chatId name='${chat.chatName}'")
         } catch (e: Exception) {
-            Log.e("ChatManagerRepository", "Failed to fetch chat metadata", e)
+            Log.e("ChatManagerRepository", "Failed to fetch chat metadata for $chatId", e)
         }
     }
 
