@@ -185,10 +185,10 @@ class ChatRemoteRepository @Inject constructor(
                         try {
                             databases.deleteDocument(
                                 collectionId = "messages",
-                                documentId = doc["$id"] as String
+                                documentId = doc["\$id"] as String
                             ).getOrThrow()
                         } catch (e: Exception) {
-                            Log.w("ChatRemoteRepository", "Failed to delete message document ${doc["$id"]}", e)
+                            Log.w("ChatRemoteRepository", "Failed to delete message document ${doc["\$id"]}", e)
                         }
                     }
                     if (documents.size < 25) {

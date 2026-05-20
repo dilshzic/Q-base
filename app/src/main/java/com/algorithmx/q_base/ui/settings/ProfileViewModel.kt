@@ -12,7 +12,6 @@ import com.algorithmx.q_base.data.auth.UserProfile
 import com.algorithmx.q_base.data.auth.ProfileRepository
 import com.algorithmx.q_base.data.auth.AuthRepository
 import com.algorithmx.q_base.data.core.DataClearingRepository
-import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -191,8 +190,12 @@ class ProfileViewModel @Inject constructor(
 
     fun signOut(clearCollections: Boolean, onComplete: () -> Unit) {
         viewModelScope.launch {
-            dataClearingRepository.clearAllData(clearCollections)
+            // Sign out first — this nulls currentUser which cancels active sync jobs
             authRepository.signOut()
+            // Brief delay to allow sync cancellation to propagate
+            kotlinx.coroutines.delay(100)
+            // Now safe to clear local data without race conditions
+            dataClearingRepository.clearAllData(clearCollections)
             onComplete()
         }
     }

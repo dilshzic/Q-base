@@ -76,7 +76,10 @@ class Navigator(val state: NavigationState) {
     }
 
     fun goBack() {
-        val currentStack = state.backStacks[state.topLevelRoute] ?: error("Stack for ${state.topLevelRoute} not found")
+        val currentStack = state.backStacks[state.topLevelRoute] ?: run {
+            android.util.Log.w("Navigator", "goBack: stack for ${state.topLevelRoute} not found, ignoring")
+            return
+        }
         val currentRoute = currentStack.lastOrNull() ?: return
         android.util.Log.d("Navigator", "goBack: topLevel=${state.topLevelRoute}, currentRoute=$currentRoute, stackSize=${currentStack.size}, tabHistorySize=${state.tabHistory.size}")
 

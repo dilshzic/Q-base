@@ -2,8 +2,9 @@ package com.algorithmx.q_base.data.sync
 
 import android.util.Log
 import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.data.backend.CoreQuery
+import com.algorithmx.q_base.data.backend.CoreQueryOperator
 import io.appwrite.ID
-import io.appwrite.Query
 import io.appwrite.models.InputFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -50,8 +51,8 @@ suspend fun CollectionSyncRepository.shareCollectionToGroup(chatId: String, coll
         val symmetricKey = collectionMetadata["symmetricKey"] as? String ?: ""
         
         try {
-            val existingDoc = databases.getDocument("qbase_db", "shared_collections", collectionId)
-            val oldUrl = existingDoc.data["downloadUrl"] as? String
+            val existingDoc = databases.getDocument("shared_collections", collectionId).getOrNull()
+            val oldUrl = existingDoc?.get("downloadUrl") as? String
             if (oldUrl != null) {
                 val oldFileId = extractFileIdFromUrl(oldUrl)
                 if (oldFileId != null) {
@@ -76,24 +77,23 @@ suspend fun CollectionSyncRepository.shareCollectionToGroup(chatId: String, coll
                         val local = userDao.getUserById(targetId)
                         var candidateKey: String? = local?.publicKey
                         try {
-                            val doc = databases.getDocument(
-                                databaseId = "qbase_db",
+                            val docData = databases.getDocument(
                                 collectionId = "users",
                                 documentId = targetId
-                            )
-                            val remoteKey = doc.data["publicKey"] as? String
-                            if (!remoteKey.isNullOrBlank()) {
+                            ).getOrNull()
+                            val remoteKey = docData?.get("publicKey") as? String
+                            if (!remoteKey.isNullOrBlank() && docData != null) {
                                 candidateKey = remoteKey
                                 val cached = UserEntity(
                                     userId = targetId,
-                                    displayName = (doc.data["displayName"] as? String) ?: (local?.displayName ?: "Unknown"),
+                                    displayName = (docData["displayName"] as? String) ?: (local?.displayName ?: "Unknown"),
                                     email = local?.email,
-                                    intro = (doc.data["intro"] as? String) ?: local?.intro,
-                                    profilePictureUrl = (doc.data["profilePictureUrl"] as? String) ?: local?.profilePictureUrl,
-                                    friendCode = (doc.data["friendCode"] as? String) ?: (local?.friendCode ?: ""),
+                                    intro = (docData["intro"] as? String) ?: local?.intro,
+                                    profilePictureUrl = (docData["profilePictureUrl"] as? String) ?: local?.profilePictureUrl,
+                                    friendCode = (docData["friendCode"] as? String) ?: (local?.friendCode ?: ""),
                                     publicKey = remoteKey,
-                                    isBanned = (doc.data["isBanned"] as? Boolean) ?: (local?.isBanned ?: false),
-                                    isPhotoVisible = (doc.data["isPhotoVisible"] as? Boolean) ?: (local?.isPhotoVisible ?: true)
+                                    isBanned = (docData["isBanned"] as? Boolean) ?: (local?.isBanned ?: false),
+                                    isPhotoVisible = (docData["isPhotoVisible"] as? Boolean) ?: (local?.isPhotoVisible ?: true)
                                 )
                                 userDao.insertUser(cached)
                             }
@@ -136,12 +136,14 @@ suspend fun CollectionSyncRepository.shareCollectionToGroup(chatId: String, coll
         )
 
         try {
-            databases.createDocument("qbase_db", "shared_collections", collectionId, secureMetadata)
-        } catch (e: io.appwrite.exceptions.AppwriteException) {
-            if (e.code == 409) {
-                databases.updateDocument("qbase_db", "shared_collections", collectionId, secureMetadata)
-            } else {
-                throw e
+            databases.createDocument("shared_collections", collectionId, secureMetadata).getOrThrow()
+        } catch (e: Exception) {
+            // Check for conflict/existing document code mapping or retry using updateDocument
+            try {
+                databases.updateDocument("shared_collections", collectionId, secureMetadata).getOrThrow()
+            } catch (ue: Exception) {
+                Log.e("CollectionSyncRepository", "Failed to create/update shared collection", ue)
+                throw ue
             }
         }
     } catch (e: Exception) {
@@ -163,30 +165,31 @@ internal fun CollectionSyncRepository.extractFileIdFromUrl(url: String): String?
 suspend fun CollectionSyncRepository.acknowledgeCollectionDownload(collectionId: String) {
     withContext(Dispatchers.IO) {
         try {
-            val doc = databases.getDocument("qbase_db", "shared_collections", collectionId)
-            val url = doc.data["downloadUrl"] as? String ?: ""
-            val pendingDownloadsList = (doc.data["pendingDownloads"] as? List<*>)?.mapNotNull { it?.toString() }?.toMutableList() ?: mutableListOf()
-            
-            if (currentUserId != null && pendingDownloadsList.contains(currentUserId)) {
-                pendingDownloadsList.remove(currentUserId)
+            val doc = databases.getDocument("shared_collections", collectionId).getOrNull()
+            if (doc != null) {
+                val url = doc["downloadUrl"] as? String ?: ""
+                val pendingDownloadsList = (doc["pendingDownloads"] as? List<*>)?.mapNotNull { it?.toString() }?.toMutableList() ?: mutableListOf()
                 
-                databases.updateDocument(
-                    databaseId = "qbase_db",
-                    collectionId = "shared_collections",
-                    documentId = collectionId,
-                    data = mapOf(
-                        "pendingDownloads" to pendingDownloadsList
-                    )
-                )
-                
-                if (pendingDownloadsList.isEmpty() && url.isNotBlank()) {
-                    val fileId = extractFileIdFromUrl(url)
-                    if (fileId != null) {
-                        try {
-                            deleteQuestionBankZip(fileId)
-                            Log.d("CollectionSyncRepository", "Zero-retention triggered: deleted ZIP file $fileId from Appwrite Storage")
-                        } catch (de: Exception) {
-                            Log.e("CollectionSyncRepository", "Failed to delete storage ZIP file", de)
+                if (currentUserId != null && pendingDownloadsList.contains(currentUserId)) {
+                    pendingDownloadsList.remove(currentUserId)
+                    
+                    databases.updateDocument(
+                        collectionId = "shared_collections",
+                        documentId = collectionId,
+                        data = mapOf(
+                            "pendingDownloads" to pendingDownloadsList
+                        )
+                    ).getOrThrow()
+                    
+                    if (pendingDownloadsList.isEmpty() && url.isNotBlank()) {
+                        val fileId = extractFileIdFromUrl(url)
+                        if (fileId != null) {
+                            try {
+                                deleteQuestionBankZip(fileId)
+                                Log.d("CollectionSyncRepository", "Zero-retention triggered: deleted ZIP file $fileId from Appwrite Storage")
+                            } catch (de: Exception) {
+                                Log.e("CollectionSyncRepository", "Failed to delete storage ZIP file", de)
+                            }
                         }
                     }
                 }
@@ -201,12 +204,12 @@ fun CollectionSyncRepository.observeGroupLibrary(chatId: String): Flow<List<Map<
     return callbackFlow {
         repositoryScope.launch {
             try {
-                val response = databases.listDocuments(
-                    databaseId = "qbase_db",
+                val queries = listOf(CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId))
+                val docs = databases.queryDocuments(
                     collectionId = "shared_collections",
-                    queries = listOf(Query.equal("chatId", chatId))
-                )
-                val mapped = mapGroupLibrary(response.documents.map { it.data })
+                    queries = queries
+                ).getOrThrow()
+                val mapped = mapGroupLibrary(docs)
                 trySend(mapped).isSuccess
             } catch (e: Exception) {}
         }
@@ -215,12 +218,12 @@ fun CollectionSyncRepository.observeGroupLibrary(chatId: String): Flow<List<Map<
         val subscription = realtime.subscribe("databases.qbase_db.collections.shared_collections.documents") { event ->
             repositoryScope.launch {
                 try {
-                    val response = databases.listDocuments(
-                        databaseId = "qbase_db",
+                    val queries = listOf(CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId))
+                    val docs = databases.queryDocuments(
                         collectionId = "shared_collections",
-                        queries = listOf(Query.equal("chatId", chatId))
-                    )
-                    val mapped = mapGroupLibrary(response.documents.map { it.data })
+                        queries = queries
+                    ).getOrThrow()
+                    val mapped = mapGroupLibrary(docs)
                     trySend(mapped).isSuccess
                 } catch (e: Exception) {}
             }

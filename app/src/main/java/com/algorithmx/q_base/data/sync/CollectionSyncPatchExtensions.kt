@@ -32,13 +32,13 @@ suspend fun CollectionSyncRepository.applyCollectionMicroUpdate(payload: String)
                 Log.w("CollectionSyncRepository", "Sequence gap detected in collection micro-update: received $revisionId, expected ${localRevision + 1}. Triggering full library re-sync.")
                 repositoryScope.launch {
                     try {
-                        val doc = databases.getDocument("qbase_db", "shared_collections", collectionId)
-                        val url = doc.data["downloadUrl"] as? String
-                        val wrappedKeysStr = doc.data["wrappedKeys"] as? String ?: ""
-                        val isAdminOnly = doc.data["isAdminOnly"] as? Boolean ?: false
-                        val chatId = doc.data["chatId"] as? String ?: ""
+                        val docData = databases.getDocument("shared_collections", collectionId).getOrNull()
+                        val url = docData?.get("downloadUrl") as? String
+                        val wrappedKeysStr = docData?.get("wrappedKeys") as? String ?: ""
+                        val isAdminOnly = docData?.get("isAdminOnly") as? Boolean ?: false
+                        val chatId = docData?.get("chatId") as? String ?: ""
                         
-                        if (!url.isNullOrBlank() && wrappedKeysStr.isNotBlank()) {
+                        if (!url.isNullOrBlank() && wrappedKeysStr.isNotBlank() && docData != null) {
                             val jsonObj = org.json.JSONObject(wrappedKeysStr)
                             val encKey = jsonObj.optString(currentUserId ?: "")
                             if (!encKey.isNullOrBlank()) {

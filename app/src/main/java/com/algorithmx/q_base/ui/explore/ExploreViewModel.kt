@@ -104,6 +104,25 @@ class ExploreViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Clears per-screen question state to prevent stale data from flashing
+     * when navigating between different Explore-family screens that share
+     * this Activity-scoped ViewModel.
+     */
+    fun resetQuestionStates() {
+        _questionStates.value = emptyList()
+        _selectedCollection.value = null
+        _collectionSets.value = emptyList()
+        _lastSession.value = null
+        _questionCount.value = 0
+        _collectionAiResponse.value = null
+        _isCollectionAiLoading.value = false
+        _sourceGroupName.value = null
+        _isUserGroupAdmin.value = false
+        _isSelectionMode.value = false
+        _selectedSetIds.value = emptySet()
+    }
+
     internal fun loadSetsAndSessions() {
         viewModelScope.launch {
             repository.getAllSets().collect { _sets.value = it }

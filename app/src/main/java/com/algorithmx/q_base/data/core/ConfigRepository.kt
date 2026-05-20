@@ -113,7 +113,7 @@ class ConfigRepository @Inject constructor(
             
             val userPublicKey = cryptoManager.initializeAndGetPublicKey()
             
-            val updateData = mutableMapOf<String, Any?>()
+            val updateData = mutableMapOf<String, Any>()
             if (isCustomGemini) {
                 updateData["geminiKeyEncrypted"] = cryptoManager.encryptMessage(rawGemini, userPublicKey)
             }

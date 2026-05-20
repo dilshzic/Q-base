@@ -80,7 +80,7 @@ class ChatManagerRepository @Inject constructor(
                     val isGroupVal = doc["isGroup"] as? Boolean ?: false
                     
                     val chat = ChatEntity(
-                        chatId = doc["$id"] as String,
+                        chatId = doc["\$id"] as String,
                         chatName = doc["chatName"] as? String,
                         isGroup = isGroupVal,
                         participantIds = participantsList.joinToString(","),
@@ -135,7 +135,7 @@ class ChatManagerRepository @Inject constructor(
                     val remoteAdminIds = doc["adminIds"] as? List<String>
                     val remoteAdminId = doc["adminId"] as? String
                     val chat = ChatEntity(
-                        chatId = doc["$id"] as String,
+                        chatId = doc["\$id"] as String,
                         chatName = doc["chatName"] as? String,
                         isGroup = false,
                         participantIds = participantsList.joinToString(","),

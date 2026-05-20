@@ -3,7 +3,8 @@ package com.algorithmx.q_base.data.sync
 import android.util.Base64
 import android.util.Log
 import com.algorithmx.q_base.data.chat.MessageEntity
-import io.appwrite.Query
+import com.algorithmx.q_base.data.backend.CoreQuery
+import com.algorithmx.q_base.data.backend.CoreQueryOperator
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -16,23 +17,23 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
         repositoryScope.launch {
             try {
                 val localPk = cryptoManager.initializeAndGetPublicKey()
-                val doc = databases.getDocument(
-                    databaseId = "qbase_db",
+                val docData = databases.getDocument(
                     collectionId = "users",
                     documentId = uid
-                )
-                val remotePk = doc.data["publicKey"] as? String
-                if (remotePk != localPk) {
-                    Log.d("MessageSyncRepository", "Aligning E2EE public key on Appwrite for current user $uid.")
-                    val updatedData = doc.data.toMutableMap()
-                    updatedData["publicKey"] = localPk
-                    val cleanData = updatedData.filterKeys { !it.startsWith("$") }
-                    databases.updateDocument(
-                        databaseId = "qbase_db",
-                        collectionId = "users",
-                        documentId = uid,
-                        data = cleanData
-                    )
+                ).getOrNull()
+                
+                if (docData != null) {
+                    val remotePk = docData["publicKey"] as? String
+                    if (remotePk != localPk) {
+                        Log.d("MessageSyncRepository", "Aligning E2EE public key on Appwrite for current user $uid.")
+                        val updatedData = docData.toMutableMap()
+                        updatedData["publicKey"] = localPk
+                        databases.updateDocument(
+                            collectionId = "users",
+                            documentId = uid,
+                            data = updatedData
+                        ).getOrThrow()
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("MessageSyncRepository", "E2EE public key alignment failed", e)
@@ -43,19 +44,23 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
     return callbackFlow {
         repositoryScope.launch {
             try {
-                val response = databases.listDocuments(
-                    databaseId = "qbase_db",
-                    collectionId = "messages",
-                    queries = listOf(Query.equal("chatId", chatId))
+                val queries = listOf(
+                    CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId)
                 )
-                response.documents.forEach { doc ->
-                    val payloadVal = doc.data["payload"] as? String ?: ""
-                    val senderId = doc.data["senderId"] as? String ?: ""
-                    val type = doc.data["type"] as? String ?: "TEXT"
-                    val rawTimestamp = (doc.data["timestamp"] as? Number)?.toLong() ?: (System.currentTimeMillis() / 1000)
+                val docs = databases.queryDocuments(
+                    collectionId = "messages",
+                    queries = queries
+                ).getOrThrow()
+
+                for (doc in docs) {
+                    val docId = doc["\$id"] as? String ?: continue
+                    val payloadVal = doc["payload"] as? String ?: ""
+                    val senderId = doc["senderId"] as? String ?: ""
+                    val type = doc["type"] as? String ?: "TEXT"
+                    val rawTimestamp = (doc["timestamp"] as? Number)?.toLong() ?: (System.currentTimeMillis() / 1000)
                     val timestamp = if (rawTimestamp < 1000000000000L) rawTimestamp * 1000 else rawTimestamp
-                    val wrappedKeyStr = doc.data["wrappedKey"] as? String
-                    val keyFingerprint = doc.data["keyFingerprint"] as? String
+                    val wrappedKeyStr = doc["wrappedKey"] as? String
+                    val keyFingerprint = doc["keyFingerprint"] as? String
 
                     val wrappedKeyMap = deserializeWrappedKeys(wrappedKeyStr)
                     val isEncrypted = wrappedKeyMap.isNotEmpty() && payloadVal.isNotEmpty()
@@ -65,11 +70,11 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
                     var decryptionStatus = if (isEncrypted) "DECRYPTION_ERROR" else "NOT_ENCRYPTED"
 
                     if (isEncrypted) {
-                        val uid = currentUserId
-                        if (uid == null) {
+                        val currentUid = currentUserId
+                        if (currentUid == null) {
                             decryptionStatus = "FAILED"
                         } else {
-                            wrappedKey = wrappedKeyMap[uid]
+                            wrappedKey = wrappedKeyMap[currentUid]
                             if (wrappedKey == null) {
                                 decryptionStatus = "FAILED"
                             } else {
@@ -93,7 +98,7 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
                     }
 
                     val message = MessageEntity(
-                        messageId = doc.id,
+                        messageId = docId,
                         chatId = chatId,
                         senderId = senderId,
                         payload = payload,
@@ -104,7 +109,7 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
                         wrappedKey = wrappedKey ?: ""
                     )
 
-                    if (messageDao.getMessageById(doc.id) == null) {
+                    if (messageDao.getMessageById(docId) == null) {
                         messageDao.insertMessage(message)
                         
                         if (type == "COLLECTION_PATCH" && decryptionStatus == "SUCCESS") {
@@ -128,7 +133,7 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
                         }
                     }
                     repositoryScope.launch {
-                        acknowledgeMessageDelivery(doc.id, chatId, senderId, wrappedKeyStr ?: "")
+                        acknowledgeMessageDelivery(docId, chatId, senderId, wrappedKeyStr ?: "")
                     }
                 }
                 trySend(null).isSuccess
@@ -171,11 +176,11 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
                         var decryptionStatus = if (isEncrypted) "DECRYPTION_ERROR" else "NOT_ENCRYPTED"
 
                         if (isEncrypted) {
-                            val uid = currentUserId
-                            if (uid == null) {
+                            val currentUid = currentUserId
+                            if (currentUid == null) {
                                 decryptionStatus = "FAILED"
                             } else {
-                                wrappedKey = wrappedKeyMap[uid]
+                                wrappedKey = wrappedKeyMap[currentUid]
                                 if (wrappedKey == null) {
                                     decryptionStatus = "FAILED"
                                 } else {

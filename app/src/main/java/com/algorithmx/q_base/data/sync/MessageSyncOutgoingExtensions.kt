@@ -35,24 +35,24 @@ suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
                 var candidateKey: String? = local?.publicKey
 
                 try {
-                    val doc = databases.getDocument(
-                        databaseId = "qbase_db",
+                    val docData = databases.getDocument(
                         collectionId = "users",
                         documentId = targetId
-                    )
-                    val remoteKey = doc.data["publicKey"] as? String
-                    if (!remoteKey.isNullOrBlank()) {
+                    ).getOrNull()
+                    
+                    val remoteKey = docData?.get("publicKey") as? String
+                    if (!remoteKey.isNullOrBlank() && docData != null) {
                         candidateKey = remoteKey
                         val cached = UserEntity(
                             userId = targetId,
-                            displayName = (doc.data["displayName"] as? String) ?: (local?.displayName ?: "Unknown"),
+                            displayName = (docData["displayName"] as? String) ?: (local?.displayName ?: "Unknown"),
                             email = local?.email,
-                            intro = (doc.data["intro"] as? String) ?: local?.intro,
-                            profilePictureUrl = (doc.data["profilePictureUrl"] as? String) ?: local?.profilePictureUrl,
-                            friendCode = (doc.data["friendCode"] as? String) ?: (local?.friendCode ?: ""),
+                            intro = (docData["intro"] as? String) ?: local?.intro,
+                            profilePictureUrl = (docData["profilePictureUrl"] as? String) ?: local?.profilePictureUrl,
+                            friendCode = (docData["friendCode"] as? String) ?: (local?.friendCode ?: ""),
                             publicKey = remoteKey,
-                            isBanned = (doc.data["isBanned"] as? Boolean) ?: (local?.isBanned ?: false),
-                            isPhotoVisible = (doc.data["isPhotoVisible"] as? Boolean) ?: (local?.isPhotoVisible ?: true)
+                            isBanned = (docData["isBanned"] as? Boolean) ?: (local?.isBanned ?: false),
+                            isPhotoVisible = (docData["isPhotoVisible"] as? Boolean) ?: (local?.isPhotoVisible ?: true)
                         )
                         userDao.insertUser(cached)
                     }
@@ -122,17 +122,10 @@ suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
 
     try {
         databases.createDocument(
-            databaseId = "qbase_db",
             collectionId = "messages",
             documentId = message.messageId,
-            data = messageMap,
-            permissions = listOf(
-                io.appwrite.Permission.read(io.appwrite.Role.users()),
-                io.appwrite.Permission.write(io.appwrite.Role.users()),
-                io.appwrite.Permission.update(io.appwrite.Role.users()),
-                io.appwrite.Permission.delete(io.appwrite.Role.users())
-            )
-        )
+            data = messageMap
+        ).getOrThrow()
 
         repositoryScope.launch {
             messageDao.insertMessage(message.copy(

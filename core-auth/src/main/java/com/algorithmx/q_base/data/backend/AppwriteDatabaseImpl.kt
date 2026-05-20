@@ -49,13 +49,13 @@ class AppwriteDatabaseImpl @Inject constructor(
         return try {
             val dataField = row.javaClass.getMethod("getData")
             val idField = row.javaClass.getMethod("getId")
-            val rawData = dataField.invoke(row) as? Map<String, Any> ?: emptyMap()
+            val rawData = dataField.invoke(row) as? Map<String, Any> ?: emptyMap<String, Any>()
             val id = idField.invoke(row) as? String ?: ""
             val mutableData = rawData.toMutableMap()
             mutableData["\$id"] = id
             mutableData
         } catch (e: Exception) {
-            emptyMap()
+            emptyMap<String, Any>()
         }
     }
 
@@ -63,10 +63,10 @@ class AppwriteDatabaseImpl @Inject constructor(
     private fun mapRowList(rowList: Any): List<Map<String, Any>> {
         return try {
             val getRowsMethod = rowList.javaClass.getMethod("getRows")
-            val rows = getRowsMethod.invoke(rowList) as? List<*> ?: emptyList()
+            val rows = getRowsMethod.invoke(rowList) as? List<*> ?: emptyList<Any?>()
             rows.map { mapRow(it!!) }
         } catch (e: Exception) {
-            emptyList()
+            emptyList<Map<String, Any>>()
         }
     }
 
@@ -107,7 +107,7 @@ class AppwriteDatabaseImpl @Inject constructor(
                 try {
                     invokeSuspendReflective(
                         methodName = "createRow",
-                        parameterTypes = arrayOf(
+                        parameterTypes = arrayOf<Class<*>>(
                             String::class.java,
                             String::class.java,
                             String::class.java,
@@ -156,7 +156,7 @@ class AppwriteDatabaseImpl @Inject constructor(
                 try {
                     val row = invokeSuspendReflective(
                         methodName = "getRow",
-                        parameterTypes = arrayOf(
+                        parameterTypes = arrayOf<Class<*>>(
                             String::class.java,
                             String::class.java,
                             String::class.java
@@ -213,7 +213,7 @@ class AppwriteDatabaseImpl @Inject constructor(
                 try {
                     invokeSuspendReflective(
                         methodName = "updateRow",
-                        parameterTypes = arrayOf(
+                        parameterTypes = arrayOf<Class<*>>(
                             String::class.java,
                             String::class.java,
                             String::class.java,
@@ -253,7 +253,7 @@ class AppwriteDatabaseImpl @Inject constructor(
                 try {
                     invokeSuspendReflective(
                         methodName = "deleteRow",
-                        parameterTypes = arrayOf(
+                        parameterTypes = arrayOf<Class<*>>(
                             String::class.java,
                             String::class.java,
                             String::class.java
@@ -287,7 +287,7 @@ class AppwriteDatabaseImpl @Inject constructor(
                 try {
                     val rowList = invokeSuspendReflective(
                         methodName = "listRows",
-                        parameterTypes = arrayOf(
+                        parameterTypes = arrayOf<Class<*>>(
                             String::class.java,
                             String::class.java,
                             List::class.java
@@ -333,7 +333,7 @@ class AppwriteDatabaseImpl @Inject constructor(
                 try {
                     val rowList = invokeSuspendReflective(
                         methodName = "listRows",
-                        parameterTypes = arrayOf(
+                        parameterTypes = arrayOf<Class<*>>(
                             String::class.java,
                             String::class.java,
                             List::class.java

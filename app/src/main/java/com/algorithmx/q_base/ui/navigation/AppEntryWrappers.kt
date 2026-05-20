@@ -26,6 +26,7 @@ fun ExplorePagerWrapper(key: Screen.ExplorePager, navigator: Navigator) {
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     
     LaunchedEffect(key.collectionId) {
+        viewModel.resetQuestionStates()
         viewModel.loadQuestionsByStudyCollection(key.collectionId)
     }
     
@@ -86,6 +87,7 @@ fun CollectionOverviewWrapper(key: Screen.CollectionOverview, navigator: Navigat
     val questionCount by viewModel.questionCount.collectAsStateWithLifecycle()
 
     LaunchedEffect(key.collectionId) {
+        viewModel.resetQuestionStates()
         viewModel.loadCollectionOverview(key.collectionId)
     }
 
@@ -124,6 +126,7 @@ fun PinnedQuestionsWrapper(navigator: Navigator) {
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
+        viewModel.resetQuestionStates()
         viewModel.loadPinnedQuestions()
     }
 
@@ -149,6 +152,7 @@ fun ExploreSetWrapper(key: Screen.ExploreSet, navigator: Navigator) {
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
 
     LaunchedEffect(key.setId) {
+        viewModel.resetQuestionStates()
         viewModel.loadQuestionsBySet(key.setId)
     }
 
