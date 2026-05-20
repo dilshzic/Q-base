@@ -84,7 +84,9 @@ fun ChatViewModel.sendMessage(chatId: String, text: String, type: String = "TEXT
     
     viewModelScope.launch {
         val chat = chatDao.getChatById(chatId)
-        val isAiChat = chat?.participantIds?.contains(ChatViewModel.QBASE_AI_BOT_ID) == true
+        val isAiChat = chat?.participantIds
+            ?.split(",")
+            ?.any { it.trim() == ChatViewModel.QBASE_AI_BOT_ID } == true
         
         val isOffline = !isAiChat && !isOnline.value
         

@@ -22,6 +22,7 @@ import com.algorithmx.q_base.data.sync.SyncRepository
 import com.algorithmx.q_base.data.util.MockExporter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import com.algorithmx.q_base.data.util.MockDownloader
@@ -43,6 +44,10 @@ class ChatViewModel @Inject constructor(
     internal val mockDownloader: MockDownloader,
     internal val networkMonitor: NetworkMonitor
 ) : ViewModel() {
+    private var messageSyncJob: Job? = null
+    private var groupLibraryJob: Job? = null
+    private var sharedSessionsJob: Job? = null
+    private var accessRequestsJob: Job? = null
 
     val isOnline: StateFlow<Boolean> = networkMonitor.isOnline
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
@@ -68,7 +73,9 @@ class ChatViewModel @Inject constructor(
         ) { chat, online ->
             if (chat == null) false
             else {
-                val isAi = chat.participantIds.contains(QBASE_AI_BOT_ID)
+                val isAi = chat.participantIds
+                    .split(",")
+                    .any { it.trim() == QBASE_AI_BOT_ID }
                 isAi || online
             }
         }
@@ -349,25 +356,32 @@ class ChatViewModel @Inject constructor(
     }
 
     fun setChatId(chatId: String) {
+        if (_currentChatId.value == chatId) return
+
+        messageSyncJob?.cancel()
+        groupLibraryJob?.cancel()
+        sharedSessionsJob?.cancel()
+        accessRequestsJob?.cancel()
+
         _currentChatId.value = chatId
         viewModelScope.launch {
             chatDao.clearUnreadCount(chatId)
             
-            val syncJob = syncRepository.observeAndSyncMessages(chatId)
+            messageSyncJob = syncRepository.observeAndSyncMessages(chatId)
                 .catch { e -> Log.e("ChatViewModel", "Error syncing messages for $chatId: ${e.message}") }
                 .launchIn(viewModelScope)
                 
             val chat = chatDao.getChatById(chatId)
             if (chat?.isGroup == true) {
-                viewModelScope.launch {
+                groupLibraryJob = viewModelScope.launch {
                     syncRepository.observeGroupLibrary(chatId)
                         .collect { _sharedCollections.value = it }
                 }
-                viewModelScope.launch {
+                sharedSessionsJob = viewModelScope.launch {
                     syncRepository.observeSharedSessions(chatId)
                         .collect { _sharedSessions.value = it }
                 }
-                viewModelScope.launch {
+                accessRequestsJob = viewModelScope.launch {
                     syncRepository.observeAccessRequests(chatId)
                         .collect { _accessRequests.value = it }
                 }
