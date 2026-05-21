@@ -1,5 +1,4 @@
-package com.algorithmx.q_base.ui.chat
-
+package com.algorithmx_q_base.feature.chat.presentation
 import android.util.Log
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow

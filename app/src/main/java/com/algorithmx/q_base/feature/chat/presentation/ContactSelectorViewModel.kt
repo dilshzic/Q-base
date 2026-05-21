@@ -1,5 +1,4 @@
-package com.algorithmx.q_base.ui.chat
-
+package com.algorithmx_q_base.feature.chat.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.algorithmx.q_base.data.core.UserDao

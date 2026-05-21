@@ -1,5 +1,4 @@
-package com.algorithmx.q_base.ui.chat
-
+package com.algorithmx_q_base.feature.chat.presentation
 import com.algorithmx.q_base.data.chat.ChatEntity
 import com.algorithmx.q_base.data.chat.MessageEntity
 import com.algorithmx.q_base.data.core.UserEntity

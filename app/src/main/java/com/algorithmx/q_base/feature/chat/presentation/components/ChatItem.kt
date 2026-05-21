@@ -1,5 +1,4 @@
-package com.algorithmx.q_base.ui.chat.components
-
+package com.algorithmx_q_base.feature.chat.presentation.components
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background

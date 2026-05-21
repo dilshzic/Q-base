@@ -1,5 +1,4 @@
-package com.algorithmx.q_base.ui.chat
-
+package com.algorithmx_q_base.feature.chat.presentation
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
