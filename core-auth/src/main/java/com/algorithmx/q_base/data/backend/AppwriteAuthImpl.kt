@@ -46,8 +46,17 @@ class AppwriteAuthImpl @Inject constructor(
     override suspend fun signInWithEmail(email: String, pass: String): Result<CoreUser> {
         return try {
             try { appwriteAccount.deleteSession("current") } catch (e: Exception) {}
-            
-            appwriteAccount.createEmailPasswordSession(email, pass)
+
+            try {
+                appwriteAccount.createEmailPasswordSession(email, pass)
+            } catch (e: NullPointerException) {
+                // Bypass Appwrite SDK 5.0.0 bug: Session parsing may throw NPE,
+                // but the session cookie is already stored by the HTTP client.
+            } catch (e: Exception) {
+                // Re-throw legitimate errors (e.g., wrong password)
+                throw e
+            }
+
             val user = appwriteAccount.get()
             val coreUser = mapUser(user)
             _currentUser.value = coreUser
@@ -62,7 +71,14 @@ class AppwriteAuthImpl @Inject constructor(
             val userId = io.appwrite.ID.unique()
             appwriteAccount.create(userId, email, pass, username)
             
-            appwriteAccount.createEmailPasswordSession(email, pass)
+            try {
+                appwriteAccount.createEmailPasswordSession(email, pass)
+            } catch (e: NullPointerException) {
+                // Bypass Appwrite SDK 5.0.0 NPE bug
+            } catch (e: Exception) {
+                throw e
+            }
+
             val user = appwriteAccount.get()
             val coreUser = mapUser(user)
             _currentUser.value = coreUser
