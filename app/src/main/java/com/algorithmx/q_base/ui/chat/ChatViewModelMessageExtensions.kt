@@ -110,15 +110,13 @@ fun ChatViewModel.sendMessage(chatId: String, text: String, type: String = "TEXT
             
             try {
                 syncRepository.sendMessage(message)
+            } catch (e: com.algorithmx.q_base.data.sync.MissingEncryptionKeysException) {
+                messageDao.updateMessageStatus(message.messageId, "FAILED")
+                _actionFeedback.emit("Waiting for recipient encryption keys...")
             } catch (e: Exception) {
-                if (e.message?.contains("missing encryption keys") == true || e.message?.contains("Security abort") == true || e.message?.contains("failed to encrypt") == true) {
-                    messageDao.updateMessageStatus(message.messageId, "FAILED")
-                    _actionFeedback.emit("Message failed: Missing security keys.")
-                } else {
-                    // Generic network/timeout error during sending
-                    messageDao.updateMessageStatus(message.messageId, "PENDING")
-                    _actionFeedback.emit("Network error: Message queued.")
-                }
+                // Generic network/timeout error during sending
+                messageDao.updateMessageStatus(message.messageId, "PENDING")
+                _actionFeedback.emit("Network error: Message queued.")
             }
         } else if (senderId == currentUserId) {
             // Trigger AI response if user sent a message to the bot

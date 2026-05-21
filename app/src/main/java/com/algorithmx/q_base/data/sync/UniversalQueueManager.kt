@@ -111,8 +111,29 @@ class UniversalQueueManager @Inject constructor(
             }
             "UPDATE_PROFILE" -> {
                 val userId = payload["userId"]?.jsonPrimitive?.content ?: return false
-                profileRepository.syncUserProfile(userId)
-                true
+                val email = payload["email"]?.jsonPrimitive?.content ?: ""
+                val displayName = payload["displayName"]?.jsonPrimitive?.content ?: ""
+                val profilePictureUrl = payload["profilePictureUrl"]?.jsonPrimitive?.content?.takeIf { it != "null" }
+                val friendCode = payload["friendCode"]?.jsonPrimitive?.content ?: ""
+                val intro = payload["intro"]?.jsonPrimitive?.content ?: ""
+                val publicKey = payload["publicKey"]?.jsonPrimitive?.content?.takeIf { it != "null" }
+                val isBanned = payload["isBanned"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: false
+                val isPhotoVisible = payload["isPhotoVisible"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
+
+                val updatedProfile = com.algorithmx.q_base.data.auth.UserProfile(
+                    userId = userId,
+                    email = email,
+                    displayName = displayName,
+                    profilePictureUrl = profilePictureUrl,
+                    friendCode = friendCode,
+                    intro = intro,
+                    publicKey = publicKey,
+                    isBanned = isBanned,
+                    isPhotoVisible = isPhotoVisible
+                )
+
+                val result = profileRepository.updateProfile(updatedProfile)
+                result.isSuccess
             }
             else -> {
                 Log.w("UniversalQueueManager", "Unknown action type: ${action.actionType}")

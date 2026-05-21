@@ -49,7 +49,10 @@ class ChatViewModel @Inject constructor(
     private var sharedSessionsJob: Job? = null
     private var accessRequestsJob: Job? = null
 
-    val isOnline: StateFlow<Boolean> = networkMonitor.isOnline
+    val isOnline: StateFlow<Boolean> = combine(
+        networkMonitor.isOnline,
+        authRepository.isBackendSessionValid
+    ) { online, sessionValid -> online && sessionValid }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     init {

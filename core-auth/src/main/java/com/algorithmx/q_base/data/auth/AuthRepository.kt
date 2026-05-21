@@ -44,6 +44,9 @@ class AuthRepository @Inject constructor(
     private val _isSessionChecked = MutableStateFlow(false)
     val isSessionChecked: Flow<Boolean> = _isSessionChecked.asStateFlow()
 
+    private val _isBackendSessionValid = MutableStateFlow(false)
+    val isBackendSessionValid: Flow<Boolean> = _isBackendSessionValid.asStateFlow()
+
     private val repositoryScope = CoroutineScope(Dispatchers.IO)
 
     init {
@@ -87,7 +90,9 @@ class AuthRepository @Inject constructor(
                 val appUser = mapAppwriteUser(user, photoUrl)
                 saveUserToPrefs(appUser)
                 _currentUser.value = appUser
+                _isBackendSessionValid.value = true
             } catch (e: Exception) {
+                _isBackendSessionValid.value = false
                 if (e is io.appwrite.exceptions.AppwriteException && e.code == 401) {
                     clearUserFromPrefs()
                     _currentUser.value = null
@@ -160,6 +165,7 @@ class AuthRepository @Inject constructor(
             val appUser = mapAppwriteUser(user)
             saveUserToPrefs(appUser)
             _currentUser.value = appUser
+            _isBackendSessionValid.value = true
             Result.success(appUser)
         } catch (e: Exception) {
             Result.failure(e)
@@ -176,6 +182,7 @@ class AuthRepository @Inject constructor(
             val appUser = mapAppwriteUser(user)
             saveUserToPrefs(appUser)
             _currentUser.value = appUser
+            _isBackendSessionValid.value = true
             Result.success(appUser)
         } catch (e: Exception) {
             Result.failure(e)
@@ -193,6 +200,7 @@ class AuthRepository @Inject constructor(
             val appUser = mapAppwriteUser(user, photoUrl)
             saveUserToPrefs(appUser)
             _currentUser.value = appUser
+            _isBackendSessionValid.value = true
             Result.success(appUser)
         } catch (e: Exception) {
             Result.failure(e)
@@ -207,6 +215,7 @@ class AuthRepository @Inject constructor(
             } catch (e: Exception) {}
             clearUserFromPrefs()
             _currentUser.value = null
+            _isBackendSessionValid.value = false
             _isSessionChecked.value = true
         }
     }

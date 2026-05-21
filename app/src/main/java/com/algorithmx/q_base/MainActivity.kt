@@ -40,6 +40,7 @@ import com.algorithmx.q_base.util.NetworkMonitor
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -117,17 +118,38 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Start global sync for notifications reactively
-        var syncJob: kotlinx.coroutines.Job? = null
+        // Trigger session check when network is restored to re-verify backend readiness
         lifecycleScope.launch {
+            networkMonitor.isOnline
+                .collect { online ->
+                    if (online) {
+                        try {
+                            authRepository.checkCurrentSession()
+                        } catch (e: Exception) {
+                            android.util.Log.e("MainActivity", "Session validation failed on network restore", e)
+                        }
+                    }
+                }
+        }
+
+        // Start global sync for notifications reactively based on backend readiness
+        var restSyncJob: kotlinx.coroutines.Job? = null
+        var realtimeSyncJob: kotlinx.coroutines.Job? = null
+        lifecycleScope.launch {
+            val isBackendReady = combine(
+                networkMonitor.isOnline,
+                authRepository.isBackendSessionValid
+            ) { online, sessionValid -> online && sessionValid }
+
             combine(
                 authRepository.currentUser,
-                networkMonitor.isOnline
-            ) { user, isOnline -> user to isOnline }
-                .collect { (user, isOnline) ->
-                    syncJob?.cancel()
-                    if (user != null && isOnline) {
-                        syncJob = launch {
+                isBackendReady
+            ) { user, ready -> user?.uid to ready }
+                .distinctUntilChanged()
+                .collect { (userId, isOnline) ->
+                    restSyncJob?.cancel()
+                    if (userId != null && isOnline) {
+                        restSyncJob = launch {
                             try {
                                 // Flush pending offline messages first
                                 syncRepository.flushQueue()
@@ -139,6 +161,14 @@ class MainActivity : ComponentActivity() {
                             } catch (e: Exception) {
                                 android.util.Log.e("MainActivity", "Failed to sync or flush on network restore", e)
                             }
+                        }
+                    }
+
+                    if (userId == null || !isOnline) {
+                        realtimeSyncJob?.cancel()
+                        realtimeSyncJob = null
+                    } else if (realtimeSyncJob == null || !realtimeSyncJob!!.isActive) {
+                        realtimeSyncJob = launch {
                             syncRepository.observeAllIncomingMessages(notificationHelper).collect {}
                         }
                     }
@@ -169,7 +199,12 @@ class MainActivity : ComponentActivity() {
             QbaseTheme(themeMode = brainConfig.themeMode) {
                 val seeded by isSeeded.collectAsStateWithLifecycle()
                 val isSessionChecked by authRepository.isSessionChecked.collectAsStateWithLifecycle(initialValue = false)
-                val isOnline by networkMonitor.isOnline.collectAsStateWithLifecycle(initialValue = false)
+                val isOnline by remember {
+                    combine(
+                        networkMonitor.isOnline,
+                        authRepository.isBackendSessionValid
+                    ) { online, sessionValid -> online && sessionValid }
+                }.collectAsStateWithLifecycle(initialValue = false)
                 
                 // Observe authentication state reactively
                 val userFlow = remember { authRepository.currentUser }

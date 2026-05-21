@@ -83,9 +83,10 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 authRepository.currentUser,
-                networkMonitor.isOnline
-            ) { user, isOnline ->
-                if (user != null && isOnline) {
+                networkMonitor.isOnline,
+                authRepository.isBackendSessionValid
+            ) { user, isOnline, isBackendValid ->
+                if (user != null && isOnline && isBackendValid) {
                     profileRepository.syncUserProfile(user.uid)
                 }
             }
@@ -97,9 +98,10 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 authRepository.currentUser,
-                networkMonitor.isOnline
-            ) { user, isOnline ->
-                if (user != null) {
+                networkMonitor.isOnline,
+                authRepository.isBackendSessionValid
+            ) { user, isOnline, isBackendValid ->
+                if (user != null && isOnline && isBackendValid) {
                     _hasSecureBackup.value = profileRepository.checkHasSecureBackup(user.uid)
                 }
             }
@@ -130,10 +132,22 @@ class ProfileViewModel @Inject constructor(
     private suspend fun tryUpdateProfile(updatedProfile: UserProfile) {
         val result = profileRepository.updateProfile(updatedProfile)
         if (result.isFailure) {
+            val payloadJson = org.json.JSONObject().apply {
+                put("userId", updatedProfile.userId)
+                put("email", updatedProfile.email)
+                put("displayName", updatedProfile.displayName)
+                put("profilePictureUrl", updatedProfile.profilePictureUrl ?: org.json.JSONObject.NULL)
+                put("friendCode", updatedProfile.friendCode)
+                put("intro", updatedProfile.intro)
+                put("publicKey", updatedProfile.publicKey ?: org.json.JSONObject.NULL)
+                put("isBanned", updatedProfile.isBanned)
+                put("isPhotoVisible", updatedProfile.isPhotoVisible)
+            }.toString()
+
             actionQueueDao.insertAction(
                 com.algorithmx.q_base.data.sync.OfflineActionEntity(
                     actionType = "UPDATE_PROFILE",
-                    payloadJson = """{"userId":"${updatedProfile.userId}"}"""
+                    payloadJson = payloadJson
                 )
             )
         }

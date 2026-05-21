@@ -8,6 +8,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 
+class MissingEncryptionKeysException(message: String) : IllegalStateException(message)
+
 suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
     val chat = chatDao.getChatById(message.chatId)
     val participants = chat?.participantIds?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
@@ -81,21 +83,21 @@ suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
     }
 
     if (missingKeyUserIds.isNotEmpty()) {
-        throw IllegalStateException(
+        throw MissingEncryptionKeysException(
             "Cannot send encrypted message: missing encryption keys for ${missingKeyUserIds.joinToString(", ")}. " +
                 "Ask them to sign in at least once on the latest app version."
         )
     }
 
     if (wrapFailures.isNotEmpty()) {
-        throw IllegalStateException(
+        throw MissingEncryptionKeysException(
             "Cannot send encrypted message: failed to encrypt for ${wrapFailures.joinToString(", ")}."
         )
     }
 
     val missingWrappedRecipients = participants.filter { wrappedKeys[it].isNullOrBlank() }
     if (missingWrappedRecipients.isNotEmpty()) {
-        throw IllegalStateException(
+        throw MissingEncryptionKeysException(
             "Security abort: missing wrapped session keys for ${missingWrappedRecipients.joinToString(", ")}."
         )
     }
