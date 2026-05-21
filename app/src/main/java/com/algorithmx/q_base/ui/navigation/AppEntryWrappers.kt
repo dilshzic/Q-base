@@ -8,7 +8,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
-import com.algorithmx.q_base.ui.auth.*
+import com.algorithmx.q_base.feature.auth.presentation.*
 import com.algorithmx.q_base.ui.chat.*
 import com.algorithmx.q_base.ui.ai.*
 import com.algorithmx.q_base.ui.content_import.*
