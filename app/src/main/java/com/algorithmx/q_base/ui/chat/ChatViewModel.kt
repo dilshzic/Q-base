@@ -49,44 +49,6 @@ class ChatViewModel @Inject constructor(
     private var sharedSessionsJob: Job? = null
     private var accessRequestsJob: Job? = null
 
-    val isOnline: StateFlow<Boolean> = combine(
-        networkMonitor.isOnline,
-        authRepository.isBackendSessionValid
-    ) { online, sessionValid -> online && sessionValid }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
-
-    init {
-        viewModelScope.launch {
-            combine(
-                authRepository.currentUser,
-                isOnline
-            ) { user, online ->
-                user != null && online
-            }
-            .distinctUntilChanged()
-            .collect { shouldSync ->
-                if (shouldSync) {
-                    syncChatsFromRemote()
-                }
-            }
-        }
-    }
-
-    fun canSendToChat(chatId: String): Flow<Boolean> {
-        return combine(
-            chatDao.getChatByIdFlow(chatId),
-            isOnline
-        ) { chat, online ->
-            if (chat == null) false
-            else {
-                val isAi = chat.participantIds
-                    .split(",")
-                    .any { it.trim() == QBASE_AI_BOT_ID }
-                isAi || online
-            }
-        }
-    }
-
     internal val json = Json { ignoreUnknownKeys = true }
     
     internal val _actionFeedback = MutableSharedFlow<String>()
@@ -94,30 +56,6 @@ class ChatViewModel @Inject constructor(
     
     internal val _accessRequests = MutableStateFlow<List<Map<String, Any>>>(emptyList())
     val accessRequests = _accessRequests.asStateFlow()
-
-    fun requestAccess(collectionId: String) {
-        val chatId = _currentChatId.value ?: return
-        viewModelScope.launch {
-            try {
-                syncRepository.requestCollectionAccess(chatId, collectionId)
-                _actionFeedback.emit("Access request sent to group admins")
-            } catch (e: Exception) {
-                _actionFeedback.emit("Failed to send request: ${e.message}")
-            }
-        }
-    }
-
-    fun grantAccess(collectionId: String, requesterId: String) {
-        val chatId = _currentChatId.value ?: return
-        viewModelScope.launch {
-            try {
-                syncRepository.grantCollectionAccess(chatId, collectionId, requesterId)
-                _actionFeedback.emit("Access granted!")
-            } catch (e: Exception) {
-                _actionFeedback.emit("Failed to grant access: ${e.message}")
-            }
-        }
-    }
 
     internal val _isSharing = MutableStateFlow(false)
     val isSharing = _isSharing.asStateFlow()
@@ -137,16 +75,26 @@ class ChatViewModel @Inject constructor(
     internal val _isLibraryMode = MutableStateFlow(false)
     val isLibraryMode = _isLibraryMode.asStateFlow()
 
-    fun toggleLibraryMode(enabled: Boolean) {
-        _isLibraryMode.value = enabled
-    }
+    internal val _selectedChatIds = MutableStateFlow<Set<String>>(emptySet())
+    val selectedChatIds = _selectedChatIds.asStateFlow()
+
+    internal val _isSelectionMode = MutableStateFlow(false)
+    val isSelectionMode = _isSelectionMode.asStateFlow()
+
+    internal val _currentChatId = MutableStateFlow<String?>(null)
+    val currentChatId: StateFlow<String?> = _currentChatId.asStateFlow()
+    
+    internal val _navigationEvents = MutableSharedFlow<ChatNavEvent>()
+    val navigationEvents = _navigationEvents.asSharedFlow()
+
+    val isOnline: StateFlow<Boolean> = combine(
+        networkMonitor.isOnline,
+        authRepository.isBackendSessionValid
+    ) { online, sessionValid -> online && sessionValid }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     val currentUserId: String
         get() = authRepository.currentUserId ?: ""
-
-    companion object {
-        const val QBASE_AI_BOT_ID = "qbase_ai_bot"
-    }
 
     // State for user selection
     val allUsers: StateFlow<List<UserEntity>> = userDao.getAllUsers()
@@ -168,56 +116,6 @@ class ChatViewModel @Inject constructor(
 
     val totalUnreadCount = chatDao.getTotalUnreadCount()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
-
-    // Selection State
-    internal val _selectedChatIds = MutableStateFlow<Set<String>>(emptySet())
-    val selectedChatIds = _selectedChatIds.asStateFlow()
-
-    internal val _isSelectionMode = MutableStateFlow(false)
-    val isSelectionMode = _isSelectionMode.asStateFlow()
-
-    fun toggleChatSelection(chatId: String) {
-        val current = _selectedChatIds.value
-        if (current.contains(chatId)) {
-            val newSet = current - chatId
-            _selectedChatIds.value = newSet
-            if (newSet.isEmpty()) _isSelectionMode.value = false
-        } else {
-            _selectedChatIds.value = current + chatId
-            _isSelectionMode.value = true
-        }
-    }
-
-    fun clearSelection() {
-        _selectedChatIds.value = emptySet()
-        _isSelectionMode.value = false
-    }
-
-    fun deleteSelectedChats() {
-        val idsToDelete = _selectedChatIds.value.toList()
-        viewModelScope.launch {
-            try {
-                idsToDelete.forEach { chatId ->
-                    val chat = chatDao.getChatById(chatId)
-                    if (chat != null && !chat.isAdmin(currentUserId) && chat.isGroup) {
-                        val currentParticipants = chat.participantIds.split(",").toMutableList()
-                        currentParticipants.remove(currentUserId)
-                        chatDao.deleteChatById(chatId)
-                        messageDao.deleteMessagesByChatId(chatId)
-                        syncRepository.removeParticipantFromRemote(chatId, currentUserId)
-                    } else {
-                        chatDao.deleteChatById(chatId)
-                        messageDao.deleteMessagesByChatId(chatId)
-                        syncRepository.deleteChatOnRemote(chatId)
-                    }
-                }
-                _actionFeedback.emit("Deleted ${idsToDelete.size} chats")
-                clearSelection()
-            } catch (e: Exception) {
-                _actionFeedback.emit("Error deleting chats: ${e.message}")
-            }
-        }
-    }
 
     val allStudyCollections: StateFlow<List<StudyCollection>> = collectionDao.getAllStudyCollections()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -313,12 +211,6 @@ class ChatViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    internal val _currentChatId = MutableStateFlow<String?>(null)
-    val currentChatId: StateFlow<String?> = _currentChatId.asStateFlow()
-    
-    internal val _navigationEvents = MutableSharedFlow<ChatNavEvent>()
-    val navigationEvents = _navigationEvents.asSharedFlow()
-    
     @OptIn(ExperimentalCoroutinesApi::class)
     val chatDetailState: StateFlow<ChatDetailState> = _currentChatId.flatMapLatest { chatId ->
         if (chatId == null) flowOf(ChatDetailState())
@@ -347,6 +239,109 @@ class ChatViewModel @Inject constructor(
             }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ChatDetailState())
+
+    init {
+        viewModelScope.launch {
+            combine(
+                authRepository.currentUser,
+                isOnline
+            ) { user, online ->
+                user != null && online
+            }
+            .distinctUntilChanged()
+            .collect { shouldSync ->
+                if (shouldSync) {
+                    syncChatsFromRemote()
+                }
+            }
+        }
+    }
+
+    fun canSendToChat(chatId: String): Flow<Boolean> {
+        return combine(
+            chatDao.getChatByIdFlow(chatId),
+            isOnline
+        ) { chat, online ->
+            if (chat == null) false
+            else {
+                val isAi = chat.participantIds
+                    .split(",")
+                    .any { it.trim() == QBASE_AI_BOT_ID }
+                isAi || online
+            }
+        }
+    }
+
+    fun requestAccess(collectionId: String) {
+        val chatId = _currentChatId.value ?: return
+        viewModelScope.launch {
+            try {
+                syncRepository.requestCollectionAccess(chatId, collectionId)
+                _actionFeedback.emit("Access request sent to group admins")
+            } catch (e: Exception) {
+                _actionFeedback.emit("Failed to send request: ${e.message}")
+            }
+        }
+    }
+
+    fun grantAccess(collectionId: String, requesterId: String) {
+        val chatId = _currentChatId.value ?: return
+        viewModelScope.launch {
+            try {
+                syncRepository.grantCollectionAccess(chatId, collectionId, requesterId)
+                _actionFeedback.emit("Access granted!")
+            } catch (e: Exception) {
+                _actionFeedback.emit("Failed to grant access: ${e.message}")
+            }
+        }
+    }
+
+    fun toggleLibraryMode(enabled: Boolean) {
+        _isLibraryMode.value = enabled
+    }
+
+    fun toggleChatSelection(chatId: String) {
+        val current = _selectedChatIds.value
+        if (current.contains(chatId)) {
+            val newSet = current - chatId
+            _selectedChatIds.value = newSet
+            if (newSet.isEmpty()) _isSelectionMode.value = false
+        } else {
+            _selectedChatIds.value = current + chatId
+            _isSelectionMode.value = true
+        }
+    }
+
+    fun clearSelection() {
+        _selectedChatIds.value = emptySet()
+        _isSelectionMode.value = false
+    }
+
+    fun deleteSelectedChats() {
+        val idsToDelete = _selectedChatIds.value.toList()
+        viewModelScope.launch {
+            try {
+                idsToDelete.forEach { chatId ->
+                    val chat = chatDao.getChatById(chatId)
+                    if (chat != null && !chat.isAdmin(currentUserId) && chat.isGroup) {
+                        val currentParticipants = chat.participantIds.split(",").toMutableList()
+                        currentParticipants.remove(currentUserId)
+                        chatDao.deleteChatById(chatId)
+                        messageDao.deleteMessagesByChatId(chatId)
+                        syncRepository.removeParticipantFromRemote(chatId, currentUserId)
+                    } else {
+                        chatDao.deleteChatById(chatId)
+                        messageDao.deleteMessagesByChatId(chatId)
+                        syncRepository.deleteChatOnRemote(chatId)
+                    }
+                }
+                _actionFeedback.emit("Deleted ${idsToDelete.size} chats")
+                clearSelection()
+            } catch (e: Exception) {
+                _actionFeedback.emit("Error deleting chats: ${e.message}")
+            }
+        }
+    }
 
     fun syncChatsFromRemote() {
         viewModelScope.launch {
@@ -397,5 +392,9 @@ class ChatViewModel @Inject constructor(
                 _accessRequests.value = emptyList()
             }
         }
+    }
+
+    companion object {
+        const val QBASE_AI_BOT_ID = "qbase_ai_bot"
     }
 }
