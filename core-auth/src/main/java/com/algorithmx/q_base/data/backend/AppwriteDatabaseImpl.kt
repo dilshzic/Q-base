@@ -57,28 +57,45 @@ class AppwriteDatabaseImpl @Inject constructor(
         return try {
             val idField = row.javaClass.getMethod("getId")
             val id = idField.invoke(row) as? String ?: ""
+            android.util.Log.d("QbaseReflection", "mapRow: row toString = $row")
 
             // Strategy 1: getData() returns a Map directly — ideal case
-            val dataMap: Map<String, Any>? = try {
+            var dataMap: Map<String, Any>? = null
+            try {
                 val dataField = row.javaClass.getMethod("getData")
                 val rawData = dataField.invoke(row)
-                when (rawData) {
-                    is Map<*, *> -> rawData.entries
-                        .associate { it.key.toString() to (it.value ?: "") }
-                    else -> null
+                android.util.Log.d("QbaseReflection", "mapRow: rawData class=${rawData?.javaClass?.name} value=$rawData")
+                if (rawData != null) {
+                    when (rawData) {
+                        is Map<*, *> -> {
+                            dataMap = rawData.entries.associate { it.key.toString() to (it.value ?: "") }
+                            android.util.Log.d("QbaseReflection", "mapRow: Strategy 1 matched, keys=${dataMap.keys}")
+                        }
+                        else -> {
+                            android.util.Log.d("QbaseReflection", "mapRow: Strategy 1 did not match rawData type")
+                        }
+                    }
                 }
-            } catch (e: Exception) { null }
+            } catch (e: Exception) {
+                android.util.Log.d("QbaseReflection", "mapRow: Strategy 1 failed with exception: ${e.message}")
+            }
 
             val mappedData: Map<String, Any> = if (dataMap != null) {
                 dataMap
             } else {
                 // Strategy 2: getData() returned a typed object — try toMap() if available
-                val toMapResult: Map<String, Any>? = try {
+                var toMapResult: Map<String, Any>? = null
+                try {
                     val dataField = row.javaClass.getMethod("getData")
                     val rawData = dataField.invoke(row)
                     val toMap = rawData?.javaClass?.getMethod("toMap")
-                    toMap?.invoke(rawData) as? Map<String, Any>
-                } catch (e: Exception) { null }
+                    if (toMap != null) {
+                        toMapResult = toMap.invoke(rawData) as? Map<String, Any>
+                        android.util.Log.d("QbaseReflection", "mapRow: Strategy 2 matched, keys=${toMapResult?.keys}")
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.d("QbaseReflection", "mapRow: Strategy 2 failed with exception: ${e.message}")
+                }
 
                 if (toMapResult != null) {
                     toMapResult
@@ -86,32 +103,44 @@ class AppwriteDatabaseImpl @Inject constructor(
                     // Strategy 3: getter method reflection, stripping get/is prefix and
                     // lowercasing the first char to recover camelCase field names
                     val map = mutableMapOf<String, Any>()
-                    row.javaClass.methods.forEach { method ->
-                        val mName = method.name
-                        val key = when {
-                            mName.startsWith("get") && mName.length > 3 ->
-                                mName[3].lowercaseChar() + mName.substring(4)
-                            mName.startsWith("is") && mName.length > 2 ->
-                                mName[2].lowercaseChar() + mName.substring(3)
-                            else -> null
+                    val dataField = row.javaClass.getMethod("getData")
+                    val rawData = dataField.invoke(row)
+                    if (rawData != null) {
+                        android.util.Log.d("QbaseReflection", "mapRow: running Strategy 3 on rawData methods...")
+                        rawData.javaClass.methods.forEach { method ->
+                            val mName = method.name
+                            val key = when {
+                                mName.startsWith("get") && mName.length > 3 ->
+                                    mName[3].lowercaseChar() + mName.substring(4)
+                                mName.startsWith("is") && mName.length > 2 ->
+                                    mName[2].lowercaseChar() + mName.substring(3)
+                                else -> null
+                            }
+                            if (key != null &&
+                                key !in setOf("class", "hashCode") &&
+                                method.parameterCount == 0) {
+                                try {
+                                    val value = method.invoke(rawData)
+                                    android.util.Log.d("QbaseReflection", "mapRow: Strategy 3 found getter: $mName -> key=$key, value=$value")
+                                    if (value != null) map[key] = value
+                                } catch (e: Exception) {
+                                    android.util.Log.d("QbaseReflection", "mapRow: Strategy 3 getter invocation failed for $mName: ${e.message}")
+                                }
+                            }
                         }
-                        if (key != null &&
-                            key !in setOf("class", "hashCode") &&
-                            method.parameterCount == 0) {
-                            try {
-                                val value = method.invoke(row)
-                                if (value != null) map[key] = value
-                            } catch (e: Exception) { /* ignore */ }
-                        }
-                    }
-                    // Strategy 4: declared field reflection as final fallback
-                    if (map.isEmpty()) {
-                        row.javaClass.declaredFields.forEach { field ->
-                            try {
-                                field.isAccessible = true
-                                val value = field.get(row)
-                                if (value != null) map[field.name] = value
-                            } catch (e: Exception) { /* ignore */ }
+                        // Strategy 4: declared field reflection as final fallback
+                        if (map.isEmpty()) {
+                            android.util.Log.d("QbaseReflection", "mapRow: Strategy 3 returned empty, running Strategy 4...")
+                            rawData.javaClass.declaredFields.forEach { field ->
+                                try {
+                                    field.isAccessible = true
+                                    val value = field.get(rawData)
+                                    android.util.Log.d("QbaseReflection", "mapRow: Strategy 4 found field: ${field.name} -> value=$value")
+                                    if (value != null) map[field.name] = value
+                                } catch (e: Exception) {
+                                    android.util.Log.d("QbaseReflection", "mapRow: Strategy 4 field access failed for ${field.name}: ${e.message}")
+                                }
+                            }
                         }
                     }
                     map
@@ -120,7 +149,7 @@ class AppwriteDatabaseImpl @Inject constructor(
 
             val mutableData = mappedData.toMutableMap()
             mutableData["\$id"] = id
-            android.util.Log.d("QbaseReflection", "mapRow result: id=$id keys=${mutableData.keys}")
+            android.util.Log.d("QbaseReflection", "mapRow final result: id=$id keys=${mutableData.keys}")
             mutableData
         } catch (e: Exception) {
             android.util.Log.e("QbaseReflection", "Failed to map row", e)
@@ -181,14 +210,16 @@ class AppwriteDatabaseImpl @Inject constructor(
                             String::class.java,
                             String::class.java,
                             Any::class.java,
-                            List::class.java
+                            List::class.java,
+                            Class::class.java
                         ),
                         args = arrayOf(
                             databaseId,
                             collectionId,
                             documentId,
                             cleanData,
-                            permissions
+                            permissions,
+                            Map::class.java
                         )
                     )
                     return Result.success(Unit)
@@ -228,12 +259,14 @@ class AppwriteDatabaseImpl @Inject constructor(
                         parameterTypes = arrayOf<Class<*>>(
                             String::class.java,
                             String::class.java,
-                            String::class.java
+                            String::class.java,
+                            Class::class.java
                         ),
                         args = arrayOf(
                             databaseId,
                             collectionId,
-                            documentId
+                            documentId,
+                            Map::class.java
                         )
                     )
                     if (row != null) {
@@ -287,14 +320,16 @@ class AppwriteDatabaseImpl @Inject constructor(
                             String::class.java,
                             String::class.java,
                             Any::class.java,
-                            List::class.java
+                            List::class.java,
+                            Class::class.java
                         ),
                         args = arrayOf(
                             databaseId,
                             collectionId,
                             documentId,
                             cleanData,
-                            permissions
+                            permissions,
+                            Map::class.java
                         )
                     )
                     return Result.success(Unit)
@@ -359,12 +394,14 @@ class AppwriteDatabaseImpl @Inject constructor(
                         parameterTypes = arrayOf<Class<*>>(
                             String::class.java,
                             String::class.java,
-                            List::class.java
+                            List::class.java,
+                            Class::class.java
                         ),
                         args = arrayOf(
                             databaseId,
                             collectionId,
-                            null
+                            null,
+                            Map::class.java
                         )
                     )
                     if (rowList != null) {
@@ -409,12 +446,14 @@ class AppwriteDatabaseImpl @Inject constructor(
                         parameterTypes = arrayOf<Class<*>>(
                             String::class.java,
                             String::class.java,
-                            List::class.java
+                            List::class.java,
+                            Class::class.java
                         ),
                         args = arrayOf(
                             databaseId,
                             collectionId,
-                            appwriteQueries
+                            appwriteQueries,
+                            Map::class.java
                         )
                     )
                     if (rowList != null) {

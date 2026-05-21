@@ -30,30 +30,55 @@ class NetworkMonitor @Inject constructor(
 
     val isOnline: StateFlow<Boolean> = callbackFlow {
         fun currentConnectivity(): Boolean {
-            val network = connectivityManager.activeNetwork ?: return false
-            val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-            return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+            val network = connectivityManager.activeNetwork
+            if (network == null) {
+                android.util.Log.d("QbaseNetwork", "currentConnectivity: activeNetwork is null")
+                return false
+            }
+            val capabilities = connectivityManager.getNetworkCapabilities(network)
+            if (capabilities == null) {
+                android.util.Log.d("QbaseNetwork", "currentConnectivity: capabilities is null for network=$network")
+                return false
+            }
+            val hasInternet = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            android.util.Log.d("QbaseNetwork", "currentConnectivity: network=$network hasInternet=$hasInternet")
+            return hasInternet
         }
 
-        trySend(currentConnectivity())
+        val initialConnectivity = currentConnectivity()
+        android.util.Log.d("QbaseNetwork", "NetworkMonitor: initialConnectivity=$initialConnectivity")
+        trySend(initialConnectivity)
 
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
-                trySend(currentConnectivity())
+                val conn = currentConnectivity()
+                android.util.Log.d("QbaseNetwork", "NetworkMonitor callback: onAvailable network=$network, currentConnectivity=$conn")
+                trySend(conn)
             }
 
             override fun onLost(network: Network) {
-                trySend(currentConnectivity())
+                val conn = currentConnectivity()
+                android.util.Log.d("QbaseNetwork", "NetworkMonitor callback: onLost network=$network, currentConnectivity=$conn")
+                trySend(conn)
             }
 
             override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
-                trySend(currentConnectivity())
+                val conn = currentConnectivity()
+                android.util.Log.d("QbaseNetwork", "NetworkMonitor callback: onCapabilitiesChanged network=$network, currentConnectivity=$conn")
+                trySend(conn)
             }
         }
 
-        connectivityManager.registerDefaultNetworkCallback(callback)
-        awaitClose { connectivityManager.unregisterNetworkCallback(callback) }
+        try {
+            connectivityManager.registerDefaultNetworkCallback(callback)
+            android.util.Log.d("QbaseNetwork", "NetworkMonitor: successfully registered default network callback")
+        } catch (e: Exception) {
+            android.util.Log.e("QbaseNetwork", "NetworkMonitor: failed to register default network callback", e)
+        }
+        awaitClose {
+            android.util.Log.d("QbaseNetwork", "NetworkMonitor: unregistering callback")
+            connectivityManager.unregisterNetworkCallback(callback)
+        }
     }.conflate()
      .stateIn(scope, SharingStarted.Eagerly, false)
 }

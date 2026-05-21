@@ -53,7 +53,7 @@ class ChatViewModel @Inject constructor(
         networkMonitor.isOnline,
         authRepository.isBackendSessionValid
     ) { online, sessionValid -> online && sessionValid }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     init {
         viewModelScope.launch {

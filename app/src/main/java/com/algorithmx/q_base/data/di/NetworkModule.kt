@@ -59,7 +59,7 @@ object NetworkModule {
                     val request = chain.request()
                     val response = chain.proceed(request)
                     
-                    if (!response.isSuccessful) {
+                    if (!response.isSuccessful && response.code != 101 && response.code != 401 && response.code != 409) {
                         val code = response.code
                         val bodyString = try {
                             val source = response.body?.source()
