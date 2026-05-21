@@ -1,4 +1,4 @@
-package com.algorithmx.q_base.ui.auth
+package com.algorithmx.q_base.feature.auth.presentation
 
 import android.app.Activity
 import android.widget.Toast
