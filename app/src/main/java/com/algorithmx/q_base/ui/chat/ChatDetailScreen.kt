@@ -33,6 +33,7 @@ fun ChatDetailScreen(
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val state by viewModel.chatDetailState.collectAsState()
+    val chat = state.chat
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val localCollections by viewModel.localStudyCollections.collectAsStateWithLifecycle()
     val isAiLoading by viewModel.isAiLoading.collectAsState()
@@ -140,13 +141,13 @@ fun ChatDetailScreen(
                 .padding(padding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            if (isLibraryMode && state.chat?.isGroup == true) {
+            if (isLibraryMode && chat?.isGroup == true) {
                 val accessRequests by viewModel.accessRequests.collectAsStateWithLifecycle()
-                val isAdmin = state.chat?.isAdmin(state.currentUserId) == true
+                val isAdmin = chat.isAdmin(state.currentUserId)
                 val sharedSessions by viewModel.sharedSessions.collectAsStateWithLifecycle()
                 
                 SharedLibraryView(
-                    chatId = state.chat!!.chatId,
+                    chatId = chat.chatId,
                     collections = sharedCollections,
                     sessions = sharedSessions,
                     onImport = { payload -> viewModel.importSharedCollection(payload) },
