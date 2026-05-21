@@ -1,4 +1,4 @@
-package com.algorithmx_q_base.feature.chat.presentation.components
+package com.algorithmx.q_base.feature.chat.presentation.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add

@@ -1,4 +1,4 @@
-package com.algorithmx_q_base.feature.chat.presentation.components
+package com.algorithmx.q_base.feature.chat.presentation.components
 import com.algorithmx.q_base.ui.state.AppAccessState
 import java.text.SimpleDateFormat
 import java.util.Calendar

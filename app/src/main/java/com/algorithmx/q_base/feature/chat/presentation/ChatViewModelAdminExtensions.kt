@@ -1,4 +1,4 @@
-package com.algorithmx_q_base.feature.chat.presentation
+package com.algorithmx.q_base.feature.chat.presentation
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.algorithmx.q_base.data.chat.isAdmin

@@ -1,4 +1,4 @@
-package com.algorithmx_q_base.feature.chat.presentation
+package com.algorithmx.q_base.feature.chat.presentation
 import androidx.compose.animation.*
 import androidx.compose.runtime.*
 import androidx.compose.material3.ExperimentalMaterial3Api
