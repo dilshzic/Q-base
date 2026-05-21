@@ -64,9 +64,29 @@ class AppwriteDatabaseImpl @Inject constructor(
             val idField = row.javaClass.getMethod("getId")
             val id = idField.invoke(row) as? String ?: ""
 
+            android.util.Log.d("QbaseReflection", "=== Inspecting row object ===")
+            row.javaClass.declaredFields.forEach { field ->
+                try {
+                    field.isAccessible = true
+                    android.util.Log.d("QbaseReflection", "  row field ${field.name} = ${field.get(row)}")
+                } catch (e: Exception) {
+                    android.util.Log.d("QbaseReflection", "  failed to inspect row field ${field.name}")
+                }
+            }
+
             val dataField = row.javaClass.getMethod("getData")
             val rawData = dataField.invoke(row)
             android.util.Log.d("QbaseReflection", "mapRow: row id=$id, rawData class=${rawData?.javaClass?.name}")
+            if (rawData != null) {
+                rawData.javaClass.declaredFields.forEach { field ->
+                    try {
+                        field.isAccessible = true
+                        android.util.Log.d("QbaseReflection", "  field ${field.name} = ${field.get(rawData)}")
+                    } catch (e: Exception) {
+                        android.util.Log.d("QbaseReflection", "  failed to inspect field ${field.name}")
+                    }
+                }
+            }
 
             val dataMap = if (rawData is AppwriteDocumentModel) {
                 rawData.data
