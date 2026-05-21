@@ -14,6 +14,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.coroutines.Continuation
+import com.google.gson.Gson
+import com.google.gson.TypeAdapter
+import com.google.gson.annotations.JsonAdapter
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
+import com.google.gson.stream.JsonWriter
 
 @Singleton
 class AppwriteDatabaseImpl @Inject constructor(
@@ -57,56 +63,25 @@ class AppwriteDatabaseImpl @Inject constructor(
         return try {
             val idField = row.javaClass.getMethod("getId")
             val id = idField.invoke(row) as? String ?: ""
-            android.util.Log.d("QbaseReflection", "mapRow: row toString = $row")
 
-            // Strategy 1: getData() returns a Map directly — ideal case
-            var dataMap: Map<String, Any>? = null
-            try {
-                val dataField = row.javaClass.getMethod("getData")
-                val rawData = dataField.invoke(row)
-                android.util.Log.d("QbaseReflection", "mapRow: rawData class=${rawData?.javaClass?.name} value=$rawData")
-                if (rawData != null) {
-                    when (rawData) {
-                        is Map<*, *> -> {
-                            dataMap = rawData.entries.associate { it.key.toString() to (it.value ?: "") }
-                            android.util.Log.d("QbaseReflection", "mapRow: Strategy 1 matched, keys=${dataMap.keys}")
-                        }
-                        else -> {
-                            android.util.Log.d("QbaseReflection", "mapRow: Strategy 1 did not match rawData type")
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                android.util.Log.d("QbaseReflection", "mapRow: Strategy 1 failed with exception: ${e.message}")
-            }
+            val dataField = row.javaClass.getMethod("getData")
+            val rawData = dataField.invoke(row)
+            android.util.Log.d("QbaseReflection", "mapRow: row id=$id, rawData class=${rawData?.javaClass?.name}")
 
-            val mappedData: Map<String, Any> = if (dataMap != null) {
-                dataMap
+            val dataMap = if (rawData is AppwriteDocumentModel) {
+                rawData.data
             } else {
-                // Strategy 2: getData() returned a typed object — try toMap() if available
-                var toMapResult: Map<String, Any>? = null
-                try {
-                    val dataField = row.javaClass.getMethod("getData")
-                    val rawData = dataField.invoke(row)
-                    val toMap = rawData?.javaClass?.getMethod("toMap")
-                    if (toMap != null) {
-                        toMapResult = toMap.invoke(rawData) as? Map<String, Any>
-                        android.util.Log.d("QbaseReflection", "mapRow: Strategy 2 matched, keys=${toMapResult?.keys}")
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.d("QbaseReflection", "mapRow: Strategy 2 failed with exception: ${e.message}")
-                }
-
-                if (toMapResult != null) {
-                    toMapResult
-                } else {
-                    // Strategy 3: getter method reflection, stripping get/is prefix and
-                    // lowercasing the first char to recover camelCase field names
-                    val map = mutableMapOf<String, Any>()
-                    val dataField = row.javaClass.getMethod("getData")
-                    val rawData = dataField.invoke(row)
-                    if (rawData != null) {
-                        android.util.Log.d("QbaseReflection", "mapRow: running Strategy 3 on rawData methods...")
+                // Keep the fallback strategies for non-AppwriteDocumentModel classes
+                var extracted: Map<String, Any>? = null
+                if (rawData is Map<*, *>) {
+                    extracted = rawData.entries.associate { it.key.toString() to (it.value ?: "") }
+                } else if (rawData != null) {
+                    try {
+                        val toMap = rawData.javaClass.getMethod("toMap")
+                        extracted = toMap.invoke(rawData) as? Map<String, Any>
+                    } catch (e: Exception) {
+                        // try getters
+                        val map = mutableMapOf<String, Any>()
                         rawData.javaClass.methods.forEach { method ->
                             val mName = method.name
                             val key = when {
@@ -116,40 +91,31 @@ class AppwriteDatabaseImpl @Inject constructor(
                                     mName[2].lowercaseChar() + mName.substring(3)
                                 else -> null
                             }
-                            if (key != null &&
-                                key !in setOf("class", "hashCode") &&
-                                method.parameterCount == 0) {
+                            if (key != null && key !in setOf("class", "hashCode") && method.parameterCount == 0) {
                                 try {
-                                    val value = method.invoke(rawData)
-                                    android.util.Log.d("QbaseReflection", "mapRow: Strategy 3 found getter: $mName -> key=$key, value=$value")
-                                    if (value != null) map[key] = value
-                                } catch (e: Exception) {
-                                    android.util.Log.d("QbaseReflection", "mapRow: Strategy 3 getter invocation failed for $mName: ${e.message}")
-                                }
+                                    method.invoke(rawData)?.let { map[key] = it }
+                                } catch (e: Exception) {}
                             }
                         }
-                        // Strategy 4: declared field reflection as final fallback
-                        if (map.isEmpty()) {
-                            android.util.Log.d("QbaseReflection", "mapRow: Strategy 3 returned empty, running Strategy 4...")
-                            rawData.javaClass.declaredFields.forEach { field ->
-                                try {
-                                    field.isAccessible = true
-                                    val value = field.get(rawData)
-                                    android.util.Log.d("QbaseReflection", "mapRow: Strategy 4 found field: ${field.name} -> value=$value")
-                                    if (value != null) map[field.name] = value
-                                } catch (e: Exception) {
-                                    android.util.Log.d("QbaseReflection", "mapRow: Strategy 4 field access failed for ${field.name}: ${e.message}")
-                                }
-                            }
-                        }
+                        extracted = map
                     }
-                    map
                 }
+                extracted ?: emptyMap()
             }
 
-            val mutableData = mappedData.toMutableMap()
+            val mutableData = dataMap.toMutableMap()
             mutableData["\$id"] = id
-            android.util.Log.d("QbaseReflection", "mapRow final result: id=$id keys=${mutableData.keys}")
+            
+            // Add other metadata fields if available
+            try {
+                row.javaClass.getMethod("getCreatedAt").invoke(row)?.let { mutableData["\$createdAt"] = it }
+                row.javaClass.getMethod("getUpdatedAt").invoke(row)?.let { mutableData["\$updatedAt"] = it }
+                row.javaClass.getMethod("getDatabaseId").invoke(row)?.let { mutableData["\$databaseId"] = it }
+                row.javaClass.getMethod("getTableId").invoke(row)?.let { mutableData["\$tableId"] = it }
+            } catch (e: Exception) {
+                // ignore
+            }
+            android.util.Log.d("QbaseReflection", "mapRow final result keys: ${mutableData.keys}")
             mutableData
         } catch (e: Exception) {
             android.util.Log.e("QbaseReflection", "Failed to map row", e)
@@ -219,7 +185,7 @@ class AppwriteDatabaseImpl @Inject constructor(
                             documentId,
                             cleanData,
                             permissions,
-                            Map::class.java
+                            AppwriteDocumentModel::class.java
                         )
                     )
                     return Result.success(Unit)
@@ -266,7 +232,7 @@ class AppwriteDatabaseImpl @Inject constructor(
                             databaseId,
                             collectionId,
                             documentId,
-                            Map::class.java
+                            AppwriteDocumentModel::class.java
                         )
                     )
                     if (row != null) {
@@ -329,7 +295,7 @@ class AppwriteDatabaseImpl @Inject constructor(
                             documentId,
                             cleanData,
                             permissions,
-                            Map::class.java
+                            AppwriteDocumentModel::class.java
                         )
                     )
                     return Result.success(Unit)
@@ -401,7 +367,7 @@ class AppwriteDatabaseImpl @Inject constructor(
                             databaseId,
                             collectionId,
                             null,
-                            Map::class.java
+                            AppwriteDocumentModel::class.java
                         )
                     )
                     if (rowList != null) {
@@ -453,7 +419,7 @@ class AppwriteDatabaseImpl @Inject constructor(
                             databaseId,
                             collectionId,
                             appwriteQueries,
-                            Map::class.java
+                            AppwriteDocumentModel::class.java
                         )
                     )
                     if (rowList != null) {
@@ -519,6 +485,88 @@ class AppwriteDatabaseImpl @Inject constructor(
                 }
             }
             awaitClose { subscription.close() }
+        }
+    }
+}
+
+@JsonAdapter(AppwriteDocumentModel.Adapter::class)
+class AppwriteDocumentModel(
+    val data: Map<String, Any> = emptyMap()
+) {
+    class Adapter : TypeAdapter<AppwriteDocumentModel>() {
+        override fun write(out: JsonWriter, value: AppwriteDocumentModel?) {
+            out.beginObject()
+            value?.data?.forEach { (k, v) ->
+                out.name(k)
+                when (v) {
+                    is String -> out.value(v)
+                    is Number -> out.value(v)
+                    is Boolean -> out.value(v)
+                    is List<*> -> {
+                        out.beginArray()
+                        v.forEach { item ->
+                            if (item is String) out.value(item)
+                            else if (item is Number) out.value(item)
+                            else if (item is Boolean) out.value(item)
+                        }
+                        out.endArray()
+                    }
+                    else -> out.nullValue()
+                }
+            }
+            out.endObject()
+        }
+
+        override fun read(reader: JsonReader): AppwriteDocumentModel {
+            val map = mutableMapOf<String, Any>()
+            reader.beginObject()
+            while (reader.hasNext()) {
+                val name = reader.nextName()
+                val value = readValue(reader)
+                if (value != null) {
+                    map[name] = value
+                }
+            }
+            reader.endObject()
+            return AppwriteDocumentModel(map)
+        }
+
+        private fun readValue(reader: JsonReader): Any? {
+            return when (reader.peek()) {
+                JsonToken.STRING -> reader.nextString()
+                JsonToken.NUMBER -> {
+                    val str = reader.nextString()
+                    str.toLongOrNull() ?: str.toDoubleOrNull() ?: str
+                }
+                JsonToken.BOOLEAN -> reader.nextBoolean()
+                JsonToken.NULL -> {
+                    reader.nextNull()
+                    null
+                }
+                JsonToken.BEGIN_ARRAY -> {
+                    val list = mutableListOf<Any>()
+                    reader.beginArray()
+                    while (reader.hasNext()) {
+                        readValue(reader)?.let { list.add(it) }
+                    }
+                    reader.endArray()
+                    list
+                }
+                JsonToken.BEGIN_OBJECT -> {
+                    val map = mutableMapOf<String, Any>()
+                    reader.beginObject()
+                    while (reader.hasNext()) {
+                        val name = reader.nextName()
+                        readValue(reader)?.let { map[name] = it }
+                    }
+                    reader.endObject()
+                    map
+                }
+                else -> {
+                    reader.skipValue()
+                    null
+                }
+            }
         }
     }
 }

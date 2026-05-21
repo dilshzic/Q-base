@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.play.services.auth)
     ksp(libs.hilt.compiler)
+    implementation(libs.gson)
 
     // Compose
     implementation(platform(libs.androidx.compose.bom))
