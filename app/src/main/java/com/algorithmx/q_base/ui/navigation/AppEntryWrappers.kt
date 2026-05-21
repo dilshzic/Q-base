@@ -9,7 +9,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import com.algorithmx.q_base.feature.auth.presentation.*
-import com.algorithmx.q_base.ui.chat.*
+import com.algorithmx_q_base.feature.chat.presentation.*
 import com.algorithmx.q_base.ui.ai.*
 import com.algorithmx.q_base.ui.content_import.*
 import com.algorithmx.q_base.ui.explore.*
