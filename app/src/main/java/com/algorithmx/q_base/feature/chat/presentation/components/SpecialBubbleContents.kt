@@ -213,4 +213,3 @@ fun MessageTimestampAndStatus(timeString: String, isMine: Boolean, status: Strin
         }
     }
 }
-

@@ -219,4 +219,3 @@ fun ChatListScreen(
     }
 }
 
-

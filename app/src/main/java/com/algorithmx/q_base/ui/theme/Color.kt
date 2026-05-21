@@ -85,4 +85,3 @@ val onSurfaceMonochromeDark = Color(0xFFFFFFFF)
 val successGreen = Color(0xFF4CAF50)
 val warningOrange = Color(0xFFFFA500)
 val infoBlue = Color(0xFF2196F3)
-

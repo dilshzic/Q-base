@@ -33,4 +33,3 @@ data class AiCollectionResponse(
     val parsingWarnings: List<String> = emptyList(),
     val skippedSegments: List<String> = emptyList()
 )
-
