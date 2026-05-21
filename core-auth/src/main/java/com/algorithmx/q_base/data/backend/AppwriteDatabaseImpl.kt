@@ -38,6 +38,8 @@ class AppwriteDatabaseImpl @Inject constructor(
         parameterTypes: Array<Class<*>>,
         args: Array<Any?>
     ): Any? = suspendCoroutineUninterceptedOrReturn { uCont ->
+        // The Tables SDK methods are suspend functions, so reflection must append the
+        // Continuation parameter that Kotlin generates behind the scenes.
         val tables = tablesClient ?: return@suspendCoroutineUninterceptedOrReturn null
         try {
             android.util.Log.d("QbaseReflection", "=== Tables Client Methods ===")
@@ -523,7 +525,8 @@ class AppwriteDocumentModel(
             out.endObject()
         }
 
-        // Recursive writer to safely serialize nested Maps and Lists
+        // Appwrite documents can contain nested maps/lists, so we recurse instead of
+        // flattening unknown values to null and losing data on write.
         private fun writeValue(out: JsonWriter, value: Any?) {
             when (value) {
                 null -> out.nullValue()
@@ -531,6 +534,7 @@ class AppwriteDocumentModel(
                 is Number -> out.value(value)
                 is Boolean -> out.value(value)
                 is Map<*, *> -> {
+                    // JSON object keys must be strings, so map keys are stringified here.
                     out.beginObject()
                     value.forEach { (k, v) ->
                         out.name(k.toString())
@@ -539,6 +543,7 @@ class AppwriteDocumentModel(
                     out.endObject()
                 }
                 is List<*> -> {
+                    // Lists are written element-by-element so nested structures survive.
                     out.beginArray()
                     value.forEach { item -> writeValue(out, item) }
                     out.endArray()
