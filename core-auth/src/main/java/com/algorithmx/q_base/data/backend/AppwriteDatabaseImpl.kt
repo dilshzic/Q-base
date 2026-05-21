@@ -518,23 +518,33 @@ class AppwriteDocumentModel(
             out.beginObject()
             value?.data?.forEach { (k, v) ->
                 out.name(k)
-                when (v) {
-                    is String -> out.value(v)
-                    is Number -> out.value(v)
-                    is Boolean -> out.value(v)
-                    is List<*> -> {
-                        out.beginArray()
-                        v.forEach { item ->
-                            if (item is String) out.value(item)
-                            else if (item is Number) out.value(item)
-                            else if (item is Boolean) out.value(item)
-                        }
-                        out.endArray()
-                    }
-                    else -> out.nullValue()
-                }
+                writeValue(out, v)
             }
             out.endObject()
+        }
+
+        // Recursive writer to safely serialize nested Maps and Lists
+        private fun writeValue(out: JsonWriter, value: Any?) {
+            when (value) {
+                null -> out.nullValue()
+                is String -> out.value(value)
+                is Number -> out.value(value)
+                is Boolean -> out.value(value)
+                is Map<*, *> -> {
+                    out.beginObject()
+                    value.forEach { (k, v) ->
+                        out.name(k.toString())
+                        writeValue(out, v)
+                    }
+                    out.endObject()
+                }
+                is List<*> -> {
+                    out.beginArray()
+                    value.forEach { item -> writeValue(out, item) }
+                    out.endArray()
+                }
+                else -> out.nullValue()
+            }
         }
 
         override fun read(reader: JsonReader): AppwriteDocumentModel {
