@@ -12,6 +12,7 @@ local.properties
 *.log
 firebase-debug.log
 ui-debug.log
+logcat.txt
 
 # Android Studio / IntelliJ
 .idea/
