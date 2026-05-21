@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import dagger.Lazy
@@ -59,65 +60,67 @@ class ChatManagerRepository @Inject constructor(
     }
 
     suspend fun syncUserChatsFromRemote() {
-        val uid = currentUserId ?: return
-        var success = false
-        var attempts = 0
-        while (!success && attempts < 3) {
-            try {
-                Log.d("ChatManagerRepository", "Syncing user chats from remote (attempt ${attempts + 1}) for uid: $uid")
-                val queries = listOf(
-                    CoreQuery("participantIds", CoreQueryOperator.ARRAY_CONTAINS, uid)
-                )
-                val docs = databases.queryDocuments(
-                    collectionId = "chats",
-                    queries = queries
-                ).getOrThrow()
-
-                for (doc in docs) {
-                    @Suppress("UNCHECKED_CAST")
-                    val participantsList = doc["participantIds"] as? List<String> ?: emptyList()
-                    val remoteAdminIds = doc["adminIds"] as? List<String>
-                    val remoteAdminId = doc["adminId"] as? String
-                    val isGroupVal = doc["isGroup"] as? Boolean ?: false
-                    
-                    Log.d("ChatManagerRepository", "Synced chat doc keys: ${doc.keys}, values: ${doc.values}")
-                    val chat = ChatEntity(
-                        chatId = doc["\$id"] as String,
-                        chatName = doc["chatName"] as? String,
-                        isGroup = isGroupVal,
-                        participantIds = participantsList.joinToString(","),
-                        adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList())
+        withContext(Dispatchers.IO) {
+            val uid = currentUserId ?: return@withContext
+            var success = false
+            var attempts = 0
+            while (!success && attempts < 3) {
+                try {
+                    Log.d("ChatManagerRepository", "Syncing user chats from remote (attempt ${attempts + 1}) for uid: $uid")
+                    val queries = listOf(
+                        CoreQuery("participantIds", CoreQueryOperator.ARRAY_CONTAINS, uid)
                     )
-                    chatDao.insertChat(chat)
-                    Log.d("ChatManagerRepository", "Synced chat from remote: ${chat.chatId} (${chat.chatName}), participants: ${chat.participantIds}")
-                    
-                    // Fetch and sync profiles for all participants
-                    participantsList.forEach { participantId ->
-                        Log.d("ChatManagerRepository", "Checking participant: '$participantId' against uid: '$uid'")
-                        if (participantId.isNotBlank() && participantId != uid) {
-                            Log.d("ChatManagerRepository", "Syncing profile for other participant: $participantId")
-                            // Run this without throwing exceptions to ensure it doesn't block message sync
-                            repositoryScope.launch {
-                                try {
-                                    profileRepository.syncUserProfile(participantId)
-                                } catch (e: Exception) {
-                                    Log.e("ChatManagerRepository", "Failed to sync profile for $participantId", e)
+                    val docs = databases.queryDocuments(
+                        collectionId = "chats",
+                        queries = queries
+                    ).getOrThrow()
+
+                    for (doc in docs) {
+                        @Suppress("UNCHECKED_CAST")
+                        val participantsList = doc["participantIds"] as? List<String> ?: emptyList()
+                        val remoteAdminIds = doc["adminIds"] as? List<String>
+                        val remoteAdminId = doc["adminId"] as? String
+                        val isGroupVal = doc["isGroup"] as? Boolean ?: false
+
+                        Log.d("ChatManagerRepository", "Synced chat doc keys: ${doc.keys}, values: ${doc.values}")
+                        val chat = ChatEntity(
+                            chatId = doc["\$id"] as String,
+                            chatName = doc["chatName"] as? String,
+                            isGroup = isGroupVal,
+                            participantIds = participantsList.joinToString(","),
+                            adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList())
+                        )
+                        chatDao.insertChat(chat)
+                        Log.d("ChatManagerRepository", "Synced chat from remote: ${chat.chatId} (${chat.chatName}), participants: ${chat.participantIds}")
+
+                        // Fetch and sync profiles for all participants
+                        participantsList.forEach { participantId ->
+                            Log.d("ChatManagerRepository", "Checking participant: '$participantId' against uid: '$uid'")
+                            if (participantId.isNotBlank() && participantId != uid) {
+                                Log.d("ChatManagerRepository", "Syncing profile for other participant: $participantId")
+                                // Run this without throwing exceptions to ensure it doesn't block message sync
+                                repositoryScope.launch {
+                                    try {
+                                        profileRepository.syncUserProfile(participantId)
+                                    } catch (e: Exception) {
+                                        Log.e("ChatManagerRepository", "Failed to sync profile for $participantId", e)
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    // Fetch and sync messages for this chat
-                    messageSyncRepository.get().fetchAndSyncMessages(chat.chatId)
-                }
-                success = true
-            } catch (e: Exception) {
-                attempts++
-                Log.e("ChatManagerRepository", "Failed to sync user chats from remote (attempt $attempts)", e)
-                if (attempts < 3) {
-                    kotlinx.coroutines.delay(2000)
-                } else {
-                    throw e
+                        // Fetch and sync messages for this chat
+                        messageSyncRepository.get().fetchAndSyncMessages(chat.chatId)
+                    }
+                    success = true
+                } catch (e: Exception) {
+                    attempts++
+                    Log.e("ChatManagerRepository", "Failed to sync user chats from remote (attempt $attempts)", e)
+                    if (attempts < 3) {
+                        kotlinx.coroutines.delay(2000)
+                    } else {
+                        throw e
+                    }
                 }
             }
         }
