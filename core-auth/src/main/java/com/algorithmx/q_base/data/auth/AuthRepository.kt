@@ -35,7 +35,8 @@ class AuthRepository @Inject constructor(
 ) {
     private val prefs = context.getSharedPreferences("qbase_prefs", Context.MODE_PRIVATE)
 
-    private val _currentUser = MutableStateFlow<AppwriteUser?>(null)
+    // Initialize with cached user immediately so UI has data before background session check
+    private val _currentUser = MutableStateFlow<AppwriteUser?>(getUserFromPrefs())
     val currentUser: Flow<AppwriteUser?> = _currentUser.asStateFlow()
     val currentUserId: String?
         get() = _currentUser.value?.uid

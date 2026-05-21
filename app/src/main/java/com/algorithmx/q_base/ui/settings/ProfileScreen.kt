@@ -199,7 +199,7 @@ fun ProfileContent(
 
                 // Identity Block
                 Text(
-                    text = user?.displayName ?: "Knowledge Seeker",
+                    text = if (!user?.displayName.isNullOrBlank()) user?.displayName!! else "Knowledge Seeker",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -207,7 +207,7 @@ fun ProfileContent(
                 )
                 
                 Text(
-                    text = user?.email ?: "guest@qbase.io",
+                    text = if (!user?.email.isNullOrBlank()) user?.email!! else "guest@qbase.io",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center
