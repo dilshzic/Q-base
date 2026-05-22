@@ -62,3 +62,12 @@ venv/
 **/build/generated/ksp*/**
 **/build/generated/source/kapt/**
 **/build/generated/source/buildConfig/**
+# ignore generated code accidentally committed into app/src
+/app/src/main/java/**/hilt_aggregated_deps/
+/app/src/main/java/**/*_HiltModules.java
+/app/src/main/java/**/*_Factory.java
+/app/src/main/java/**/*_GeneratedInjector.java
+/app/src/main/java/**/Hilt_*.java
+/app/src/main/java/**/*_Impl.java
+/app/src/main/java/**/*_Impl.kt
+/app/src/main/java/**/BuildConfig.java
