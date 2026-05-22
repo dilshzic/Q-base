@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.algorithmx.q_base.feature.settings.AVATAR_TEMPLATES
-import com.algorithmx.q_base.feature.settings.bounceClick
+import com.algorithmx.q_base.feature.settings.presentation.AVATAR_TEMPLATES
+import com.algorithmx.q_base.feature.settings.presentation.bounceClick
 
 @Composable
 fun ProfileAvatar(
