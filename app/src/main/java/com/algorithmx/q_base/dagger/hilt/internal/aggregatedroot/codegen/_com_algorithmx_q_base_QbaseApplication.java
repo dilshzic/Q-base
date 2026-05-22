@@ -19,5 +19,5 @@ import javax.annotation.processing.Generated;
     rootComponentSimpleNames = "SingletonComponent"
 )
 @Generated("dagger.hilt.processor.internal.root.AggregatedRootGenerator")
-public class _com_algorithmx_q_base_QbaseApplication {
+public class _com.algorithmx.q_base_QbaseApplication {
 }
