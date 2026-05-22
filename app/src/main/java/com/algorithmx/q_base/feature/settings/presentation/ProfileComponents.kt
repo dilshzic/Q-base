@@ -89,7 +89,7 @@ fun Modifier.bounceClick(onClick: () -> Unit = {}) = composed {
 
 @Composable
 fun ProfileParallaxHeader(
-    user: com.algorithmx.q_base.data.core.UserEntity?,
+    user: com.algorithmx.q_base.core.data.UserEntity?,
     scrollState: androidx.compose.foundation.ScrollState,
     padding: PaddingValues,
     onAvatarClick: () -> Unit

@@ -23,7 +23,7 @@ class HomeRepository @Inject constructor(
     private val userDao: UserDao,
     private val chatDao: ChatDao
 ) {
-    fun getCurrentUser(userId: String): Flow<com.algorithmx.q_base.data.core.UserEntity?> = 
+    fun getCurrentUser(userId: String): Flow<com.algorithmx.q_base.core.data.UserEntity?> = 
         userDao.getCurrentUser(userId)
 
     fun getOngoingSessions(): Flow<List<StudySession>> = sessionDao.getOngoingSessions()

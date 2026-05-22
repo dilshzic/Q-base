@@ -142,7 +142,7 @@ object DatabaseModule {
         return object : ProfileCache {
             override suspend fun upsert(profile: com.algorithmx.q_base.core.data.auth.UserProfile) {
                 userDao.insertUser(
-                    com.algorithmx.q_base.data.core.UserEntity(
+                    com.algorithmx.q_base.core.data.UserEntity(
                         userId = profile.userId,
                         displayName = profile.displayName,
                         email = profile.email,

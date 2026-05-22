@@ -48,7 +48,7 @@ fun CollectionOverviewScreen(
     onDeleteCollection: (StudyCollection) -> Unit = {},
     onProfileClick: () -> Unit,
     onBack: () -> Unit,
-    currentUser: com.algorithmx.q_base.data.core.UserEntity? = null,
+    currentUser: com.algorithmx.q_base.core.data.UserEntity? = null,
     viewModel: ExploreViewModel? = null
 ) {
     if (collection == null) {

@@ -72,7 +72,7 @@ fun ProfileScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileContent(
-    user: com.algorithmx.q_base.data.core.UserEntity?,
+    user: com.algorithmx.q_base.core.data.UserEntity?,
     hasSecureBackup: Boolean,
     onBack: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -290,7 +290,7 @@ fun ProfileContent(
 fun ProfileContentPreview() {
     QbaseTheme {
         ProfileContent(
-            user = com.algorithmx.q_base.data.core.UserEntity(
+            user = com.algorithmx.q_base.core.data.UserEntity(
                 userId = "123",
                 displayName = "John Doe",
                 email = "john.doe@example.com",
