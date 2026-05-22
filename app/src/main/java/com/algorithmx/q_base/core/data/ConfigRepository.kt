@@ -1,4 +1,4 @@
-package com.algorithmx.q_base.core.data
+package com.algorithmx.q_base.data.core
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
