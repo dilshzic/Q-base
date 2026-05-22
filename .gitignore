@@ -57,3 +57,8 @@ input_images/
 temp_icon.png
 venv/
 .venv/
+
+# Ignore KSP/Gradle generated sources
+**/build/generated/ksp*/**
+**/build/generated/source/kapt/**
+**/build/generated/source/buildConfig/**
