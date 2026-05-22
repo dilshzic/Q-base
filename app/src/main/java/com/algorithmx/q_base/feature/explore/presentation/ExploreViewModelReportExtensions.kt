@@ -12,7 +12,7 @@ fun ExploreViewModel.reportCollectionToGroup(collection: StudyCollection, reason
     viewModelScope.launch {
         try {
             val reportMessage = "⚠️ PROBLEM REPORT: Issue with shared collection '${collection.name}'. Reason: $reason"
-            val message = com.algorithmx.q_base.data.chat.MessageEntity(
+            val message = com.algorithmx.q_base.core.data.chat.MessageEntity(
                 messageId = java.util.UUID.randomUUID().toString(),
                 chatId = groupId,
                 senderId = authRepository.currentUser.first()?.uid ?: "",

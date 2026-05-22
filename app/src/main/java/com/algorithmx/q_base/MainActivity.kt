@@ -33,10 +33,10 @@ import androidx.navigation3.ui.NavDisplay
 import com.algorithmx.q_base.core.data.DatabaseSeeder
 import com.algorithmx.q_base.core.data.auth.AuthRepository
 import com.algorithmx.q_base.sync.orchestration.SyncRepository
-import com.algorithmx.q_base.ui.state.AppAccessState
-import com.algorithmx.q_base.ui.state.LocalAppAccessState
-import com.algorithmx.q_base.ui.navigation.*
-import com.algorithmx.q_base.ui.theme.QbaseTheme
+import com.algorithmx.q_base.core.state.AppAccessState
+import com.algorithmx.q_base.core.state.LocalAppAccessState
+import com.algorithmx.q_base.core.navigation.*
+import com.algorithmx.q_base.core.designsystem.theme.QbaseTheme
 import com.algorithmx.q_base.util.NetworkMonitor
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow

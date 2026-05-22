@@ -29,7 +29,7 @@ import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Report
 import com.algorithmx.q_base.data.collections.Question
 import com.algorithmx.q_base.data.collections.QuestionOption
-import com.algorithmx.q_base.feature.theme.QbaseTheme
+import com.algorithmx.q_base.core.designsystem.theme.QbaseTheme
 
 @Composable
 fun QuestionHeader(

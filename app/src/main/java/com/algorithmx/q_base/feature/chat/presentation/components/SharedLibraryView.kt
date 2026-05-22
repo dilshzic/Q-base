@@ -18,7 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.algorithmx.q_base.data.collections.StudyCollection
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import com.algorithmx.q_base.ui.theme.QbaseTheme
+import com.algorithmx.q_base.core.designsystem.theme.QbaseTheme
 import java.text.SimpleDateFormat
 import java.util.*
 

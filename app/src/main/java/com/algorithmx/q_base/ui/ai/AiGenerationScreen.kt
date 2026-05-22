@@ -12,8 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar
-import com.algorithmx.q_base.ui.state.LocalAppAccessState
-import com.algorithmx.q_base.ui.state.AppAccessState
+import com.algorithmx.q_base.core.state.LocalAppAccessState
+import com.algorithmx.q_base.core.state.AppAccessState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

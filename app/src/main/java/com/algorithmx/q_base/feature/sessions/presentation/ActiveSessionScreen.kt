@@ -45,11 +45,11 @@ import com.algorithmx.q_base.feature.sessions.data.SessionAttempt
 import com.algorithmx.q_base.core.data.UserEntity
 import com.algorithmx.q_base.core.designsystem.components.question.QuestionViewer
 import com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar
-import com.algorithmx.q_base.feature.theme.*
+import com.algorithmx.q_base.core.designsystem.theme.*
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import androidx.compose.material.icons.rounded.AutoAwesome
 import kotlinx.coroutines.launch
-import com.algorithmx.q_base.feature.sessions.components.MasterNavigator
+import com.algorithmx.q_base.feature.sessions.presentation.components.MasterNavigator
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

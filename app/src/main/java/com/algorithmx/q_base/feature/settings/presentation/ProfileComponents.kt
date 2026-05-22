@@ -30,12 +30,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import com.algorithmx.q_base.feature.theme.QbaseTheme
+import com.algorithmx.q_base.core.designsystem.theme.QbaseTheme
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.algorithmx.q_base.feature.settings.components.*
+import com.algorithmx.q_base.feature.settings.presentation.components.*
 
 data class AvatarTemplate(
     val name: String,

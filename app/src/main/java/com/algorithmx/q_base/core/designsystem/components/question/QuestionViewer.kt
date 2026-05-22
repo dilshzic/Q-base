@@ -14,7 +14,7 @@ import com.algorithmx.q_base.data.collections.Question
 import com.algorithmx.q_base.data.collections.QuestionOption
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
-import com.algorithmx.q_base.feature.theme.QbaseTheme
+import com.algorithmx.q_base.core.designsystem.theme.QbaseTheme
 
 @Composable
 fun QuestionViewer(

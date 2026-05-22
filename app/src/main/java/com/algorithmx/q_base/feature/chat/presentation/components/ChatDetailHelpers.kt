@@ -1,5 +1,5 @@
 package com.algorithmx.q_base.feature.chat.presentation.components
-import com.algorithmx.q_base.ui.state.AppAccessState
+import com.algorithmx.q_base.core.state.AppAccessState
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date

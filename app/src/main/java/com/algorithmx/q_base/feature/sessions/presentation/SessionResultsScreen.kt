@@ -343,8 +343,8 @@ fun AnimatedAttemptDot(
     }
     
     val color = when {
-        attempt.marksObtained >= 1f -> com.algorithmx.q_base.ui.theme.successGreen
-        attempt.marksObtained > 0f -> com.algorithmx.q_base.ui.theme.warningOrange
+        attempt.marksObtained >= 1f -> com.algorithmx.q_base.core.designsystem.theme.successGreen
+        attempt.marksObtained > 0f -> com.algorithmx.q_base.core.designsystem.theme.warningOrange
         attempt.attemptStatus == "UNATTEMPTED" -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
         else -> MaterialTheme.colorScheme.error
     }

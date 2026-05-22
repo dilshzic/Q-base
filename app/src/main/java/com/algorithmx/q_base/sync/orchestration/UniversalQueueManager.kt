@@ -91,7 +91,7 @@ class UniversalQueueManager @Inject constructor(
                 val chatId = payload["chatId"]?.jsonPrimitive?.content ?: return false
                 val reason = payload["reason"]?.jsonPrimitive?.content ?: return false
                 // Dummy ChatEntity just to carry the ID for reportGroup
-                val dummyGroup = com.algorithmx.q_base.data.chat.ChatEntity(
+                val dummyGroup = com.algorithmx.q_base.core.data.chat.ChatEntity(
                     chatId = chatId,
                     chatName = null,
                     isGroup = true,
@@ -104,7 +104,7 @@ class UniversalQueueManager @Inject constructor(
                 val messageId = payload["messageId"]?.jsonPrimitive?.content ?: return false
                 val reason = payload["reason"]?.jsonPrimitive?.content ?: return false
                 // Dummy MessageEntity just to carry the ID for reportMessage
-                val dummyMessage = com.algorithmx.q_base.data.chat.MessageEntity(
+                val dummyMessage = com.algorithmx.q_base.core.data.chat.MessageEntity(
                     messageId = messageId, chatId = "", senderId = "", payload = "", type = "TEXT", timestamp = 0L
                 )
                 chatRemoteRepository.reportMessage(dummyMessage, reason)

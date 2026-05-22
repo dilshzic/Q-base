@@ -22,9 +22,9 @@ import androidx.compose.ui.unit.sp
 import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.feature.sessions.data.StudySession
 import com.algorithmx.q_base.core.data.UserEntity
-import com.algorithmx.q_base.feature.state.AppAccessState
-import com.algorithmx.q_base.feature.state.LocalAppAccessState
-import com.algorithmx.q_base.feature.theme.QbaseTheme
+import com.algorithmx.q_base.core.state.AppAccessState
+import com.algorithmx.q_base.core.state.LocalAppAccessState
+import com.algorithmx.q_base.core.designsystem.theme.QbaseTheme
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)

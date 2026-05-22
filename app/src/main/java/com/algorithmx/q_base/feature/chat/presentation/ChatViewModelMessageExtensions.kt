@@ -4,6 +4,7 @@ import com.algorithmx.q_base.core.data.chat.ChatEntity
 import com.algorithmx.q_base.core.data.chat.MessageEntity
 import kotlinx.coroutines.launch
 import java.util.UUID
+import com.algorithmx.q_base.sync.orchestration.MissingEncryptionKeysException
 
 fun ChatViewModel.startNewChat(userId: String, userName: String) {
     viewModelScope.launch {
@@ -109,7 +110,7 @@ fun ChatViewModel.sendMessage(chatId: String, text: String, type: String = "TEXT
             
             try {
                 syncRepository.sendMessage(message)
-            } catch (e: com.algorithmx.q_base.data.sync.MissingEncryptionKeysException) {
+            } catch (e: MissingEncryptionKeysException) {
                 messageDao.updateMessageStatus(message.messageId, "FAILED")
                 _actionFeedback.emit("Waiting for recipient encryption keys...")
             } catch (e: Exception) {

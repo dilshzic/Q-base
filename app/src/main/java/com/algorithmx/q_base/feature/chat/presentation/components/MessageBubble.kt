@@ -31,7 +31,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.algorithmx.q_base.core.data.chat.MessageEntity
 import com.algorithmx.q_base.data.collections.StudyCollection
-import com.algorithmx.q_base.ui.chat.ChatViewModel
+import com.algorithmx.q_base.feature.chat.presentation.ChatViewModel
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

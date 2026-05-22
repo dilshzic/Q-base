@@ -28,15 +28,15 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.core.data.chat.ChatEntity
 import com.algorithmx.q_base.core.data.chat.MessageEntity
 import com.algorithmx.q_base.core.designsystem.components.reusable.ProfileIconButton
-import com.algorithmx.q_base.ui.state.AppAccessState
-import com.algorithmx.q_base.ui.state.LocalAppAccessState
+import com.algorithmx.q_base.core.state.AppAccessState
+import com.algorithmx.q_base.core.state.LocalAppAccessState
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.delay
 import com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar
-import com.algorithmx.q_base.ui.chat.components.GuestConnectView
-import com.algorithmx.q_base.ui.chat.components.EmptyConnectView
-import com.algorithmx.q_base.ui.chat.components.AnimatedChatItem
+import com.algorithmx.q_base.feature.chat.presentation.components.GuestConnectView
+import com.algorithmx.q_base.feature.chat.presentation.components.EmptyConnectView
+import com.algorithmx.q_base.feature.chat.presentation.components.AnimatedChatItem
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable

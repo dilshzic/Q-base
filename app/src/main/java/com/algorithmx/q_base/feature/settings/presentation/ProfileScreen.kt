@@ -26,9 +26,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar
-import com.algorithmx.q_base.feature.theme.QbaseTheme
+import com.algorithmx.q_base.core.designsystem.theme.QbaseTheme
 
-import com.algorithmx.q_base.feature.settings.components.*
+import com.algorithmx.q_base.feature.settings.presentation.components.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

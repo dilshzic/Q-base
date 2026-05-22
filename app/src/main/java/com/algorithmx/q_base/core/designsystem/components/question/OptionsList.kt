@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.algorithmx.q_base.data.collections.Question
 import com.algorithmx.q_base.data.collections.QuestionOption
-import com.algorithmx.q_base.feature.theme.*
+import com.algorithmx.q_base.core.designsystem.theme.*
 import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @Composable

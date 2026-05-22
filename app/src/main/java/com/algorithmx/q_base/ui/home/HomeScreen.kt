@@ -16,7 +16,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
-import com.algorithmx.q_base.ui.sessions.SessionsViewModel
+import com.algorithmx.q_base.feature.sessions.presentation.SessionsViewModel
+import com.algorithmx.q_base.core.designsystem.components.reusable.*
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.background
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier

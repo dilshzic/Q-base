@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.algorithmx.q_base.feature.theme.*
+import com.algorithmx.q_base.core.designsystem.theme.*
 
 @Composable
 fun TrueFalseToggle(

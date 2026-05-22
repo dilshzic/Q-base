@@ -14,8 +14,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.algorithmx.q_base.feature.sessions.NavigatorDot
-import com.algorithmx.q_base.feature.theme.warningOrange
+import com.algorithmx.q_base.feature.sessions.presentation.NavigatorDot
+import com.algorithmx.q_base.core.designsystem.theme.warningOrange
 
 @Composable
 fun MasterNavigator(

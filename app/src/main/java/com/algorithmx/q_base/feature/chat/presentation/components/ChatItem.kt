@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.algorithmx.q_base.ui.chat.ChatUiModel
+import com.algorithmx.q_base.feature.chat.presentation.ChatUiModel
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.delay

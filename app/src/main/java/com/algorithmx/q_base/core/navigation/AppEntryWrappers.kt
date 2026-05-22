@@ -10,11 +10,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import com.algorithmx.q_base.feature.auth.presentation.*
 import com.algorithmx.q_base.feature.chat.presentation.*
-import com.algorithmx.q_base.feature.ai.*
-import com.algorithmx.q_base.feature.content_import.*
-import com.algorithmx.q_base.feature.explore.*
-import com.algorithmx.q_base.feature.sessions.*
-import com.algorithmx.q_base.feature.settings.*
+import com.algorithmx.q_base.ui.ai.*
+import com.algorithmx.q_base.feature.content_import.presentation.*
+import com.algorithmx.q_base.feature.explore.presentation.*
+import com.algorithmx.q_base.feature.sessions.presentation.*
+import com.algorithmx.q_base.feature.settings.presentation.*
 
 @Composable
 fun ExplorePagerWrapper(key: Screen.ExplorePager, navigator: Navigator) {

@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.algorithmx.q_base.core.data.chat.ChatEntity
 import com.algorithmx.q_base.core.data.UserEntity
 import com.algorithmx.q_base.core.designsystem.components.reusable.ProfileIconButton
-import com.algorithmx.q_base.ui.state.AppAccessState
+import com.algorithmx.q_base.core.state.AppAccessState
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
