@@ -1,4 +1,4 @@
-package com.algorithmx.q_base.core.ai.data
+package com.algorithmx.q_base.di
 
 import android.util.Log
 import com.algorithmx.q_base.BuildConfig

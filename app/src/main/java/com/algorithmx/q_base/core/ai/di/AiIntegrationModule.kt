@@ -1,4 +1,4 @@
-package com.algorithmx.q_base.di
+package com.algorithmx.q_base.core.ai.di
 
 import com.algorithmx.q_base.data.ai.AiUsageLoggerImpl
 import com.algorithmx.q_base.data.ai.BrainConfigProviderImpl

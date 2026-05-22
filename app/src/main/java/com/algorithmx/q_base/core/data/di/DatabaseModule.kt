@@ -1,4 +1,4 @@
-package com.algorithmx.q_base.di
+package com.algorithmx.q_base.core.data.di
 
 import android.content.Context
 import com.algorithmx.q_base.data.AppDatabase

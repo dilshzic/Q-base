@@ -1,4 +1,4 @@
-package com.algorithmx.q_base.core_ai.brain.di
+package com.algorithmx.q_base.core.ai.di
 
 import com.algorithmx.q_base.core_ai.brain.AiBrainManager
 import com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager
