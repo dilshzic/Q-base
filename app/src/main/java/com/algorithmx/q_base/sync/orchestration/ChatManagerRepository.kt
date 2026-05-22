@@ -1,15 +1,15 @@
 package com.algorithmx.q_base.sync.orchestration
 
 import android.util.Log
-import com.algorithmx.q_base.data.chat.ChatDao
-import com.algorithmx.q_base.data.chat.ChatEntity
-import com.algorithmx.q_base.data.chat.isAdmin
-import com.algorithmx.q_base.data.chat.ChatRemoteRepository
-import com.algorithmx.q_base.data.chat.MessageDao
-import com.algorithmx.q_base.data.auth.AuthRepository
-import com.algorithmx.q_base.data.backend.CoreDatabase
-import com.algorithmx.q_base.data.backend.CoreQuery
-import com.algorithmx.q_base.data.backend.CoreQueryOperator
+import com.algorithmx.q_base.core.data.chat.ChatDao
+import com.algorithmx.q_base.core.data.chat.ChatEntity
+import com.algorithmx.q_base.core.data.chat.isAdmin
+import com.algorithmx.q_base.core.data.chat.ChatRemoteRepository
+import com.algorithmx.q_base.core.data.chat.MessageDao
+import com.algorithmx.q_base.core.data.auth.AuthRepository
+import com.algorithmx.q_base.core.data.backend.CoreDatabase
+import com.algorithmx.q_base.core.data.backend.CoreQuery
+import com.algorithmx.q_base.core.data.backend.CoreQueryOperator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

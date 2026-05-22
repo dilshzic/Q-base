@@ -15,8 +15,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.algorithmx.q_base.data.chat.MessageEntity
-import com.algorithmx.q_base.data.chat.isAdmin
+import com.algorithmx.q_base.core.data.chat.MessageEntity
+import com.algorithmx.q_base.core.data.chat.isAdmin
 import com.algorithmx.q_base.ui.chat.components.*
 import com.algorithmx.q_base.ui.state.LocalAppAccessState
 import kotlinx.coroutines.launch

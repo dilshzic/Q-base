@@ -1,8 +1,8 @@
 package com.algorithmx.q_base.feature.explore.presentation
 
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.collections.Answer
-import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.feature.content_import.data.Answer
+import com.algorithmx.q_base.feature.content_import.data.StudyCollection
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 

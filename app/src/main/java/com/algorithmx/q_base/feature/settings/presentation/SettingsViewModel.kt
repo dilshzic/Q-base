@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager
-import com.algorithmx.q_base.data.AppDatabase
+import com.algorithmx.q_base.core.data.AppDatabase
 import com.algorithmx.androidmodules.coreai.brain.models.BrainCategory
 import com.algorithmx.androidmodules.coreai.brain.models.BrainProvider
 import com.algorithmx.q_base.core_ai.brain.models.StoredBrainConfig

@@ -6,7 +6,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.algorithmx.q_base.BuildConfig
 import com.algorithmx.q_base.core_crypto.CryptoManager
-import com.algorithmx.q_base.data.backend.CoreDatabase
+import com.algorithmx.q_base.core.data.backend.CoreDatabase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map

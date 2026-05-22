@@ -1,9 +1,9 @@
 package com.algorithmx.q_base.sync.orchestration
 
 import android.util.Log
-import com.algorithmx.q_base.data.auth.ProfileRepository
-import com.algorithmx.q_base.data.chat.ChatRemoteRepository
-import com.algorithmx.q_base.data.collections.ProblemReportDao
+import com.algorithmx.q_base.core.data.auth.ProfileRepository
+import com.algorithmx.q_base.core.data.chat.ChatRemoteRepository
+import com.algorithmx.q_base.feature.content_import.data.ProblemReportDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json

@@ -1,7 +1,7 @@
 package com.algorithmx.q_base.feature.chat.presentation
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.chat.ChatEntity
-import com.algorithmx.q_base.data.chat.MessageEntity
+import com.algorithmx.q_base.core.data.chat.ChatEntity
+import com.algorithmx.q_base.core.data.chat.MessageEntity
 import kotlinx.coroutines.launch
 import java.util.UUID
 

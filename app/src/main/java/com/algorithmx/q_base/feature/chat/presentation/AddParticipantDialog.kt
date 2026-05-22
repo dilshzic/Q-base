@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.core.data.UserEntity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

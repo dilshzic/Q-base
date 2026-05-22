@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.algorithmx.q_base.data.collections.Question
+import com.algorithmx.q_base.feature.content_import.data.Question
 import com.algorithmx.q_base.feature.components.reusable.UnifiedTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)

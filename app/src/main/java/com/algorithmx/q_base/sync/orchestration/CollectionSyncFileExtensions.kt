@@ -1,9 +1,9 @@
 package com.algorithmx.q_base.sync.orchestration
 
 import android.util.Log
-import com.algorithmx.q_base.data.core.UserEntity
-import com.algorithmx.q_base.data.backend.CoreQuery
-import com.algorithmx.q_base.data.backend.CoreQueryOperator
+import com.algorithmx.q_base.core.data.UserEntity
+import com.algorithmx.q_base.core.data.backend.CoreQuery
+import com.algorithmx.q_base.core.data.backend.CoreQueryOperator
 import io.appwrite.ID
 import io.appwrite.models.InputFile
 import kotlinx.coroutines.Dispatchers

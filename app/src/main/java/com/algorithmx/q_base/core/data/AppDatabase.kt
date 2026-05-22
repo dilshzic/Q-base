@@ -5,10 +5,10 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.algorithmx.q_base.data.ai.*
-import com.algorithmx.q_base.data.collections.*
-import com.algorithmx.q_base.data.core.*
-import com.algorithmx.q_base.data.sessions.*
+import com.algorithmx.q_base.core.ai.data.*
+import com.algorithmx.q_base.feature.content_import.data.*
+import com.algorithmx.q_base.core.data.*
+import com.algorithmx.q_base.feature.sessions.data.*
 
 @Database(
     entities = [

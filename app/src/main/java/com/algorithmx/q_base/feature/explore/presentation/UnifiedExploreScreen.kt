@@ -26,8 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.algorithmx.q_base.data.collections.StudyCollectionWithCount
-import com.algorithmx.q_base.data.collections.QuestionSet
+import com.algorithmx.q_base.feature.content_import.data.StudyCollectionWithCount
+import com.algorithmx.q_base.feature.content_import.data.QuestionSet
 import com.algorithmx.q_base.feature.components.reusable.UnifiedTopAppBar
 import java.text.SimpleDateFormat
 import java.util.*

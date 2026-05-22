@@ -1,4 +1,4 @@
-package com.algorithmx.q_base.data.backend;
+package com.algorithmx.q_base.core.data.backend;
 
 import com.google.firebase.auth.FirebaseAuth;
 import dagger.internal.DaggerGenerated;

@@ -2,11 +2,11 @@ package com.algorithmx.q_base.feature.content_import.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.collections.CollectionDao
-import com.algorithmx.q_base.data.collections.QuestionDao
-import com.algorithmx.q_base.data.collections.StudyCollection
-import com.algorithmx.q_base.data.collections.Question
-import com.algorithmx.q_base.data.collections.QuestionSet
+import com.algorithmx.q_base.feature.content_import.data.CollectionDao
+import com.algorithmx.q_base.feature.content_import.data.QuestionDao
+import com.algorithmx.q_base.feature.content_import.data.StudyCollection
+import com.algorithmx.q_base.feature.content_import.data.Question
+import com.algorithmx.q_base.feature.content_import.data.QuestionSet
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

@@ -1,16 +1,16 @@
 package com.algorithmx.q_base.ui.settings
 
-import com.algorithmx.q_base.data.auth.AppwriteUser
-import com.algorithmx.q_base.data.auth.AuthRepository
-import com.algorithmx.q_base.data.auth.ProfileRepository
-import com.algorithmx.q_base.data.auth.UserProfile
-import com.algorithmx.q_base.data.collections.CollectionDao
-import com.algorithmx.q_base.data.collections.QuestionDao
-import com.algorithmx.q_base.data.core.DataClearingRepository
-import com.algorithmx.q_base.data.core.UserDao
-import com.algorithmx.q_base.data.core.UserEntity
-import com.algorithmx.q_base.data.sessions.SessionDao
-import com.algorithmx.q_base.data.sessions.StudySession
+import com.algorithmx.q_base.core.data.auth.AppwriteUser
+import com.algorithmx.q_base.core.data.auth.AuthRepository
+import com.algorithmx.q_base.core.data.auth.ProfileRepository
+import com.algorithmx.q_base.core.data.auth.UserProfile
+import com.algorithmx.q_base.feature.content_import.data.CollectionDao
+import com.algorithmx.q_base.feature.content_import.data.QuestionDao
+import com.algorithmx.q_base.core.data.DataClearingRepository
+import com.algorithmx.q_base.core.data.UserDao
+import com.algorithmx.q_base.core.data.UserEntity
+import com.algorithmx.q_base.feature.sessions.data.SessionDao
+import com.algorithmx.q_base.feature.sessions.data.StudySession
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

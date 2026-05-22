@@ -29,8 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.algorithmx.q_base.data.chat.MessageEntity
-import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.core.data.chat.MessageEntity
+import com.algorithmx.q_base.feature.content_import.data.StudyCollection
 import com.algorithmx.q_base.ui.chat.ChatViewModel
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.CoroutineScope

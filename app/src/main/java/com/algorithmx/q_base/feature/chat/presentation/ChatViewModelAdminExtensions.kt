@@ -1,8 +1,8 @@
 package com.algorithmx.q_base.feature.chat.presentation
 import android.util.Log
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.chat.isAdmin
-import com.algorithmx.q_base.data.chat.MessageEntity
+import com.algorithmx.q_base.core.data.chat.isAdmin
+import com.algorithmx.q_base.core.data.chat.MessageEntity
 import kotlinx.coroutines.launch
 
 fun ChatViewModel.addParticipant(chatId: String, userId: String) {

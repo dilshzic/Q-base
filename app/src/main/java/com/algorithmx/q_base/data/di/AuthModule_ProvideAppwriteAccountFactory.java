@@ -1,4 +1,4 @@
-package com.algorithmx.q_base.data.di;
+package com.algorithmx.q_base.core.data.di;
 
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;

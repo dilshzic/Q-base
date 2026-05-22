@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.algorithmx.q_base.feature.components.reusable.UnifiedTopAppBar
 import dev.jeziellago.compose.markdowntext.MarkdownText
-import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.core.data.UserEntity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

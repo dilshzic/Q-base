@@ -10,8 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.algorithmx.q_base.data.collections.Question
-import com.algorithmx.q_base.data.collections.QuestionOption
+import com.algorithmx.q_base.feature.content_import.data.Question
+import com.algorithmx.q_base.feature.content_import.data.QuestionOption
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import com.algorithmx.q_base.feature.theme.QbaseTheme

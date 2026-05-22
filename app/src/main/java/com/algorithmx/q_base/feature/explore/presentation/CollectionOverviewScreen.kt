@@ -28,9 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.algorithmx.q_base.data.collections.StudyCollection
-import com.algorithmx.q_base.data.collections.QuestionSet
-import com.algorithmx.q_base.data.sessions.StudySession
+import com.algorithmx.q_base.feature.content_import.data.StudyCollection
+import com.algorithmx.q_base.feature.content_import.data.QuestionSet
+import com.algorithmx.q_base.feature.sessions.data.StudySession
 import com.algorithmx.q_base.feature.components.reusable.ReportDialog
 import com.algorithmx.q_base.feature.components.reusable.ProfileIconButton
 

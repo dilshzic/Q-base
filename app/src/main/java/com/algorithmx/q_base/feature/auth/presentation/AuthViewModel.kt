@@ -2,9 +2,9 @@ package com.algorithmx.q_base.feature.auth.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.auth.AuthRepository
-import com.algorithmx.q_base.data.auth.ProfileRepository
-import com.algorithmx.q_base.data.auth.AppwriteUser
+import com.algorithmx.q_base.core.data.auth.AuthRepository
+import com.algorithmx.q_base.core.data.auth.ProfileRepository
+import com.algorithmx.q_base.core.data.auth.AppwriteUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

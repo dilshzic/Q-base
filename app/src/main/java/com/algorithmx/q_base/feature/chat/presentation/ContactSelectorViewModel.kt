@@ -1,9 +1,9 @@
 package com.algorithmx.q_base.feature.chat.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.core.UserDao
-import com.algorithmx.q_base.data.core.UserEntity
-import com.algorithmx.q_base.data.auth.ProfileRepository
+import com.algorithmx.q_base.core.data.UserDao
+import com.algorithmx.q_base.core.data.UserEntity
+import com.algorithmx.q_base.core.data.auth.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

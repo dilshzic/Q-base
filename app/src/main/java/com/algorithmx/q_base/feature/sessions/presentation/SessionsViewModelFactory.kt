@@ -2,10 +2,10 @@ package com.algorithmx.q_base.feature.sessions.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.algorithmx.q_base.data.sessions.SessionRepository
-import com.algorithmx.q_base.data.auth.AuthRepository
-import com.algorithmx.q_base.data.sync.SyncRepository
-import com.algorithmx.q_base.data.core.UserDao
+import com.algorithmx.q_base.feature.sessions.data.SessionRepository
+import com.algorithmx.q_base.core.data.auth.AuthRepository
+import com.algorithmx.q_base.sync.orchestration.SyncRepository
+import com.algorithmx.q_base.core.data.UserDao
 
 class SessionsViewModelFactory(
     private val repository: SessionRepository,

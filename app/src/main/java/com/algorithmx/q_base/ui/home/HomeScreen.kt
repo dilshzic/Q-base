@@ -30,8 +30,8 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.algorithmx.q_base.data.collections.StudyCollection
-import com.algorithmx.q_base.data.collections.Question
+import com.algorithmx.q_base.feature.content_import.data.StudyCollection
+import com.algorithmx.q_base.feature.content_import.data.Question
 import com.algorithmx.q_base.ui.components.reusable.*
 import kotlinx.coroutines.delay
 

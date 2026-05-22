@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.feature.content_import.data.StudyCollection
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import com.algorithmx.q_base.ui.theme.QbaseTheme
 import java.text.SimpleDateFormat

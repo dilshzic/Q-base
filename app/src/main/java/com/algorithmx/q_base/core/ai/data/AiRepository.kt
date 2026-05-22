@@ -3,7 +3,7 @@ package com.algorithmx.q_base.core.ai.data
 import android.util.Log
 import com.algorithmx.q_base.core_ai.brain.AiBrainManager
 import com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse
-import com.algorithmx.q_base.data.collections.*
+import com.algorithmx.q_base.feature.content_import.data.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json

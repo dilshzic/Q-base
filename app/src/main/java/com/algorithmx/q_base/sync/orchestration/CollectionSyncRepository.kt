@@ -1,15 +1,15 @@
 package com.algorithmx.q_base.sync.orchestration
 
 import com.algorithmx.q_base.BuildConfig
-import com.algorithmx.q_base.data.chat.ChatDao
-import com.algorithmx.q_base.data.collections.CollectionDao
-import com.algorithmx.q_base.data.collections.CollectionVersionLedgerDao
-import com.algorithmx.q_base.data.collections.QuestionDao
-import com.algorithmx.q_base.data.core.UserDao
-import com.algorithmx.q_base.data.auth.AuthRepository
+import com.algorithmx.q_base.core.data.chat.ChatDao
+import com.algorithmx.q_base.feature.content_import.data.CollectionDao
+import com.algorithmx.q_base.feature.content_import.data.CollectionVersionLedgerDao
+import com.algorithmx.q_base.feature.content_import.data.QuestionDao
+import com.algorithmx.q_base.core.data.UserDao
+import com.algorithmx.q_base.core.data.auth.AuthRepository
 import com.algorithmx.q_base.core_crypto.CryptoManager
-import com.algorithmx.q_base.data.util.MockDownloader
-import com.algorithmx.q_base.data.backend.CoreDatabase
+import com.algorithmx.q_base.core.data.util.MockDownloader
+import com.algorithmx.q_base.core.data.backend.CoreDatabase
 import io.appwrite.Client
 import io.appwrite.services.Storage
 import kotlinx.coroutines.CoroutineScope

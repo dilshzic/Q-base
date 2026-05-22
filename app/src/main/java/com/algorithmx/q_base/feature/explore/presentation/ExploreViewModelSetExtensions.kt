@@ -1,9 +1,9 @@
 package com.algorithmx.q_base.feature.explore.presentation
 
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.collections.QuestionSet
-import com.algorithmx.q_base.data.chat.ChatEntity
-import com.algorithmx.q_base.data.chat.isAdmin
+import com.algorithmx.q_base.feature.content_import.data.QuestionSet
+import com.algorithmx.q_base.core.data.chat.ChatEntity
+import com.algorithmx.q_base.core.data.chat.isAdmin
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch

@@ -29,9 +29,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
-import com.algorithmx.q_base.data.DatabaseSeeder
-import com.algorithmx.q_base.data.auth.AuthRepository
-import com.algorithmx.q_base.data.sync.SyncRepository
+import com.algorithmx.q_base.core.data.DatabaseSeeder
+import com.algorithmx.q_base.core.data.auth.AuthRepository
+import com.algorithmx.q_base.sync.orchestration.SyncRepository
 import com.algorithmx.q_base.ui.state.AppAccessState
 import com.algorithmx.q_base.ui.state.LocalAppAccessState
 import com.algorithmx.q_base.ui.navigation.*

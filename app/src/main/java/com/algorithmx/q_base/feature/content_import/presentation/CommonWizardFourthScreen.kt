@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.feature.content_import.data.StudyCollection
 
 // ── Step 4: Success & Interactive AI Generated Collection Overview ──
 

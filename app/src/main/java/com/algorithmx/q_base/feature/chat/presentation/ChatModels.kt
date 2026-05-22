@@ -1,7 +1,7 @@
 package com.algorithmx.q_base.feature.chat.presentation
-import com.algorithmx.q_base.data.chat.ChatEntity
-import com.algorithmx.q_base.data.chat.MessageEntity
-import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.core.data.chat.ChatEntity
+import com.algorithmx.q_base.core.data.chat.MessageEntity
+import com.algorithmx.q_base.core.data.UserEntity
 
 /**
  * UI model for a single chat item in the list.

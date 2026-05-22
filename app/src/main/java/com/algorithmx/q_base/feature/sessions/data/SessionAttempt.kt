@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.algorithmx.q_base.data.collections.Question
+import com.algorithmx.q_base.feature.content_import.data.Question
 import kotlinx.serialization.Serializable
 
 @Serializable

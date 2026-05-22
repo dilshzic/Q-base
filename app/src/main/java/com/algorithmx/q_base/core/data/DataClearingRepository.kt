@@ -1,13 +1,13 @@
 package com.algorithmx.q_base.core.data
 
-import com.algorithmx.q_base.data.chat.ChatDao
-import com.algorithmx.q_base.data.chat.MessageDao
-import com.algorithmx.q_base.data.sessions.SessionDao
-import com.algorithmx.q_base.data.collections.QuestionDao
-import com.algorithmx.q_base.data.core.UserDao
-import com.algorithmx.q_base.data.ai.AiResponseDao
-import com.algorithmx.q_base.data.ai.BrainUsageDao
-import com.algorithmx.q_base.data.collections.CollectionDao
+import com.algorithmx.q_base.core.data.chat.ChatDao
+import com.algorithmx.q_base.core.data.chat.MessageDao
+import com.algorithmx.q_base.feature.sessions.data.SessionDao
+import com.algorithmx.q_base.feature.content_import.data.QuestionDao
+import com.algorithmx.q_base.core.data.UserDao
+import com.algorithmx.q_base.core.ai.data.AiResponseDao
+import com.algorithmx.q_base.core.ai.data.BrainUsageDao
+import com.algorithmx.q_base.feature.content_import.data.CollectionDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject

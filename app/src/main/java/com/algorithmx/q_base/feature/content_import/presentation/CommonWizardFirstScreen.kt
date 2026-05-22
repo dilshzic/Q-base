@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.feature.content_import.data.StudyCollection
 
 /**
  * The first screen in the common content creation wizard. This screen serves as the entry point for

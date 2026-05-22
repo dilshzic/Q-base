@@ -4,17 +4,17 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.collections.StudyCollection
-import com.algorithmx.q_base.data.sessions.StudySession
-import com.algorithmx.q_base.data.sessions.SessionRepository
-import com.algorithmx.q_base.data.auth.AuthRepository
-import com.algorithmx.q_base.data.core.UserDao
-import com.algorithmx.q_base.data.sync.SyncRepository
+import com.algorithmx.q_base.feature.content_import.data.StudyCollection
+import com.algorithmx.q_base.feature.sessions.data.StudySession
+import com.algorithmx.q_base.feature.sessions.data.SessionRepository
+import com.algorithmx.q_base.core.data.auth.AuthRepository
+import com.algorithmx.q_base.core.data.UserDao
+import com.algorithmx.q_base.sync.orchestration.SyncRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.core.data.UserEntity
 
 @HiltViewModel
 class SessionsViewModel @Inject constructor(

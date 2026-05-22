@@ -12,9 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.algorithmx.q_base.data.collections.StudyCollection
-import com.algorithmx.q_base.data.sessions.StudySession
-import com.algorithmx.q_base.data.chat.MessageEntity
+import com.algorithmx.q_base.feature.content_import.data.StudyCollection
+import com.algorithmx.q_base.feature.sessions.data.StudySession
+import com.algorithmx.q_base.core.data.chat.MessageEntity
 import com.algorithmx.q_base.ui.components.reusable.ReportDialog
 
 @OptIn(ExperimentalMaterial3Api::class)

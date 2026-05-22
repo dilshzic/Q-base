@@ -1,13 +1,13 @@
 package com.algorithmx.q_base.sync.orchestration
 
 import android.util.Log
-import com.algorithmx.q_base.data.chat.ChatDao
-import com.algorithmx.q_base.data.chat.ChatRemoteRepository
-import com.algorithmx.q_base.data.chat.MessageDao
-import com.algorithmx.q_base.data.core.UserDao
-import com.algorithmx.q_base.data.auth.AuthRepository
+import com.algorithmx.q_base.core.data.chat.ChatDao
+import com.algorithmx.q_base.core.data.chat.ChatRemoteRepository
+import com.algorithmx.q_base.core.data.chat.MessageDao
+import com.algorithmx.q_base.core.data.UserDao
+import com.algorithmx.q_base.core.data.auth.AuthRepository
 import com.algorithmx.q_base.core_crypto.CryptoManager
-import com.algorithmx.q_base.data.backend.CoreDatabase
+import com.algorithmx.q_base.core.data.backend.CoreDatabase
 import io.appwrite.Client
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

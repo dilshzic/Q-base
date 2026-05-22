@@ -2,9 +2,9 @@ package com.algorithmx.q_base.sync.orchestration
 
 import android.util.Base64
 import android.util.Log
-import com.algorithmx.q_base.data.chat.MessageEntity
-import com.algorithmx.q_base.data.backend.CoreQuery
-import com.algorithmx.q_base.data.backend.CoreQueryOperator
+import com.algorithmx.q_base.core.data.chat.MessageEntity
+import com.algorithmx.q_base.core.data.backend.CoreQuery
+import com.algorithmx.q_base.core.data.backend.CoreQueryOperator
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow

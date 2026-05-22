@@ -19,8 +19,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.algorithmx.q_base.data.chat.ChatEntity
-import com.algorithmx.q_base.data.core.UserEntity
+import com.algorithmx.q_base.core.data.chat.ChatEntity
+import com.algorithmx.q_base.core.data.UserEntity
 import com.algorithmx.q_base.ui.components.reusable.ProfileIconButton
 import com.algorithmx.q_base.ui.state.AppAccessState
 

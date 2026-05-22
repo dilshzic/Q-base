@@ -4,13 +4,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.data.collections.*
-import com.algorithmx.q_base.data.core.UserEntity
-import com.algorithmx.q_base.data.sessions.StudySession
-import com.algorithmx.q_base.data.ai.AiRepository
-import com.algorithmx.q_base.data.auth.AuthRepository
-import com.algorithmx.q_base.data.chat.isAdmin
-import com.algorithmx.q_base.data.sync.SyncRepository
+import com.algorithmx.q_base.feature.content_import.data.*
+import com.algorithmx.q_base.core.data.UserEntity
+import com.algorithmx.q_base.feature.sessions.data.StudySession
+import com.algorithmx.q_base.core.ai.data.AiRepository
+import com.algorithmx.q_base.core.data.auth.AuthRepository
+import com.algorithmx.q_base.core.data.chat.isAdmin
+import com.algorithmx.q_base.sync.orchestration.SyncRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

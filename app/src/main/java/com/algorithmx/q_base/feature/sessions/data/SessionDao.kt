@@ -1,8 +1,8 @@
 package com.algorithmx.q_base.feature.sessions.data
 
 import androidx.room.*
-import com.algorithmx.q_base.data.collections.Question
-import com.algorithmx.q_base.data.collections.QuestionSet
+import com.algorithmx.q_base.feature.content_import.data.Question
+import com.algorithmx.q_base.feature.content_import.data.QuestionSet
 import kotlinx.coroutines.flow.Flow
 
 @Dao
