@@ -13,7 +13,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.automirrored.rounded.*
-import com.algorithmx.q_base.feature.components.reusable.UnifiedTopAppBar
+import com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar
 import androidx.compose.material3.*
 import androidx.compose.material3.rememberModalBottomSheetState
 import dev.jeziellago.compose.markdowntext.MarkdownText
@@ -31,8 +31,8 @@ import androidx.compose.ui.unit.sp
 import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.data.collections.QuestionSet
 import com.algorithmx.q_base.feature.sessions.data.StudySession
-import com.algorithmx.q_base.feature.components.reusable.ReportDialog
-import com.algorithmx.q_base.feature.components.reusable.ProfileIconButton
+import com.algorithmx.q_base.core.designsystem.components.reusable.ReportDialog
+import com.algorithmx.q_base.core.designsystem.components.reusable.ProfileIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

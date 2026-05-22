@@ -29,8 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.algorithmx.q_base.feature.components.question.QuestionViewer
-import com.algorithmx.q_base.feature.components.reusable.ReportDialog
+import com.algorithmx.q_base.core.designsystem.components.question.QuestionViewer
+import com.algorithmx.q_base.core.designsystem.components.reusable.ReportDialog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -53,7 +53,7 @@ fun SessionResultsScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar(
+            com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar(
                 title = (uiState as? ResultsUiState.Success)?.session?.title?.takeIf { it.isNotBlank() } ?: "Session Results",
                 subtitle = "Analysis of Your Performance",
                 currentUser = currentUser,
@@ -163,7 +163,7 @@ fun ResultsContent(
     state: ResultsUiState.Success,
     isUserGroupAdmin: Boolean,
     onIsAdminOnlyChange: (Boolean) -> Unit,
-    onReviewQuestion: (com.algorithmx.q_base.data.sessions.SessionAttempt) -> Unit,
+    onReviewQuestion: (com.algorithmx.q_base.feature.sessions.data.SessionAttempt) -> Unit,
     onReportSession: () -> Unit,
     onDone: () -> Unit
 ) {
@@ -333,8 +333,8 @@ fun ResultsContent(
 @Composable
 fun AnimatedAttemptDot(
     index: Int,
-    attempt: com.algorithmx.q_base.data.sessions.SessionAttempt,
-    onClick: (com.algorithmx.q_base.data.sessions.SessionAttempt) -> Unit
+    attempt: com.algorithmx.q_base.feature.sessions.data.SessionAttempt,
+    onClick: (com.algorithmx.q_base.feature.sessions.data.SessionAttempt) -> Unit
 ) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {

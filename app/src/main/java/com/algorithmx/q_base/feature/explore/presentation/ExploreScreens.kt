@@ -34,9 +34,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.data.collections.QuestionSet
 import com.algorithmx.q_base.core.data.UserEntity
 import com.algorithmx.q_base.feature.sessions.data.StudySession
-import com.algorithmx.q_base.feature.components.question.QuestionViewer
-import com.algorithmx.q_base.feature.components.reusable.UnifiedTopAppBar
-import com.algorithmx.q_base.feature.components.reusable.ReportDialog
+import com.algorithmx.q_base.core.designsystem.components.question.QuestionViewer
+import com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar
+import com.algorithmx.q_base.core.designsystem.components.reusable.ReportDialog
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.launch
 

@@ -43,8 +43,8 @@ import com.algorithmx.q_base.data.collections.QuestionOption
 import com.algorithmx.q_base.data.collections.Answer
 import com.algorithmx.q_base.feature.sessions.data.SessionAttempt
 import com.algorithmx.q_base.core.data.UserEntity
-import com.algorithmx.q_base.feature.components.question.QuestionViewer
-import com.algorithmx.q_base.feature.components.reusable.UnifiedTopAppBar
+import com.algorithmx.q_base.core.designsystem.components.question.QuestionViewer
+import com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar
 import com.algorithmx.q_base.feature.theme.*
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import androidx.compose.material.icons.rounded.AutoAwesome
@@ -395,7 +395,7 @@ fun ActiveSessionScreen(
     }
 
     if (showReportSessionDialog) {
-        com.algorithmx.q_base.ui.components.reusable.ReportDialog(
+        com.algorithmx.q_base.core.designsystem.components.reusable.ReportDialog(
             itemType = "Session",
             itemName = session?.title ?: "current session",
             onDismiss = { showReportSessionDialog = false },
@@ -407,7 +407,7 @@ fun ActiveSessionScreen(
     }
 
     if (showReportQuestionDialog) {
-        com.algorithmx.q_base.ui.components.reusable.ReportDialog(
+        com.algorithmx.q_base.core.designsystem.components.reusable.ReportDialog(
             itemType = "Question",
             itemName = currentQuestion?.stem?.take(30) + "..." ?: "this question",
             onDismiss = { showReportQuestionDialog = false },

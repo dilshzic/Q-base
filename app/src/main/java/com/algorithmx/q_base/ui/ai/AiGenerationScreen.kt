@@ -11,7 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
+import com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar
 import com.algorithmx.q_base.ui.state.LocalAppAccessState
 import com.algorithmx.q_base.ui.state.AppAccessState
 

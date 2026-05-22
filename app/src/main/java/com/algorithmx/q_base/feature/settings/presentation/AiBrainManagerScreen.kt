@@ -13,8 +13,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.core_ai.brain.models.BrainTask
-import com.algorithmx.q_base.feature.components.reusable.AiConfigSelector
-import com.algorithmx.q_base.feature.components.reusable.UnifiedTopAppBar
+import com.algorithmx.q_base.core.designsystem.components.reusable.AiConfigSelector
+import com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar
 import com.algorithmx.q_base.feature.settings.components.UsageStatsCard
 
 @OptIn(ExperimentalMaterial3Api::class)

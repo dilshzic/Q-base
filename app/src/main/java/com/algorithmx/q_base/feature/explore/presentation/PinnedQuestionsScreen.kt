@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.algorithmx.q_base.feature.components.reusable.UnifiedTopAppBar
+import com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import com.algorithmx.q_base.core.data.UserEntity
 

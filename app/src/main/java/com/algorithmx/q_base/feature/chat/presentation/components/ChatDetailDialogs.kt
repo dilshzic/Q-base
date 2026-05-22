@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.feature.sessions.data.StudySession
 import com.algorithmx.q_base.core.data.chat.MessageEntity
-import com.algorithmx.q_base.ui.components.reusable.ReportDialog
+import com.algorithmx.q_base.core.designsystem.components.reusable.ReportDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

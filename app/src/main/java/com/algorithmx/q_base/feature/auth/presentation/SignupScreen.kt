@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.core.data.auth.UserProfile
-import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
+import com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

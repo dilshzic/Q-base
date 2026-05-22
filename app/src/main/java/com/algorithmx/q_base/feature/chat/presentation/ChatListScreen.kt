@@ -27,13 +27,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.core.data.chat.ChatEntity
 import com.algorithmx.q_base.core.data.chat.MessageEntity
-import com.algorithmx.q_base.ui.components.reusable.ProfileIconButton
+import com.algorithmx.q_base.core.designsystem.components.reusable.ProfileIconButton
 import com.algorithmx.q_base.ui.state.AppAccessState
 import com.algorithmx.q_base.ui.state.LocalAppAccessState
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.delay
-import com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar
+import com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar
 import com.algorithmx.q_base.ui.chat.components.GuestConnectView
 import com.algorithmx.q_base.ui.chat.components.EmptyConnectView
 import com.algorithmx.q_base.ui.chat.components.AnimatedChatItem

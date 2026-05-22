@@ -41,8 +41,8 @@ import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.data.collections.Question
 import com.algorithmx.q_base.feature.sessions.data.StudySession
 import com.algorithmx.q_base.core.data.UserEntity
-import com.algorithmx.q_base.feature.components.reusable.SectionHeader
-import com.algorithmx.q_base.feature.components.reusable.ReportDialog
+import com.algorithmx.q_base.core.designsystem.components.reusable.SectionHeader
+import com.algorithmx.q_base.core.designsystem.components.reusable.ReportDialog
 import kotlinx.coroutines.delay
 import java.util.Locale
 
@@ -75,7 +75,7 @@ fun SessionsListScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar(
+            com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar(
                 title = if (isSelectionMode) "${selectedIds.size} Selected" else "Sessions",
                 subtitle = if (isSelectionMode) null else "Test your knowledge",
                 currentUser = currentUser,

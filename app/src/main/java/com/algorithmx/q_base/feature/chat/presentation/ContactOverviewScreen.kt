@@ -26,7 +26,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 import androidx.compose.foundation.clickable
 import com.algorithmx.q_base.core.data.UserEntity
-import com.algorithmx.q_base.ui.components.reusable.ProfileIconButton
+import com.algorithmx.q_base.core.designsystem.components.reusable.ProfileIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,7 +56,7 @@ fun ContactOverviewScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            com.algorithmx.q_base.ui.components.reusable.UnifiedTopAppBar(
+            com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar(
                 title = "Contact Info",
                 currentUser = currentUser,
                 onProfileClick = onProfileClick,

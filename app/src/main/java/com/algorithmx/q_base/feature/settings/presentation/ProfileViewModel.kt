@@ -145,7 +145,7 @@ class ProfileViewModel @Inject constructor(
             }.toString()
 
             actionQueueDao.insertAction(
-                com.algorithmx.q_base.data.sync.OfflineActionEntity(
+                com.algorithmx.q_base.sync.orchestration.OfflineActionEntity(
                     actionType = "UPDATE_PROFILE",
                     payloadJson = payloadJson
                 )
