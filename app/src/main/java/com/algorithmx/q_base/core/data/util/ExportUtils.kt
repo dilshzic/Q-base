@@ -1,11 +1,11 @@
 package com.algorithmx.q_base.core.data.util
 
 import android.content.Context
-import com.algorithmx.q_base.feature.content_import.data.QuestionDao
-import com.algorithmx.q_base.feature.content_import.data.StudyCollection
-import com.algorithmx.q_base.feature.content_import.data.SetWithQuestions
-import com.algorithmx.q_base.feature.content_import.data.MockExport
-import com.algorithmx.q_base.feature.content_import.data.QuestionExport
+import com.algorithmx.q_base.data.collections.QuestionDao
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.SetWithQuestions
+import com.algorithmx.q_base.data.collections.MockExport
+import com.algorithmx.q_base.data.collections.QuestionExport
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

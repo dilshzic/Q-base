@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.algorithmx.q_base.core.data.UserDao
 import com.algorithmx.q_base.feature.sessions.data.SessionDao
-import com.algorithmx.q_base.feature.content_import.data.CollectionDao
-import com.algorithmx.q_base.feature.content_import.data.QuestionDao
-import com.algorithmx.q_base.feature.content_import.data.StudyCollection
+import com.algorithmx.q_base.data.collections.CollectionDao
+import com.algorithmx.q_base.data.collections.QuestionDao
+import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.core.data.UserEntity
 import com.algorithmx.q_base.core.data.auth.UserProfile
 import com.algorithmx.q_base.core.data.auth.ProfileRepository

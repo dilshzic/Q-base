@@ -4,10 +4,10 @@ import android.util.Log
 import com.algorithmx.q_base.core.data.chat.ChatEntity
 import com.algorithmx.q_base.core.data.chat.ChatRemoteRepository
 import com.algorithmx.q_base.core.data.chat.MessageEntity
-import com.algorithmx.q_base.feature.content_import.data.Question
-import com.algorithmx.q_base.feature.content_import.data.QuestionOption
-import com.algorithmx.q_base.feature.content_import.data.Answer
-import com.algorithmx.q_base.feature.content_import.data.StudyCollection
+import com.algorithmx.q_base.data.collections.Question
+import com.algorithmx.q_base.data.collections.QuestionOption
+import com.algorithmx.q_base.data.collections.Answer
+import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.core.data.UserEntity
 import com.algorithmx.q_base.feature.sessions.data.SessionDao
 import com.algorithmx.q_base.core.data.auth.AuthRepository

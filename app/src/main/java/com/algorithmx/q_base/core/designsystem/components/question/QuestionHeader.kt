@@ -27,8 +27,8 @@ import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Report
-import com.algorithmx.q_base.feature.content_import.data.Question
-import com.algorithmx.q_base.feature.content_import.data.QuestionOption
+import com.algorithmx.q_base.data.collections.Question
+import com.algorithmx.q_base.data.collections.QuestionOption
 import com.algorithmx.q_base.feature.theme.QbaseTheme
 
 @Composable

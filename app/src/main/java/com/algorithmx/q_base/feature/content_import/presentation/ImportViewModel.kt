@@ -3,10 +3,11 @@ package com.algorithmx.q_base.feature.content_import.presentation
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.feature.content_import.data.StudyCollection
 import com.algorithmx.q_base.core.ai.data.AiRepository
-import com.algorithmx.q_base.feature.content_import.data.ExploreRepository
-import com.algorithmx.q_base.feature.content_import.data.ImportRepository
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.ExploreRepository
+import com.algorithmx.q_base.data.collections.ImportRepository
+// legacy import removed
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

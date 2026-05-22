@@ -19,7 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.algorithmx.q_base.feature.content_import.data.StudyCollection
+import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.feature.sessions.data.StudySession
 import com.algorithmx.q_base.core.data.UserEntity
 import com.algorithmx.q_base.feature.state.AppAccessState

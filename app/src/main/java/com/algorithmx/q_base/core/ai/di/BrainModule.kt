@@ -1,7 +1,7 @@
 package com.algorithmx.q_base.core.ai.di
 
 import com.algorithmx.q_base.core_ai.brain.AiBrainManager
-import com.algorithmx.q_base.feature.content_import.data.QuestionDao
+import com.algorithmx.q_base.data.collections.QuestionDao
 import com.algorithmx.q_base.core.ai.data.AiRepository
 import dagger.Module
 import dagger.Provides
@@ -18,7 +18,7 @@ object BrainModule {
     fun provideAiRepository(
         aiBrainManager: AiBrainManager,
         questionDao: QuestionDao,
-        collectionDao: com.algorithmx.q_base.feature.content_import.data.CollectionDao,
+        collectionDao: com.algorithmx.q_base.data.collections.CollectionDao,
         aiResponseDao: com.algorithmx.q_base.core.ai.data.AiResponseDao
     ): AiRepository {
         return AiRepository(aiBrainManager, questionDao, collectionDao, aiResponseDao)

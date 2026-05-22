@@ -8,7 +8,7 @@ import com.algorithmx.androidmodules.coreai.brain.models.BrainProvider
 import com.algorithmx.q_base.core_ai.brain.models.BrainTask
 import com.algorithmx.q_base.core.ai.data.BrainUsageDao
 import com.algorithmx.q_base.core_ai.brain.models.BrainUsageEntity
-import com.algorithmx.q_base.data.core.ConfigRepository
+import com.algorithmx.q_base.core.data.ConfigRepository
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -4,7 +4,7 @@ import android.util.Log
 import com.algorithmx.q_base.data.sync.ActionQueueDao
 import com.algorithmx.q_base.core.data.auth.ProfileRepository
 import com.algorithmx.q_base.core.data.chat.ChatRemoteRepository
-import com.algorithmx.q_base.feature.content_import.data.ProblemReportDao
+import com.algorithmx.q_base.data.collections.ProblemReportDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json

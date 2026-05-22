@@ -1,12 +1,20 @@
-package com.algorithmx.q_base.feature.content_import.data
+package com.algorithmx.q_base.data.collections
 
 import com.algorithmx.q_base.core.data.UserEntity
 import com.algorithmx.q_base.core.data.UserDao
 import com.algorithmx.q_base.feature.sessions.data.SessionDao
 import com.algorithmx.q_base.feature.sessions.data.StudySession
 import com.algorithmx.q_base.feature.sessions.data.SessionAttempt
-import com.algorithmx.q_base.feature.content_import.data.StudyCollection
-import com.algorithmx.q_base.feature.content_import.data.StudyCollectionWithCount
+import com.algorithmx.q_base.data.collections.Answer
+import com.algorithmx.q_base.data.collections.CollectionDao
+import com.algorithmx.q_base.data.collections.ProblemReport
+import com.algorithmx.q_base.data.collections.Question
+import com.algorithmx.q_base.data.collections.QuestionDao
+import com.algorithmx.q_base.data.collections.QuestionOption
+import com.algorithmx.q_base.data.collections.QuestionSet
+import com.algorithmx.q_base.data.collections.SetQuestionCrossRef
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.StudyCollectionWithCount
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -2,8 +2,8 @@ package com.algorithmx.q_base.feature.explore.presentation
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.feature.content_import.data.ProblemReport
-import com.algorithmx.q_base.feature.content_import.data.StudyCollection
+import com.algorithmx.q_base.data.collections.ProblemReport
+import com.algorithmx.q_base.data.collections.StudyCollection
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 

@@ -4,7 +4,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.feature.content_import.data.*
+import com.algorithmx.q_base.data.collections.*
 import com.algorithmx.q_base.core.data.UserEntity
 import com.algorithmx.q_base.feature.sessions.data.StudySession
 import com.algorithmx.q_base.core.ai.data.AiRepository

@@ -3,7 +3,7 @@ package com.algorithmx.q_base.core.data
 import com.algorithmx.q_base.core.data.chat.ChatDao
 import com.algorithmx.q_base.core.data.chat.MessageDao
 import com.algorithmx.q_base.feature.sessions.data.SessionDao
-import com.algorithmx.q_base.feature.content_import.data.QuestionDao
+import com.algorithmx.q_base.data.collections.QuestionDao
 import com.algorithmx.q_base.core.data.UserDao
 import com.algorithmx.q_base.core.ai.data.AiResponseDao
 import com.algorithmx.q_base.core.ai.data.BrainUsageDao

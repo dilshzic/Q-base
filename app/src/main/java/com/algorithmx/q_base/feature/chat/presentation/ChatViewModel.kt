@@ -9,8 +9,8 @@ import com.algorithmx.q_base.core.data.chat.ChatEntity
 import com.algorithmx.q_base.core.data.chat.isAdmin
 import com.algorithmx.q_base.core.data.chat.MessageDao
 import com.algorithmx.q_base.core.data.chat.MessageEntity
-import com.algorithmx.q_base.feature.content_import.data.StudyCollection
-import com.algorithmx.q_base.feature.content_import.data.CollectionDao
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.CollectionDao
 import com.algorithmx.q_base.core.data.UserDao
 import com.algorithmx.q_base.core.data.UserEntity
 import com.algorithmx.q_base.core.ai.data.AiRepository

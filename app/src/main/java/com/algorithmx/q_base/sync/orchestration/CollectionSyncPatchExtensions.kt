@@ -2,10 +2,10 @@ package com.algorithmx.q_base.sync.orchestration
 
 import android.util.Log
 import com.algorithmx.q_base.core.data.chat.MessageEntity
-import com.algorithmx.q_base.feature.content_import.data.Answer
-import com.algorithmx.q_base.feature.content_import.data.CollectionVersionLedgerEntity
-import com.algorithmx.q_base.feature.content_import.data.Question
-import com.algorithmx.q_base.feature.content_import.data.QuestionOption
+import com.algorithmx.q_base.data.collections.Answer
+import com.algorithmx.q_base.data.collections.CollectionVersionLedgerEntity
+import com.algorithmx.q_base.data.collections.Question
+import com.algorithmx.q_base.data.collections.QuestionOption
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

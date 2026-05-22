@@ -1,18 +1,19 @@
 package com.algorithmx.q_base.core.data
 
 import com.algorithmx.q_base.core.data.chat.ChatDao
-import com.algorithmx.q_base.feature.content_import.data.CollectionDao
-import com.algorithmx.q_base.feature.content_import.data.QuestionDao
+import com.algorithmx.q_base.data.collections.CollectionDao
+import com.algorithmx.q_base.data.collections.QuestionDao
 import com.algorithmx.q_base.feature.sessions.data.SessionDao
 import com.algorithmx.q_base.core.data.UserDao
-import com.algorithmx.q_base.feature.content_import.data.StudyCollection
-import com.algorithmx.q_base.feature.content_import.data.Question
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.Question
 import com.algorithmx.q_base.feature.sessions.data.StudySession
-import com.algorithmx.q_base.feature.content_import.data.StudyCollectionWithCount
+import com.algorithmx.q_base.data.collections.StudyCollectionWithCount
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.algorithmx.q_base.data.collections.StudyCollectionWithCount
 
 @Singleton
 class HomeRepository @Inject constructor(

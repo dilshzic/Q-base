@@ -2,9 +2,9 @@ package com.algorithmx.q_base.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.feature.content_import.data.StudyCollection
-import com.algorithmx.q_base.feature.content_import.data.StudyCollectionWithCount
-import com.algorithmx.q_base.feature.content_import.data.Question
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.StudyCollectionWithCount
+import com.algorithmx.q_base.data.collections.Question
 import com.algorithmx.q_base.feature.sessions.data.StudySession
 import com.algorithmx.q_base.core.data.HomeRepository
 import com.algorithmx.q_base.core.data.UserEntity

@@ -5,7 +5,7 @@ import com.algorithmx.q_base.core.data.auth.AuthRepository
 import com.algorithmx.q_base.core.data.auth.ProfileRepository
 import com.algorithmx.q_base.core.data.auth.UserProfile
 import com.algorithmx.q_base.data.collections.CollectionDao
-import com.algorithmx.q_base.feature.content_import.data.QuestionDao
+import com.algorithmx.q_base.data.collections.QuestionDao
 import com.algorithmx.q_base.core.data.DataClearingRepository
 import com.algorithmx.q_base.core.data.UserDao
 import com.algorithmx.q_base.core.data.UserEntity

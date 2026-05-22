@@ -37,8 +37,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.layout.Layout
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import com.algorithmx.q_base.feature.content_import.data.StudyCollection
-import com.algorithmx.q_base.feature.content_import.data.Question
+import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.Question
 import com.algorithmx.q_base.feature.sessions.data.StudySession
 import com.algorithmx.q_base.core.data.UserEntity
 import com.algorithmx.q_base.feature.components.reusable.SectionHeader
