@@ -1,4 +1,4 @@
-package com.algorithmx.q_base.data.auth
+package com.algorithmx.q_base.core.data.auth
 
 import com.google.firebase.firestore.PropertyName
 import com.google.firebase.firestore.ServerTimestamp

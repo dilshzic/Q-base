@@ -18,8 +18,8 @@ object BrainModule {
     fun provideAiRepository(
         aiBrainManager: AiBrainManager,
         questionDao: QuestionDao,
-        collectionDao: com.algorithmx.q_base.data.collections.CollectionDao,
-        aiResponseDao: com.algorithmx.q_base.data.ai.AiResponseDao
+        collectionDao: com.algorithmx.q_base.feature.content_import.data.CollectionDao,
+        aiResponseDao: com.algorithmx.q_base.core.ai.data.AiResponseDao
     ): AiRepository {
         return AiRepository(aiBrainManager, questionDao, collectionDao, aiResponseDao)
     }

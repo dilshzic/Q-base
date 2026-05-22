@@ -12,25 +12,25 @@ import com.algorithmx.q_base.feature.sessions.data.*
 
 @Database(
     entities = [
-        com.algorithmx.q_base.data.collections.StudyCollection::class,
-        com.algorithmx.q_base.data.collections.Question::class,
-        com.algorithmx.q_base.data.collections.QuestionOption::class,
-        com.algorithmx.q_base.data.collections.Answer::class,
-        com.algorithmx.q_base.data.collections.QuestionSet::class,
-        com.algorithmx.q_base.data.collections.SetQuestionCrossRef::class,
-        com.algorithmx.q_base.data.sessions.StudySession::class,
-        com.algorithmx.q_base.data.sessions.SessionAttempt::class,
-        com.algorithmx.q_base.data.collections.ProblemReport::class,
-        com.algorithmx.q_base.data.core.UserEntity::class,
-        com.algorithmx.q_base.data.ai.AiResponseEntity::class,
-        com.algorithmx.q_base.data.ai.BrainUsageEntity::class,
-        com.algorithmx.q_base.data.collections.CollectionVersionLedgerEntity::class,
-        com.algorithmx.q_base.data.sync.OfflineActionEntity::class
+        StudyCollection::class,
+        Question::class,
+        QuestionOption::class,
+        Answer::class,
+        QuestionSet::class,
+        SetQuestionCrossRef::class,
+        com.algorithmx.q_base.feature.sessions.data.StudySession::class,
+        com.algorithmx.q_base.feature.sessions.data.SessionAttempt::class,
+        ProblemReport::class,
+        UserEntity::class,
+        AiResponseEntity::class,
+        BrainUsageEntity::class,
+        CollectionVersionLedgerEntity::class,
+        com.algorithmx.q_base.sync.orchestration.OfflineActionEntity::class
     ],
     version = 28,
     exportSchema = false
 )
-@TypeConverters(com.algorithmx.q_base.data.util.TypeConverters::class)
+@TypeConverters(com.algorithmx.q_base.core.data.util.TypeConverters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun questionDao(): QuestionDao

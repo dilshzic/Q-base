@@ -24,7 +24,7 @@ import dagger.Lazy
 class ChatManagerRepository @Inject constructor(
     private val databases: CoreDatabase,
     private val authRepository: AuthRepository,
-    private val profileRepository: com.algorithmx.q_base.data.auth.ProfileRepository,
+    private val profileRepository: com.algorithmx.q_base.core.data.auth.ProfileRepository,
     private val chatRemoteRepository: ChatRemoteRepository,
     private val chatDao: ChatDao,
     private val messageDao: MessageDao,

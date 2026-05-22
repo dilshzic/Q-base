@@ -1,6 +1,7 @@
 package com.algorithmx.q_base.sync.orchestration
 
 import android.util.Log
+import com.algorithmx.q_base.data.sync.ActionQueueDao
 import com.algorithmx.q_base.core.data.auth.ProfileRepository
 import com.algorithmx.q_base.core.data.chat.ChatRemoteRepository
 import com.algorithmx.q_base.feature.content_import.data.ProblemReportDao
@@ -120,7 +121,7 @@ class UniversalQueueManager @Inject constructor(
                 val isBanned = payload["isBanned"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: false
                 val isPhotoVisible = payload["isPhotoVisible"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
 
-                val updatedProfile = com.algorithmx.q_base.data.auth.UserProfile(
+                val updatedProfile = com.algorithmx.q_base.core.data.auth.UserProfile(
                     userId = userId,
                     email = email,
                     displayName = displayName,

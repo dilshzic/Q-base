@@ -3,6 +3,7 @@ package com.algorithmx.q_base
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+// This is the correct package declaration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -92,7 +93,7 @@ class MainActivity : ComponentActivity() {
     lateinit var networkMonitor: NetworkMonitor
 
     @Inject
-    lateinit var universalQueueManager: com.algorithmx.q_base.data.sync.UniversalQueueManager
+    lateinit var universalQueueManager: com.algorithmx.q_base.sync.orchestration.UniversalQueueManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -1,12 +1,12 @@
-package com.algorithmx.q_base.data.chat
+package com.algorithmx.q_base.core.data.chat
 
 import android.util.Log
 import io.appwrite.Client
 import io.appwrite.services.Account
 import io.appwrite.ID
-import com.algorithmx.q_base.data.backend.CoreDatabase
-import com.algorithmx.q_base.data.backend.CoreQuery
-import com.algorithmx.q_base.data.backend.CoreQueryOperator
+import com.algorithmx.q_base.core.data.backend.CoreDatabase
+import com.algorithmx.q_base.core.data.backend.CoreQuery
+import com.algorithmx.q_base.core.data.backend.CoreQueryOperator
 import javax.inject.Inject
 import javax.inject.Singleton
 

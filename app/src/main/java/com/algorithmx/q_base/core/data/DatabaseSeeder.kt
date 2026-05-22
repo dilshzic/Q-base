@@ -27,7 +27,7 @@ class DatabaseSeeder @Inject constructor(
     private val messageDao: MessageDao,
     private val userDao: UserDao,
     private val dataStoreManager: com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager,
-    private val authRepository: com.algorithmx.q_base.data.auth.AuthRepository
+        private val authRepository: com.algorithmx.q_base.core.data.auth.AuthRepository
 ) {
     private fun getColumnString(cursor: android.database.Cursor, index: Int): String? {
         return if (index != -1 && !cursor.isNull(index)) cursor.getString(index) else null

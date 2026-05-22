@@ -35,7 +35,7 @@ class ExploreViewModel @Inject constructor(
     internal val questionDao: QuestionDao,
     internal val syncRepository: SyncRepository,
     internal val authRepository: AuthRepository,
-    internal val configRepository: com.algorithmx.q_base.data.core.ConfigRepository
+    internal val configRepository: com.algorithmx.q_base.core.data.ConfigRepository
 ) : ViewModel() {
 
     internal val _actionFeedback = MutableSharedFlow<String>()

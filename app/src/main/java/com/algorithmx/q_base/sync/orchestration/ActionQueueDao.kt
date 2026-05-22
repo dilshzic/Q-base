@@ -1,6 +1,7 @@
-package com.algorithmx.q_base.sync.orchestration
+package com.algorithmx.q_base.data.sync
 
 import androidx.room.*
+import com.algorithmx.q_base.sync.orchestration.OfflineActionEntity
 
 @Dao
 interface ActionQueueDao {

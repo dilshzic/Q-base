@@ -1,10 +1,10 @@
-package com.algorithmx.q_base.data.auth
+package com.algorithmx.q_base.core.data.auth
 
 import android.util.Log
-import com.algorithmx.q_base.data.backend.CoreAuth
-import com.algorithmx.q_base.data.backend.CoreDatabase
-import com.algorithmx.q_base.data.backend.CoreQuery
-import com.algorithmx.q_base.data.backend.CoreQueryOperator
+import com.algorithmx.q_base.core.data.backend.CoreAuth
+import com.algorithmx.q_base.core.data.backend.CoreDatabase
+import com.algorithmx.q_base.core.data.backend.CoreQuery
+import com.algorithmx.q_base.core.data.backend.CoreQueryOperator
 import kotlinx.coroutines.flow.firstOrNull
 import kotlin.random.Random
 import javax.inject.Inject
