@@ -7,7 +7,7 @@ import com.algorithmx.q_base.feature.content_import.data.QuestionDao
 import com.algorithmx.q_base.core.data.UserDao
 import com.algorithmx.q_base.core.ai.data.AiResponseDao
 import com.algorithmx.q_base.core.ai.data.BrainUsageDao
-import com.algorithmx.q_base.feature.content_import.data.CollectionDao
+import com.algorithmx.q_base.data.collections.CollectionDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject

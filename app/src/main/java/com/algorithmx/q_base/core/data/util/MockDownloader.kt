@@ -1,7 +1,7 @@
 package com.algorithmx.q_base.core.data.util
 
 import android.content.Context
-import com.algorithmx.q_base.feature.content_import.data.CollectionDao
+import com.algorithmx_q_base.data.collections.CollectionDao
 import com.algorithmx.q_base.feature.content_import.data.QuestionDao
 import com.algorithmx.q_base.feature.content_import.data.SetQuestionCrossRef
 import com.algorithmx.q_base.feature.content_import.data.CollectionExport
