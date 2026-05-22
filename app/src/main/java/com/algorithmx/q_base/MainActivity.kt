@@ -80,8 +80,8 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var notificationHelper: com.algorithmx.q_base.util.NotificationHelper
 
-    @Inject
-    lateinit var dataStoreManager: com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager
+        @Inject
+        lateinit var dataStoreManager: com.algorithmx.q_base.core.ai.brain.BrainDataStoreManager
 
     @Inject
     lateinit var databaseSeeder: DatabaseSeeder
@@ -183,7 +183,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val brainConfig by dataStoreManager.brainConfigFlow.collectAsStateWithLifecycle(
-                initialValue = com.algorithmx.q_base.core_ai.brain.models.StoredBrainConfig(
+                initialValue = com.algorithmx.q_base.core.ai.brain.models.StoredBrainConfig(
                     provider = com.algorithmx.androidmodules.coreai.brain.models.BrainProvider.GEMINI,
                     modelName = "gemini-1.5-flash",
                     systemInstruction = "",

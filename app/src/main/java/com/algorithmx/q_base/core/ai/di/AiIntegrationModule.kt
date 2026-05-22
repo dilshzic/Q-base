@@ -1,7 +1,7 @@
 package com.algorithmx.q_base.core.ai.di
 
-import com.algorithmx.q_base.di.AiUsageLoggerImpl
-import com.algorithmx.q_base.di.BrainConfigProviderImpl
+import com.algorithmx.q_base.core.ai.di.AiUsageLoggerImpl
+import com.algorithmx.q_base.core.ai.di.BrainConfigProviderImpl
 import com.algorithmx.androidmodules.coreai.brain.AiUsageLogger
 import com.algorithmx.androidmodules.coreai.brain.BrainConfigProvider
 import dagger.Binds

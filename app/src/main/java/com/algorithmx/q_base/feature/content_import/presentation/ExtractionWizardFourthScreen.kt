@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse
+import com.algorithmx.q_base.core.ai.brain.models.AiCollectionResponse
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

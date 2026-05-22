@@ -2,7 +2,7 @@ package com.algorithmx.q_base.core.data.util
 
 import androidx.room.TypeConverter
 import com.algorithmx.androidmodules.coreai.brain.models.BrainProvider
-import com.algorithmx.q_base.core_ai.brain.models.BrainTask
+import com.algorithmx.q_base.core.ai.brain.models.BrainTask
 
 class TypeConverters {
     @TypeConverter

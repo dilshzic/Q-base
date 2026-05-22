@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse
+import com.algorithmx.q_base.core.ai.brain.models.AiCollectionResponse
 import com.algorithmx.q_base.core.ai.data.AiResponseEntity
 import kotlinx.serialization.json.Json
 import javax.inject.Inject

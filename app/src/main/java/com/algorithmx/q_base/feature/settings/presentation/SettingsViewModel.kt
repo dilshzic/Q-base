@@ -3,13 +3,13 @@ package com.algorithmx.q_base.feature.settings.presentation
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager
+import com.algorithmx.q_base.core.ai.brain.BrainDataStoreManager
 import com.algorithmx.q_base.core.data.AppDatabase
 import com.algorithmx.androidmodules.coreai.brain.models.BrainCategory
 import com.algorithmx.androidmodules.coreai.brain.models.BrainProvider
-import com.algorithmx.q_base.core_ai.brain.models.StoredBrainConfig
-import com.algorithmx.q_base.core_ai.brain.models.BrainTask
-import com.algorithmx.q_base.core_ai.brain.models.TaskConfig
+import com.algorithmx.q_base.core.ai.brain.models.StoredBrainConfig
+import com.algorithmx.q_base.core.ai.brain.models.BrainTask
+import com.algorithmx.q_base.core.ai.brain.models.TaskConfig
 import com.algorithmx.androidmodules.coreai.brain.registry.BrainRegistry
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext

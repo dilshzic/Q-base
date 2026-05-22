@@ -28,7 +28,7 @@ fun CollectionBubbleContent(
     val json = remember { kotlinx.serialization.json.Json { ignoreUnknownKeys = true } }
     val collection = remember(payload) {
         try {
-            json.decodeFromString<com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse>(payload)
+            json.decodeFromString<com.algorithmx.q_base.core.ai.brain.models.AiCollectionResponse>(payload)
         } catch (e: Exception) { null }
     }
 

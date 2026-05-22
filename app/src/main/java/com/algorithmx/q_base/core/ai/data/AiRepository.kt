@@ -1,8 +1,8 @@
 package com.algorithmx.q_base.core.ai.data
 
 import android.util.Log
-import com.algorithmx.q_base.core_ai.brain.AiBrainManager
-import com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse
+import com.algorithmx.q_base.core.ai.brain.AiBrainManager
+import com.algorithmx.q_base.core.ai.brain.models.AiCollectionResponse
 import com.algorithmx.q_base.data.collections.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -63,7 +63,7 @@ class AiRepository @Inject constructor(
         """.trimIndent()
 
         return try {
-            val brainResult = aiBrainManager.askBrain(com.algorithmx.q_base.core_ai.brain.models.BrainTask.COLLECTION_GEN, prompt)
+            val brainResult = aiBrainManager.askBrain(com.algorithmx.q_base.core.ai.brain.models.BrainTask.COLLECTION_GEN, prompt)
             
             if (brainResult.isFailure) {
                 return Result.failure(brainResult.exceptionOrNull() ?: Exception("Unknown AI failure"))
@@ -147,7 +147,7 @@ class AiRepository @Inject constructor(
         setId
     }
 
-    private suspend fun saveQuestionsToSet(questions: List<com.algorithmx.q_base.core_ai.brain.models.AiQuestion>, setId: String, collectionName: String) {
+    private suspend fun saveQuestionsToSet(questions: List<com.algorithmx.q_base.core.ai.brain.models.AiQuestion>, setId: String, collectionName: String) {
         questions.forEach { aiQ ->
             val questionId = UUID.randomUUID().toString()
             
@@ -230,7 +230,7 @@ class AiRepository @Inject constructor(
         """.trimIndent()
 
         return try {
-            val brainResult = aiBrainManager.askBrain(com.algorithmx.q_base.core_ai.brain.models.BrainTask.QUESTION_EXTRACTION, prompt)
+                        val brainResult = aiBrainManager.askBrain(com.algorithmx.q_base.core.ai.brain.models.BrainTask.QUESTION_EXTRACTION, prompt)
             
             if (brainResult.isFailure) {
                 return Result.failure(brainResult.exceptionOrNull() ?: Exception("Extraction AI call failed"))
@@ -302,11 +302,11 @@ class AiRepository @Inject constructor(
             Format your response as a helpful AI assistant.
         """.trimIndent()
         
-        return aiBrainManager.askBrain(com.algorithmx.q_base.core_ai.brain.models.BrainTask.EDIT_ASSISTANT, prompt)
+        return aiBrainManager.askBrain(com.algorithmx.q_base.core.ai.brain.models.BrainTask.EDIT_ASSISTANT, prompt)
     }
 
     suspend fun getAiAssistance(prompt: String): Result<String> {
-        return aiBrainManager.askBrain(com.algorithmx.q_base.core_ai.brain.models.BrainTask.CHAT_BOT, prompt)
+        return aiBrainManager.askBrain(com.algorithmx.q_base.core.ai.brain.models.BrainTask.CHAT_BOT, prompt)
     }
 
     suspend fun getAiResponseById(responseId: String): AiResponseEntity? {

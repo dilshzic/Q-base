@@ -1,7 +1,7 @@
 package com.algorithmx.q_base.feature.chat.presentation
 import android.util.Log
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse
+import com.algorithmx.q_base.core.ai.brain.models.AiCollectionResponse
 import com.algorithmx.q_base.core.data.chat.isAdmin
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json

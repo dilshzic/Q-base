@@ -1,4 +1,4 @@
-package com.algorithmx.q_base.core_ai.brain
+package com.algorithmx.q_base.core.ai.brain
 
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -6,9 +6,9 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.algorithmx.androidmodules.coreai.brain.models.BrainCategory
 import com.algorithmx.androidmodules.coreai.brain.models.BrainProvider
-import com.algorithmx.q_base.core_ai.brain.models.StoredBrainConfig
-import com.algorithmx.q_base.core_ai.brain.models.BrainTask
-import com.algorithmx.q_base.core_ai.brain.models.TaskConfig
+import com.algorithmx.q_base.core.ai.brain.models.StoredBrainConfig
+import com.algorithmx.q_base.core.ai.brain.models.BrainTask
+import com.algorithmx.q_base.core.ai.brain.models.TaskConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

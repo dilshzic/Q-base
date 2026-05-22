@@ -25,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.algorithmx.q_base.core_ai.brain.models.BrainTask
+import com.algorithmx.q_base.core.ai.brain.models.BrainTask
 import com.algorithmx.q_base.core.designsystem.components.reusable.AiConfigSelector
 import com.algorithmx.q_base.feature.settings.presentation.components.*
 
@@ -56,14 +56,14 @@ fun SettingsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsContent(
-    config: com.algorithmx.q_base.core_ai.brain.models.StoredBrainConfig,
+    config: com.algorithmx.q_base.core.ai.brain.models.StoredBrainConfig,
     dbSize: Double,
     availableModels: List<String>,
     onBack: () -> Unit,
     onNavigateToBrainManager: () -> Unit,
     onNavigateToAppTheme: () -> Unit,
     onUpdateNotifications: (Boolean) -> Unit,
-    onSaveTaskConfig: (BrainTask, com.algorithmx.q_base.core_ai.brain.models.TaskConfig) -> Unit,
+    onSaveTaskConfig: (BrainTask, com.algorithmx.q_base.core.ai.brain.models.TaskConfig) -> Unit,
     onClearAllData: (() -> Unit) -> Unit
 ) {
     var showClearDialog by remember { mutableStateOf(false) }

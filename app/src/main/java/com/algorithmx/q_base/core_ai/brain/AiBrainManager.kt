@@ -1,12 +1,12 @@
-package com.algorithmx.q_base.core_ai.brain
+package com.algorithmx.q_base.core.ai.brain
 
 import android.util.Log
 import com.algorithmx.androidmodules.coreai.brain.implementations.GeminiBrainImpl
 import com.algorithmx.androidmodules.coreai.brain.implementations.OpenAiCompatibleBrainImpl
 import com.algorithmx.androidmodules.coreai.brain.AiBrain
 import com.algorithmx.androidmodules.coreai.brain.models.BrainProvider
-import com.algorithmx.q_base.core_ai.brain.models.BrainTask
-import com.algorithmx.q_base.core_ai.brain.models.StoredBrainConfig
+import com.algorithmx.q_base.core.ai.brain.models.BrainTask
+import com.algorithmx.q_base.core.ai.brain.models.StoredBrainConfig
 import com.algorithmx.androidmodules.coreai.brain.registry.BrainRegistry
 import com.algorithmx.androidmodules.coreai.brain.AiUsageLogger
 import com.algorithmx.androidmodules.coreai.brain.BrainConfigProvider
@@ -115,12 +115,11 @@ class AiBrainManager @Inject constructor(
         scope.launch {
             try {
                 usageLogger.logUsage(
-                    taskId = task,
-                    provider = BrainRegistry.getProviderForModel(currentModel),
-                    modelUsed = currentModel,
-                    tokensEstimated = estimatedTokens,
-                    isSuccess = isSuccess,
-                    errorMessage = if (!isSuccess) errorMessage else null
+                    BrainRegistry.getProviderForModel(currentModel),
+                    currentModel,
+                    estimatedTokens,
+                    isSuccess,
+                    if (!isSuccess) errorMessage else null
                 )
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to log usage: ${e.message}")

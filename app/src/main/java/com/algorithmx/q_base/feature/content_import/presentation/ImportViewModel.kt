@@ -52,13 +52,13 @@ sealed class ImportStep {
 
     // Direct Exam Paper Extraction pipeline states
     data object ExtractionIngest : ImportStep()
-    data class ExtractionOverview(val responseId: String, val response: com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse) : ImportStep()
+    data class ExtractionOverview(val responseId: String, val response: com.algorithmx.q_base.core.ai.brain.models.AiCollectionResponse) : ImportStep()
 
     // Legacy states kept for internal processing
     data class Extracting(val source: String) : ImportStep()
     data class Editing(val extractedText: String) : ImportStep()
     data class Config(val extractedText: String, val targetId: String? = null) : ImportStep()
-    data class Preview(val responseId: String, val response: com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse) : ImportStep()
+    data class Preview(val responseId: String, val response: com.algorithmx.q_base.core.ai.brain.models.AiCollectionResponse) : ImportStep()
     data class Complete(val message: String) : ImportStep()
 }
 
@@ -260,7 +260,7 @@ class ImportViewModel @Inject constructor(
             viewModelScope.launch {
                 val entity = aiRepository.getAiResponseById(responseId)
                 val count = try {
-                    json.decodeFromString<com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse>(entity?.rawJson ?: "")
+                        json.decodeFromString<com.algorithmx.q_base.core.ai.brain.models.AiCollectionResponse>(entity?.rawJson ?: "")
                         .questions.size
                 } catch (e: Exception) { 0 }
                 
@@ -383,7 +383,7 @@ class ImportViewModel @Inject constructor(
                 val responseId = result.getOrThrow()
                 val entity = aiRepository.getAiResponseById(responseId)
                 val response = try {
-                    json.decodeFromString<com.algorithmx.q_base.core_ai.brain.models.AiCollectionResponse>(entity?.rawJson ?: "")
+                        json.decodeFromString<com.algorithmx.q_base.core.ai.brain.models.AiCollectionResponse>(entity?.rawJson ?: "")
                 } catch (e: Exception) { null }
                 
                 if (response != null) {

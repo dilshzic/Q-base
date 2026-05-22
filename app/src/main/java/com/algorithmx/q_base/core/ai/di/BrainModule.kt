@@ -1,6 +1,6 @@
 package com.algorithmx.q_base.core.ai.di
 
-import com.algorithmx.q_base.core_ai.brain.AiBrainManager
+import com.algorithmx.q_base.core.ai.brain.AiBrainManager
 import com.algorithmx.q_base.data.collections.QuestionDao
 import com.algorithmx.q_base.core.ai.data.AiRepository
 import dagger.Module

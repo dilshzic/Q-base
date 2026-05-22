@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.algorithmx.q_base.core_ai.brain.models.BrainTask
+import com.algorithmx.q_base.core.ai.brain.models.BrainTask
 import kotlinx.coroutines.flow.Flow
 
 @Dao
