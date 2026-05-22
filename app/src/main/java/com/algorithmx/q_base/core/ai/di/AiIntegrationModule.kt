@@ -1,9 +1,9 @@
-package com.algorithmx_q_base.core.ai.di
+package com.algorithmx.q_base.core.ai.di
 
-import com.algorithmx_q_base.di.AiUsageLoggerImpl
-import com.algorithmx_q_base.di.BrainConfigProviderImpl
-import com.algorithmx.q_base.core_ai.brain.AiUsageLogger
-import com.algorithmx.q_base.core_ai.brain.BrainConfigProvider
+import com.algorithmx.q_base.di.AiUsageLoggerImpl
+import com.algorithmx.q_base.di.BrainConfigProviderImpl
+import com.algorithmx.androidmodules.coreai.brain.AiUsageLogger
+import com.algorithmx.androidmodules.coreai.brain.BrainConfigProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

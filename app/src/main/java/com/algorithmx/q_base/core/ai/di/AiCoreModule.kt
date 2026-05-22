@@ -1,10 +1,10 @@
 package com.algorithmx.q_base.core.ai.di
 
-import com.algorithmx.q_base.core_ai.brain.AiBrainManager
-import com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager
-import com.algorithmx.q_base.core_ai.brain.CommonAiService
-import com.algorithmx.q_base.core_ai.brain.AiUsageLogger
-import com.algorithmx.q_base.core_ai.brain.BrainConfigProvider
+import com.algorithmx_q_base.core_ai.brain.AiBrainManager
+import com.algorithmx_q_base.core_ai.brain.BrainDataStoreManager
+import com.algorithmx_q_base.core_ai.brain.CommonAiService
+import com.algorithmx.androidmodules.coreai.brain.AiUsageLogger
+import com.algorithmx.androidmodules.coreai.brain.BrainConfigProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
