@@ -1,4 +1,4 @@
-package com.algorithmx_q_base.data.collections
+package com.algorithmx.q_base.data.collections
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

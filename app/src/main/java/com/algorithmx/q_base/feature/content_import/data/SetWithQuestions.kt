@@ -1,4 +1,4 @@
-package com.algorithmx.q_base.feature.content_import.data
+package com.algorithmx.q_base.data.collections
 
 import androidx.room.Embedded
 import androidx.room.Junction
