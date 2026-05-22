@@ -1,0 +1,260 @@
+--- AppDatabase ---
+app/src/main/java/com/algorithmx/q_base/feature/settings/presentation/SettingsViewModel.kt:7:import com.algorithmx.q_base.data.AppDatabase
+app/src/main/java/com/algorithmx/q_base/feature/settings/presentation/SettingsViewModel.kt:27:    private val database: AppDatabase,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:4:import com.algorithmx.q_base.data.AppDatabase
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:37:    fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:38:        return AppDatabase.getDatabase(context)
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:42:    fun provideQuestionDao(database: AppDatabase): QuestionDao = database.questionDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:45:    fun provideCollectionDao(database: AppDatabase): CollectionDao = database.collectionDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:48:    fun provideSessionDao(database: AppDatabase): SessionDao = database.sessionDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:51:    fun provideProblemReportDao(database: AppDatabase): ProblemReportDao = database.problemReportDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:54:    fun provideUserDao(database: AppDatabase): UserDao = database.userDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:69:    fun provideAiResponseDao(database: AppDatabase): AiResponseDao = database.aiResponseDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:72:    fun provideBrainUsageDao(database: AppDatabase): BrainUsageDao = database.brainUsageDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:75:    fun provideCollectionVersionLedgerDao(database: AppDatabase): CollectionVersionLedgerDao = database.collectionVersionLedgerDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:78:    fun provideActionQueueDao(database: AppDatabase): com.algorithmx.q_base.data.sync.ActionQueueDao = database.actionQueueDao()
+app/src/main/java/com/algorithmx/q_base/core/data/AppDatabase.kt:34:abstract class AppDatabase : RoomDatabase() {
+app/src/main/java/com/algorithmx/q_base/core/data/AppDatabase.kt:48:        private var INSTANCE: AppDatabase? = null
+app/src/main/java/com/algorithmx/q_base/core/data/AppDatabase.kt:50:        fun getDatabase(context: Context): AppDatabase {
+app/src/main/java/com/algorithmx/q_base/core/data/AppDatabase.kt:55:                        AppDatabase::class.java,
+app/src/main/java/com/algorithmx/q_base/core/data/AppDatabase.kt:63:                    android.util.Log.e("AppDatabase", "Error building database", e)
+app/src/main/java/com/algorithmx/q_base/core/data/DatabaseSeeder.kt:24:    private val database: AppDatabase,
+--- QuestionDao ---
+app/src/test/java/com/algorithmx/q_base/ui/settings/ProfileViewModelTest.kt:8:import com.algorithmx.q_base.data.collections.QuestionDao
+app/src/test/java/com/algorithmx/q_base/ui/settings/ProfileViewModelTest.kt:31:    private val questionDao: QuestionDao = mockk()
+app/src/main/java/com/algorithmx/q_base/feature/explore/presentation/ExploreViewModel.kt:35:    internal val questionDao: QuestionDao,
+app/src/main/java/com/algorithmx/q_base/feature/sessions/data/SessionRepository.kt:4:import com.algorithmx.q_base.data.collections.QuestionDao
+app/src/main/java/com/algorithmx/q_base/feature/sessions/data/SessionRepository.kt:22:    private val questionDao: QuestionDao,
+app/src/main/java/com/algorithmx/q_base/feature/settings/presentation/ProfileViewModel.kt:8:import com.algorithmx.q_base.data.collections.QuestionDao
+app/src/main/java/com/algorithmx/q_base/feature/settings/presentation/ProfileViewModel.kt:35:    private val questionDao: QuestionDao,
+app/src/main/java/com/algorithmx/q_base/feature/content_import/data/ExploreRepository.kt:17:    private val questionDao: QuestionDao,
+app/src/main/java/com/algorithmx/q_base/feature/content_import/data/QuestionDao.kt:7:interface QuestionDao {
+app/src/main/java/com/algorithmx/q_base/feature/content_import/presentation/ManualBuilderViewModel.kt:6:import com.algorithmx.q_base.data.collections.QuestionDao
+app/src/main/java/com/algorithmx/q_base/feature/content_import/presentation/ManualBuilderViewModel.kt:20:    private val questionDao: QuestionDao
+app/src/main/java/com/algorithmx/q_base/feature/content_import/presentation/QuestionEditorViewModel.kt:5:import com.algorithmx.q_base.data.collections.QuestionDao
+app/src/main/java/com/algorithmx/q_base/feature/content_import/presentation/QuestionEditorViewModel.kt:30:    private val questionDao: QuestionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:12:import com.algorithmx.q_base.data.collections.QuestionDao
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:42:    fun provideQuestionDao(database: AppDatabase): QuestionDao = database.questionDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:84:        questionDao: QuestionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:97:        questionDao: QuestionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:107:        questionDao: QuestionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:127:        questionDao: QuestionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/HomeRepository.kt:5:import com.algorithmx.q_base.data.collections.QuestionDao
+app/src/main/java/com/algorithmx/q_base/core/data/HomeRepository.kt:20:    private val questionDao: QuestionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/AppDatabase.kt:36:    abstract fun questionDao(): QuestionDao
+app/src/main/java/com/algorithmx/q_base/core/data/util/ExportUtils.kt:4:import com.algorithmx.q_base.data.collections.QuestionDao
+app/src/main/java/com/algorithmx/q_base/core/data/util/ExportUtils.kt:24:    private val questionDao: QuestionDao
+app/src/main/java/com/algorithmx/q_base/core/data/util/MockExporter.kt:5:import com.algorithmx.q_base.data.collections.QuestionDao
+app/src/main/java/com/algorithmx/q_base/core/data/util/MockExporter.kt:27:    private val questionDao: QuestionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/util/MockDownloader.kt:5:import com.algorithmx.q_base.data.collections.QuestionDao
+app/src/main/java/com/algorithmx/q_base/core/data/util/MockDownloader.kt:25:    private val questionDao: QuestionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:6:import com.algorithmx.q_base.data.collections.QuestionDao
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:21:    private val questionDao: QuestionDao,
+app/src/main/java/com/algorithmx/q_base/core/ai/data/AiRepository.kt:17:    private val questionDao: QuestionDao,
+app/src/main/java/com/algorithmx/q_base/core/ai/di/BrainModule.kt:4:import com.algorithmx.q_base.data.collections.QuestionDao
+app/src/main/java/com/algorithmx/q_base/core/ai/di/BrainModule.kt:20:        questionDao: QuestionDao,
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/CollectionSyncRepository.kt:7:import com.algorithmx.q_base.data.collections.QuestionDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/CollectionSyncRepository.kt:33:    internal val questionDao: QuestionDao,
+--- CollectionDao ---
+app/src/test/java/com/algorithmx/q_base/ui/settings/ProfileViewModelTest.kt:7:import com.algorithmx.q_base.data.collections.CollectionDao
+app/src/test/java/com/algorithmx/q_base/ui/settings/ProfileViewModelTest.kt:30:    private val collectionDao: CollectionDao = mockk()
+app/src/main/java/com/algorithmx/q_base/feature/sessions/data/SessionRepository.kt:3:import com.algorithmx.q_base.data.collections.CollectionDao
+app/src/main/java/com/algorithmx/q_base/feature/sessions/data/SessionRepository.kt:21:    private val collectionDao: CollectionDao,
+app/src/main/java/com/algorithmx/q_base/feature/settings/presentation/ProfileViewModel.kt:7:import com.algorithmx.q_base.data.collections.CollectionDao
+app/src/main/java/com/algorithmx/q_base/feature/settings/presentation/ProfileViewModel.kt:34:    private val collectionDao: CollectionDao,
+app/src/main/java/com/algorithmx/q_base/feature/chat/presentation/ChatViewModel.kt:13:import com.algorithmx.q_base.data.collections.CollectionDao
+app/src/main/java/com/algorithmx/q_base/feature/chat/presentation/ChatViewModel.kt:40:    internal val collectionDao: CollectionDao,
+app/src/main/java/com/algorithmx/q_base/feature/content_import/data/ExploreRepository.kt:16:    private val collectionDao: CollectionDao,
+app/src/main/java/com/algorithmx/q_base/feature/content_import/data/CollectionDao.kt:7:interface CollectionDao {
+app/src/main/java/com/algorithmx/q_base/feature/content_import/presentation/ManualBuilderViewModel.kt:5:import com.algorithmx.q_base.data.collections.CollectionDao
+app/src/main/java/com/algorithmx/q_base/feature/content_import/presentation/ManualBuilderViewModel.kt:19:    private val collectionDao: CollectionDao,
+app/src/main/java/com/algorithmx/q_base/feature/content_import/presentation/QuestionEditorViewModel.kt:6:import com.algorithmx.q_base.data.collections.CollectionDao
+app/src/main/java/com/algorithmx/q_base/feature/content_import/presentation/QuestionEditorViewModel.kt:31:    private val collectionDao: CollectionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:10:import com.algorithmx.q_base.data.collections.CollectionDao
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:45:    fun provideCollectionDao(database: AppDatabase): CollectionDao = database.collectionDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:83:        collectionDao: CollectionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:96:        collectionDao: CollectionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:108:        collectionDao: CollectionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:131:        collectionDao: CollectionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/HomeRepository.kt:4:import com.algorithmx.q_base.data.collections.CollectionDao
+app/src/main/java/com/algorithmx/q_base/core/data/HomeRepository.kt:21:    private val collectionDao: CollectionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/AppDatabase.kt:37:    abstract fun collectionDao(): CollectionDao
+app/src/main/java/com/algorithmx/q_base/core/data/util/MockExporter.kt:4:import com.algorithmx.q_base.data.collections.CollectionDao
+app/src/main/java/com/algorithmx/q_base/core/data/util/MockExporter.kt:26:    private val collectionDao: CollectionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/util/MockDownloader.kt:4:import com.algorithmx.q_base.data.collections.CollectionDao
+app/src/main/java/com/algorithmx/q_base/core/data/util/MockDownloader.kt:26:    private val collectionDao: CollectionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:10:import com.algorithmx.q_base.data.collections.CollectionDao
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:25:    private val collectionDao: CollectionDao,
+app/src/main/java/com/algorithmx/q_base/core/ai/data/AiRepository.kt:18:    private val collectionDao: CollectionDao,
+app/src/main/java/com/algorithmx/q_base/core/ai/di/BrainModule.kt:21:        collectionDao: com.algorithmx.q_base.data.collections.CollectionDao,
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/CollectionSyncRepository.kt:5:import com.algorithmx.q_base.data.collections.CollectionDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/CollectionSyncRepository.kt:32:    internal val collectionDao: CollectionDao,
+--- SessionDao ---
+app/src/test/java/com/algorithmx/q_base/ui/settings/ProfileViewModelTest.kt:12:import com.algorithmx.q_base.data.sessions.SessionDao
+app/src/test/java/com/algorithmx/q_base/ui/settings/ProfileViewModelTest.kt:29:    private val sessionDao: SessionDao = mockk()
+app/src/main/java/com/algorithmx/q_base/feature/sessions/data/SessionDao.kt:9:interface SessionDao {
+app/src/main/java/com/algorithmx/q_base/feature/sessions/data/SessionRepository.kt:20:    private val sessionDao: SessionDao,
+app/src/main/java/com/algorithmx/q_base/feature/settings/presentation/ProfileViewModel.kt:6:import com.algorithmx.q_base.data.sessions.SessionDao
+app/src/main/java/com/algorithmx/q_base/feature/settings/presentation/ProfileViewModel.kt:33:    private val sessionDao: SessionDao,
+app/src/main/java/com/algorithmx/q_base/feature/chat/presentation/ChatViewModel.kt:18:import com.algorithmx.q_base.data.sessions.SessionDao
+app/src/main/java/com/algorithmx/q_base/feature/chat/presentation/ChatViewModel.kt:41:    internal val sessionDao: SessionDao,
+app/src/main/java/com/algorithmx/q_base/feature/content_import/data/ExploreRepository.kt:5:import com.algorithmx.q_base.data.sessions.SessionDao
+app/src/main/java/com/algorithmx/q_base/feature/content_import/data/ExploreRepository.kt:18:    private val sessionDao: SessionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:15:import com.algorithmx.q_base.data.sessions.SessionDao
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:48:    fun provideSessionDao(database: AppDatabase): SessionDao = database.sessionDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:85:        sessionDao: SessionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:95:        sessionDao: SessionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:106:        sessionDao: SessionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:126:        sessionDao: SessionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/HomeRepository.kt:6:import com.algorithmx.q_base.data.sessions.SessionDao
+app/src/main/java/com/algorithmx/q_base/core/data/HomeRepository.kt:19:    private val sessionDao: SessionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/AppDatabase.kt:38:    abstract fun sessionDao(): SessionDao
+app/src/main/java/com/algorithmx/q_base/core/data/util/MockExporter.kt:9:import com.algorithmx.q_base.data.sessions.SessionDao
+app/src/main/java/com/algorithmx/q_base/core/data/util/MockExporter.kt:28:    private val sessionDao: SessionDao
+app/src/main/java/com/algorithmx/q_base/core/data/util/MockDownloader.kt:9:import com.algorithmx.q_base.data.sessions.SessionDao
+app/src/main/java/com/algorithmx/q_base/core/data/util/MockDownloader.kt:27:    private val sessionDao: SessionDao,
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:5:import com.algorithmx.q_base.data.sessions.SessionDao
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:20:    private val sessionDao: SessionDao,
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/SessionSyncRepository.kt:6:import com.algorithmx.q_base.data.sessions.SessionDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/SessionSyncRepository.kt:32:    private val sessionDao: SessionDao,
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/ReportSyncRepository.kt:12:import com.algorithmx.q_base.data.sessions.SessionDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/ReportSyncRepository.kt:24:    private val sessionDao: SessionDao
+--- UserDao ---
+app/src/test/java/com/algorithmx/q_base/ui/settings/ProfileViewModelTest.kt:10:import com.algorithmx.q_base.data.core.UserDao
+app/src/test/java/com/algorithmx/q_base/ui/settings/ProfileViewModelTest.kt:28:    private val userDao: UserDao = mockk()
+app/src/main/java/com/algorithmx/q_base/feature/sessions/data/SessionRepository.kt:5:import com.algorithmx.q_base.data.core.UserDao
+app/src/main/java/com/algorithmx/q_base/feature/sessions/data/SessionRepository.kt:23:    private val userDao: UserDao
+app/src/main/java/com/algorithmx/q_base/feature/sessions/presentation/SessionsViewModelFactory.kt:8:import com.algorithmx.q_base.data.core.UserDao
+app/src/main/java/com/algorithmx/q_base/feature/sessions/presentation/SessionsViewModelFactory.kt:14:    private val userDao: UserDao
+app/src/main/java/com/algorithmx/q_base/feature/sessions/presentation/SessionsViewModel.kt:11:import com.algorithmx.q_base.data.core.UserDao
+app/src/main/java/com/algorithmx/q_base/feature/sessions/presentation/SessionsViewModel.kt:23:    private val userDao: UserDao,
+app/src/main/java/com/algorithmx/q_base/feature/settings/presentation/ProfileViewModel.kt:5:import com.algorithmx.q_base.data.core.UserDao
+app/src/main/java/com/algorithmx/q_base/feature/settings/presentation/ProfileViewModel.kt:32:    private val userDao: UserDao,
+app/src/main/java/com/algorithmx/q_base/feature/chat/presentation/ChatViewModel.kt:14:import com.algorithmx.q_base.data.core.UserDao
+app/src/main/java/com/algorithmx/q_base/feature/chat/presentation/ChatViewModel.kt:36:    internal val userDao: UserDao,
+app/src/main/java/com/algorithmx/q_base/feature/chat/presentation/ContactSelectorViewModel.kt:4:import com.algorithmx.q_base.data.core.UserDao
+app/src/main/java/com/algorithmx/q_base/feature/chat/presentation/ContactSelectorViewModel.kt:21:    private val userDao: UserDao,
+app/src/main/java/com/algorithmx/q_base/feature/content_import/data/ExploreRepository.kt:4:import com.algorithmx.q_base.data.core.UserDao
+app/src/main/java/com/algorithmx/q_base/feature/content_import/data/ExploreRepository.kt:20:    private val userDao: UserDao
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:13:import com.algorithmx.q_base.data.core.UserDao
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:54:    fun provideUserDao(database: AppDatabase): UserDao = database.userDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:87:        userDao: UserDao
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:98:        userDao: UserDao
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:109:        userDao: UserDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:128:        userDao: UserDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:141:    fun provideProfileCache(userDao: UserDao): ProfileCache {
+app/src/main/java/com/algorithmx/q_base/core/data/UserDao.kt:7:interface UserDao {
+app/src/main/java/com/algorithmx/q_base/core/data/HomeRepository.kt:7:import com.algorithmx.q_base.data.core.UserDao
+app/src/main/java/com/algorithmx/q_base/core/data/HomeRepository.kt:22:    private val userDao: UserDao,
+app/src/main/java/com/algorithmx/q_base/core/data/AppDatabase.kt:40:    abstract fun userDao(): UserDao
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:7:import com.algorithmx.q_base.data.core.UserDao
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:22:    private val userDao: UserDao,
+app/src/main/java/com/algorithmx/q_base/core/data/DatabaseSeeder.kt:28:    private val userDao: UserDao,
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/MessageSyncRepository.kt:7:import com.algorithmx.q_base.data.core.UserDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/MessageSyncRepository.kt:28:    internal val userDao: UserDao,
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/CollectionSyncRepository.kt:8:import com.algorithmx.q_base.data.core.UserDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/CollectionSyncRepository.kt:29:    internal val userDao: UserDao,
+--- AiResponseDao ---
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:5:import com.algorithmx.q_base.data.ai.AiResponseDao
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:69:    fun provideAiResponseDao(database: AppDatabase): AiResponseDao = database.aiResponseDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:129:        aiResponseDao: AiResponseDao,
+app/src/main/java/com/algorithmx/q_base/core/data/AppDatabase.kt:41:    abstract fun aiResponseDao(): AiResponseDao
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:8:import com.algorithmx.q_base.data.ai.AiResponseDao
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:23:    private val aiResponseDao: AiResponseDao,
+app/src/main/java/com/algorithmx/q_base/core/ai/data/AiResponseDao.kt:7:interface AiResponseDao {
+app/src/main/java/com/algorithmx/q_base/core/ai/data/AiRepository.kt:19:    private val aiResponseDao: AiResponseDao
+app/src/main/java/com/algorithmx/q_base/core/ai/di/BrainModule.kt:22:        aiResponseDao: com.algorithmx.q_base.data.ai.AiResponseDao
+--- BrainUsageDao ---
+app/src/main/java/com/algorithmx/q_base/di/AiModuleIntegrator.kt:9:import com.algorithmx.q_base.data.ai.BrainUsageDao
+app/src/main/java/com/algorithmx/q_base/di/AiModuleIntegrator.kt:33:    private val brainUsageDao: BrainUsageDao
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:6:import com.algorithmx.q_base.data.ai.BrainUsageDao
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:72:    fun provideBrainUsageDao(database: AppDatabase): BrainUsageDao = database.brainUsageDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:130:        brainUsageDao: BrainUsageDao,
+app/src/main/java/com/algorithmx/q_base/core/data/AppDatabase.kt:42:    abstract fun brainUsageDao(): BrainUsageDao
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:9:import com.algorithmx.q_base.data.ai.BrainUsageDao
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:24:    private val brainUsageDao: BrainUsageDao,
+app/src/main/java/com/algorithmx/q_base/core/ai/data/BrainUsageDao.kt:11:interface BrainUsageDao {
+--- ProblemReportDao ---
+app/src/main/java/com/algorithmx/q_base/feature/content_import/data/ExploreRepository.kt:19:    private val problemReportDao: ProblemReportDao,
+app/src/main/java/com/algorithmx/q_base/feature/content_import/data/ProblemReportDao.kt:7:interface ProblemReportDao {
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:11:import com.algorithmx.q_base.data.collections.ProblemReportDao
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:51:    fun provideProblemReportDao(database: AppDatabase): ProblemReportDao = database.problemReportDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:86:        problemReportDao: ProblemReportDao,
+app/src/main/java/com/algorithmx/q_base/core/data/AppDatabase.kt:39:    abstract fun problemReportDao(): ProblemReportDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/UniversalQueueManager.kt:6:import com.algorithmx.q_base.data.collections.ProblemReportDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/UniversalQueueManager.kt:20:    private val problemReportDao: ProblemReportDao
+--- ActionQueueDao ---
+app/src/test/java/com/algorithmx/q_base/ui/settings/ProfileViewModelTest.kt:35:    private val actionQueueDao: com.algorithmx.q_base.data.sync.ActionQueueDao = mockk()
+app/src/main/java/com/algorithmx/q_base/feature/settings/presentation/ProfileViewModel.kt:39:    private val actionQueueDao: com.algorithmx.q_base.data.sync.ActionQueueDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:78:    fun provideActionQueueDao(database: AppDatabase): com.algorithmx.q_base.data.sync.ActionQueueDao = database.actionQueueDao()
+app/src/main/java/com/algorithmx/q_base/core/data/AppDatabase.kt:44:    abstract fun actionQueueDao(): com.algorithmx.q_base.data.sync.ActionQueueDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/UniversalQueueManager.kt:17:    private val actionQueueDao: ActionQueueDao,
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/ActionQueueDao.kt:6:interface ActionQueueDao {
+--- ChatDao ---
+app/src/main/java/com/algorithmx/q_base/feature/chat/presentation/ChatViewModel.kt:7:import com.algorithmx.q_base.data.chat.ChatDao
+app/src/main/java/com/algorithmx/q_base/feature/chat/presentation/ChatViewModel.kt:34:    internal val chatDao: ChatDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:7:import com.algorithmx.q_base.data.chat.ChatDao
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:63:    fun provideChatDao(database: ChatDatabase): ChatDao = database.chatDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:110:        chatDao: ChatDao
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:124:        chatDao: ChatDao,
+app/src/main/java/com/algorithmx/q_base/core/data/HomeRepository.kt:3:import com.algorithmx.q_base.data.chat.ChatDao
+app/src/main/java/com/algorithmx/q_base/core/data/HomeRepository.kt:23:    private val chatDao: ChatDao
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:3:import com.algorithmx.q_base.data.chat.ChatDao
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:18:    private val chatDao: ChatDao,
+app/src/main/java/com/algorithmx/q_base/core/data/DatabaseSeeder.kt:26:    private val chatDao: ChatDao,
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/ChatManagerRepository.kt:4:import com.algorithmx.q_base.data.chat.ChatDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/ChatManagerRepository.kt:29:    private val chatDao: ChatDao,
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/MessageSyncRepository.kt:4:import com.algorithmx.q_base.data.chat.ChatDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/MessageSyncRepository.kt:26:    internal val chatDao: ChatDao,
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/CollectionSyncRepository.kt:4:import com.algorithmx.q_base.data.chat.ChatDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/CollectionSyncRepository.kt:28:    internal val chatDao: ChatDao,
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/SessionSyncRepository.kt:4:import com.algorithmx.q_base.data.chat.ChatDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/SessionSyncRepository.kt:31:    private val chatDao: ChatDao,
+--- MessageDao ---
+app/src/main/java/com/algorithmx/q_base/feature/chat/presentation/ChatViewModel.kt:10:import com.algorithmx.q_base.data.chat.MessageDao
+app/src/main/java/com/algorithmx/q_base/feature/chat/presentation/ChatViewModel.kt:35:    internal val messageDao: MessageDao,
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:9:import com.algorithmx.q_base.data.chat.MessageDao
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:66:    fun provideMessageDao(database: ChatDatabase): MessageDao = database.messageDao()
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:125:        messageDao: MessageDao,
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:4:import com.algorithmx.q_base.data.chat.MessageDao
+app/src/main/java/com/algorithmx/q_base/core/data/DataClearingRepository.kt:19:    private val messageDao: MessageDao,
+app/src/main/java/com/algorithmx/q_base/core/data/DatabaseSeeder.kt:27:    private val messageDao: MessageDao,
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/ChatManagerRepository.kt:8:import com.algorithmx.q_base.data.chat.MessageDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/ChatManagerRepository.kt:30:    private val messageDao: MessageDao,
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/MessageSyncRepository.kt:6:import com.algorithmx.q_base.data.chat.MessageDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/MessageSyncRepository.kt:27:    internal val messageDao: MessageDao,
+--- CollectionVersionLedgerDao ---
+app/src/main/java/com/algorithmx/q_base/feature/content_import/data/CollectionVersionLedger.kt:18:interface CollectionVersionLedgerDao {
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:22:import com.algorithmx.q_base.data.collections.CollectionVersionLedgerDao
+app/src/main/java/com/algorithmx/q_base/core/data/di/DatabaseModule.kt:75:    fun provideCollectionVersionLedgerDao(database: AppDatabase): CollectionVersionLedgerDao = database.collectionVersionLedgerDao()
+app/src/main/java/com/algorithmx/q_base/core/data/AppDatabase.kt:43:    abstract fun collectionVersionLedgerDao(): CollectionVersionLedgerDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/CollectionSyncRepository.kt:6:import com.algorithmx.q_base.data.collections.CollectionVersionLedgerDao
+app/src/main/java/com/algorithmx/q_base/sync/orchestration/CollectionSyncRepository.kt:34:    internal val collectionVersionLedgerDao: CollectionVersionLedgerDao,
+--- AiRepository ---
+app/src/main/java/com/algorithmx/q_base/feature/explore/presentation/ExploreViewModel.kt:10:import com.algorithmx.q_base.data.ai.AiRepository
+app/src/main/java/com/algorithmx/q_base/feature/explore/presentation/ExploreViewModel.kt:34:    internal val aiRepository: AiRepository,
+app/src/main/java/com/algorithmx/q_base/feature/sessions/presentation/ActiveSessionViewModelFactory.kt:7:import com.algorithmx.q_base.data.ai.AiRepository
+app/src/main/java/com/algorithmx/q_base/feature/sessions/presentation/ActiveSessionViewModelFactory.kt:13:    private val aiRepository: AiRepository,
+app/src/main/java/com/algorithmx/q_base/feature/sessions/presentation/ActiveSessionViewModel.kt:18:import com.algorithmx.q_base.data.ai.AiRepository
+app/src/main/java/com/algorithmx/q_base/feature/sessions/presentation/ActiveSessionViewModel.kt:38:    private val aiRepository: AiRepository,
+app/src/main/java/com/algorithmx/q_base/feature/chat/presentation/ChatViewModel.kt:16:import com.algorithmx.q_base.data.ai.AiRepository
+app/src/main/java/com/algorithmx/q_base/feature/chat/presentation/ChatViewModel.kt:39:    internal val aiRepository: AiRepository,
+app/src/main/java/com/algorithmx/q_base/feature/content_import/presentation/ImportViewModel.kt:7:import com.algorithmx.q_base.data.ai.AiRepository
+app/src/main/java/com/algorithmx/q_base/feature/content_import/presentation/ImportViewModel.kt:67:    private val aiRepository: AiRepository,
+app/src/main/java/com/algorithmx/q_base/feature/content_import/presentation/QuestionEditorViewModel.kt:8:import com.algorithmx.q_base.data.ai.AiRepository
+app/src/main/java/com/algorithmx/q_base/feature/content_import/presentation/QuestionEditorViewModel.kt:32:    private val aiRepository: AiRepository
+app/src/main/java/com/algorithmx/q_base/core/ai/data/AiRepository.kt:15:class AiRepository @Inject constructor(
+app/src/main/java/com/algorithmx/q_base/core/ai/data/AiRepository.kt:21:    private val TAG = "AiRepository"
+app/src/main/java/com/algorithmx/q_base/core/ai/di/BrainModule.kt:5:import com.algorithmx.q_base.data.ai.AiRepository
+app/src/main/java/com/algorithmx/q_base/core/ai/di/BrainModule.kt:23:    ): AiRepository {
+app/src/main/java/com/algorithmx/q_base/core/ai/di/BrainModule.kt:24:        return AiRepository(aiBrainManager, questionDao, collectionDao, aiResponseDao)
+app/src/main/java/com/algorithmx/q_base/ui/ai/AiViewModel.kt:5:import com.algorithmx.q_base.data.ai.AiRepository
+app/src/main/java/com/algorithmx/q_base/ui/ai/AiViewModel.kt:25:    private val aiRepository: AiRepository
+--- AiUsageLoggerImpl ---
+app/src/main/java/com/algorithmx/q_base/di/AiModuleIntegrator.kt:32:class AiUsageLoggerImpl @Inject constructor(
+app/src/main/java/com/algorithmx/q_base/core/ai/di/AiIntegrationModule.kt:3:import com.algorithmx.q_base.data.ai.AiUsageLoggerImpl
+app/src/main/java/com/algorithmx/q_base/core/ai/di/AiIntegrationModule.kt:20:        impl: AiUsageLoggerImpl
+--- BrainConfigProviderImpl ---
+app/src/main/java/com/algorithmx/q_base/di/AiModuleIntegrator.kt:17:class BrainConfigProviderImpl @Inject constructor(
+app/src/main/java/com/algorithmx/q_base/core/ai/di/AiIntegrationModule.kt:4:import com.algorithmx.q_base.data.ai.BrainConfigProviderImpl
+app/src/main/java/com/algorithmx/q_base/core/ai/di/AiIntegrationModule.kt:26:        impl: BrainConfigProviderImpl
