@@ -9,12 +9,16 @@ import com.algorithmx.q_base.data.collections.QuestionDao
 import com.algorithmx.q_base.core.data.DataClearingRepository
 import com.algorithmx.q_base.core.data.UserDao
 import com.algorithmx.q_base.core.data.UserEntity
+import com.algorithmx.q_base.feature.settings.presentation.ProfileViewModel
 import com.algorithmx.q_base.feature.sessions.data.SessionDao
 import com.algorithmx.q_base.feature.sessions.data.StudySession
+import com.algorithmx.q_base.util.NetworkMonitor
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.*
 import org.junit.After
@@ -33,6 +37,9 @@ class ProfileViewModelTest {
     private val profileRepository: ProfileRepository = mockk()
     private val dataClearingRepository: DataClearingRepository = mockk()
     private val actionQueueDao: com.algorithmx.q_base.data.sync.ActionQueueDao = mockk()
+    private val networkMonitor: NetworkMonitor = mockk()
+    private val onlineState: StateFlow<Boolean> = MutableStateFlow(true)
+    private val backendSessionState: StateFlow<Boolean> = MutableStateFlow(true)
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
@@ -42,6 +49,7 @@ class ProfileViewModelTest {
 
         // Mock initialization flows
         every { authRepository.currentUser } returns flowOf(null)
+        every { authRepository.isBackendSessionValid } returns backendSessionState
         every { questionDao.getQuestionCountFlow() } returns flowOf(0)
         every { questionDao.getUserCreatedQuestionCount() } returns flowOf(0)
         every { questionDao.getSharedQuestionCount() } returns flowOf(0)
@@ -49,6 +57,7 @@ class ProfileViewModelTest {
         
         coEvery { profileRepository.checkHasSecureBackup(any()) } returns false
         coEvery { profileRepository.syncUserProfile(any()) } returns Unit
+        every { networkMonitor.isOnline } returns onlineState
 
         viewModel = ProfileViewModel(
             userDao,
@@ -58,7 +67,8 @@ class ProfileViewModelTest {
             authRepository,
             profileRepository,
             dataClearingRepository,
-            actionQueueDao
+            actionQueueDao,
+            networkMonitor
         )
     }
 
@@ -79,6 +89,7 @@ class ProfileViewModelTest {
         
         // We need to mock authRepository.currentUser to return a user so userState has a value
         every { authRepository.currentUser } returns flowOf(mockk<AppwriteUser> { every { uid } returns "uid123" })
+        every { authRepository.isBackendSessionValid } returns backendSessionState
         every { userDao.getCurrentUser("uid123") } returns flowOf(user)
         
         // Re-initialize to pick up the mocked flows
@@ -90,7 +101,8 @@ class ProfileViewModelTest {
             authRepository,
             profileRepository,
             dataClearingRepository,
-            actionQueueDao
+            actionQueueDao,
+            networkMonitor
         )
 
         // Ensure userState is collected so it updates
@@ -123,6 +135,7 @@ class ProfileViewModelTest {
         )
         
         every { authRepository.currentUser } returns flowOf(mockk<AppwriteUser> { every { uid } returns "uid123" })
+        every { authRepository.isBackendSessionValid } returns backendSessionState
         every { userDao.getCurrentUser("uid123") } returns flowOf(user)
         
         viewModel = ProfileViewModel(
@@ -133,7 +146,8 @@ class ProfileViewModelTest {
             authRepository,
             profileRepository,
             dataClearingRepository,
-            actionQueueDao
+            actionQueueDao,
+            networkMonitor
         )
 
         backgroundScope.launch { viewModel.userState.collect {} }
