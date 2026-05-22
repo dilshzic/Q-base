@@ -1,14 +1,14 @@
-package com.algorithmx.q_base.di
+package com.algorithmx_q_base.di
 
 import android.util.Log
-import com.algorithmx.q_base.BuildConfig
-import com.algorithmx.q_base.core_ai.brain.AiUsageLogger
-import com.algorithmx.q_base.core_ai.brain.BrainConfigProvider
+import com.algorithmx_q_base.BuildConfig
+import com.algorithmx_q_base.core_ai.brain.AiUsageLogger
+import com.algorithmx_q_base.core_ai.brain.BrainConfigProvider
 import com.algorithmx.androidmodules.coreai.brain.models.BrainProvider
-import com.algorithmx.q_base.core_ai.brain.models.BrainTask
-import com.algorithmx.q_base.core.ai.data.BrainUsageDao
-import com.algorithmx.q_base.core.ai.data.BrainUsageEntity
-import com.algorithmx.q_base.core.data.ConfigRepository
+import com.algorithmx_q_base.core_ai.brain.models.BrainTask
+import com.algorithmx_q_base.core.ai.data.BrainUsageDao
+import com.algorithmx_q_base.core.ai.data.BrainUsageEntity
+import com.algorithmx_q_base.core.data.ConfigRepository
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
