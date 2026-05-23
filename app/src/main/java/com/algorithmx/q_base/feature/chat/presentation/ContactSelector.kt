@@ -54,7 +54,7 @@ fun ContactSelector(
     
     val context = LocalContext.current
     val appAccessState = LocalAppAccessState.current
-    val isOffline = appAccessState == AppAccessState.SignedInOffline || appAccessState == AppAccessState.OfflineGuest
+    val isOffline = appAccessState != AppAccessState.Online
 
     val filteredContacts = remember(nameQuery, state.localContacts, excludedUserId) {
         state.localContacts.filter { 

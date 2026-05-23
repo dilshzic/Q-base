@@ -56,7 +56,7 @@ fun AiGenerationScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (accessState != AppAccessState.OnlineReady) {
+            if (accessState != AppAccessState.Online) {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                     modifier = Modifier.fillMaxWidth()
@@ -81,7 +81,7 @@ fun AiGenerationScreen(
                 label = { Text("Topic (e.g. Early signs of Heart Failure)") },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
-                enabled = accessState == AppAccessState.OnlineReady
+                enabled = accessState == AppAccessState.Online
             )
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -90,14 +90,14 @@ fun AiGenerationScreen(
                     onValueChange = { count = it },
                     label = { Text("Count") },
                     modifier = Modifier.weight(1f),
-                    enabled = accessState == AppAccessState.OnlineReady
+                    enabled = accessState == AppAccessState.Online
                 )
                 
                 // Simplified type selector
                 var expanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(
                     expanded = expanded,
-                    onExpandedChange = { if (accessState == AppAccessState.OnlineReady) expanded = !expanded },
+                    onExpandedChange = { if (accessState == AppAccessState.Online) expanded = !expanded },
                     modifier = Modifier.weight(1f)
                 ) {
                     OutlinedTextField(
@@ -107,7 +107,7 @@ fun AiGenerationScreen(
                         label = { Text("Type") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                        enabled = accessState == AppAccessState.OnlineReady
+                        enabled = accessState == AppAccessState.Online
                     )
                     ExposedDropdownMenu(
                         expanded = expanded,
@@ -131,7 +131,7 @@ fun AiGenerationScreen(
                     viewModel.generateCollection(topic, count.toIntOrNull() ?: 5, selectedType, collectionId, collectionName)
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = topic.isNotBlank() && uiState !is AiUiState.Loading && accessState == AppAccessState.OnlineReady
+                enabled = topic.isNotBlank() && uiState !is AiUiState.Loading && accessState == AppAccessState.Online
             ) {
                 if (uiState is AiUiState.Loading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)

@@ -126,7 +126,7 @@ fun CollectionOverviewScreen(
         },
         floatingActionButton = {
             val accessState = com.algorithmx.q_base.core.state.LocalAppAccessState.current
-            if (accessState == com.algorithmx.q_base.core.state.AppAccessState.OnlineReady) {
+            if (accessState == com.algorithmx.q_base.core.state.AppAccessState.Online) {
                 ExtendedFloatingActionButton(
                     onClick = { viewModel?.askAiAboutCollection(collection) },
                     containerColor = MaterialTheme.colorScheme.tertiary,

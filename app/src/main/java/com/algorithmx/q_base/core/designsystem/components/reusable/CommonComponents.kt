@@ -124,11 +124,9 @@ fun UnifiedTopAppBar(
 @Composable
 private fun AppAccessStateBadge(appAccessState: AppAccessState) {
     val (label, color) = when (appAccessState) {
-        AppAccessState.RestoringSession -> "Restoring" to MaterialTheme.colorScheme.tertiary
-        AppAccessState.OnlineReady -> "Online" to Color(0xFF2E7D32)
-        AppAccessState.SignedInOffline -> "Offline" to MaterialTheme.colorScheme.error
-        AppAccessState.GuestOnline -> "Guest • Online" to MaterialTheme.colorScheme.secondary
-        AppAccessState.OfflineGuest -> "Guest • Offline" to MaterialTheme.colorScheme.error
+        AppAccessState.Online -> "Online" to Color(0xFF2E7D32)
+        AppAccessState.Offline -> "Offline" to MaterialTheme.colorScheme.error
+        AppAccessState.NotLoggedIn -> "Not logged in" to MaterialTheme.colorScheme.tertiary
     }
 
     Surface(

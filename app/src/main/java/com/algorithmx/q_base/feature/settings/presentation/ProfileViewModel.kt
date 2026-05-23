@@ -83,10 +83,9 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 authRepository.currentUser,
-                networkMonitor.isOnline,
-                authRepository.isBackendSessionValid
-            ) { user, isOnline, isBackendValid ->
-                if (user != null && isOnline && isBackendValid) {
+                networkMonitor.isOnline
+            ) { user, isOnline ->
+                if (user != null && isOnline) {
                     profileRepository.syncUserProfile(user.uid)
                 }
             }
@@ -98,10 +97,9 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 authRepository.currentUser,
-                networkMonitor.isOnline,
-                authRepository.isBackendSessionValid
-            ) { user, isOnline, isBackendValid ->
-                if (user != null && isOnline && isBackendValid) {
+                networkMonitor.isOnline
+            ) { user, isOnline ->
+                if (user != null && isOnline) {
                     _hasSecureBackup.value = profileRepository.checkHasSecureBackup(user.uid)
                 }
             }

@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.algorithmx.q_base.core_chat"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 24

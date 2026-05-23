@@ -86,10 +86,7 @@ class ChatViewModel @Inject constructor(
     internal val _navigationEvents = MutableSharedFlow<ChatNavEvent>()
     val navigationEvents = _navigationEvents.asSharedFlow()
 
-    val isOnline: StateFlow<Boolean> = combine(
-        networkMonitor.isOnline,
-        authRepository.isBackendSessionValid
-    ) { online, sessionValid -> online && sessionValid }
+    val isOnline: StateFlow<Boolean> = networkMonitor.isOnline
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     val currentUserId: String

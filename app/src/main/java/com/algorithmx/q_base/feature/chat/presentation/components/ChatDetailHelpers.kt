@@ -6,11 +6,9 @@ import java.util.Date
 import java.util.Locale
 
 fun accessStateLabel(state: AppAccessState): String = when (state) {
-    AppAccessState.RestoringSession -> "Restoring"
-    AppAccessState.OnlineReady -> "Online"
-    AppAccessState.SignedInOffline -> "Offline"
-    AppAccessState.GuestOnline -> "Guest Online"
-    AppAccessState.OfflineGuest -> "Guest Offline"
+    AppAccessState.Online -> "Online"
+    AppAccessState.Offline -> "Offline"
+    AppAccessState.NotLoggedIn -> "Not logged in"
 }
 
 fun formatDateRelatively(timestamp: Long): String {

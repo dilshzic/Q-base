@@ -134,24 +134,7 @@ fun ChatListScreen(
             }
         }
     ) { padding ->
-        if (appAccessState is AppAccessState.RestoringSession) {
-            Box(
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator()
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Restoring your session…",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        } else if (currentUser == null) {
+        if (currentUser == null) {
             GuestConnectView(
                 modifier = Modifier.padding(padding)
             )

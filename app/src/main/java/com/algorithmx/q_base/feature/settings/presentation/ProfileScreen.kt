@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar
 import com.algorithmx.q_base.core.designsystem.theme.QbaseTheme
+import com.algorithmx.q_base.core.state.AppAccessState
+import com.algorithmx.q_base.core.state.LocalAppAccessState
 
 import com.algorithmx.q_base.feature.settings.presentation.components.*
 
@@ -40,6 +42,7 @@ fun ProfileScreen(
 ) {
     val user by viewModel.userState.collectAsStateWithLifecycle()
     val hasSecureBackup by viewModel.hasSecureBackup.collectAsStateWithLifecycle()
+    val appAccessState = LocalAppAccessState.current
 
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
@@ -47,6 +50,7 @@ fun ProfileScreen(
     ProfileContent(
         user = user,
         hasSecureBackup = hasSecureBackup,
+        appAccessState = appAccessState,
         onBack = onBack,
         onNavigateToSettings = onNavigateToSettings,
         onLoggedOut = onLoggedOut,
@@ -74,6 +78,7 @@ fun ProfileScreen(
 fun ProfileContent(
     user: com.algorithmx.q_base.core.data.UserEntity?,
     hasSecureBackup: Boolean,
+    appAccessState: AppAccessState,
     onBack: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onLoggedOut: () -> Unit,
@@ -213,6 +218,20 @@ fun ProfileContent(
                     textAlign = TextAlign.Center
                 )
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                AssistChip(
+                    onClick = {},
+                    label = { Text("${appAccessStateLabel(appAccessState)}") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Rounded.Circle,
+                            contentDescription = null,
+                            tint = appAccessStateColor(appAccessState)
+                        )
+                    }
+                )
+
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // Connect Section
@@ -285,6 +304,19 @@ fun ProfileContent(
     }
 }
 
+private fun appAccessStateLabel(appAccessState: AppAccessState): String = when (appAccessState) {
+    AppAccessState.Online -> "Online"
+    AppAccessState.Offline -> "Offline"
+    AppAccessState.NotLoggedIn -> "Not logged in"
+}
+
+@Composable
+private fun appAccessStateColor(appAccessState: AppAccessState): Color = when (appAccessState) {
+    AppAccessState.Online -> Color(0xFF2E7D32)
+    AppAccessState.Offline -> MaterialTheme.colorScheme.error
+    AppAccessState.NotLoggedIn -> MaterialTheme.colorScheme.tertiary
+}
+
 @Preview(showBackground = true)
 @Composable
 fun ProfileContentPreview() {
@@ -300,6 +332,7 @@ fun ProfileContentPreview() {
                 isPhotoVisible = true
             ),
             hasSecureBackup = false,
+            appAccessState = AppAccessState.Online,
             onBack = {},
             onNavigateToSettings = {},
             onLoggedOut = {},

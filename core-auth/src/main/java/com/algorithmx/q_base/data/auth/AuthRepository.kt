@@ -18,6 +18,8 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 import javax.inject.Inject
+import androidx.core.content.edit
+import androidx.core.net.toUri
 import javax.inject.Singleton
 
 data class AppwriteUser(
@@ -54,13 +56,13 @@ class AuthRepository @Inject constructor(
     }
 
     private fun saveUserToPrefs(user: AppwriteUser) {
-        prefs.edit()
-            .putString("cached_user_uid", user.uid)
-            .putString("cached_user_email", user.email)
-            .putString("cached_user_name", user.displayName)
-            .putString("cached_user_photo", user.photoUrl?.toString())
-            .putBoolean("is_logged_in", true)
-            .apply()
+        prefs.edit {
+            putString("cached_user_uid", user.uid)
+            putString("cached_user_email", user.email)
+            putString("cached_user_name", user.displayName)
+            putString("cached_user_photo", user.photoUrl?.toString())
+            putBoolean("is_logged_in", true)
+        }
     }
 
     private fun getUserFromPrefs(): AppwriteUser? {
@@ -68,18 +70,18 @@ class AuthRepository @Inject constructor(
         val email = prefs.getString("cached_user_email", null)
         val name = prefs.getString("cached_user_name", null)
         val photoUrlString = prefs.getString("cached_user_photo", null)
-        val photoUrl = if (photoUrlString != null) android.net.Uri.parse(photoUrlString) else null
+        val photoUrl = photoUrlString?.toUri()
         return AppwriteUser(uid, email, name, photoUrl)
     }
 
     private fun clearUserFromPrefs() {
-        prefs.edit()
-            .remove("cached_user_uid")
-            .remove("cached_user_email")
-            .remove("cached_user_name")
-            .remove("cached_user_photo")
-            .putBoolean("is_logged_in", false)
-            .apply()
+        prefs.edit {
+            remove("cached_user_uid")
+            remove("cached_user_email")
+            remove("cached_user_name")
+            remove("cached_user_photo")
+            putBoolean("is_logged_in", false)
+        }
     }
 
     fun checkCurrentSession() {
@@ -111,7 +113,7 @@ class AuthRepository @Inject constructor(
             uid = user.id,
             email = user.email,
             displayName = user.name,
-            photoUrl = photoUrl?.let { android.net.Uri.parse(it) }
+            photoUrl = photoUrl?.toUri()
         )
     }
 

@@ -137,10 +137,7 @@ class MainActivity : ComponentActivity() {
         var restSyncJob: kotlinx.coroutines.Job? = null
         var realtimeSyncJob: kotlinx.coroutines.Job? = null
         lifecycleScope.launch {
-            val isBackendReady = combine(
-                networkMonitor.isOnline,
-                authRepository.isBackendSessionValid
-            ) { online, sessionValid -> online && sessionValid }
+            val isBackendReady = networkMonitor.isOnline
 
             combine(
                 authRepository.currentUser,
@@ -200,12 +197,7 @@ class MainActivity : ComponentActivity() {
             QbaseTheme(themeMode = brainConfig.themeMode) {
                 val seeded by isSeeded.collectAsStateWithLifecycle()
                 val isSessionChecked by authRepository.isSessionChecked.collectAsStateWithLifecycle(initialValue = false)
-                val isOnline by remember {
-                    combine(
-                        networkMonitor.isOnline,
-                        authRepository.isBackendSessionValid
-                    ) { online, sessionValid -> online && sessionValid }
-                }.collectAsStateWithLifecycle(initialValue = false)
+                val isOnline by networkMonitor.isOnline.collectAsStateWithLifecycle(initialValue = false)
                 
                 // Observe authentication state reactively
                 val userFlow = remember { authRepository.currentUser }
@@ -234,13 +226,11 @@ class MainActivity : ComponentActivity() {
                     if (isLoggedInInstancePersisted) Screen.Home else Screen.Login
                 }
 
-                val appAccessState = remember(isSessionChecked, user, isOnline) {
+                val appAccessState = remember(user, isOnline, isLoggedInInstancePersisted) {
                     when {
-                        !isSessionChecked -> AppAccessState.RestoringSession
-                        user != null && isOnline -> AppAccessState.OnlineReady
-                        user != null && !isOnline -> AppAccessState.SignedInOffline
-                        user == null && isOnline -> AppAccessState.GuestOnline
-                        else -> AppAccessState.OfflineGuest
+                        user == null && !isLoggedInInstancePersisted -> AppAccessState.NotLoggedIn
+                        isOnline -> AppAccessState.Online
+                        else -> AppAccessState.Offline
                     }
                 }
                 
@@ -260,11 +250,11 @@ class MainActivity : ComponentActivity() {
                 android.util.Log.d("MainActivity", "Composition: startRoute=$startRoute, currentTopLevel=${navigationState.topLevelRoute}")
                 android.util.Log.d("MainActivity", "Compose state: seeded=$seeded, isSessionChecked=$isSessionChecked, appAccessState=$appAccessState, user=$user, isOnline=$isOnline")
 
-                // Display a generic long-duration snackbar if background session check fails/user is guest
-                LaunchedEffect(isSessionChecked, user) {
-                    if (isSessionChecked && user == null) {
+                // Display a sign-in prompt only when there is no previous login history.
+                LaunchedEffect(isSessionChecked, user, isLoggedInInstancePersisted) {
+                    if (isSessionChecked && user == null && !isLoggedInInstancePersisted) {
                         snackbarHostState.showSnackbar(
-                            message = "Running in offline guest mode. Tap profile to log in.",
+                            message = "You are not logged in. Tap profile to sign in.",
                             duration = SnackbarDuration.Long
                         )
                     }
@@ -295,7 +285,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 CompositionLocalProvider(LocalAppAccessState provides appAccessState) {
-                    if (!seeded || appAccessState == AppAccessState.RestoringSession) {
+                    if (!seeded) {
                         LoadingScreen()
                     } else {
                         MainScreen(navigationState, navigator, snackbarHostState)

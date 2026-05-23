@@ -33,7 +33,7 @@ fun NewGroupScreen(
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
     val appAccessState = LocalAppAccessState.current
-    val isOffline = appAccessState == AppAccessState.SignedInOffline || appAccessState == AppAccessState.OfflineGuest
+    val isOffline = appAccessState != AppAccessState.Online
     
     LaunchedEffect(Unit) {
         viewModel.navigationEvents.collect { event ->

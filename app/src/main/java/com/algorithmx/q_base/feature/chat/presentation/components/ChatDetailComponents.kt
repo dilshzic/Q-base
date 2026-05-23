@@ -130,9 +130,9 @@ fun ChatDetailTopBar(
                             text = "• ${accessStateLabel(appAccessState)}",
                             style = MaterialTheme.typography.labelSmall,
                             color = when (appAccessState) {
-                                AppAccessState.OnlineReady, AppAccessState.GuestOnline -> MaterialTheme.colorScheme.primary
-                                AppAccessState.RestoringSession -> MaterialTheme.colorScheme.tertiary
-                                AppAccessState.SignedInOffline, AppAccessState.OfflineGuest -> MaterialTheme.colorScheme.error
+                                AppAccessState.Online -> MaterialTheme.colorScheme.primary
+                                AppAccessState.Offline -> MaterialTheme.colorScheme.error
+                                AppAccessState.NotLoggedIn -> MaterialTheme.colorScheme.tertiary
                             }
                         )
                     }
