@@ -28,6 +28,7 @@ class ChatManagerRepository @Inject constructor(
     private val chatRemoteRepository: ChatRemoteRepository,
     private val chatDao: ChatDao,
     private val messageDao: MessageDao,
+    private val userDao: com.algorithmx.q_base.core.data.UserDao,
     private val messageSyncRepository: Lazy<MessageSyncRepository>
 ) {
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -196,6 +197,24 @@ class ChatManagerRepository @Inject constructor(
             // Local chat exists but has no name yet — refresh metadata from remote
             fetchAndSyncChatMetadata(chatId)
         }
+
+        // Fetch/sync the profile for the other participant if missing
+        val finalChat = chatDao.getChatById(chatId)
+        val uid = currentUserId
+        val otherParticipantId = finalChat?.participantIds?.split(",")
+            ?.firstOrNull { it != uid && it.isNotBlank() }
+        if (otherParticipantId != null) {
+            val user = userDao.getUserById(otherParticipantId)
+            if (user == null) {
+                repositoryScope.launch {
+                    try {
+                        profileRepository.syncUserProfile(otherParticipantId)
+                    } catch (e: Exception) {
+                        Log.e("ChatManagerRepository", "Failed to sync profile for missing participant $otherParticipantId", e)
+                    }
+                }
+            }
+        }
     }
 
     suspend fun fetchAndSyncChatMetadata(chatId: String) {
@@ -232,6 +251,20 @@ class ChatManagerRepository @Inject constructor(
             }
             chatDao.insertChat(chat)
             Log.d("ChatManagerRepository", "fetchAndSyncChatMetadata: chatId=$chatId name='${chat.chatName}'")
+
+            // Sync user profiles for all other participants
+            val uid = currentUserId
+            participantsList.forEach { participantId ->
+                if (participantId.isNotBlank() && participantId != uid) {
+                    repositoryScope.launch {
+                        try {
+                            profileRepository.syncUserProfile(participantId)
+                        } catch (e: Exception) {
+                            Log.e("ChatManagerRepository", "Failed to sync profile for participant $participantId during metadata update", e)
+                        }
+                    }
+                }
+            }
         } catch (e: Exception) {
             Log.e("ChatManagerRepository", "Failed to fetch chat metadata for $chatId", e)
         }

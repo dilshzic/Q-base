@@ -241,6 +241,23 @@ class ChatViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            if (userDao.getUserById(QBASE_AI_BOT_ID) == null) {
+                userDao.insertUser(
+                    UserEntity(
+                        userId = QBASE_AI_BOT_ID,
+                        displayName = "Qbase AI",
+                        email = null,
+                        intro = "Qbase Official AI Assistant",
+                        profilePictureUrl = null,
+                        friendCode = "AI-BOT",
+                        publicKey = null,
+                        isBanned = false,
+                        isPhotoVisible = true
+                    )
+                )
+            }
+        }
+        viewModelScope.launch {
             combine(
                 authRepository.currentUser,
                 isOnline

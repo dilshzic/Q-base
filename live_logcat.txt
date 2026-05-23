@@ -1,0 +1,1244 @@
+--------- beginning of main
+05-22 23:57:04.857 D/ProcessState( 2856): Binder ioctl to enable oneway spam detection failed: Invalid argument
+05-22 23:57:04.861 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:04.861 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:04.862 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x41, d=0, 'cc3a094'
+05-22 23:57:04.863 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:04.864 I/HBD     (11039): HoneyBoardService onKeyDown r:75fea636 consumed:false 
+05-22 23:57:04.864 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:04.866 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:04.867 D/SingleKeyGesture( 5213): reset counter=0 mActiveRule=null Callers(5)=com.android.server.policy.SingleKeyGestureDetector.interceptKeyDown:277 com.android.server.policy.SingleKeyGestureDetector.interceptKey:219 com.android.server.policy.PhoneWindowManager.handleKeyGesture:4766 com.android.server.policy.PhoneWindowManager.interceptKeyBeforeQueueing:4300 com.android.server.wm.InputManagerCallback.interceptKeyBeforeQueueing:161 
+05-22 23:57:04.867 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:04.867 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x41, d=0, 'cc3a094'
+05-22 23:57:04.868 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:04.869 I/HBD     (11039): HoneyBoardService onKeyDown r:d0d0161b consumed:false 
+05-22 23:57:04.870 I/ViewRootImpl@f63227f[MainActivity](  937): setInTouchMode(false), android.view.ViewRootImpl.checkForLeavingTouchModeAndConsume:9050 android.view.ViewRootImpl.access$3500:303 android.view.ViewRootImpl$EarlyPostImeInputStage.processKeyEvent:7399 android.view.ViewRootImpl$EarlyPostImeInputStage.onProcess:7383 android.view.ViewRootImpl$InputStage.deliver:6927 android.view.ViewRootImpl$InputStage.onDeliverToNext:6984 android.view.ViewRootImpl$InputStage.forward:6950 android.view.ViewRootImpl$AsyncInputStage.forward:7181 android.view.ViewRootImpl$ImeInputStage.onFinishedInputEvent:7368 android.view.inputmethod.InputMethodManager$PendingEvent.run:3411 
+05-22 23:57:04.870 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:04.872 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:04.872 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:04.873 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x41, d=0, 'cc3a094'
+05-22 23:57:04.873 I/HBD     (11039): HoneyBoardService onKeyUp r:ddd872a3 consumed:false 
+05-22 23:57:04.874 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:04.875 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:04.875 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:04.875 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:04.876 I/HBD     (11039): HoneyBoardService onKeyUp r:19356d5d consumed:false 
+05-22 23:57:04.877 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:04.878 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:04.878 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:04.878 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:04.879 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:04.879 I/HBD     (11039): HoneyBoardService onKeyDown r:a9603a99 consumed:false 
+05-22 23:57:04.880 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:04.881 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:04.882 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:04.882 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:04.883 I/HBD     (11039): HoneyBoardService onKeyUp r:eb7fe50f consumed:false 
+05-22 23:57:04.935 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:04.936 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:04.937 I/HBD     (11039): bd ous -  0 ,  0 ,  2 ,  2 ,  -1 ,  -1
+05-22 23:57:04.937 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:04.938 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:04.949 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:04.965 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:04.965 I/HBD     (11039): b getET , flag: 1 , start: 2 , end: 2 , length: 2 , composingLength: 0 , isKCC: false
+05-22 23:57:04.970 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:04.971 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:04.971 I/HBD     (11039): HoneyBoardService onKeyDown r:5a4a5555 consumed:false 
+05-22 23:57:04.987 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:04.989 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:04.990 I/HBD     (11039): a [PF_KL][HBIC] getExtractedText, 25 
+05-22 23:57:04.990 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:04.991 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.000 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.024 I/HBD     (11039): bd ous -  2 ,  2 ,  3 ,  3 ,  -1 ,  -1
+05-22 23:57:05.031 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.036 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.036 I/HBD     (11039): HoneyBoardService onKeyUp r:303b0c7f consumed:false 
+05-22 23:57:05.041 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.043 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.043 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.044 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.044 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.045 I/HBD     (11039): HoneyBoardService onKeyDown r:885d8a34 consumed:false 
+05-22 23:57:05.047 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.067 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.070 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.070 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.071 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.080 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.103 I/HBD     (11039): bd ous -  3 ,  3 ,  4 ,  4 ,  -1 ,  -1
+05-22 23:57:05.113 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.115 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.116 I/HBD     (11039): HoneyBoardService onKeyUp r:8c534e46 consumed:false 
+05-22 23:57:05.119 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.121 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.121 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.122 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.130 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.143 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.144 I/HBD     (11039): HoneyBoardService onKeyDown r:11f4af69 consumed:false 
+05-22 23:57:05.144 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.147 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.147 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.148 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.151 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.043492995]
+05-22 23:57:05.152 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.96100235]
+05-22 23:57:05.152 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9452727]
+05-22 23:57:05.152 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.411769 msecs
+05-22 23:57:05.152 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.492423 msecs
+05-22 23:57:05.153 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.466077 msecs
+05-22 23:57:05.162 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.181 I/HBD     (11039): bd ous -  4 ,  4 ,  5 ,  5 ,  -1 ,  -1
+05-22 23:57:05.194 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.195 I/HBD     (11039): HoneyBoardService onKeyUp r:b441fb00 consumed:false 
+05-22 23:57:05.195 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.199 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.200 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.201 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.202 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.212 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.225 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.225 I/HBD     (11039): HoneyBoardService onKeyDown r:6abda0d4 consumed:false 
+05-22 23:57:05.226 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.228 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.228 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.228 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.245 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.265 I/HBD     (11039): bd ous -  5 ,  5 ,  6 ,  6 ,  -1 ,  -1
+05-22 23:57:05.276 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.276 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.276 I/HBD     (11039): HoneyBoardService onKeyUp r:7d081be5 consumed:false 
+05-22 23:57:05.281 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.282 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.283 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.284 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.293 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.304 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.305 I/HBD     (11039): HoneyBoardService onKeyDown r:61443a0a consumed:false 
+05-22 23:57:05.309 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.318 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.320 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.320 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.320 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.323 I/HBD     (11039): HoneyBoardService onKeyUp r:ee8b4b11 consumed:false 
+05-22 23:57:05.325 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.353 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.355 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.355 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.356 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.358 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.365 I/HBD     (11039): bd ous -  6 ,  6 ,  7 ,  7 ,  -1 ,  -1
+05-22 23:57:05.374 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.374 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.374 I/HBD     (11039): HoneyBoardService onKeyDown r:bb34405a consumed:false 
+05-22 23:57:05.375 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.375 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.376 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.376 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.377 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.400 I/HBD     (11039): bd ous -  7 ,  7 ,  8 ,  8 ,  -1 ,  -1
+05-22 23:57:05.407 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.412 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.412 I/HBD     (11039): HoneyBoardService onKeyUp r:fc9b76cc consumed:false 
+05-22 23:57:05.421 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.423 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.423 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.424 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.425 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x41, d=0, 'cc3a094'
+05-22 23:57:05.425 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.426 I/HBD     (11039): HoneyBoardService onKeyDown r:c9cf77a4 consumed:false 
+05-22 23:57:05.426 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.428 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.429 D/SingleKeyGesture( 5213): reset counter=0 mActiveRule=null Callers(5)=com.android.server.policy.SingleKeyGestureDetector.interceptKeyDown:277 com.android.server.policy.SingleKeyGestureDetector.interceptKey:219 com.android.server.policy.PhoneWindowManager.handleKeyGesture:4766 com.android.server.policy.PhoneWindowManager.interceptKeyBeforeQueueing:4300 com.android.server.wm.InputManagerCallback.interceptKeyBeforeQueueing:161 
+05-22 23:57:05.429 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.429 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x41, d=0, 'cc3a094'
+05-22 23:57:05.430 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.430 I/HBD     (11039): HoneyBoardService onKeyDown r:34f8ed2e consumed:false 
+05-22 23:57:05.431 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.433 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.433 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.433 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x41, d=0, 'cc3a094'
+05-22 23:57:05.434 I/HBD     (11039): HoneyBoardService onKeyUp r:f901d0fe consumed:false 
+05-22 23:57:05.435 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.435 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.436 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.436 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.437 I/HBD     (11039): HoneyBoardService onKeyUp r:214d423f consumed:false 
+05-22 23:57:05.437 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.438 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.439 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.439 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.440 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.440 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.440 I/HBD     (11039): HoneyBoardService onKeyDown r:0cce7cb0 consumed:false 
+05-22 23:57:05.463 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.464 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.465 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.465 I/HBD     (11039): bd ous -  8 ,  8 ,  9 ,  9 ,  -1 ,  -1
+05-22 23:57:05.465 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.473 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.488 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.488 I/HBD     (11039): HoneyBoardService onKeyUp r:206ecf6d consumed:false 
+05-22 23:57:05.492 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.493 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.494 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.495 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.506 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.508 I/HBD     (11039): bd ous -  9 ,  9 ,  10 ,  10 ,  -1 ,  -1
+05-22 23:57:05.521 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.521 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.521 I/HBD     (11039): HoneyBoardService onKeyDown r:6793c85a consumed:false 
+05-22 23:57:05.522 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.522 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.524 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.524 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.524 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.533 D/MobileStatusTracker(1/1)( 5568): onSignalStrengthsChanged signalStrength=SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-107 rsrp=-106 rsrq=-14 rssnr=-1 cqiTableIndex=2147483647 cqi=6 ta=2147483647 level=3 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=3 },rat=14,primary=CellSignalStrengthLte} level=3
+05-22 23:57:05.535 D/NetworkController( 5568): SignalStrength from intent slotId=1
+05-22 23:57:05.548 I/HBD     (11039): bd ous -  10 ,  10 ,  11 ,  11 ,  -1 ,  -1
+05-22 23:57:05.554 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.561 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.562 I/HBD     (11039): HoneyBoardService onKeyUp r:7a46a695 consumed:false 
+05-22 23:57:05.569 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.571 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.571 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.572 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.572 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.573 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.574 I/HBD     (11039): HoneyBoardService onKeyDown r:9eefbb01 consumed:false 
+05-22 23:57:05.574 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.576 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.577 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.577 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.578 I/HBD     (11039): HoneyBoardService onKeyUp r:a257eb23 consumed:false 
+05-22 23:57:05.579 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.580 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.580 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.580 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.581 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.581 I/HBD     (11039): HoneyBoardService onKeyDown r:ab011ff7 consumed:false 
+05-22 23:57:05.582 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.583 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.583 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.584 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.585 I/HBD     (11039): HoneyBoardService onKeyUp r:e0ee27c6 consumed:false 
+05-22 23:57:05.585 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.586 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.586 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.586 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x41, d=0, 'cc3a094'
+05-22 23:57:05.587 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.587 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.587 I/HBD     (11039): HoneyBoardService onKeyDown r:fd5280d3 consumed:false 
+05-22 23:57:05.610 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.612 I/HBD     (11039): bd ous -  11 ,  11 ,  13 ,  13 ,  -1 ,  -1
+05-22 23:57:05.612 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.613 D/SingleKeyGesture( 5213): reset counter=0 mActiveRule=null Callers(5)=com.android.server.policy.SingleKeyGestureDetector.interceptKeyDown:277 com.android.server.policy.SingleKeyGestureDetector.interceptKey:219 com.android.server.policy.PhoneWindowManager.handleKeyGesture:4766 com.android.server.policy.PhoneWindowManager.interceptKeyBeforeQueueing:4300 com.android.server.wm.InputManagerCallback.interceptKeyBeforeQueueing:161 
+05-22 23:57:05.613 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.614 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x41, d=0, 'cc3a094'
+05-22 23:57:05.619 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.627 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.627 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.627 I/HBD     (11039): HoneyBoardService onKeyDown r:6c7e7e4d consumed:false 
+05-22 23:57:05.633 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute *filter
+05-22 23:57:05.633 D/IptablesRestoreController( 4802): -nvx -L tetherctrl_counters
+05-22 23:57:05.633 D/IptablesRestoreController( 4802): COMMIT
+05-22 23:57:05.634 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.635 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute done, res : 0
+05-22 23:57:05.636 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.636 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute *filter
+05-22 23:57:05.636 D/IptablesRestoreController( 4802): -nvx -L tetherctrl_counters
+05-22 23:57:05.636 D/IptablesRestoreController( 4802): COMMIT
+05-22 23:57:05.637 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.637 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.638 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x41, d=0, 'cc3a094'
+05-22 23:57:05.640 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute done, res : 0
+05-22 23:57:05.653 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.654 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.011789859]
+05-22 23:57:05.654 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.81943756]
+05-22 23:57:05.654 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.86128134]
+05-22 23:57:05.655 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.458346 msecs
+05-22 23:57:05.655 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.478039 msecs
+05-22 23:57:05.656 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.446346 msecs
+05-22 23:57:05.662 I/HBD     (11039): bd ous -  13 ,  13 ,  14 ,  14 ,  -1 ,  -1
+05-22 23:57:05.668 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.685 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.701 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.709 I/HBD     (11039): a [PF_EN] updateSelectList() t, 45 
+05-22 23:57:05.713 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.714 I/HBD     (11039): HoneyBoardService onKeyUp r:06eb63c8 consumed:false 
+05-22 23:57:05.715 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.716 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.716 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.716 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.717 I/HBD     (11039): HoneyBoardService onKeyUp r:e94ffe16 consumed:false 
+05-22 23:57:05.718 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.719 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.720 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.721 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.721 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.722 I/HBD     (11039): HoneyBoardService onKeyDown r:c3fe13ba consumed:false 
+05-22 23:57:05.722 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.724 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.725 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.726 D/PhoneInterfaceManager( 5538): setDataEnabledForReason() Reason=1 Pid=5213 App=system
+05-22 23:57:05.726 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.727 I/HBD     (11039): HoneyBoardService onKeyUp r:7a147748 consumed:false 
+05-22 23:57:05.728 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.728 D/PhoneInterfaceManager( 5538): setDataEnabledForReason() Reason=1 Pid=5213 App=system
+05-22 23:57:05.729 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.729 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.730 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.731 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.731 I/HBD     (11039): HoneyBoardService onKeyDown r:caa5fea9 consumed:false 
+05-22 23:57:05.732 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.733 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.733 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.734 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.735 I/HBD     (11039): HoneyBoardService onKeyUp r:3ba8df6b consumed:false 
+05-22 23:57:05.765 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.767 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.767 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.767 I/HBD     (11039): bd ous -  14 ,  14 ,  16 ,  16 ,  -1 ,  -1
+05-22 23:57:05.768 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.782 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.782 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.783 I/HBD     (11039): HoneyBoardService onKeyDown r:836481b8 consumed:false 
+05-22 23:57:05.783 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.794 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.796 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.796 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.797 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.798 I/HBD     (11039): HoneyBoardService onKeyUp r:95df946a consumed:false 
+05-22 23:57:05.798 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.799 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.799 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.799 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.800 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.816 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.824 I/HBD     (11039): bd ous -  16 ,  16 ,  17 ,  17 ,  -1 ,  -1
+05-22 23:57:05.832 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.836 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.836 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.837 I/HBD     (11039): HoneyBoardService onKeyDown r:cb41d118 consumed:false 
+05-22 23:57:05.844 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.847 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.847 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.848 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.848 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.849 I/HBD     (11039): HoneyBoardService onKeyUp r:6ab78777 consumed:false 
+05-22 23:57:05.864 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.871 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.872 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.872 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.872 I/HBD     (11039): bd ous -  17 ,  17 ,  18 ,  18 ,  -1 ,  -1
+05-22 23:57:05.872 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.881 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.893 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.893 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.893 I/HBD     (11039): HoneyBoardService onKeyDown r:d925885b consumed:false 
+05-22 23:57:05.894 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.896 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.896 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.897 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.897 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.898 I/HBD     (11039): HoneyBoardService onKeyUp r:64ae3bd6 consumed:false 
+05-22 23:57:05.914 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.920 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.921 D/InputDispatcher( 5213): Inject key (2856): action=0, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.921 I/HBD     (11039): bd ous -  18 ,  18 ,  19 ,  19 ,  -1 ,  -1
+05-22 23:57:05.922 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.922 I/InputDispatcher( 5213): Delivering key to (937): action: 0x0 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.930 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.934 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.934 I/HBD     (11039): a skip onKeyDown as physical keyboard not connected 
+05-22 23:57:05.934 I/HBD     (11039): HoneyBoardService onKeyDown r:eaa7355d consumed:false 
+05-22 23:57:05.935 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 0
+05-22 23:57:05.937 D/InputDispatcher( 5213): Inject key (2856): action=1, f=0x0, d=-1, time=1018525878000000
+05-22 23:57:05.937 D/WindowManager( 5213): interceptKeyTq interceptKeyResult=1
+05-22 23:57:05.938 I/InputDispatcher( 5213): Delivering key to (937): action: 0x1 (0), f=0x0, m=0x0, d=0, 'cc3a094'
+05-22 23:57:05.946 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.960 I/HBD     (11039): bd ous -  19 ,  19 ,  20 ,  20 ,  -1 ,  -1
+05-22 23:57:05.963 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.968 I/HBD     (11039): al EBD cm f 1 
+05-22 23:57:05.969 I/HBD     (11039): HoneyBoardService onKeyUp r:ddbc8891 consumed:false 
+05-22 23:57:05.970 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme key 1
+05-22 23:57:05.979 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:05.996 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:06.157 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.05289541]
+05-22 23:57:06.157 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.90942943]
+05-22 23:57:06.158 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.93405503]
+05-22 23:57:06.158 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.740653 msecs
+05-22 23:57:06.159 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 1.034385 msecs
+05-22 23:57:06.160 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.848423 msecs
+05-22 23:57:06.487 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+--------- beginning of system
+05-22 23:57:06.649 D/io_stats( 4423): !@   8,0 r 205457033 3939633184 w 24228883 564432548 d 0 0 f 0 0 iot 43765212 0 th 0 0 0 pt 0 inp 0 0 1018527.666
+05-22 23:57:06.661 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.03202303]
+05-22 23:57:06.661 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.75310284]
+05-22 23:57:06.661 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9733342]
+05-22 23:57:06.662 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.728385 msecs
+05-22 23:57:06.663 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 1.036808 msecs
+05-22 23:57:06.664 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.870038 msecs
+05-22 23:57:06.993 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:07.165 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.0058663227]
+05-22 23:57:07.166 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.88647693]
+05-22 23:57:07.166 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.93132085]
+05-22 23:57:07.166 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.715154 msecs
+05-22 23:57:07.167 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 1.087769 msecs
+05-22 23:57:07.168 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.892153 msecs
+05-22 23:57:07.202 I/SDHMS:C (10407): SIOP:: AP:313(393,80) BAT:351(351,0) USB:0(0,0) CHG:403(403,0) WIFI:392(392,0) LRP:387(387,0) LRF:374(374) LRB:387(387) 
+05-22 23:57:07.500 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:07.671 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.038815442]
+05-22 23:57:07.671 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.39940837]
+05-22 23:57:07.671 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.95818764]
+05-22 23:57:07.671 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.688 msecs
+05-22 23:57:07.672 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.908846 msecs
+05-22 23:57:07.673 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.858346 msecs
+05-22 23:57:07.991 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:08.176 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.013856506]
+05-22 23:57:08.176 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.4603315]
+05-22 23:57:08.176 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.8591727]
+05-22 23:57:08.176 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.71 msecs
+05-22 23:57:08.177 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.905616 msecs
+05-22 23:57:08.178 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.846539 msecs
+05-22 23:57:08.475 D/BatteryDump( 4822): wait_for_battery_event : occurred : change@/devices/platform/battery/power_supply/battery 
+05-22 23:57:08.485 E/android.hardware.health@2.1-service-samsung( 4822): Could not open /sys/class/power_supply/battery/lrp
+05-22 23:57:08.487 D/BatteryService( 5213): Sending ACTION_BATTERY_CHANGED. scale:100, info:{.chargerAcOnline = false, .chargerUsbOnline = true, .chargerWirelessOnline = false, .maxChargingCurrent = 0, .maxChargingVoltage = 0, .batteryStatus = CHARGING, .batteryHealth = GOOD, .batteryPresent = true, .batteryLevel = 78, .batteryVoltage = 4215, .batteryTemperature = 351, .batteryCurrent = 967, .batteryCycleCount = 0, .batteryFullCharge = 6000000, .batteryChargeCounter = 4197663, .batteryTechnology = Li-ion}
+05-22 23:57:08.488 D/BatteryService( 5213): online:4, current avg:940, charge type:1, POGO powered:false, power sharing:false, high voltage charger:false, charger_type:0, capacity:280000, misc_event:0x20000, current_event:0x8000, current_now:967
+05-22 23:57:08.490 D/MotionRecognitionService( 5213): [SAR]  onReceive : ACTION_BATTERY_CHANGED, Plugged: 2
+05-22 23:57:08.490 I/MotionRecognitionService( 5213): [TA] In/out: true, curr state: 1
+05-22 23:57:08.491 D/PhoneWindowManagerExt( 5213): ACTION_BATTERY_CHANGED - Level=78, status=2
+05-22 23:57:08.492 D/SemWifiApBroadcastReceiver( 5213): Received : android.intent.action.BATTERY_CHANGED
+05-22 23:57:08.493 D/SemBigDataInfoController( 5538): Intent : android.intent.action.BATTERY_CHANGED
+05-22 23:57:08.493 D/SemBigDataInfoController( 5538): Intent : android.intent.action.BATTERY_CHANGED
+05-22 23:57:08.494 I/PowerUI ( 5568): mBootCompleted = true |  mFullyConnected = true
+05-22 23:57:08.494 I/PowerUI ( 5568): BATTERY_HEALTH_CHECK extraHealth=2 mBatteryMiscEvent=131072
+05-22 23:57:08.494 D/PowerUI ( 5568): priorPlugType = 2 mPlugType = 2 priorBatteryStatus = 2 mBatteryStatus = 2
+05-22 23:57:08.494 I/PowerUI ( 5568): oldMisalign : false, curMisalign : false
+05-22 23:57:08.496 D/PowerUI.Notification( 5568): showChargingNotice oldChargingType : 1 currentChargingType : 1 oldChargingTime : 884000 mChargingTime : 870000
+05-22 23:57:08.496 D/PowerUI.Notification( 5568): showChargingNotification()
+05-22 23:57:08.497 I/SurfaceFlinger( 4899): SFWD update time=1018529514870566
+05-22 23:57:08.498 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:08.500 D/ApplicationPolicy( 5213): isStatusBarNotificationAllowedAsUser: packageName = com.android.systemui,userId = 0
+05-22 23:57:08.500 D/ApplicationPolicy( 5213): isStatusBarNotificationAllowedAsUser: packageName = com.android.systemui,userId = -1
+05-22 23:57:08.500 D/ApplicationPolicy( 5213): isStatusBarNotificationAllowedAsUser: converting userId from USER_ALLto 0
+05-22 23:57:08.501 D/PowerUI ( 5568): Battery swelling mode - priorBatterySwellingMode = 0 mBatterySwellingMode = 0 mBatteryStatus = 2
+05-22 23:57:08.501 I/PowerUI ( 5568): mBatteryMiscEvent = 131072
+05-22 23:57:08.503 D/PowerUI.Notification( 5568): 1. restoreScreenTimeOut - saved_value : :
+05-22 23:57:08.503 E/PowerUI.Notification( 5568): no saved value, so we do nothing !!
+05-22 23:57:08.505 D/KeyguardUpdateMonitor( 5568): received broadcast android.intent.action.BATTERY_CHANGED
+05-22 23:57:08.505 I/AODBatteryManager( 5568): updateBatteryData: ACTION_BATTERY_CHANGED
+05-22 23:57:08.506 I/AODBatteryManager( 5568): saveBatteryData : AOD BatteryData [mBatteryLevel=78, mBatteryStatus=CHARGING, mBatteryPlugType=USB, mBatteryPlugged=true, mRemainingChargeTime=870000, mBatteryChargingType=1, mBatteryChargerType=NORMAL, mBatteryOnline=USB, mBatterySwellingMode=NONE, mBatteryProtectMode=false]
+05-22 23:57:08.506 I/ChargingInfoManager( 5568): updateChargingInfo: newState = AOD ChargingInfo [mState=BATTERY_AND_REMAIN_TIME, mIsCharging=true, mIsFullyCharged=false, mIsBatteryProtectMode=false], oldState = AOD ChargingInfo [mState=BATTERY_AND_REMAIN_TIME, mIsCharging=true, mIsFullyCharged=false, mIsBatteryProtectMode=false]
+05-22 23:57:08.517 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:08.520 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:08.520 V/SecQSFragmentAnimatorBase( 5568): setQsExpansionPosition 0.0
+05-22 23:57:08.520 V/QsExpandAnimator( 5568): setQsExpansionPosition 0.0 0
+05-22 23:57:08.521 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:08.522 D/IndicatorGardenInputProperty( 5568): updateRotation() prv:-1 >> new:0
+05-22 23:57:08.523 D/DeviceState( 5568): getDeviceResolutionPixelSize - currentDensity = 420 deviceDensity = 420 initialDisplaySizeFactor = 1080 currentDisplaySizeFactor = 1080 initialDisplayDensity = 420 proportionalDensity = 420 proportionalPixel = 0
+05-22 23:57:08.523 D/DeviceState( 5568): getDeviceResolutionPixelSize - currentDensity = 420 deviceDensity = 420 initialDisplaySizeFactor = 1080 currentDisplaySizeFactor = 1080 initialDisplayDensity = 420 proportionalDensity = 420 proportionalPixel = 0
+05-22 23:57:08.523 D/DeviceState( 5568): getDeviceResolutionPixelSize - currentDensity = 420 deviceDensity = 420 initialDisplaySizeFactor = 1080 currentDisplaySizeFactor = 1080 initialDisplayDensity = 420 proportionalDensity = 420 proportionalPixel = 0
+05-22 23:57:08.523 E/IndicatorGardenAlgorithmBasicCutout( 5568): NOT MATCH !!!! resourceHeight:78, cutoutHeight:83 ([IndicatorGardenInputProperty]  Rotation(0-0,90-1,180-2,270-3)0, Density:2.625, ScreenWidthSize:1080, CoverSidePadding:0, mIndicatorGardenCenterOffset:11, mCameraCutoutCropSize:60, mGardenPaddingStart:21, mIndicatorCornerPadding:0, mCameraSidePadding:0, mCameraTopMargin:0, DpCutout:DisplayCutout{insets=Rect(0, 83 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(443, 0 - 637, 83), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=1080 displayHeight=2340 density={2.625} cutoutSpec={M36.95,0C26.35,0,24.15,3.8,23.15,9.8 l-0.1,0.7c-1.7,9.6-9.3,17.2-18.9,18.9c-12.7,2.2-24.8-6.2-27-18.9 c0,0-0.1-0.7-0.1-0.7C-24.15,3.8,-26.25,0,-36.95,0Z @dp} rotation={0} scale={1.0}}}}) 
+05-22 23:57:08.523 E/IndicatorGardenAlgorithmBasicCutout( 5568): NOT MATCH !!!! resourceHeight:78, cutoutHeight:83 ([IndicatorGardenInputProperty]  Rotation(0-0,90-1,180-2,270-3)0, Density:2.625, ScreenWidthSize:1080, CoverSidePadding:0, mIndicatorGardenCenterOffset:11, mCameraCutoutCropSize:60, mGardenPaddingStart:21, mIndicatorCornerPadding:0, mCameraSidePadding:0, mCameraTopMargin:0, DpCutout:DisplayCutout{insets=Rect(0, 83 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(443, 0 - 637, 83), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=1080 displayHeight=2340 density={2.625} cutoutSpec={M36.95,0C26.35,0,24.15,3.8,23.15,9.8 l-0.1,0.7c-1.7,9.6-9.3,17.2-18.9,18.9c-12.7,2.2-24.8-6.2-27-18.9 c0,0-0.1-0.7-0.1-0.7C-24.15,3.8,-26.25,0,-36.95,0Z @dp} rotation={0} scale={1.0}}}}) 
+05-22 23:57:08.524 W/Looper  ( 5568): Slow dispatch took 10ms main h=android.view.Choreographer$FrameHandler c=android.view.Choreographer$FrameDisplayEventReceiver@6137dc7 m=0
+05-22 23:57:08.524 D/KeyguardUpdateMonitor( 5568): handleBatteryUpdate
+05-22 23:57:08.527 D/KeyguardSecIndicationController( 5568): addIndicationTimeout() returned - unlocking
+05-22 23:57:08.527 D/KeyguardSecIndicationController( 5568): addIndication() returned - unlocking
+05-22 23:57:08.527 D/KeyguardSecIndicationController( 5568): addBatteryIndication() status = BatteryStatus{status=2,level=78,plugged=2,health=2,maxChargingWattage=-1,remaining=870000ultraFastCharger=0}
+05-22 23:57:08.527 W/Looper  ( 5568): Slow delivery took 20ms main h=com.android.keyguard.KeyguardUpdateMonitor$17 c=null m=302
+05-22 23:57:08.527 W/Looper  ( 5568): Drained
+05-22 23:57:08.681 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.051891476]
+05-22 23:57:08.681 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.1293399]
+05-22 23:57:08.681 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9742569]
+05-22 23:57:08.681 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.697231 msecs
+05-22 23:57:08.682 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.947769 msecs
+05-22 23:57:08.683 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.839423 msecs
+05-22 23:57:08.711 I/Edge.badge(16058): updateBadge item = com.android.systemui:-1 1
+05-22 23:57:08.711 I/Launcher.NotificationListener( 5975): onNotificationPosted : com.android.systemui number : 0
+05-22 23:57:08.712 I/GW_NOTI-Provider-Fit3(32013): NotificationListener.onNotificationPosted - com.android.systemui[ -1 / 2131428820 ] : charging_state
+05-22 23:57:08.712 I/HMApplication(32013): getWearableConnectionMgr() - sWConnectionMgr: com.samsung.wearable.hostmanager.connection.WearableConnectionManager@2c566e6
+05-22 23:57:08.713 I/WearableConnectionManager(32013): getConnectedBTAddress() :##:##:##:##:54:1A
+05-22 23:57:08.713 I/HMApplication(32013): getWearableConnectionMgr() - sWConnectionMgr: com.samsung.wearable.hostmanager.connection.WearableConnectionManager@2c566e6
+05-22 23:57:08.713 D/InterruptionStateProvider( 5568): No bubble up: not allowed to bubble: -1|com.android.systemui|2131428820|charging_state|10052
+05-22 23:57:08.713 I/WearableConnectionManager(32013): isConnected() btAddress:##:##:##:##:54:1A mBtAddress:##:##:##:##:54:1A saAgentReadyStatus:0 connected result = true
+05-22 23:57:08.714 I/GW_NOTI-Provider-Fit3(32013): NotificationListener.checkAndSendNotificationAhead - com.android.systemui[ -1 / 2131428820 ] : charging_state,   isPostedNotification: true, afterConnection: 0
+05-22 23:57:08.714 I/GW_NOTI-Provider-Fit3(32013): CommonUtil.* com.android.systemui is Inclued package
+05-22 23:57:08.715 I/GW_NOTI-Provider-Fit3(32013): NotificationListener.isSendable() [ABORT] - com.android.systemui -  This is an ignored package : com.android.systemui
+05-22 23:57:08.717 D/InterruptionStateProvider( 5568):  no Heads up : edgelighting enabled app. -1|com.android.systemui|2131428820|charging_state|10052
+05-22 23:57:08.725 W/Looper  ( 5568): Slow dispatch took 14ms main h=android.os.Handler c=com.android.systemui.statusbar.NotificationListener$$ExternalSyntheticLambda1@19bac59 m=0
+05-22 23:57:08.725 D/PeopleSpaceWidgetMgr( 5568): Sbn doesn't contain valid PeopleTileKey: null/-1/com.android.systemui
+05-22 23:57:08.731 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:08.731 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:08.749 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:08.749 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:08.769 W/Looper  ( 5568): Slow dispatch took 18ms main h=android.os.AsyncTask$InternalHandler c=null m=1
+05-22 23:57:08.769 W/Looper  ( 5568): Slow delivery took 20ms main h=com.android.keyguard.KeyguardUpdateMonitor$17 c=null m=1110
+05-22 23:57:08.772 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:08.773 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:08.773 W/Looper  ( 5568): Drained
+05-22 23:57:09.006 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:09.081 D/AndroidRuntime( 2860): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+05-22 23:57:09.092 I/AndroidRuntime( 2860): Using default boot image
+05-22 23:57:09.092 I/AndroidRuntime( 2860): Leaving lock profiling enabled
+05-22 23:57:09.093 D/SecNativeFeatureCppIf( 2860): encoded
+05-22 23:57:09.093 D/SecNativeFeatureCppIf( 2860): decoding and unzip finish
+05-22 23:57:09.093 D/SecNativeFeatureCppIf( 2860): use unCompDataBuff. encoded
+05-22 23:57:09.093 D/SecNativeFeatureCppIf( 2860): Free unCompDataBuff
+05-22 23:57:09.094 D/AndroidRuntime( 2860): addProductProperty: pBrand1 is not null
+05-22 23:57:09.094 D/AndroidRuntime( 2860): addProductProperty: not brand or 7
+05-22 23:57:09.101 I/app_process( 2860): Using CollectorTypeCC GC.
+05-22 23:57:09.187 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.038723856]
+05-22 23:57:09.187 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.8443346]
+05-22 23:57:09.188 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.90245366]
+05-22 23:57:09.188 D/SemNscXgbMsL1( 5213): 1 sample inference time: 1.34827 msecs
+05-22 23:57:09.191 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 2.667423 msecs
+05-22 23:57:09.193 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 1.44777 msecs
+05-22 23:57:09.274 D/nativeloader( 2860): InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+05-22 23:57:09.305 D/nativeloader( 2860): Load libicu_jni.so using APEX ns com_android_art for caller /apex/com.android.art/javalib/core-oj.jar: ok
+05-22 23:57:09.306 D/app_process( 2860): Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+05-22 23:57:09.306 D/app_process( 2860): I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt68l.dat
+05-22 23:57:09.308 D/nativeloader( 2860): Load libjavacore.so using APEX ns com_android_art for caller /apex/com.android.art/javalib/core-oj.jar: ok
+05-22 23:57:09.310 D/nativeloader( 2860): Load libopenjdk.so using APEX ns com_android_art for caller /apex/com.android.art/javalib/core-oj.jar: ok
+05-22 23:57:09.313 W/app_process( 2860): Using default priority map due to SDK version
+05-22 23:57:09.344 E/SemDvfsManager_JNI( 2860): SemDvfsManager: registerfunction enter
+05-22 23:57:09.344 E/SemAffinityControl( 2860): SemAffinityControl: registerfunction enter
+05-22 23:57:09.368 D/ProcessState( 2860): Binder ioctl to enable oneway spam detection failed: Invalid argument
+05-22 23:57:09.368 D/AndroidRuntime( 2860): Calling main entry com.android.commands.uiautomator.Launcher
+05-22 23:57:09.383 I/SurfaceFlinger( 4899): id=198643 createSurf (0x0),-1 flag=80004, WindowToken{230b376 android.os.Binder@2b1c611}#0
+05-22 23:57:09.384 D/SettingsProvider( 5213): isChangeAllowed() : name = accessibility_enabled
+05-22 23:57:09.385 I/GenerationRegistry( 5213): mBackingStore.isClosed() : false
+05-22 23:57:09.385 I/GenerationRegistry( 5213): mBackingStore.isClosed() : false
+05-22 23:57:09.388 D/SettingsProvider( 5213): isChangeAllowed() : name = accessibility_enabled
+05-22 23:57:09.388 I/GenerationRegistry( 5213): mBackingStore.isClosed() : false
+05-22 23:57:09.388 I/GenerationRegistry( 5213): mBackingStore.isClosed() : false
+05-22 23:57:09.398 I/AccessibilityManagerService( 5213): semIsAccessibilityServiceEnabled()
+05-22 23:57:09.398 I/AccessibilityManagerService( 5213): semIsAccessibilityServiceEnabled()
+05-22 23:57:09.399 D/AS.AudioService( 5213): Accessibility volume enabled = false
+05-22 23:57:09.399 D/BatterySaverPolicy( 5213): accessibility changed to true, updating policy.
+05-22 23:57:09.402 D/BatterySaverController( 5213): send ACTION_POWER_SAVE_MODE_CHANGED
+05-22 23:57:09.403 D/BatterySaverController( 5213): send ACTION_POWER_SAVE_MODE_CHANGED_INTERNAL
+05-22 23:57:09.404 I/SHEALTH#WI#WearableLazyBootReceiver( 6412): (print) : on Receive() android.os.action.POWER_SAVE_MODE_CHANGED
+05-22 23:57:09.405 I/PhoneSettingChangeReceiver(32013): onReceive() action:android.os.action.POWER_SAVE_MODE_CHANGED
+05-22 23:57:09.406 I/AiAiCaptions(17022): onReceive(): Battery saver mode turned on.
+05-22 23:57:09.406 I/PhoneSettingChangeReceiver(32013): onReceive() screenStatus:true, psmStatus:true
+05-22 23:57:09.406 I/PhoneSettingChangeReceiver(32013): onReceive() PSM mode changed
+05-22 23:57:09.406 I/SettingManager(32013): sendScreenInfoToBand()
+05-22 23:57:09.406 W/SAMessageDataPacketConstructor(32013): printing byte array packet -----------------------------------------------------------------
+05-22 23:57:09.406 W/SAMessageDataPacketConstructor(32013): packetLen: 8
+05-22 23:57:09.406 W/SAMessageDataPacketConstructor(32013): -12 3 0 0 1 1 2 1 
+05-22 23:57:09.406 W/SAMessageDataPacketConstructor(32013): ********************************************************************************************
+05-22 23:57:09.406 I/HMApplication(32013): getWearableConnectionMgr() - sWConnectionMgr: com.samsung.wearable.hostmanager.connection.WearableConnectionManager@2c566e6
+05-22 23:57:09.406 I/WearableConnectionManager(32013): sendMessageToChannel:: Sending messages from band for channel id 11
+05-22 23:57:09.408 I/PersonalSafety(  736): (REDACTED) [Settings] power saver mode changed to %s
+05-22 23:57:09.409 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: BATTERY_STATS: true
+05-22 23:57:09.409 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: ANIMATION: false
+05-22 23:57:09.410 I/[SA_SDK]SAMessage(32013): Sending data:8 bytes
+05-22 23:57:09.410 I/[SA_SDK]SAFragmenter(32013): confiure: 16 2 7672 0 8
+05-22 23:57:09.410 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: VIBRATION: false
+05-22 23:57:09.410 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: UNKNOWN: false
+05-22 23:57:09.410 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: FORCE_ALL_APPS_STANDBY: true
+05-22 23:57:09.410 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: UNKNOWN: true
+05-22 23:57:09.410 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: UNKNOWN: true
+05-22 23:57:09.410 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: FORCE_BACKGROUND_CHECK: true
+05-22 23:57:09.410 I/SAFrameworkConnection(32257): write() : [16,8] 48 SrcAgentId:11
+05-22 23:57:09.411 I/SAMexLiteSessionHandler(32257): >>> created new TransactionId: 206
+05-22 23:57:09.411 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: NETWORK_FIREWALL: true
+05-22 23:57:09.411 I/SASessionDetails(32257): Enqueue msg sessionId:1026
+05-22 23:57:09.412 W/Looper  ( 5568): Slow delivery took 20ms main h=android.view.ViewRootImpl$ViewRootHandler c=android.view.accessibility.AccessibilityManager$$ExternalSyntheticLambda0@75ad656 m=0
+05-22 23:57:09.412 I/SACreditDetails(32257): incrementSessionCount -  connectivity : 4 classType : 1 sessionCount : 1
+05-22 23:57:09.412 I/SAMexLiteDetails(32257): >>> timeout started for transaction<206>
+05-22 23:57:09.412 I/SADispatchController(32257): >> DequeTask accId: 6599, sessionId: 1026
+05-22 23:57:09.413 I/[SA_SDK]SAMessage(32013): 11_6599_11-> msg<206>[0] sent: 8
+05-22 23:57:09.413 I/SALiteRetransmitterFsm(32257): state: IDLE, onSendMessage
+05-22 23:57:09.414 I/SATransportManager(32257): park All Queues for accessory: 6599
+05-22 23:57:09.415 I/SALiteRetransmitter(32257): Packet with seq num: 0 and window id: 1 added to map
+05-22 23:57:09.416 I/SALiteRetransmitter(32257): Msg sent to CL seq#:0
+05-22 23:57:09.418 I/SelfLocationFetcher(  736): Starting self-location fetching naive strategy. [CONTEXT service_id=284 ]
+05-22 23:57:09.418 I/SABleClientConnection(32257): writeCharacteristic called
+05-22 23:57:09.418 I/ActivityScheduler(  736): nextTriggerTime: 9223372036854775806, in 9223372035158887576ms, detectorType: 32, SLEEP alarmWindowMillis: 1152921504606846975
+05-22 23:57:09.421 D/BtGatt.GattService( 6363): onWriteCharacteristic() - address=74190A_A, status=0
+05-22 23:57:09.422 D/BtGatt.GattService( 6363): onWriteCharacteristic : isCongested == false
+05-22 23:57:09.422 I/SAGattCallback(32257): onCharacteristicWrite enter
+05-22 23:57:09.423 I/SABleConnection(32257): BLE TX len:18
+05-22 23:57:09.424 I/SATransportManager(32257): onMessageDispatched acc:6599 sess:1026
+05-22 23:57:09.425 V/Navbar.Store( 5568): handleEvent [EventType] ON_NAVBAR_UPDATE_A11Y_SERVICE [Module] NavigationBar  KEYS_CLICKABLE=false  KEYS_LONG_CLICKABLE=false
+05-22 23:57:09.425 I/SALiteRetransmitterFsm(32257): state: IDLE, onMsgDispatched
+05-22 23:57:09.425 V/Navbar.Store( 5568): --[Band]SETUPWIZARD_PACK_UPDATE_A11Y_SERVICE
+05-22 23:57:09.425 V/Navbar.Store( 5568): ----getValue(BOOL_NAVBAR_BUTTON_FORCED_VISIBLE)=false
+05-22 23:57:09.425 V/Navbar.Store( 5568): ----getValue(BOOL_NAVBAR_SETUPWIZARD_STYLE)=false
+05-22 23:57:09.425 I/SALiteRetransmitter(32257): buffer not recycled, msg status: 0
+05-22 23:57:09.425 W/PowerUI ( 5568): unknown intent: Intent { act=android.os.action.POWER_SAVE_MODE_CHANGED flg=0x40000010 }
+05-22 23:57:09.425 I/SALiteRetransmitterFsm(32257): Rel ON: enter TX_WINDOW_RELIABLE
+05-22 23:57:09.425 I/SALiteRetransmitterFsm(32257): state: TX_WINDOW_RELIABLE, onEntry
+05-22 23:57:09.426 I/SALiteRetransmitterFsm(32257): unfragmented pkt sent, move to TX_BLOCKED
+05-22 23:57:09.426 I/SALiteRetransmitterFsm(32257): state: TX_BLOCKED, onEntry
+05-22 23:57:09.426 I/SALiteRetransmitterFsm(32257): Rel: ON, wait for ACK
+05-22 23:57:09.426 I/SALiteRetransmitter(32257): timer started
+05-22 23:57:09.440 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: DATA_SAVER: false
+05-22 23:57:09.440 V/NetworkPolicy( 5213): getRestrictBackgroundInLowerPowerMode: enabled(true)
+05-22 23:57:09.496 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:09.496 W/Looper  ( 5568): Drained
+05-22 23:57:09.694 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.045270316]
+05-22 23:57:09.695 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.25738394]
+05-22 23:57:09.695 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.7010372]
+05-22 23:57:09.695 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.730461 msecs
+05-22 23:57:09.696 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.974038 msecs
+05-22 23:57:09.697 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.921462 msecs
+05-22 23:57:09.815 I/SAGattCallback(32257): onCharacteristicChanged enter
+05-22 23:57:09.816 I/SABleConnection(32257): EVT_DATA_RECEIVED
+05-22 23:57:09.817 I/SABleConnection(32257): eval c301 recd c301
+05-22 23:57:09.817 I/SABleConnection(32257): Dispatching frame buffer to transport layer
+05-22 23:57:09.818 I/SABleConnection(32257): BLE RX len:4
+05-22 23:57:09.818 I/SAProtocolFrameUtils(32257): parsing... seq num: 1000000000000000
+05-22 23:57:09.819 I/SALiteRetransmitterFsm(32257): state: TX_BLOCKED, onAckReceived
+05-22 23:57:09.819 I/SALiteRetransmitter(32257): timer stopped
+05-22 23:57:09.820 I/SALiteRetransmitter(32257): Seq Bits recvd: 1000000000000000
+05-22 23:57:09.820 I/SALiteRetransmitter(32257): Removed seq num: 0
+05-22 23:57:09.820 I/SALiteRetransmitter(32257): Buffer is recycled ..
+05-22 23:57:09.821 I/SALiteRetransmitterFsm(32257): received ACK,entering IDLE from TX_BLOCKED
+05-22 23:57:09.821 I/SATransportManager(32257): move All parked Queues for accessory: 6599
+05-22 23:57:09.821 I/SACreditDetails(32257): decrementSessionCount -  connectivity : 4 classType : 1 sessionCount : 0
+05-22 23:57:09.822 I/SAMexLiteSessionHandler(32257): onMessageDelivered, status=0
+05-22 23:57:09.822 I/SAMexLiteDetails(32257): cleared transaction<206>
+05-22 23:57:09.823 I/[SA_SDK]SAPeerAccesssosry(32257): mCompatibilityVersion = 9
+05-22 23:57:09.823 I/[SA_SDK]SAPeerAgent(32257): mCompatibilityVersion = 9
+05-22 23:57:09.824 I/[SA_SDK]SAPeerAgent(32013): Peeragent:Framework version:9
+05-22 23:57:09.824 E/SAFullSettingFit3(32013): FullSettingSAPService.[e][null][onSent][20] Message successfully sent to agent: 11
+05-22 23:57:09.825 I/SALiteRetransmitterFsm(32257): IDLE: onEntry
+05-22 23:57:10.004 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:10.198 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.026348103]
+05-22 23:57:10.198 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.33246398]
+05-22 23:57:10.198 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9436329]
+05-22 23:57:10.199 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.545307 msecs
+05-22 23:57:10.199 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.640077 msecs
+05-22 23:57:10.200 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.601577 msecs
+05-22 23:57:10.200 I/SemWifiServiceDetector( 5213): NSD results: [0, 1, 2, 0, 0, 1, 1, 1] Traff. type 1 Thr 205
+05-22 23:57:10.201 D/SemWifiOptimizer( 5213): enable=0 state=0x10 prev=0x10 new=0x00 force=0
+05-22 23:57:10.409 D/SemCscFeature( 2860): Encoded
+05-22 23:57:10.496 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:10.529 W/AccessibilityNodeInfoDumper( 2860): Fetch time: 115ms
+05-22 23:57:10.530 W/WindowManager( 5213): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@2b1c611
+05-22 23:57:10.530 D/SettingsProvider( 5213): isChangeAllowed() : name = accessibility_enabled
+05-22 23:57:10.531 I/GenerationRegistry( 5213): mBackingStore.isClosed() : false
+05-22 23:57:10.531 I/GenerationRegistry( 5213): mBackingStore.isClosed() : false
+05-22 23:57:10.532 D/SettingsProvider( 5213): isChangeAllowed() : name = accelerometer_rotation
+05-22 23:57:10.532 D/SettingsProvider( 5213): isChangeAllowed() : name = user_rotation
+05-22 23:57:10.533 V/WindowManager( 5213): rotationForOrientation(orient=SCREEN_ORIENTATION_UNSPECIFIED (-1), last=ROTATION_0 (0)); user=ROTATION_0 (0) USER_ROTATION_LOCKED
+05-22 23:57:10.533 D/WindowManager( 5213): rotationForOrientation, orientationSource=ActivityRecord{459b14b u0 com.algorithmx.q_base/.MainActivity t25011}
+05-22 23:57:10.534 V/WindowManager( 5213): Computed rotation=ROTATION_0 (0) for display id=0 based on lastOrientation=SCREEN_ORIENTATION_UNSPECIFIED (-1) and oldRotation=ROTATION_0 (0), caller=com.android.server.wm.DisplayContent.updateRotationUnchecked:2339 com.android.server.wm.WindowManagerService.updateRotationUnchecked:4535 com.android.server.wm.WindowManagerService.freezeDisplayRotation:4435 com.android.server.wm.WindowManagerService.freezeRotation:4394 android.view.IWindowManager$Stub.onTransact:2456 com.android.server.wm.WindowManagerService.onTransact:1621 
+05-22 23:57:10.539 D/hw-ProcessState( 2860): Binder ioctl to enable oneway spam detection failed: Invalid argument
+05-22 23:57:10.540 D/AndroidRuntime( 2860): Shutting down VM
+05-22 23:57:10.544 I/Layer   ( 4899): id=198643 removeFromCurrentState WindowToken{230b376 android.os.Binder@2b1c611}#0 (200)
+05-22 23:57:10.544 I/SurfaceFlinger( 4899): id=198643 Removed WindowToken{230b376 android.os.Binder@2b1c611}#0 (200)
+05-22 23:57:10.545 I/Layer   ( 4899): id=198643 Destroyed WindowToken{230b376 android.os.Binder@2b1c611}#0
+05-22 23:57:10.548 D/BatterySaverPolicy( 5213): accessibility changed to false, updating policy.
+05-22 23:57:10.554 D/BatterySaverController( 5213): send ACTION_POWER_SAVE_MODE_CHANGED
+05-22 23:57:10.555 D/BatterySaverController( 5213): send ACTION_POWER_SAVE_MODE_CHANGED_INTERNAL
+05-22 23:57:10.555 I/SHEALTH#WI#WearableLazyBootReceiver( 6412): (print) : on Receive() android.os.action.POWER_SAVE_MODE_CHANGED
+05-22 23:57:10.556 W/Looper  ( 5568): Slow delivery took 20ms main h=android.view.ViewRootImpl$ViewRootHandler c=android.view.accessibility.AccessibilityManager$$ExternalSyntheticLambda0@7a2daad m=0
+05-22 23:57:10.557 I/PersonalSafety(  736): (REDACTED) [Settings] power saver mode changed to %s
+05-22 23:57:10.558 I/PhoneSettingChangeReceiver(32013): onReceive() action:android.os.action.POWER_SAVE_MODE_CHANGED
+05-22 23:57:10.559 I/AiAiCaptions(17022): onReceive(): Battery saver mode turned on.
+05-22 23:57:10.560 I/PhoneSettingChangeReceiver(32013): onReceive() screenStatus:true, psmStatus:true
+05-22 23:57:10.560 I/PhoneSettingChangeReceiver(32013): onReceive() PSM mode changed
+05-22 23:57:10.560 I/SettingManager(32013): sendScreenInfoToBand()
+05-22 23:57:10.560 W/SAMessageDataPacketConstructor(32013): printing byte array packet -----------------------------------------------------------------
+05-22 23:57:10.560 W/SAMessageDataPacketConstructor(32013): packetLen: 8
+05-22 23:57:10.560 W/SAMessageDataPacketConstructor(32013): -12 3 0 0 1 1 2 1 
+05-22 23:57:10.560 W/SAMessageDataPacketConstructor(32013): ********************************************************************************************
+05-22 23:57:10.560 W/Looper  ( 5568): Drained
+05-22 23:57:10.560 I/HMApplication(32013): getWearableConnectionMgr() - sWConnectionMgr: com.samsung.wearable.hostmanager.connection.WearableConnectionManager@2c566e6
+05-22 23:57:10.560 I/WearableConnectionManager(32013): sendMessageToChannel:: Sending messages from band for channel id 11
+05-22 23:57:10.561 W/PowerUI ( 5568): unknown intent: Intent { act=android.os.action.POWER_SAVE_MODE_CHANGED flg=0x40000010 }
+05-22 23:57:10.563 I/[SA_SDK]SAMessage(32013): Sending data:8 bytes
+05-22 23:57:10.563 I/[SA_SDK]SAFragmenter(32013): confiure: 16 2 7672 0 8
+05-22 23:57:10.563 I/SAFrameworkConnection(32257): write() : [16,8] 48 SrcAgentId:11
+05-22 23:57:10.564 I/SAMexLiteSessionHandler(32257): >>> created new TransactionId: 207
+05-22 23:57:10.564 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: BATTERY_STATS: true
+05-22 23:57:10.564 I/SASessionDetails(32257): Enqueue msg sessionId:1026
+05-22 23:57:10.564 I/SACreditDetails(32257): incrementSessionCount -  connectivity : 4 classType : 1 sessionCount : 1
+05-22 23:57:10.565 I/SAMexLiteDetails(32257): >>> timeout started for transaction<207>
+05-22 23:57:10.565 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: ANIMATION: false
+05-22 23:57:10.565 I/SADispatchController(32257): >> DequeTask accId: 6599, sessionId: 1026
+05-22 23:57:10.565 I/[SA_SDK]SAMessage(32013): 11_6599_11-> msg<207>[0] sent: 8
+05-22 23:57:10.566 I/SALiteRetransmitterFsm(32257): state: IDLE, onSendMessage
+05-22 23:57:10.566 I/SATransportManager(32257): park All Queues for accessory: 6599
+05-22 23:57:10.567 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: VIBRATION: true
+05-22 23:57:10.567 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: UNKNOWN: false
+05-22 23:57:10.567 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: FORCE_ALL_APPS_STANDBY: true
+05-22 23:57:10.567 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: UNKNOWN: true
+05-22 23:57:10.567 I/ActivityScheduler(  736): nextTriggerTime: 9223372036854775806, in 9223372035158886427ms, detectorType: 32, SLEEP alarmWindowMillis: 1152921504606846975
+05-22 23:57:10.567 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: UNKNOWN: true
+05-22 23:57:10.567 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: FORCE_BACKGROUND_CHECK: true
+05-22 23:57:10.568 I/SALiteRetransmitter(32257): Packet with seq num: 0 and window id: 0 added to map
+05-22 23:57:10.568 I/SelfLocationFetcher(  736): Starting self-location fetching naive strategy. [CONTEXT service_id=284 ]
+05-22 23:57:10.568 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: NETWORK_FIREWALL: true
+05-22 23:57:10.568 I/SALiteRetransmitter(32257): Msg sent to CL seq#:0
+05-22 23:57:10.570 I/SABleClientConnection(32257): writeCharacteristic called
+05-22 23:57:10.572 D/BtGatt.GattService( 6363): onWriteCharacteristic() - address=74190A_A, status=0
+05-22 23:57:10.572 D/BtGatt.GattService( 6363): onWriteCharacteristic : isCongested == false
+05-22 23:57:10.572 I/SAGattCallback(32257): onCharacteristicWrite enter
+05-22 23:57:10.573 I/SABleConnection(32257): BLE TX len:18
+05-22 23:57:10.574 I/SATransportManager(32257): onMessageDispatched acc:6599 sess:1026
+05-22 23:57:10.575 I/SALiteRetransmitterFsm(32257): state: IDLE, onMsgDispatched
+05-22 23:57:10.576 I/SALiteRetransmitter(32257): buffer not recycled, msg status: 0
+05-22 23:57:10.577 I/SALiteRetransmitterFsm(32257): Rel ON: enter TX_WINDOW_RELIABLE
+05-22 23:57:10.577 I/SALiteRetransmitterFsm(32257): state: TX_WINDOW_RELIABLE, onEntry
+05-22 23:57:10.578 I/SALiteRetransmitterFsm(32257): unfragmented pkt sent, move to TX_BLOCKED
+05-22 23:57:10.579 I/SALiteRetransmitterFsm(32257): state: TX_BLOCKED, onEntry
+05-22 23:57:10.580 I/SALiteRetransmitterFsm(32257): Rel: ON, wait for ACK
+05-22 23:57:10.581 I/SALiteRetransmitter(32257): timer started
+05-22 23:57:10.592 D/BatterySaverController( 5213): onLowPowerModeChanged: ServiceType: DATA_SAVER: false
+05-22 23:57:10.592 V/NetworkPolicy( 5213): getRestrictBackgroundInLowerPowerMode: enabled(true)
+05-22 23:57:10.651 D/io_stats( 4423): !@   8,0 r 205457033 3939633184 w 24228886 564432616 d 0 0 f 0 0 iot 43765216 0 th 0 0 0 pt 0 inp 0 0 1018531.668
+05-22 23:57:10.659 D/MobileStatusTracker(1/1)( 5568): onSignalStrengthsChanged signalStrength=SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-109 rsrp=-108 rsrq=-13 rssnr=-3 cqiTableIndex=2147483647 cqi=6 ta=2147483647 level=3 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=3 },rat=14,primary=CellSignalStrengthLte} level=3
+05-22 23:57:10.661 D/NetworkController( 5568): SignalStrength from intent slotId=1
+05-22 23:57:10.699 I/wpa_supplicant(14300): Heartbeat 1112
+05-22 23:57:10.703 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.02006884]
+05-22 23:57:10.703 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.6909121]
+05-22 23:57:10.703 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9237606]
+05-22 23:57:10.703 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.71173 msecs
+05-22 23:57:10.704 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.937 msecs
+05-22 23:57:10.705 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.880577 msecs
+05-22 23:57:10.727 I/SAGattCallback(32257): onCharacteristicChanged enter
+05-22 23:57:10.729 I/SABleConnection(32257): EVT_DATA_RECEIVED
+05-22 23:57:10.729 I/SABleConnection(32257): eval c301 recd c301
+05-22 23:57:10.730 I/SABleConnection(32257): Dispatching frame buffer to transport layer
+05-22 23:57:10.730 I/SABleConnection(32257): BLE RX len:4
+05-22 23:57:10.731 I/SAProtocolFrameUtils(32257): parsing... seq num: 1000000000000000
+05-22 23:57:10.731 I/SALiteRetransmitterFsm(32257): state: TX_BLOCKED, onAckReceived
+05-22 23:57:10.732 I/SALiteRetransmitter(32257): timer stopped
+05-22 23:57:10.732 I/SALiteRetransmitter(32257): Seq Bits recvd: 1000000000000000
+05-22 23:57:10.732 I/SALiteRetransmitter(32257): Removed seq num: 0
+05-22 23:57:10.733 I/SALiteRetransmitter(32257): Buffer is recycled ..
+05-22 23:57:10.733 I/SALiteRetransmitterFsm(32257): received ACK,entering IDLE from TX_BLOCKED
+05-22 23:57:10.734 I/SATransportManager(32257): move All parked Queues for accessory: 6599
+05-22 23:57:10.734 I/SACreditDetails(32257): decrementSessionCount -  connectivity : 4 classType : 1 sessionCount : 0
+05-22 23:57:10.735 I/SAMexLiteSessionHandler(32257): onMessageDelivered, status=0
+05-22 23:57:10.735 I/SAMexLiteDetails(32257): cleared transaction<207>
+05-22 23:57:10.736 I/[SA_SDK]SAPeerAccesssosry(32257): mCompatibilityVersion = 9
+05-22 23:57:10.736 I/[SA_SDK]SAPeerAgent(32257): mCompatibilityVersion = 9
+05-22 23:57:10.737 I/[SA_SDK]SAPeerAgent(32013): Peeragent:Framework version:9
+05-22 23:57:10.737 I/SALiteRetransmitterFsm(32257): IDLE: onEntry
+05-22 23:57:10.738 E/SAFullSettingFit3(32013): FullSettingSAPService.[e][null][onSent][20] Message successfully sent to agent: 11
+05-22 23:57:11.002 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:11.207 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.032463826]
+05-22 23:57:11.208 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.8710037]
+05-22 23:57:11.208 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.85797983]
+05-22 23:57:11.208 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.706115 msecs
+05-22 23:57:11.209 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.891077 msecs
+05-22 23:57:11.210 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.814846 msecs
+05-22 23:57:11.210 I/SemWifiServiceDetector( 5213): NSD results: [1, 1, 1, 0, 1, 1, 1, 0] Traff. type 1 Thr 432
+05-22 23:57:11.212 D/SemWifiOptimizer( 5213): enable=1 state=0x10 prev=0x00 new=0x10 force=0
+05-22 23:57:11.508 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:11.529 E/audit   ( 4782): type=1400 audit(1779474431.523:257851): avc:  denied  { write } for  pid=7480 comm="ThreadPoolForeg" name="traced_producer" dev="tmpfs" ino=28072 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 SEPF_SM-M215F_12_0001 audit_filtered
+05-22 23:57:11.529 E/audit   ( 4782): type=1300 audit(1779474431.523:257851): arch=c00000b7 syscall=203 success=no exit=-13 a0=b4 a1=7380b8b1c0 a2=1e a3=74befe7aac items=0 ppid=4803 pid=7480 auid=4294967295 uid=10198 gid=10198 euid=10198 suid=10198 fsuid=10198 egid=10198 sgid=10198 fsgid=10198 tty=(none) ses=4294967295 comm="ThreadPoolForeg" exe="/system/bin/app_process64" subj=u:r:gmscore_app:s0:c512,c768 key=(null)
+05-22 23:57:11.529 E/audit   ( 4782): type=1327 audit(1779474431.523:257851): proctitle="com.google.android.gms"
+05-22 23:57:11.712 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.027014658]
+05-22 23:57:11.713 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.7109406]
+05-22 23:57:11.713 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9446868]
+05-22 23:57:11.713 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.714962 msecs
+05-22 23:57:11.714 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.970577 msecs
+05-22 23:57:11.715 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 1.044038 msecs
+05-22 23:57:12.017 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:12.217 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.01276546]
+05-22 23:57:12.217 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.42520502]
+05-22 23:57:12.218 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.94312984]
+05-22 23:57:12.218 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.724154 msecs
+05-22 23:57:12.219 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 1.025654 msecs
+05-22 23:57:12.220 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.88623 msecs
+05-22 23:57:12.509 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:12.526 D/BatteryExternalStatsWorker( 5213): update stats : update-network-download (6)
+05-22 23:57:12.527 D/BatteryExternalStatsWorker( 5213): WifiActivityEnergyInfo was updated
+05-22 23:57:12.560 D/TelephonyManager( 5213): requestModemActivityInfo: Sending result to app: ModemActivityInfo{ mTimestamp=1695891371 mSleepTimeMs=1332936059 mIdleTimeMs=27761031 mTxTimeMs[]=[3758940, 1483254, 2369294, 693627, 2339189] mRxTimeMs=344239148}
+05-22 23:57:12.560 D/BatteryExternalStatsWorker( 5213): ModemActivityInfo was updated
+05-22 23:57:12.560 D/BatteryExternalStatsWorker( 5213): done updateExternalStatsLocked
+05-22 23:57:12.573 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute *filter
+05-22 23:57:12.573 D/IptablesRestoreController( 4802): -nvx -L tetherctrl_counters
+05-22 23:57:12.573 D/IptablesRestoreController( 4802): COMMIT
+05-22 23:57:12.575 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute done, res : 0
+05-22 23:57:12.576 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute *filter
+05-22 23:57:12.576 D/IptablesRestoreController( 4802): -nvx -L tetherctrl_counters
+05-22 23:57:12.576 D/IptablesRestoreController( 4802): COMMIT
+05-22 23:57:12.577 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute done, res : 0
+05-22 23:57:12.601 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute *filter
+05-22 23:57:12.601 D/IptablesRestoreController( 4802): -nvx -L tetherctrl_counters
+05-22 23:57:12.601 D/IptablesRestoreController( 4802): COMMIT
+05-22 23:57:12.603 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute done, res : 0
+05-22 23:57:12.603 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute *filter
+05-22 23:57:12.603 D/IptablesRestoreController( 4802): -nvx -L tetherctrl_counters
+05-22 23:57:12.603 D/IptablesRestoreController( 4802): COMMIT
+05-22 23:57:12.604 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute done, res : 0
+05-22 23:57:12.652 D/io_stats( 4423): !@   8,0 r 205457041 3939633216 w 24228895 564432712 d 0 0 f 0 0 iot 43765220 0 th 0 0 0 pt 0 inp 0 0 1018533.669
+05-22 23:57:12.755 I/system_server( 5213): Background young concurrent copying GC freed 15MB AllocSpace bytes, 327(6272KB) LOS objects, 16% free, 109MB/130MB, paused 636us,265us total 170.612ms
+05-22 23:57:12.755 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.1741383]
+05-22 23:57:12.755 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.97875744]
+05-22 23:57:12.755 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.91541773]
+05-22 23:57:12.756 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.371653 msecs
+05-22 23:57:12.756 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.471615 msecs
+05-22 23:57:12.757 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.462153 msecs
+05-22 23:57:12.764 W/System  ( 5213): A resource failed to call close. 
+05-22 23:57:12.765 W/System  ( 5213): A resource failed to call close. 
+05-22 23:57:13.012 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:13.259 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.07840409]
+05-22 23:57:13.259 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.92656714]
+05-22 23:57:13.259 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.8576506]
+05-22 23:57:13.259 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.712654 msecs
+05-22 23:57:13.260 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.906038 msecs
+05-22 23:57:13.261 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.849577 msecs
+05-22 23:57:13.519 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:13.763 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.12575366]
+05-22 23:57:13.763 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.52905303]
+05-22 23:57:13.763 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.88966274]
+05-22 23:57:13.763 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.698461 msecs
+05-22 23:57:13.764 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.957192 msecs
+05-22 23:57:13.765 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.872384 msecs
+05-22 23:57:14.009 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:14.268 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.055236116]
+05-22 23:57:14.268 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.6643868]
+05-22 23:57:14.268 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.8754126]
+05-22 23:57:14.268 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.689423 msecs
+05-22 23:57:14.269 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.830923 msecs
+05-22 23:57:14.270 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.804308 msecs
+05-22 23:57:14.515 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:14.771 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.031937428]
+05-22 23:57:14.771 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.7785625]
+05-22 23:57:14.772 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.84154314]
+05-22 23:57:14.772 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.366192 msecs
+05-22 23:57:14.772 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.463885 msecs
+05-22 23:57:14.773 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.438769 msecs
+05-22 23:57:15.026 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:15.284 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.01459042]
+05-22 23:57:15.285 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.9253626]
+05-22 23:57:15.285 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9342492]
+05-22 23:57:15.285 D/SemNscXgbMsL1( 5213): 1 sample inference time: 1.764884 msecs
+05-22 23:57:15.288 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 2.077616 msecs
+05-22 23:57:15.291 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 2.1025 msecs
+05-22 23:57:15.518 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:15.671 D/DeviceStorageMonitorService( 5213): check() STORAGE TOTAL <= 64G
+05-22 23:57:15.672 W/DeviceStorageMonitorService( 5213): updateBroadcasts(/data) oldLevel:0, newLevel:0, seq:1
+05-22 23:57:15.673 D/DeviceStorageMonitorService( 5213): Available File Node Number is [13128007]
+05-22 23:57:15.673 W/DeviceStorageMonitorService( 5213): updateBroadcasts_filenode(/data) fn_oldLevel:0, fn_newLevel:0, seq:1
+05-22 23:57:15.793 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.013818803]
+05-22 23:57:15.793 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.8907682]
+05-22 23:57:15.793 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9076223]
+05-22 23:57:15.793 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.628884 msecs
+05-22 23:57:15.794 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.859308 msecs
+05-22 23:57:15.795 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.909731 msecs
+05-22 23:57:16.023 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:16.297 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.005166996]
+05-22 23:57:16.298 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.93493855]
+05-22 23:57:16.298 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9399212]
+05-22 23:57:16.298 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.684615 msecs
+05-22 23:57:16.299 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.97423 msecs
+05-22 23:57:16.300 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.804615 msecs
+05-22 23:57:16.531 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:16.801 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.006322226]
+05-22 23:57:16.802 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.9532925]
+05-22 23:57:16.802 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.8578276]
+05-22 23:57:16.802 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.647193 msecs
+05-22 23:57:16.803 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 1.033769 msecs
+05-22 23:57:16.804 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.879616 msecs
+05-22 23:57:17.022 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:17.202 I/SDHMS:C (10407): SIOP:: AP:313(390,80) BAT:351(351,0) USB:0(0,0) CHG:402(402,0) WIFI:392(392,0) LRP:386(386,0) LRF:373(373) LRB:386(386) 
+05-22 23:57:17.306 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.0098395515]
+05-22 23:57:17.306 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.9922438]
+05-22 23:57:17.307 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9162588]
+05-22 23:57:17.307 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.756846 msecs
+05-22 23:57:17.308 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.903346 msecs
+05-22 23:57:17.309 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.860884 msecs
+05-22 23:57:17.486 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute *filter
+05-22 23:57:17.486 D/IptablesRestoreController( 4802): -nvx -L tetherctrl_counters
+05-22 23:57:17.486 D/IptablesRestoreController( 4802): COMMIT
+05-22 23:57:17.490 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute done, res : 0
+05-22 23:57:17.491 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute *filter
+05-22 23:57:17.491 D/IptablesRestoreController( 4802): -nvx -L tetherctrl_counters
+05-22 23:57:17.491 D/IptablesRestoreController( 4802): COMMIT
+05-22 23:57:17.494 D/IptablesRestoreController( 4802): [iptables debug]iptables-restore execute done, res : 0
+05-22 23:57:17.531 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:17.600 D/PhoneInterfaceManager( 5538): setDataEnabledForReason() Reason=1 Pid=5213 App=system
+05-22 23:57:17.602 D/PhoneInterfaceManager( 5538): setDataEnabledForReason() Reason=1 Pid=5213 App=system
+05-22 23:57:17.811 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.010582135]
+05-22 23:57:17.811 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.8985328]
+05-22 23:57:17.811 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9496383]
+05-22 23:57:17.811 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.639115 msecs
+05-22 23:57:17.812 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.879384 msecs
+05-22 23:57:17.813 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.827846 msecs
+05-22 23:57:18.036 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:18.315 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.004114067]
+05-22 23:57:18.315 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.8910046]
+05-22 23:57:18.315 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9122901]
+05-22 23:57:18.315 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.634769 msecs
+05-22 23:57:18.316 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.899115 msecs
+05-22 23:57:18.317 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.839807 msecs
+05-22 23:57:18.337 D/MobileStatusTracker(1/1)( 5568): onSignalStrengthsChanged signalStrength=SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-107 rsrp=-106 rsrq=-14 rssnr=-3 cqiTableIndex=2147483647 cqi=6 ta=2147483647 level=3 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=3 },rat=14,primary=CellSignalStrengthLte} level=3
+05-22 23:57:18.339 D/NetworkController( 5568): SignalStrength from intent slotId=1
+05-22 23:57:18.500 D/BatteryDump( 4822): wait_for_battery_event : occurred : change@/devices/platform/battery/power_supply/battery 
+05-22 23:57:18.511 E/android.hardware.health@2.1-service-samsung( 4822): Could not open /sys/class/power_supply/battery/lrp
+05-22 23:57:18.512 D/BatteryService( 5213): Sending ACTION_BATTERY_CHANGED. scale:100, info:{.chargerAcOnline = false, .chargerUsbOnline = true, .chargerWirelessOnline = false, .maxChargingCurrent = 0, .maxChargingVoltage = 0, .batteryStatus = CHARGING, .batteryHealth = GOOD, .batteryPresent = true, .batteryLevel = 78, .batteryVoltage = 4214, .batteryTemperature = 351, .batteryCurrent = 814, .batteryCycleCount = 0, .batteryFullCharge = 6000000, .batteryChargeCounter = 4203024, .batteryTechnology = Li-ion}
+05-22 23:57:18.512 D/BatteryService( 5213): online:4, current avg:836, charge type:1, POGO powered:false, power sharing:false, high voltage charger:false, charger_type:0, capacity:280000, misc_event:0x20000, current_event:0x8000, current_now:814
+05-22 23:57:18.514 D/PhoneWindowManagerExt( 5213): ACTION_BATTERY_CHANGED - Level=78, status=2
+05-22 23:57:18.514 D/MotionRecognitionService( 5213): [SAR]  onReceive : ACTION_BATTERY_CHANGED, Plugged: 2
+05-22 23:57:18.514 I/MotionRecognitionService( 5213): [TA] In/out: true, curr state: 1
+05-22 23:57:18.514 D/SemWifiApBroadcastReceiver( 5213): Received : android.intent.action.BATTERY_CHANGED
+05-22 23:57:18.515 D/SemBigDataInfoController( 5538): Intent : android.intent.action.BATTERY_CHANGED
+05-22 23:57:18.516 I/PowerUI ( 5568): mBootCompleted = true |  mFullyConnected = true
+05-22 23:57:18.516 I/PowerUI ( 5568): BATTERY_HEALTH_CHECK extraHealth=2 mBatteryMiscEvent=131072
+05-22 23:57:18.516 D/PowerUI ( 5568): priorPlugType = 2 mPlugType = 2 priorBatteryStatus = 2 mBatteryStatus = 2
+05-22 23:57:18.516 I/PowerUI ( 5568): oldMisalign : false, curMisalign : false
+05-22 23:57:18.519 D/PowerUI.Notification( 5568): showChargingNotice oldChargingType : 1 currentChargingType : 1 oldChargingTime : 870000 mChargingTime : 859000
+05-22 23:57:18.519 D/PowerUI.Notification( 5568): showChargingNotification()
+05-22 23:57:18.520 D/SemBigDataInfoController( 5538): Intent : android.intent.action.BATTERY_CHANGED
+05-22 23:57:18.521 D/PowerUI.Notification( 5568): 1. restoreScreenTimeOut - saved_value : :
+05-22 23:57:18.521 E/PowerUI.Notification( 5568): no saved value, so we do nothing !!
+05-22 23:57:18.523 D/ApplicationPolicy( 5213): isStatusBarNotificationAllowedAsUser: packageName = com.android.systemui,userId = 0
+05-22 23:57:18.523 D/ApplicationPolicy( 5213): isStatusBarNotificationAllowedAsUser: packageName = com.android.systemui,userId = -1
+05-22 23:57:18.523 D/ApplicationPolicy( 5213): isStatusBarNotificationAllowedAsUser: converting userId from USER_ALLto 0
+05-22 23:57:18.524 D/PowerUI ( 5568): Battery swelling mode - priorBatterySwellingMode = 0 mBatterySwellingMode = 0 mBatteryStatus = 2
+05-22 23:57:18.524 I/PowerUI ( 5568): mBatteryMiscEvent = 131072
+05-22 23:57:18.527 D/KeyguardUpdateMonitor( 5568): received broadcast android.intent.action.BATTERY_CHANGED
+05-22 23:57:18.527 I/AODBatteryManager( 5568): updateBatteryData: ACTION_BATTERY_CHANGED
+05-22 23:57:18.529 I/AODBatteryManager( 5568): saveBatteryData : AOD BatteryData [mBatteryLevel=78, mBatteryStatus=CHARGING, mBatteryPlugType=USB, mBatteryPlugged=true, mRemainingChargeTime=859000, mBatteryChargingType=1, mBatteryChargerType=NORMAL, mBatteryOnline=USB, mBatterySwellingMode=NONE, mBatteryProtectMode=false]
+05-22 23:57:18.529 I/ChargingInfoManager( 5568): updateChargingInfo: newState = AOD ChargingInfo [mState=BATTERY_AND_REMAIN_TIME, mIsCharging=true, mIsFullyCharged=false, mIsBatteryProtectMode=false], oldState = AOD ChargingInfo [mState=BATTERY_AND_REMAIN_TIME, mIsCharging=true, mIsFullyCharged=false, mIsBatteryProtectMode=false]
+05-22 23:57:18.529 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:18.532 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:18.534 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:18.535 V/SecQSFragmentAnimatorBase( 5568): setQsExpansionPosition 0.0
+05-22 23:57:18.535 V/QsExpandAnimator( 5568): setQsExpansionPosition 0.0 0
+05-22 23:57:18.535 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:18.537 D/IndicatorGardenInputProperty( 5568): updateRotation() prv:-1 >> new:0
+05-22 23:57:18.537 D/DeviceState( 5568): getDeviceResolutionPixelSize - currentDensity = 420 deviceDensity = 420 initialDisplaySizeFactor = 1080 currentDisplaySizeFactor = 1080 initialDisplayDensity = 420 proportionalDensity = 420 proportionalPixel = 0
+05-22 23:57:18.537 D/DeviceState( 5568): getDeviceResolutionPixelSize - currentDensity = 420 deviceDensity = 420 initialDisplaySizeFactor = 1080 currentDisplaySizeFactor = 1080 initialDisplayDensity = 420 proportionalDensity = 420 proportionalPixel = 0
+05-22 23:57:18.538 D/DeviceState( 5568): getDeviceResolutionPixelSize - currentDensity = 420 deviceDensity = 420 initialDisplaySizeFactor = 1080 currentDisplaySizeFactor = 1080 initialDisplayDensity = 420 proportionalDensity = 420 proportionalPixel = 0
+05-22 23:57:18.538 E/IndicatorGardenAlgorithmBasicCutout( 5568): NOT MATCH !!!! resourceHeight:78, cutoutHeight:83 ([IndicatorGardenInputProperty]  Rotation(0-0,90-1,180-2,270-3)0, Density:2.625, ScreenWidthSize:1080, CoverSidePadding:0, mIndicatorGardenCenterOffset:11, mCameraCutoutCropSize:60, mGardenPaddingStart:21, mIndicatorCornerPadding:0, mCameraSidePadding:0, mCameraTopMargin:0, DpCutout:DisplayCutout{insets=Rect(0, 83 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(443, 0 - 637, 83), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=1080 displayHeight=2340 density={2.625} cutoutSpec={M36.95,0C26.35,0,24.15,3.8,23.15,9.8 l-0.1,0.7c-1.7,9.6-9.3,17.2-18.9,18.9c-12.7,2.2-24.8-6.2-27-18.9 c0,0-0.1-0.7-0.1-0.7C-24.15,3.8,-26.25,0,-36.95,0Z @dp} rotation={0} scale={1.0}}}}) 
+05-22 23:57:18.538 E/IndicatorGardenAlgorithmBasicCutout( 5568): NOT MATCH !!!! resourceHeight:78, cutoutHeight:83 ([IndicatorGardenInputProperty]  Rotation(0-0,90-1,180-2,270-3)0, Density:2.625, ScreenWidthSize:1080, CoverSidePadding:0, mIndicatorGardenCenterOffset:11, mCameraCutoutCropSize:60, mGardenPaddingStart:21, mIndicatorCornerPadding:0, mCameraSidePadding:0, mCameraTopMargin:0, DpCutout:DisplayCutout{insets=Rect(0, 83 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(443, 0 - 637, 83), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=1080 displayHeight=2340 density={2.625} cutoutSpec={M36.95,0C26.35,0,24.15,3.8,23.15,9.8 l-0.1,0.7c-1.7,9.6-9.3,17.2-18.9,18.9c-12.7,2.2-24.8-6.2-27-18.9 c0,0-0.1-0.7-0.1-0.7C-24.15,3.8,-26.25,0,-36.95,0Z @dp} rotation={0} scale={1.0}}}}) 
+05-22 23:57:18.539 W/Looper  ( 5568): Slow dispatch took 10ms main h=android.view.Choreographer$FrameHandler c=android.view.Choreographer$FrameDisplayEventReceiver@6137dc7 m=0
+05-22 23:57:18.539 D/KeyguardUpdateMonitor( 5568): handleBatteryUpdate
+05-22 23:57:18.542 D/KeyguardSecIndicationController( 5568): addIndicationTimeout() returned - unlocking
+05-22 23:57:18.542 D/KeyguardSecIndicationController( 5568): addIndication() returned - unlocking
+05-22 23:57:18.542 D/KeyguardSecIndicationController( 5568): addBatteryIndication() status = BatteryStatus{status=2,level=78,plugged=2,health=2,maxChargingWattage=-1,remaining=859000ultraFastCharger=0}
+05-22 23:57:18.733 W/NotificationHistory( 5213): Attempted to add notif for locked/gone/disabled user 0
+05-22 23:57:18.737 I/GW_NOTI-Provider-Fit3(32013): NotificationListener.onNotificationPosted - com.android.systemui[ -1 / 2131428820 ] : charging_state
+05-22 23:57:18.738 I/Launcher.NotificationListener( 5975): onNotificationPosted : com.android.systemui number : 0
+05-22 23:57:18.739 I/HMApplication(32013): getWearableConnectionMgr() - sWConnectionMgr: com.samsung.wearable.hostmanager.connection.WearableConnectionManager@2c566e6
+05-22 23:57:18.739 I/WearableConnectionManager(32013): getConnectedBTAddress() :##:##:##:##:54:1A
+05-22 23:57:18.740 I/HMApplication(32013): getWearableConnectionMgr() - sWConnectionMgr: com.samsung.wearable.hostmanager.connection.WearableConnectionManager@2c566e6
+05-22 23:57:18.740 I/WearableConnectionManager(32013): isConnected() btAddress:##:##:##:##:54:1A mBtAddress:##:##:##:##:54:1A saAgentReadyStatus:0 connected result = true
+05-22 23:57:18.741 I/GW_NOTI-Provider-Fit3(32013): NotificationListener.checkAndSendNotificationAhead - com.android.systemui[ -1 / 2131428820 ] : charging_state,   isPostedNotification: true, afterConnection: 0
+05-22 23:57:18.741 D/InterruptionStateProvider( 5568): No bubble up: not allowed to bubble: -1|com.android.systemui|2131428820|charging_state|10052
+05-22 23:57:18.741 I/GW_NOTI-Provider-Fit3(32013): CommonUtil.* com.android.systemui is Inclued package
+05-22 23:57:18.742 I/GW_NOTI-Provider-Fit3(32013): NotificationListener.isSendable() [ABORT] - com.android.systemui -  This is an ignored package : com.android.systemui
+05-22 23:57:18.743 I/Edge.badge(16058): updateBadge item = com.android.systemui:-1 1
+05-22 23:57:18.747 D/InterruptionStateProvider( 5568):  no Heads up : edgelighting enabled app. -1|com.android.systemui|2131428820|charging_state|10052
+05-22 23:57:18.754 W/Looper  ( 5568): Slow dispatch took 16ms main h=android.os.Handler c=com.android.systemui.statusbar.NotificationListener$$ExternalSyntheticLambda1@72437b6 m=0
+05-22 23:57:18.754 D/PeopleSpaceWidgetMgr( 5568): Sbn doesn't contain valid PeopleTileKey: null/-1/com.android.systemui
+05-22 23:57:18.758 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:18.758 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:18.797 W/Looper  ( 5568): Slow dispatch took 17ms main h=android.os.AsyncTask$InternalHandler c=null m=1
+05-22 23:57:18.802 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:18.802 D/QS      ( 5568): setQSExpansion 0.0 -142.8
+05-22 23:57:18.820 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.0077966144]
+05-22 23:57:18.820 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.741818]
+05-22 23:57:18.820 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9754252]
+05-22 23:57:18.820 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.846615 msecs
+05-22 23:57:18.821 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.809423 msecs
+05-22 23:57:18.822 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.6315 msecs
+05-22 23:57:19.032 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:19.324 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.0106146205]
+05-22 23:57:19.324 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.8785796]
+05-22 23:57:19.324 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9257293]
+05-22 23:57:19.324 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.635269 msecs
+05-22 23:57:19.326 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.888385 msecs
+05-22 23:57:19.327 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.926615 msecs
+05-22 23:57:19.539 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:19.829 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.027884716]
+05-22 23:57:19.829 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.6143251]
+05-22 23:57:19.829 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9480863]
+05-22 23:57:19.829 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.774923 msecs
+05-22 23:57:19.831 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 1.105616 msecs
+05-22 23:57:19.832 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.895116 msecs
+05-22 23:57:20.031 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:20.333 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.029934539]
+05-22 23:57:20.333 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.75087816]
+05-22 23:57:20.333 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9654778]
+05-22 23:57:20.333 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.3505 msecs
+05-22 23:57:20.334 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.462577 msecs
+05-22 23:57:20.334 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.437308 msecs
+05-22 23:57:20.514 D/MobileStatusTracker(0/3)( 5568): onSignalStrengthsChanged signalStrength=SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-103 rsrp=-103 rsrq=-12 rssnr=0 cqiTableIndex=2147483647 cqi=7 ta=2147483647 level=3 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=3 },rat=14,primary=CellSignalStrengthLte} level=3
+05-22 23:57:20.517 D/NetworkController( 5568): SignalStrength from intent slotId=0
+05-22 23:57:20.539 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:20.703 I/wpa_supplicant(14300): Heartbeat 1113
+05-22 23:57:20.836 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.026210781]
+05-22 23:57:20.837 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.55190283]
+05-22 23:57:20.837 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9293534]
+05-22 23:57:20.837 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.700539 msecs
+05-22 23:57:20.838 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.896538 msecs
+05-22 23:57:20.839 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.989884 msecs
+05-22 23:57:21.048 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:21.341 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.024496427]
+05-22 23:57:21.342 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.3733212]
+05-22 23:57:21.342 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.93668365]
+05-22 23:57:21.342 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.679538 msecs
+05-22 23:57:21.343 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 1.034538 msecs
+05-22 23:57:21.344 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.851885 msecs
+05-22 23:57:21.550 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:21.665 E/audit   ( 4782): type=1400 audit(1779474441.659:257852): avc:  denied  { write } for  pid=31284 comm="ThreadPoolForeg" name="traced_producer" dev="tmpfs" ino=28072 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 SEPF_SM-M215F_12_0001 audit_filtered
+05-22 23:57:21.665 E/audit   ( 4782): type=1300 audit(1779474441.659:257852): arch=c00000b7 syscall=203 success=no exit=-13 a0=6 a1=7418343220 a2=1e a3=74befe7aac items=0 ppid=4803 pid=31284 auid=4294967295 uid=9510198 gid=9510198 euid=9510198 suid=9510198 fsuid=9510198 egid=9510198 sgid=9510198 fsgid=9510198 tty=(none) ses=4294967295 comm="ThreadPoolForeg" exe="/system/bin/app_process64" subj=u:r:gmscore_app:s0:c512,c768 key=(null)
+05-22 23:57:21.665 E/audit   ( 4782): type=1327 audit(1779474441.659:257852): proctitle="com.google.android.gms.persistent"
+05-22 23:57:21.846 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.010188746]
+05-22 23:57:21.846 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.6238389]
+05-22 23:57:21.847 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9570098]
+05-22 23:57:21.847 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.828692 msecs
+05-22 23:57:21.848 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.982615 msecs
+05-22 23:57:21.849 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.852039 msecs
+05-22 23:57:22.040 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.115 D/ProcessState( 2887): Binder ioctl to enable oneway spam detection failed: Invalid argument
+05-22 23:57:22.120 D/InputDispatcher( 5213): Inject motion (2887): action=0x0, time=1018543137000000, f=0x0, d=0
+05-22 23:57:22.120 I/InputDispatcher( 5213): Delivering touch to (5568): action: 0x4, f=0x0, d=0, '984aa93', t=1 
+05-22 23:57:22.120 I/InputDispatcher( 5213): Delivering touch to (937): action: 0x0, f=0x0, d=0, 'cc3a094', t=1 
+05-22 23:57:22.121 I/GestureDetector( 5213): obtain mCurrentDownEvent. id: -591820018 caller: com.android.server.wm.SystemGesturesPointerEventListener.onPointerEvent:179 com.android.server.wm.PointerEventDispatcher.onInputEvent:71 android.view.InputEventReceiver.dispatchInputEvent:259 
+05-22 23:57:22.121 D/PowerManagerService( 5213): UserActivityStateListenerState: 1
+05-22 23:57:22.121 I/GestureDetector( 5213): obtain mCurrentDownEvent. id: -591820018 caller: com.android.server.wm.SystemPerformancePointerEventListener.onPointerEvent:89 com.android.server.wm.PointerEventDispatcher.onInputEvent:71 android.view.InputEventReceiver.dispatchInputEvent:259 
+05-22 23:57:22.122 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme pointer 0
+05-22 23:57:22.122 I/MSHandlerLifeCycle(  937): isMultiSplitHandlerRequested: windowingMode=1 isFullscreen=true isPopOver=false isHidden=false skipActivityType=false isHandlerType=true this: DecorView@9447753[MainActivity]
+05-22 23:57:22.123 W/TouchInteractionService( 5975): onInputEvent, inputConsumer = com.android.quickstep.-$$Lambda$InputConsumer$cayMJybMMyH-XvJ76yEWjWeqQUo@7a1bfa1
+05-22 23:57:22.127 D/InputDispatcher( 5213): Inject motion (2887): action=0x1, time=1018543137000000, f=0x0, d=0
+05-22 23:57:22.127 I/InputDispatcher( 5213): Delivering touch to (937): action: 0x1, f=0x0, d=0, 'cc3a094', t=1 
+05-22 23:57:22.127 I/ViewRootImpl@f63227f[MainActivity](  937): ViewPostIme pointer 1
+05-22 23:57:22.128 I/MSHandlerLifeCycle(  937): isMultiSplitHandlerRequested: windowingMode=1 isFullscreen=true isPopOver=false isHidden=false skipActivityType=false isHandlerType=true this: DecorView@9447753[MainActivity]
+05-22 23:57:22.128 W/TouchInteractionService( 5975): reset
+05-22 23:57:22.128 I/GestureDetector( 5213): obtain mCurrentMotionEventRaw. action: 1 id: -256227787
+05-22 23:57:22.128 I/GestureDetector( 5213): obtain mCurrentMotionEventRaw. action: 1 id: -256227787
+05-22 23:57:22.142 D/InputMethodManager(  937): startInputInner - Id : 0
+05-22 23:57:22.142 I/InputMethodManager(  937): startInputInner - mService.startInputOrWindowGainedFocus
+05-22 23:57:22.144 V/InputMethodManagerService( 5213): startInputOrWindowGainedFocusInternalLocked: reason=APP_CALLED_RESTART_INPUT_API clientState=5575bbf attribute=android.view.inputmethod.EditorInfo@77e95e startInputFlags=VIEW_HAS_FOCUS|IS_TEXT_EDITOR softInputMode=STATE_UNSPECIFIED|ADJUST_RESIZE windowFlags=#81810100 sameWindowFocused=true
+05-22 23:57:22.144 D/InputMethodManagerService( 5213): mDesktopModeManager null!
+05-22 23:57:22.144 V/InputMethodManagerService( 5213): getDisplayIdOfInputMethodWindowToBeAdded : 0
+05-22 23:57:22.145 D/InputMethodManagerService( 5213): checkDisplayOfStartInputAndUpdateKeyboard display Id 0last 0
+05-22 23:57:22.145 V/InputMethodManagerService( 5213): Attach new input asks to show input
+05-22 23:57:22.145 D/InputMethodManagerService( 5213): ACCESS_CONTROL_ENABLED = false, ACCESS_CONTROL_KEYBOARD_BLOCK = false
+05-22 23:57:22.145 D/InputMethodManagerService( 5213): showCurrentInputLocked: mCurToken=android.os.Binder@cb3cfb4, showForced=false, showExplicitlyRequestedtrue
+05-22 23:57:22.145 I/InputMethodManagerService( 5213): Calling com.android.internal.view.IInputMethod$Stub$Proxy@ede5b1c.showSoftInput(android.os.Binder@e95a0c, 1, null) for reason: ATTACH_NEW_INPUT
+05-22 23:57:22.146 D/InputTransport( 5213): Input channel constructed: 'ClientS', fd=720
+05-22 23:57:22.146 D/InputTransport( 5213): Input channel destroyed: 'ClientS', fd=720
+05-22 23:57:22.146 I/HBD     (11039): HoneyBoardService [IMI] onStartInput - caller pid : 937 , caller uid : 10918 
+05-22 23:57:22.146 I/HBD     (11039): j updateConfigs 
+05-22 23:57:22.147 I/HBD     (11039): j isEnabledNightMode : true 
+05-22 23:57:22.147 I/HBD     (11039): a IC have been binding, InputConnectionWrapper{idHash=#baf8ff1 mMissingMethods=} 
+05-22 23:57:22.147 I/HBD     (11039): h [EditorInputType]setPrivateImeOptionsToTable privateImeOptions ( null )
+05-22 23:57:22.147 I/HBD     (11039): b incognitoMode : false 
+05-22 23:57:22.147 I/HBD     (11039): h getDefaultInputRange : UNKNOWN 
+05-22 23:57:22.148 I/HBD     (11039): h getDefaultInputRange : UNKNOWN 
+05-22 23:57:22.148 I/HBD     (11039): h getDefaultInputRange : UNKNOWN 
+05-22 23:57:22.150 I/HBD     (11039): a update cached prediction status : true 
+05-22 23:57:22.150 I/HBD     (11039): h getDefaultInputRange : UNKNOWN 
+05-22 23:57:22.150 I/HBD     (11039): a currentState : 0 
+05-22 23:57:22.152 I/HBD     (11039): h load selected json path : /data/user/0/com.samsung.android.honeyboard/files/selected.json 
+05-22 23:57:22.152 I/HBD     (11039): h load selected json info : {"version":"1.0","currentLanguageOrder":0,"selected":[{"activeOptionList":["auto_replace","auto_spacing","writing_assistant"],"engName":"English","id":65537,"inputType":"qwerty","isUsed":true},{"activeOptionList":["auto_replace","auto_spacing"],"engName":"Sinhala","id":6488064,"inputType":"qwerty","isUsed":true},{"activeOptionList":["auto_replace","auto_spacing"],"engName":"Tamil","id":6619136,"inputType":"qwerty_indian_vertical","isUsed":true}]} 
+05-22 23:57:22.152 I/HBD     (11039): a [UpdatePolicy] [post] a: 0 cl: 65537 kit: [0/0] vt: 0 ir: 1 
+05-22 23:57:22.153 I/HBD     (11039): HoneyBoardService [PF_OP][onStartInput]  6740884 ns 
+05-22 23:57:22.153 I/HBD     (11039): HoneyBoardService onStartInputView : restarting = true, client = com.algorithmx.q_base 
+05-22 23:57:22.153 I/HBD     (11039): h [EditorInputType]setPrivateImeOptionsToTable privateImeOptions ( null )
+05-22 23:57:22.153 I/HBD     (11039): b incognitoMode : false 
+05-22 23:57:22.154 I/HBD     (11039): h getDefaultInputRange : UNKNOWN 
+05-22 23:57:22.154 I/HBD     (11039): h getDefaultInputRange : UNKNOWN 
+05-22 23:57:22.154 I/HBD     (11039): h getDefaultInputRange : UNKNOWN 
+05-22 23:57:22.154 I/SemDvfsHyPerManager(11039): acquire hyper - SKBD_RE_ENTER_SHOW/11039@1, type = -999
+05-22 23:57:22.154 I/HBD     (11039): HoneyBoardService onStartInputViewInternal: inputType=0x28001, imeOptions=0x42000000, initialSelStart=0, initialSelEnd=0 
+05-22 23:57:22.154 I/HBD     (11039): f applyThemesPolicy 
+05-22 23:57:22.154 I/HBD     (11039): e mUsedOpenTheme = false IsRequiredDarkTypeTheme = true night mode : true mIsEnabledHighContrast = false mIsOpenThemeForHoneyBoardInstalled = true mIsWallpaperThemeInstalled = true mIsThemeParkTheme = false
+05-22 23:57:22.154 I/HBD     (11039): a theme : Dark mode and no theme park 
+05-22 23:57:22.155 I/HBD     (11039): f required dark type theme, isCoverDisplayTheme :  false
+05-22 23:57:22.155 I/HBD     (11039): f update KeyboardTheme themeIndex : 0x 12000000  theme :  Dark
+05-22 23:57:22.155 I/HBD     (11039): a set Theme convertedIndex : 4 
+05-22 23:57:22.155 I/HBD     (11039): a themeStyleSet :4 
+05-22 23:57:22.155 I/HBD     (11039): a updatePredictionStatus : 1, editorOpt 
+05-22 23:57:22.155 I/HBD     (11039): a updateForEditorClass isPredictionOn = true 
+05-22 23:57:22.156 I/HYPER-HAL( 4840): [RequestManager.cpp]acquire(): Acquired ID : 60946321  [11039 / 1]    HINT : KBD_APP_RE_ENTER_VIEW    list : [TIMEOUT / 400] 
+05-22 23:57:22.222 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.231 I/HBD     (11039): a [PF_KL][HBIC] getTextBeforeCursor t, 72 
+05-22 23:57:22.238 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.263 I/HBD     (11039): a [PF_KL][HBIC] getTextAfterCursor t, 32 
+05-22 23:57:22.263 I/HBD     (11039): al EBD ssu f 1 
+05-22 23:57:22.270 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.286 I/HBD     (11039): a [PF_KL][HBIC] getCursorCapsMode t, 23 
+05-22 23:57:22.287 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.287 I/HBD     (11039): a [UpdatePolicy] [post] a: 1 cl: 65537 kit: [0/0] vt: 0 ir: 1 
+05-22 23:57:22.288 I/HBD     (11039): a update cached prediction status : true 
+05-22 23:57:22.292 D/SettingsProvider( 5213): isChangeAllowed() : name = enabled_input_methods
+05-22 23:57:22.292 D/SettingsProvider( 5213): edmUri: content://com.sec.knox.provider/RestrictionPolicy3
+05-22 23:57:22.293 D/SettingsProvider( 5213): projectionArgs: isSettingsChangesAllowed
+05-22 23:57:22.293 D/SettingsProvider( 5213): selectionArgs: false
+05-22 23:57:22.293 D/SettingsProvider( 5213): selectionArgs: 10298
+05-22 23:57:22.293 D/SecContentProvider( 5213): query(), uri = 17 selection = isSettingsChangesAllowed
+05-22 23:57:22.293 D/SecContentProvider( 5213): called from android.uid.honeyboard:10298
+05-22 23:57:22.294 D/RestrictionPolicy( 5213): isSettingsChangesAllowedAsUser, userId 0 : true
+05-22 23:57:22.294 D/SettingsProvider( 5213): ret = 1
+05-22 23:57:22.295 D/SettingsProvider( 5213): isChangeAllowed() : name = default_input_method
+05-22 23:57:22.295 D/SettingsProvider( 5213): edmUri: content://com.sec.knox.provider/RestrictionPolicy3
+05-22 23:57:22.295 D/SettingsProvider( 5213): projectionArgs: isSettingsChangesAllowed
+05-22 23:57:22.295 D/SettingsProvider( 5213): selectionArgs: false
+05-22 23:57:22.295 D/SettingsProvider( 5213): selectionArgs: 10298
+05-22 23:57:22.295 D/SecContentProvider( 5213): query(), uri = 17 selection = isSettingsChangesAllowed
+05-22 23:57:22.295 D/SecContentProvider( 5213): called from android.uid.honeyboard:10298
+05-22 23:57:22.296 D/RestrictionPolicy( 5213): isSettingsChangesAllowedAsUser, userId 0 : true
+05-22 23:57:22.296 D/SettingsProvider( 5213): ret = 1
+05-22 23:57:22.297 I/HBD     (11039): m updated Sub Types. English 
+05-22 23:57:22.298 I/HBD     (11039): a InputMethodSubtype is set as local:en_US 
+05-22 23:57:22.303 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.319 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.336 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.349 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.018468613]
+05-22 23:57:22.350 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.8339315]
+05-22 23:57:22.350 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9511286]
+05-22 23:57:22.350 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.382539 msecs
+05-22 23:57:22.350 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.576231 msecs
+05-22 23:57:22.351 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.462847 msecs
+05-22 23:57:22.352 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.368 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.377 I/HBD     (11039): b updateConfig: [LanguageItem] English / [KeyboardViewTypeItem] 0 / [KeyboardInputTypeItem] mainType(0), subType(0) / [CurrentLanguageInputTypeItem] mainType(0), subType(0) / [KeyboardInputRangeItem] 1 / [HandwritingModeItem] false / [SelectedLanguageItem] 3 / [LocaleItem] en-US,si-LK,hi-IN / [TextOrNullInputClassItem] true / [DateInputTypeItem] false / [DateTimeInputTypeItem] false /  
+05-22 23:57:22.377 I/HBD     (11039): b updateConfig: [DecimalNumberInputTypeItem] false / [NumberOnlyInputTypeItem] false / [NumberPasswordInputTypeItem] false / [PhoneNumberInputClassItem] false / [SignedDecimalNumberInputTypeItem] false / [SignedNumberInputTypeItem] false / [EmailInputTypeItem] false / [UrlInputTypeItem] false / [UrlEmailModeItem] false / [PasswordInputTypeItem] false / [WebPasswordEditorItem] false /  
+05-22 23:57:22.377 I/HBD     (11039): b updateConfig: [NumberInputClassItem] false / [DateTimeInputClassItem] false / [DigitEditorItem] false / [MonthInputTypeItem] false / [YearDateTimeInputTypeItem] false / [IPAddressInputTypeItem] false / [FileNameInputTypeItem] false / [CustomSymbolsForPeriodKeyItem] false / [OptionInputTypeItem] false / [DisableHanjaInputItem] false / [DisableCmKeyInputItem] false /  
+05-22 23:57:22.377 I/HBD     (11039): b updateConfig: [DisableCommaKeyInputItem] false / [DisableLanguageChangeKeyItem] false / [DisableSpaceKeyItem] false / [NumberPickerInputItem] false / [TimeInputTypeItem] false / [NumberKeyFirstLineItem] true / [AlternativeCharacterItem] false / [SimpleRowStyleItem] false / [HighContrastItem] false / [TouchAndHoldSpaceBarTypeItem] cursor_control / [UseContinuousInputItem] false /  
+05-22 23:57:22.377 I/HBD     (11039): b updateConfig: [UseToolBarItem] true / [OrientationItem] false / [DensityItem] 2.625 / [DisplayWidthItem] 0x1080 / [DisplayHeightItem] 0x2257 / [MainTextLabelItem] 1 / [LanguageSwitchingUsingSpaceBarItem] true / [LanguageSwitchingUsingKeyItem] false / [TransliterationTypingModeItem] false / [CoverDisplayModeItem] false / [TalkBackEnabledItem] false /  
+05-22 23:57:22.377 I/HBD     (11039): b updateConfig: [Japanese8FlickCustomisationItem] false / [VoiceEnabledItem] true / [SamsungVoiceImeItem] false / [PredictionStatusItem] true /  
+05-22 23:57:22.378 I/HBD     (11039): a update cached prediction status : true 
+05-22 23:57:22.378 I/HBD     (11039): ::BnR:: d HONEY_SUPPORT_DATA_MIGRATION_FROM_SKBD : true, isMigrateNotNeeded : true, isFinishMigPreferences : false, isPasswordInputType : falseisUserUnlocked : true 
+05-22 23:57:22.378 I/HBD     (11039): b updateMultiTapTimeValue 
+05-22 23:57:22.378 I/HBD     (11039): b getMultiTapTimeoutValue 
+05-22 23:57:22.378 I/HBD     (11039): b getSingleVowelMultiTapTimeoutValue 
+05-22 23:57:22.380 D/SecContentProvider( 5213): query(), uri = 15 selection = isClipboardShareAllowedAsUser
+05-22 23:57:22.380 D/SecContentProvider( 5213): called from android.uid.honeyboard:10298
+05-22 23:57:22.380 D/RestrictionPolicy( 5213): isClipboardShareAllowed : true
+05-22 23:57:22.385 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.386 I/HBD     (11039): HoneyBoardService [PF_OP][onStartInputView]  233 ms 
+05-22 23:57:22.387 I/InputMethod(11039): showSoftInput(), flags : 1
+05-22 23:57:22.387 I/InputMethodManagerService( 5213): isAccessoryKeyboard 0
+05-22 23:57:22.387 I/HBD     (11039): HoneyBoardService onEvaluateInputViewShown: true 
+05-22 23:57:22.391 I/InputMethodManagerService( 5213): isAccessoryKeyboard 0
+05-22 23:57:22.391 I/HBD     (11039): HoneyBoardService onEvaluateInputViewShown: true 
+05-22 23:57:22.391 I/InputMethodService(11039): startViews: mShowInputRequested=true, mInputViewStarted=true, mCandidatesViewStarted= false
+05-22 23:57:22.392 D/InputMethodManagerService( 5213): notifyUserActivity: canceled, displayId=0
+05-22 23:57:22.393 I/CocktailBarUiController(16058): onReceive: action=ResponseAxT9Info isVisibleWindow=1
+05-22 23:57:22.396 D/InputMethodManagerServicePhysicalKey( 5213): isConnectedDexOnPC false
+05-22 23:57:22.397 D/InputMethodManagerService( 5213): isImeSwitcherDisabledPackage : false
+05-22 23:57:22.398 D/InputMethodManagerService( 5213): shouldShowImeSwitcherLocked : checking vis : 3
+05-22 23:57:22.401 I/InputMethodManagerService( 5213): setImeWindowStatus: vis=3, backDisposition=0
+05-22 23:57:22.401 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.404 I/HBD     (11039): al EBD si t 0 
+05-22 23:57:22.417 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.420 I/GestureDetector( 5213): handleMessage TAP
+05-22 23:57:22.421 I/GestureDetector( 5213): handleMessage TAP
+05-22 23:57:22.434 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.450 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.459 I/HBD     (11039): bd requestCursorUpdates returned  true ,  81
+05-22 23:57:22.466 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.483 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.499 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.515 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.524 D/InsetsController(  937): show(ime(), fromIme=true)
+05-22 23:57:22.532 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.548 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.554 I/HBD     (11039): al EBD ex 
+05-22 23:57:22.560 I/HYPER-HAL( 4840): [RequestManager.cpp]releaseLocked(): Released ID : 60946321
+05-22 23:57:22.581 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.613 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.630 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.646 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.658 D/io_stats( 4423): !@   8,0 r 205457041 3939633216 w 24228910 564432792 d 0 0 f 0 0 iot 43765220 0 th 0 0 0 pt 0 inp 0 0 1018543.675
+05-22 23:57:22.663 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.679 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.696 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.711 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.728 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.744 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.761 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.777 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.794 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.810 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.826 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.843 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.852 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.042049058]
+05-22 23:57:22.853 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.6014164]
+05-22 23:57:22.853 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.96294504]
+05-22 23:57:22.853 D/SemNscXgbMsL1( 5213): 1 sample inference time: 1.027423 msecs
+05-22 23:57:22.855 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 1.613615 msecs
+05-22 23:57:22.856 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.952231 msecs
+05-22 23:57:22.859 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.875 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.891 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.907 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.924 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.940 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.957 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.973 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:22.990 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.022 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.039 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.055 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.071 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.087 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.104 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.120 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.137 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.153 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.169 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.186 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.202 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.252 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.333 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.358 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.0147195235]
+05-22 23:57:23.360 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.45950896]
+05-22 23:57:23.360 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9250134]
+05-22 23:57:23.360 D/SemNscXgbMsL1( 5213): 1 sample inference time: 2.407692 msecs
+05-22 23:57:23.361 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 1.071461 msecs
+05-22 23:57:23.362 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.810924 msecs
+05-22 23:57:23.382 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.457 D/MobileStatusTracker(1/1)( 5568): onSignalStrengthsChanged signalStrength=SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-105 rsrp=-104 rsrq=-13 rssnr=0 cqiTableIndex=2147483647 cqi=6 ta=2147483647 level=3 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=3 },rat=14,primary=CellSignalStrengthLte} level=3
+05-22 23:57:23.459 D/NetworkController( 5568): SignalStrength from intent slotId=1
+05-22 23:57:23.742 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:23.865 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.05718927]
+05-22 23:57:23.865 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.90311867]
+05-22 23:57:23.865 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9322966]
+05-22 23:57:23.865 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.756539 msecs
+05-22 23:57:23.866 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.917039 msecs
+05-22 23:57:23.867 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.872385 msecs
+05-22 23:57:24.053 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:24.249 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:24.318 D/UsbStatsMonitor( 5213): 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+05-22 23:57:24.370 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.025587413]
+05-22 23:57:24.370 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.5314017]
+05-22 23:57:24.370 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.96783924]
+05-22 23:57:24.370 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.843423 msecs
+05-22 23:57:24.372 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.961 msecs
+05-22 23:57:24.373 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.936654 msecs
+05-22 23:57:24.377 E/audit   ( 4782): type=1400 audit(1779474444.371:257853): avc:  denied  { write } for  pid=736 comm="ThreadPoolForeg" name="traced_producer" dev="tmpfs" ino=28072 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 SEPF_SM-M215F_12_0001 audit_filtered
+05-22 23:57:24.377 E/audit   ( 4782): type=1300 audit(1779474444.371:257853): arch=c00000b7 syscall=203 success=no exit=-13 a0=67 a1=737dd5fe60 a2=1e a3=74befe7aac items=0 ppid=4803 pid=736 auid=4294967295 uid=10198 gid=10198 euid=10198 suid=10198 fsuid=10198 egid=10198 sgid=10198 fsgid=10198 tty=(none) ses=4294967295 comm="ThreadPoolForeg" exe="/system/bin/app_process64" subj=u:r:gmscore_app:s0:c512,c768 key=(null)
+05-22 23:57:24.377 E/audit   ( 4782): type=1327 audit(1779474444.371:257853): proctitle="com.google.android.gms.persistent"
+05-22 23:57:24.755 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:24.875 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.023778325]
+05-22 23:57:24.875 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.7271034]
+05-22 23:57:24.875 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.5520044]
+05-22 23:57:24.875 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.702808 msecs
+05-22 23:57:24.876 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.932192 msecs
+05-22 23:57:24.877 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.905039 msecs
+05-22 23:57:25.123 D/PowerManagerService( 5213): UserActivityStateListenerState: 0
+05-22 23:57:25.249 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:25.381 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.23905894]
+05-22 23:57:25.382 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.78538966]
+05-22 23:57:25.382 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9669124]
+05-22 23:57:25.383 D/SemNscXgbMsL1( 5213): 1 sample inference time: 1.563308 msecs
+05-22 23:57:25.384 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 1.5685 msecs
+05-22 23:57:25.387 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 1.453808 msecs
+05-22 23:57:25.588 W/ProcessStats( 5213): Tracking association SourceState{7a6488c com.samsung.wearable.fit3plugin/10825 BTopFgs #2768560} whose proc state 2 is better than process ProcessState{42fbbd5 com.sec.android.app.shealth:remote/10239 pkg=com.sec.android.app.shealth} proc state 3 (0 skipped)
+05-22 23:57:25.633 D/MobileStatusTracker(0/3)( 5568): onSignalStrengthsChanged signalStrength=SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-105 rsrp=-105 rsrq=-14 rssnr=-3 cqiTableIndex=2147483647 cqi=7 ta=2147483647 level=3 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=3 },rat=14,primary=CellSignalStrengthLte} level=3
+05-22 23:57:25.635 D/NetworkController( 5568): SignalStrength from intent slotId=0
+05-22 23:57:25.757 E/SurfaceFlinger( 4899): Attempt to update InputPolicyFlags without permission ACCESS_SURFACE_FLINGER
+05-22 23:57:25.888 D/SemNscXgbMsL1( 5213): Probability - Cloud gaming: [0.04196424]
+05-22 23:57:25.888 D/SemNscXgbMsL1( 5213): Probability - Real time: [0.713421]
+05-22 23:57:25.888 D/SemNscXgbMsL1( 5213): Probability - Non real time: [0.9321504]
+05-22 23:57:25.889 D/SemNscXgbMsL1( 5213): 1 sample inference time: 0.364577 msecs
+05-22 23:57:25.889 D/SemNscXgbL2Rt( 5213): L2 RT 1 sample inference time: 0.466154 msecs
+05-22 23:57:25.890 D/SemNscXgbL2Nrt( 5213): L2 NRT 1 sample inference time: 0.453385 msecs

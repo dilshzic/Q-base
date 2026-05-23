@@ -308,7 +308,8 @@ fun UserItem(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().padding(horizontal = if (isSearchResult) 0.dp else 16.dp, vertical = 4.dp),
         shape = RoundedCornerShape(16.dp),
-        color = if (isSearchResult) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent,
+        color = if (isSearchResult) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+        contentColor = if (isSearchResult) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
         border = if (isSearchResult) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)) else null
     ) {
         Row(
@@ -332,7 +333,7 @@ fun UserItem(
             Column {
                 Text(user.displayName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 user.friendCode.let {
-                    Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                    Text(it, style = MaterialTheme.typography.bodySmall, color = if (isSearchResult) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.outline)
                 }
             }
             if (isSearchResult) {
