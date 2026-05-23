@@ -178,7 +178,7 @@ fun QuestionHeader(
             } else if (isMTF) {
                 var total = 0f
                 options.forEach { option ->
-                    val letter = option.optionLetter ?: ""
+                    val letter = option.optionLetter
                     val userValue = when {
                         selectedAnswers.contains("${letter}_T") -> true
                         selectedAnswers.contains("${letter}_F") -> false
@@ -235,9 +235,11 @@ fun QuestionHeader(
     Spacer(modifier = Modifier.height(8.dp))
 
     dev.jeziellago.compose.markdowntext.MarkdownText(
-        markdown = question.stem ?: "",
-        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-        color = MaterialTheme.colorScheme.onSurface
+        markdown = question.stem,
+        style = MaterialTheme.typography.titleMedium.copy(
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     )
 }
 

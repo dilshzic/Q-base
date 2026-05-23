@@ -12,6 +12,7 @@ import io.appwrite.services.Databases
 import io.appwrite.services.Storage
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import okhttp3.ResponseBody.Companion.toResponseBody
 import javax.inject.Singleton
 
 @Module
@@ -42,14 +43,14 @@ object AppwriteModule {
                 .addInterceptor { chain ->
                     val request = chain.request()
                     val response = chain.proceed(request)
+                    val responseBody = response.body
 
                     if (!response.isSuccessful && response.code != 101 && response.code != 401 && response.code != 409) {
                         val code = response.code
                         val bodyString = try {
-                            val source = response.body?.source()
+                            val source = responseBody?.source()
                             source?.request(Long.MAX_VALUE)
-                            val buffer = source?.buffer
-                            buffer?.clone()?.readString(java.nio.charset.Charset.forName("UTF-8"))
+                            source?.buffer?.clone()?.readString(java.nio.charset.Charset.forName("UTF-8"))
                         } catch (e: Exception) {
                             null
                         }
@@ -58,18 +59,17 @@ object AppwriteModule {
 
                         if (bodyString != null && (!bodyString.trim().startsWith("{") || !bodyString.trim().endsWith("}"))) {
                             val fakeJsonError = "{\"message\": ${com.google.gson.Gson().toJson(bodyString)}, \"code\": $code, \"type\": \"appwrite_error\"}"
-                            val mediaType = response.body?.contentType()
-                            val newBody = okhttp3.ResponseBody.create(mediaType, fakeJsonError)
+                            val mediaType = responseBody?.contentType()
+                            val newBody = fakeJsonError.toResponseBody(mediaType)
                             return@addInterceptor response.newBuilder()
                                 .body(newBody)
                                 .build()
                         }
                     } else {
                         val bodyString = try {
-                            val source = response.body?.source()
+                            val source = responseBody?.source()
                             source?.request(Long.MAX_VALUE)
-                            val buffer = source?.buffer
-                            buffer?.clone()?.readString(java.nio.charset.Charset.forName("UTF-8"))
+                            source?.buffer?.clone()?.readString(java.nio.charset.Charset.forName("UTF-8"))
                         } catch (e: Exception) {
                             null
                         }
@@ -103,8 +103,8 @@ object AppwriteModule {
 
                                 if (modified) {
                                     val shieldedBodyString = json.toString()
-                                    val mediaType = response.body?.contentType()
-                                    val newBody = okhttp3.ResponseBody.create(mediaType, shieldedBodyString)
+                                    val mediaType = responseBody?.contentType()
+                                    val newBody = shieldedBodyString.toResponseBody(mediaType)
                                     return@addInterceptor response.newBuilder()
                                         .body(newBody)
                                         .build()

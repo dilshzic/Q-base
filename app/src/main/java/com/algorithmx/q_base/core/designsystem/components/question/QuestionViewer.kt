@@ -79,8 +79,10 @@ fun QuestionViewer(
                 Spacer(modifier = Modifier.height(8.dp))
                 dev.jeziellago.compose.markdowntext.MarkdownText(
                     markdown = question.stem,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }

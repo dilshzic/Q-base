@@ -3,8 +3,6 @@ package com.algorithmx.q_base.core.data.di
 import android.content.Context
 import com.algorithmx.q_base.core.ai.data.AiResponseDao
 import com.algorithmx.q_base.core.ai.data.BrainUsageDao
-import com.algorithmx.q_base.core.data.chat.ChatDao
-import com.algorithmx.q_base.core.data.chat.MessageDao
 import com.algorithmx.q_base.data.collections.CollectionDao
 import com.algorithmx.q_base.data.collections.ProblemReportDao
 import com.algorithmx.q_base.data.collections.QuestionDao
@@ -51,17 +49,7 @@ object DatabaseModule {
         return SessionRepository(sessionDao, collectionDao, questionDao, userDao)
     }
 
-    @Provides
-    @Singleton
-    fun provideHomeRepository(
-        sessionDao: SessionDao,
-        questionDao: QuestionDao,
-        collectionDao: CollectionDao,
-        userDao: UserDao,
-        chatDao: ChatDao
-    ): HomeRepository {
-        return HomeRepository(sessionDao, questionDao, collectionDao, userDao, chatDao)
-    }
+
 
     @Provides
     @Singleton
@@ -69,24 +57,8 @@ object DatabaseModule {
         return ImportRepository(context)
     }
 
-    @Provides
-    @Singleton
-    fun provideDataClearingRepository(
-        chatDao: ChatDao,
-        messageDao: MessageDao,
-        sessionDao: SessionDao,
-        questionDao: QuestionDao,
-        userDao: UserDao,
-        aiResponseDao: AiResponseDao,
-        brainUsageDao: BrainUsageDao,
-        collectionDao: CollectionDao,
-        cryptoManager: CryptoManager
-    ): DataClearingRepository {
-        return DataClearingRepository(
-            chatDao, messageDao, sessionDao, questionDao, userDao,
-            aiResponseDao, brainUsageDao, collectionDao, cryptoManager
-        )
-    }
+    // DataClearingRepository is @Inject-constructible and depends on chat DAOs owned
+    // by `core-chat`. Allow Hilt to construct it from its @Inject constructor.
 
     @Provides
     fun provideProfileCache(userDao: UserDao): ProfileCache {
