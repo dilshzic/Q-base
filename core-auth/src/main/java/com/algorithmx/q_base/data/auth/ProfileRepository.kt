@@ -209,6 +209,10 @@ class ProfileRepository @Inject constructor(
                 }
 
                 profileCache.upsert(p)
+                Log.d(
+                    "ProfileRepository",
+                    "Cached profile for ${p.userId}: displayName='${p.displayName}', email='${p.email}', friendCode='${p.friendCode}', publicKey=${p.publicKey != null}"
+                )
                 Log.d("ProfileRepository", "Successfully cached profile locally")
             } ?: Log.e("ProfileRepository", "Failed to get profile for $userId")
         } catch (e: Exception) {

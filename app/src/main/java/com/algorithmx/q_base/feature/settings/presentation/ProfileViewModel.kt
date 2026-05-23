@@ -77,6 +77,16 @@ class ProfileViewModel @Inject constructor(
         loadUser()
         loadStats()
         loadBackupStatus()
+        refreshProfileSync()
+    }
+
+    fun refreshProfileSync() {
+        viewModelScope.launch {
+            val user = authRepository.currentUser.firstOrNull()
+            if (user != null) {
+                profileRepository.syncUserProfile(user.uid)
+            }
+        }
     }
 
     private fun loadUser() {
