@@ -24,12 +24,12 @@ val deepseekApiKey = localProperties.getProperty("DEEPSEEK_API_KEY") ?: ""
 
 android {
     namespace = "com.algorithmx.q_base"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.algorithmx.q_base"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
