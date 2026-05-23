@@ -19,10 +19,4 @@ object DatabaseCoreModule {
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
         return AppDatabase.getDatabase(context)
     }
-
-    @Provides
-    @Singleton
-    fun provideChatDatabase(@ApplicationContext context: Context): ChatDatabase {
-        return ChatDatabase.getDatabase(context)
-    }
 }

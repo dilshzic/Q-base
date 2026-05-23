@@ -36,11 +36,7 @@ object DaoModule {
     @Provides
     fun provideUserDao(database: AppDatabase): UserDao = database.userDao()
 
-    @Provides
-    fun provideChatDao(database: ChatDatabase): ChatDao = database.chatDao()
-
-    @Provides
-    fun provideMessageDao(database: ChatDatabase): MessageDao = database.messageDao()
+    // Chat DAOs are provided by the core-chat module to avoid duplicate bindings
 
     @Provides
     fun provideAiResponseDao(database: AppDatabase): AiResponseDao = database.aiResponseDao()
