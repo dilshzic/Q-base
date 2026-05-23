@@ -4,8 +4,6 @@ import android.util.Base64
 import android.util.Log
 import com.algorithmx.q_base.core.data.chat.MessageEntity
 import com.algorithmx.q_base.core.data.UserEntity
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 
 class MissingEncryptionKeysException(message: String) : IllegalStateException(message)
@@ -28,46 +26,14 @@ suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
     val missingKeyUserIds = mutableListOf<String>()
     val wrapFailures = mutableListOf<String>()
 
-    val deferredKeys = participants.map { targetId ->
-        repositoryScope.async {
-            val publicKeyBase64: String? = if (targetId == senderUid) {
-                cryptoManager.initializeAndGetPublicKey()
-            } else {
-                val local = userDao.getUserById(targetId)
-                var candidateKey: String? = local?.publicKey
-
-                try {
-                    val docData = databases.getDocument(
-                        collectionId = "users",
-                        documentId = targetId
-                    ).getOrNull()
-                    
-                    val remoteKey = docData?.get("publicKey") as? String
-                    if (!remoteKey.isNullOrBlank() && docData != null) {
-                        candidateKey = remoteKey
-                        val cached = UserEntity(
-                            userId = targetId,
-                            displayName = (docData["displayName"] as? String) ?: (local?.displayName ?: "Unknown"),
-                            email = local?.email,
-                            intro = (docData["intro"] as? String) ?: local?.intro,
-                            profilePictureUrl = (docData["profilePictureUrl"] as? String) ?: local?.profilePictureUrl,
-                            friendCode = (docData["friendCode"] as? String) ?: (local?.friendCode ?: ""),
-                            publicKey = remoteKey,
-                            isBanned = (docData["isBanned"] as? Boolean) ?: (local?.isBanned ?: false),
-                            isPhotoVisible = (docData["isPhotoVisible"] as? Boolean) ?: (local?.isPhotoVisible ?: true)
-                        )
-                        userDao.insertUser(cached)
-                    }
-                } catch (e: Exception) {
-                    Log.w("MessageSyncRepository", "Failed to refresh public key for $targetId", e)
-                }
-                candidateKey
-            }
-            targetId to publicKeyBase64
+    val resolvedKeys = participants.map { targetId ->
+        val publicKeyBase64: String? = if (targetId == senderUid) {
+            cryptoManager.initializeAndGetPublicKey()
+        } else {
+            userDao.getUserById(targetId)?.publicKey
         }
+        targetId to publicKeyBase64
     }
-
-    val resolvedKeys = deferredKeys.awaitAll()
     
     resolvedKeys.forEach { (targetId, publicKeyBase64) ->
         if (publicKeyBase64.isNullOrBlank()) {

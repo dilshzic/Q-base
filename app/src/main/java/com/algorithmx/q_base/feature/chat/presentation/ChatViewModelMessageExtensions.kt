@@ -1,4 +1,5 @@
 package com.algorithmx.q_base.feature.chat.presentation
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.algorithmx.q_base.core.data.chat.ChatEntity
 import com.algorithmx.q_base.core.data.chat.MessageEntity
@@ -44,6 +45,10 @@ fun ChatViewModel.startNewChat(userId: String, userName: String) {
         val initialMessage = if (userId == ChatViewModel.QBASE_AI_BOT_ID) 
             "Hello! I am Qbase AI. How can I assist you with your studies today?"
             else "Hi! I'd like to start a professional conversation."
+
+        if (userId != ChatViewModel.QBASE_AI_BOT_ID) {
+            refreshChatParticipantProfiles(chatId)
+        }
         
         sendMessage(chatId, initialMessage, senderId = if (userId == ChatViewModel.QBASE_AI_BOT_ID) ChatViewModel.QBASE_AI_BOT_ID else uid)
         _currentChatId.value = chatId
@@ -67,6 +72,8 @@ fun ChatViewModel.startNewGroup(participantIds: List<String>, groupName: String)
         
         chatDao.insertChat(newChat)
         syncRepository.createChatOnRemote(newChat)
+
+        refreshChatParticipantProfiles(chatId)
         
         sendMessage(chatId, "created the group \"$groupName\"", type = "DB_CHANGE", senderId = uid)
         _currentChatId.value = chatId
@@ -111,9 +118,11 @@ fun ChatViewModel.sendMessage(chatId: String, text: String, type: String = "TEXT
             try {
                 syncRepository.sendMessage(message)
             } catch (e: MissingEncryptionKeysException) {
-                messageDao.updateMessageStatus(message.messageId, "FAILED")
-                _actionFeedback.emit("Waiting for recipient encryption keys...")
+                messageDao.updateMessageStatus(message.messageId, "PENDING")
+                _actionFeedback.emit("Refreshing encryption keys. Message queued.")
+                refreshMissingKeysForChat(chatId)
             } catch (e: Exception) {
+                Log.e("ChatViewModel", "Error sending message: ${e.message}")
                 // Generic network/timeout error during sending
                 messageDao.updateMessageStatus(message.messageId, "PENDING")
                 _actionFeedback.emit("Network error: Message queued.")

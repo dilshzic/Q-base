@@ -15,6 +15,7 @@ import com.algorithmx.q_base.core.data.UserDao
 import com.algorithmx.q_base.core.data.UserEntity
 import com.algorithmx.q_base.core.ai.data.AiRepository
 import com.algorithmx.q_base.core.data.auth.AuthRepository
+import com.algorithmx.q_base.core.data.auth.ProfileRepository
 import com.algorithmx.q_base.feature.sessions.data.SessionDao
 import com.algorithmx.q_base.feature.sessions.data.StudySession
 import com.algorithmx.q_base.sync.orchestration.SyncRepository
@@ -36,6 +37,7 @@ class ChatViewModel @Inject constructor(
     internal val userDao: UserDao,
     internal val syncRepository: SyncRepository,
     internal val authRepository: AuthRepository,
+    internal val profileRepository: ProfileRepository,
     internal val aiRepository: AiRepository,
     internal val collectionDao: CollectionDao,
     internal val sessionDao: SessionDao,
@@ -47,6 +49,8 @@ class ChatViewModel @Inject constructor(
     private var groupLibraryJob: Job? = null
     private var sharedSessionsJob: Job? = null
     private var accessRequestsJob: Job? = null
+    private var keyPrefetchJob: Job? = null
+    private var keyRefreshJob: Job? = null
 
     internal val json = Json { ignoreUnknownKeys = true }
     
@@ -378,6 +382,7 @@ class ChatViewModel @Inject constructor(
         accessRequestsJob?.cancel()
 
         _currentChatId.value = chatId
+        prefetchChatParticipantProfiles(chatId)
         viewModelScope.launch {
             chatDao.clearUnreadCount(chatId)
             
@@ -405,6 +410,41 @@ class ChatViewModel @Inject constructor(
                 _accessRequests.value = emptyList()
             }
         }
+    }
+
+    internal fun prefetchChatParticipantProfiles(chatId: String) {
+        keyPrefetchJob?.cancel()
+        keyPrefetchJob = viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            refreshChatParticipantProfiles(chatId)
+        }
+    }
+
+    internal fun refreshMissingKeysForChat(chatId: String) {
+        keyRefreshJob?.cancel()
+        keyRefreshJob = viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            refreshChatParticipantProfiles(chatId)
+            try {
+                syncRepository.flushQueue()
+            } catch (e: Exception) {
+                Log.e("ChatViewModel", "Failed to flush message queue after key refresh", e)
+            }
+        }
+    }
+
+    internal suspend fun refreshChatParticipantProfiles(chatId: String) {
+        val chat = chatDao.getChatById(chatId) ?: return
+        chat.participantIds
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .forEach { participantId ->
+                try {
+                    profileRepository.syncUserProfile(participantId)
+                } catch (e: Exception) {
+                    Log.w("ChatViewModel", "Background profile refresh failed for $participantId", e)
+                }
+            }
     }
 
     companion object {
