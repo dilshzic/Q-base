@@ -37,8 +37,12 @@ import com.algorithmx.q_base.feature.sessions.data.StudySession
 import com.algorithmx.q_base.core.designsystem.components.question.QuestionViewer
 import com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar
 import com.algorithmx.q_base.core.designsystem.components.reusable.ReportDialog
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.algorithmx.q_base.feature.chat.presentation.ChatViewModel
+import com.algorithmx.q_base.feature.chat.presentation.startAiChat
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.launch
+import com.algorithmx.q_base.feature.explore.presentation.components.AiChatBottomSheet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,6 +91,11 @@ fun ExploreQuestionPagerScreen(
     }
 
     val listState = rememberLazyListState()
+
+    // AI chat sheet state
+    val chatViewModel: ChatViewModel = hiltViewModel()
+    var showAiSheet by remember { mutableStateOf(false) }
+    var aiQuestionStem by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(currentSubCategoryIndex) {
         if (currentSubCategoryIndex != -1) {
@@ -199,7 +208,12 @@ fun ExploreQuestionPagerScreen(
                         onDelete = { onDeleteQuestion(page) },
                         isEditable = state.isEditable,
                         onEditQuestion = { onEditQuestion(page) },
-                        onAskAi = { onAskAi(page, "EXPLAIN") },
+                        onAskAi = {
+                            // Open the interactive AI chat bottom sheet and seed with the question
+                            aiQuestionStem = state.question.stem
+                            chatViewModel.startAiChat()
+                            showAiSheet = true
+                        },
                         onCopy = {
                             val content = buildString {
                                 appendLine("Q: ${state.question.stem}")
@@ -312,6 +326,15 @@ fun ExploreQuestionPagerScreen(
                 }
             }
         }
+    }
+
+    // New interactive AI Chat Bottom Sheet
+    if (showAiSheet) {
+        AiChatBottomSheet(
+            questionStem = aiQuestionStem,
+            onDismiss = { showAiSheet = false; aiQuestionStem = null },
+            viewModel = chatViewModel
+        )
     }
 
     // Collection Selector Dialog
