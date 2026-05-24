@@ -3,6 +3,7 @@ package com.algorithmx.q_base
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+// This is the correct package declaration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -29,13 +30,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
-import com.algorithmx.q_base.data.DatabaseSeeder
-import com.algorithmx.q_base.data.auth.AuthRepository
-import com.algorithmx.q_base.data.sync.SyncRepository
-import com.algorithmx.q_base.ui.state.AppAccessState
-import com.algorithmx.q_base.ui.state.LocalAppAccessState
-import com.algorithmx.q_base.ui.navigation.*
-import com.algorithmx.q_base.ui.theme.QbaseTheme
+import com.algorithmx.q_base.core.data.DatabaseSeeder
+import com.algorithmx.q_base.core.data.auth.AuthRepository
+import com.algorithmx.q_base.sync.orchestration.SyncRepository
+import com.algorithmx.q_base.core.state.AppAccessState
+import com.algorithmx.q_base.core.state.LocalAppAccessState
+import com.algorithmx.q_base.core.navigation.*
+import com.algorithmx.q_base.core.designsystem.theme.QbaseTheme
 import com.algorithmx.q_base.util.NetworkMonitor
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,8 +80,8 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var notificationHelper: com.algorithmx.q_base.util.NotificationHelper
 
-    @Inject
-    lateinit var dataStoreManager: com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager
+        @Inject
+        lateinit var dataStoreManager: com.algorithmx.q_base.core.ai.brain.BrainDataStoreManager
 
     @Inject
     lateinit var databaseSeeder: DatabaseSeeder
@@ -92,7 +93,7 @@ class MainActivity : ComponentActivity() {
     lateinit var networkMonitor: NetworkMonitor
 
     @Inject
-    lateinit var universalQueueManager: com.algorithmx.q_base.data.sync.UniversalQueueManager
+    lateinit var universalQueueManager: com.algorithmx.q_base.sync.orchestration.UniversalQueueManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -136,10 +137,7 @@ class MainActivity : ComponentActivity() {
         var restSyncJob: kotlinx.coroutines.Job? = null
         var realtimeSyncJob: kotlinx.coroutines.Job? = null
         lifecycleScope.launch {
-            val isBackendReady = combine(
-                networkMonitor.isOnline,
-                authRepository.isBackendSessionValid
-            ) { online, sessionValid -> online && sessionValid }
+            val isBackendReady = networkMonitor.isOnline
 
             combine(
                 authRepository.currentUser,
@@ -182,7 +180,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val brainConfig by dataStoreManager.brainConfigFlow.collectAsStateWithLifecycle(
-                initialValue = com.algorithmx.q_base.core_ai.brain.models.StoredBrainConfig(
+                initialValue = com.algorithmx.q_base.core.ai.brain.models.StoredBrainConfig(
                     provider = com.algorithmx.androidmodules.coreai.brain.models.BrainProvider.GEMINI,
                     modelName = "gemini-1.5-flash",
                     systemInstruction = "",
@@ -199,12 +197,7 @@ class MainActivity : ComponentActivity() {
             QbaseTheme(themeMode = brainConfig.themeMode) {
                 val seeded by isSeeded.collectAsStateWithLifecycle()
                 val isSessionChecked by authRepository.isSessionChecked.collectAsStateWithLifecycle(initialValue = false)
-                val isOnline by remember {
-                    combine(
-                        networkMonitor.isOnline,
-                        authRepository.isBackendSessionValid
-                    ) { online, sessionValid -> online && sessionValid }
-                }.collectAsStateWithLifecycle(initialValue = false)
+                val isOnline by networkMonitor.isOnline.collectAsStateWithLifecycle(initialValue = false)
                 
                 // Observe authentication state reactively
                 val userFlow = remember { authRepository.currentUser }
@@ -233,13 +226,11 @@ class MainActivity : ComponentActivity() {
                     if (isLoggedInInstancePersisted) Screen.Home else Screen.Login
                 }
 
-                val appAccessState = remember(isSessionChecked, user, isOnline) {
+                val appAccessState = remember(user, isOnline, isLoggedInInstancePersisted) {
                     when {
-                        !isSessionChecked -> AppAccessState.RestoringSession
-                        user != null && isOnline -> AppAccessState.OnlineReady
-                        user != null && !isOnline -> AppAccessState.SignedInOffline
-                        user == null && isOnline -> AppAccessState.GuestOnline
-                        else -> AppAccessState.OfflineGuest
+                        user == null && !isLoggedInInstancePersisted -> AppAccessState.NotLoggedIn
+                        isOnline -> AppAccessState.Online
+                        else -> AppAccessState.Offline
                     }
                 }
                 
@@ -259,11 +250,11 @@ class MainActivity : ComponentActivity() {
                 android.util.Log.d("MainActivity", "Composition: startRoute=$startRoute, currentTopLevel=${navigationState.topLevelRoute}")
                 android.util.Log.d("MainActivity", "Compose state: seeded=$seeded, isSessionChecked=$isSessionChecked, appAccessState=$appAccessState, user=$user, isOnline=$isOnline")
 
-                // Display a generic long-duration snackbar if background session check fails/user is guest
-                LaunchedEffect(isSessionChecked, user) {
-                    if (isSessionChecked && user == null) {
+                // Display a sign-in prompt only when there is no previous login history.
+                LaunchedEffect(isSessionChecked, user, isLoggedInInstancePersisted) {
+                    if (isSessionChecked && user == null && !isLoggedInInstancePersisted) {
                         snackbarHostState.showSnackbar(
-                            message = "Running in offline guest mode. Tap profile to log in.",
+                            message = "You are not logged in. Tap profile to sign in.",
                             duration = SnackbarDuration.Long
                         )
                     }
@@ -294,7 +285,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 CompositionLocalProvider(LocalAppAccessState provides appAccessState) {
-                    if (!seeded || appAccessState == AppAccessState.RestoringSession) {
+                    if (!seeded) {
                         LoadingScreen()
                     } else {
                         MainScreen(navigationState, navigator, snackbarHostState)

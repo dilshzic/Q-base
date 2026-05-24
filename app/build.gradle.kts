@@ -24,12 +24,12 @@ val deepseekApiKey = localProperties.getProperty("DEEPSEEK_API_KEY") ?: ""
 
 android {
     namespace = "com.algorithmx.q_base"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.algorithmx.q_base"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
@@ -65,7 +65,7 @@ android {
 }
 
 dependencies {
-    implementation("com.github.dilshzic:alx-core-ai:v1.0.1")
+    implementation("com.github.dilshzic:alx-core-ai:v1.0.2")
     implementation(project(":core-chat"))
     implementation(project(":core-auth"))
     implementation(project(":core-crypto"))
@@ -104,12 +104,9 @@ dependencies {
 
     // Networking
     implementation(libs.retrofit)
-    implementation(libs.converter.moshi)
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
-    implementation(libs.moshi.kotlin)
     implementation(libs.gson)
-    ksp(libs.moshi.kotlin.codegen)
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)

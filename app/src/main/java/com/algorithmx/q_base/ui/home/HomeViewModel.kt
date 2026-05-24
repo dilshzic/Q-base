@@ -5,10 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.data.collections.StudyCollectionWithCount
 import com.algorithmx.q_base.data.collections.Question
-import com.algorithmx.q_base.data.sessions.StudySession
-import com.algorithmx.q_base.data.core.HomeRepository
-import com.algorithmx.q_base.data.core.UserEntity
-import com.algorithmx.q_base.data.auth.AuthRepository
+import com.algorithmx.q_base.feature.sessions.data.StudySession
+import com.algorithmx.q_base.core.data.HomeRepository
+import com.algorithmx.q_base.core.data.UserEntity
+import com.algorithmx.q_base.core.data.auth.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

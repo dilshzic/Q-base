@@ -1,4 +1,4 @@
-package com.algorithmx.q_base.data.backend
+package com.algorithmx.q_base.core.data.backend
 
 import io.appwrite.Client
 import io.appwrite.Query
@@ -511,6 +511,9 @@ class AppwriteDatabaseImpl @Inject constructor(
     }
 }
 
+// TODO: REMOVE_IN_PHASE6 - Consider moving this Gson TypeAdapter into a
+// dedicated serialization module (`core-serialization`) or consolidating
+// adapters. Marked for review before removal.
 @JsonAdapter(AppwriteDocumentModel.Adapter::class)
 class AppwriteDocumentModel(
     val data: Map<String, Any> = emptyMap()

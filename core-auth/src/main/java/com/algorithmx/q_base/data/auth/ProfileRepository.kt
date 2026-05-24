@@ -1,10 +1,10 @@
-package com.algorithmx.q_base.data.auth
+package com.algorithmx.q_base.core.data.auth
 
 import android.util.Log
-import com.algorithmx.q_base.data.backend.CoreAuth
-import com.algorithmx.q_base.data.backend.CoreDatabase
-import com.algorithmx.q_base.data.backend.CoreQuery
-import com.algorithmx.q_base.data.backend.CoreQueryOperator
+import com.algorithmx.q_base.core.data.backend.CoreAuth
+import com.algorithmx.q_base.core.data.backend.CoreDatabase
+import com.algorithmx.q_base.core.data.backend.CoreQuery
+import com.algorithmx.q_base.core.data.backend.CoreQueryOperator
 import kotlinx.coroutines.flow.firstOrNull
 import kotlin.random.Random
 import javax.inject.Inject
@@ -209,6 +209,10 @@ class ProfileRepository @Inject constructor(
                 }
 
                 profileCache.upsert(p)
+                Log.d(
+                    "ProfileRepository",
+                    "Cached profile for ${p.userId}: displayName='${p.displayName}', email='${p.email}', friendCode='${p.friendCode}', publicKey=${p.publicKey != null}"
+                )
                 Log.d("ProfileRepository", "Successfully cached profile locally")
             } ?: Log.e("ProfileRepository", "Failed to get profile for $userId")
         } catch (e: Exception) {

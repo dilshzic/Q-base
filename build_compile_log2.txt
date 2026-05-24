@@ -1,0 +1,720 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Configure project :app
+WARNING: The option setting 'android.disallowKotlinSourceSets=false' is experimental.
+The current default is 'true'.
+
+> Task :app:clean
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig
+> Task :app:generateDebugResources
+> Task :app:processDebugGoogleServices
+> Task :app:packageDebugResources
+> Task :core-auth:preBuild UP-TO-DATE
+> Task :core-auth:preDebugBuild UP-TO-DATE
+> Task :core-auth:processDebugNavigationResources UP-TO-DATE
+> Task :core-chat:preBuild UP-TO-DATE
+> Task :core-chat:preDebugBuild UP-TO-DATE
+> Task :core-chat:processDebugNavigationResources UP-TO-DATE
+> Task :core-crypto:preBuild UP-TO-DATE
+> Task :core-crypto:preDebugBuild UP-TO-DATE
+> Task :core-crypto:processDebugNavigationResources UP-TO-DATE
+> Task :app:processDebugNavigationResources
+> Task :core-auth:generateDebugResources UP-TO-DATE
+> Task :core-auth:packageDebugResources UP-TO-DATE
+> Task :core-auth:parseDebugLocalResources UP-TO-DATE
+> Task :core-auth:generateDebugRFile UP-TO-DATE
+> Task :core-auth:generateDebugBuildConfig UP-TO-DATE
+> Task :core-crypto:generateDebugResources UP-TO-DATE
+> Task :core-crypto:packageDebugResources UP-TO-DATE
+> Task :core-crypto:parseDebugLocalResources UP-TO-DATE
+> Task :core-crypto:generateDebugRFile UP-TO-DATE
+> Task :app:parseDebugLocalResources
+> Task :core-crypto:kspDebugKotlin UP-TO-DATE
+> Task :app:generateDebugRFile
+> Task :core-crypto:compileDebugKotlin UP-TO-DATE
+> Task :core-crypto:javaPreCompileDebug UP-TO-DATE
+> Task :core-crypto:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core-crypto:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core-crypto:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core-auth:kspDebugKotlin UP-TO-DATE
+> Task :core-auth:compileDebugKotlin UP-TO-DATE
+> Task :core-auth:javaPreCompileDebug UP-TO-DATE
+> Task :core-auth:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core-crypto:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core-auth:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core-auth:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core-chat:generateDebugResources UP-TO-DATE
+> Task :core-chat:packageDebugResources UP-TO-DATE
+> Task :core-chat:parseDebugLocalResources UP-TO-DATE
+> Task :core-chat:generateDebugRFile UP-TO-DATE
+> Task :core-auth:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core-chat:kspDebugKotlin UP-TO-DATE
+> Task :core-chat:compileDebugKotlin UP-TO-DATE
+> Task :core-chat:javaPreCompileDebug UP-TO-DATE
+> Task :core-chat:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core-chat:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core-chat:bundleLibCompileToJarDebug UP-TO-DATE
+
+> Task :app:kspDebugKotlin
+e: [ksp] [MissingType]: Element 'com.algorithmx.q_base.core.data.AppDatabase' references a type that is not present
+e: [ksp] InjectProcessingStep was unable to process 'ExploreViewModel(com.algorithmx.q_base.feature.content_import.data.ExploreRepository,com.algorithmx.q_base.core.ai.data.AiRepository,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.sync.orchestration.SyncRepository,AuthRepository,com.algorithmx.q_base.data.core.ConfigRepository)' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.feature.explore.presentation.ExploreViewModel
+    => element (CONSTRUCTOR): ExploreViewModel(com.algorithmx.q_base.feature.content_import.data.ExploreRepository,com.algorithmx.q_base.core.ai.data.AiRepository,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.sync.orchestration.SyncRepository,AuthRepository,com.algorithmx.q_base.data.core.ConfigRepository)
+    => type (EXECUTABLE constructor): (com.algorithmx.q_base.feature.content_import.data.ExploreRepository,com.algorithmx.q_base.core.ai.data.AiRepository,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.sync.orchestration.SyncRepository,AuthRepository,com.algorithmx.q_base.data.core.ConfigRepository)void
+    => type (ERROR parameter type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'ActiveSessionViewModel(com.algorithmx.q_base.feature.sessions.data.SessionRepository,com.algorithmx.q_base.core.ai.data.AiRepository,AuthRepository,com.algorithmx.q_base.sync.orchestration.SyncRepository)' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.feature.sessions.presentation.ActiveSessionViewModel
+    => element (CONSTRUCTOR): ActiveSessionViewModel(com.algorithmx.q_base.feature.sessions.data.SessionRepository,com.algorithmx.q_base.core.ai.data.AiRepository,AuthRepository,com.algorithmx.q_base.sync.orchestration.SyncRepository)
+    => type (EXECUTABLE constructor): (com.algorithmx.q_base.feature.sessions.data.SessionRepository,com.algorithmx.q_base.core.ai.data.AiRepository,AuthRepository,com.algorithmx.q_base.sync.orchestration.SyncRepository)void
+    => type (ERROR parameter type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'SessionsViewModel(com.algorithmx.q_base.feature.sessions.data.SessionRepository,AuthRepository,com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.sync.orchestration.SyncRepository)' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.feature.sessions.presentation.SessionsViewModel
+    => element (CONSTRUCTOR): SessionsViewModel(com.algorithmx.q_base.feature.sessions.data.SessionRepository,AuthRepository,com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.sync.orchestration.SyncRepository)
+    => type (EXECUTABLE constructor): (com.algorithmx.q_base.feature.sessions.data.SessionRepository,AuthRepository,com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.sync.orchestration.SyncRepository)void
+    => type (ERROR parameter type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'SessionResultsViewModel(com.algorithmx.q_base.feature.sessions.data.SessionRepository,com.algorithmx.q_base.sync.orchestration.SyncRepository,AuthRepository)' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.feature.sessions.presentation.SessionResultsViewModel
+    => element (CONSTRUCTOR): SessionResultsViewModel(com.algorithmx.q_base.feature.sessions.data.SessionRepository,com.algorithmx.q_base.sync.orchestration.SyncRepository,AuthRepository)
+    => type (EXECUTABLE constructor): (com.algorithmx.q_base.feature.sessions.data.SessionRepository,com.algorithmx.q_base.sync.orchestration.SyncRepository,AuthRepository)void
+    => type (ERROR parameter type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'SecureBackupViewModel(ProfileRepository,AuthRepository)' because 'ProfileRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.feature.settings.presentation.SecureBackupViewModel
+    => element (CONSTRUCTOR): SecureBackupViewModel(ProfileRepository,AuthRepository)
+    => type (EXECUTABLE constructor): (ProfileRepository,AuthRepository)void
+    => type (ERROR parameter type): ProfileRepository
+
+If type 'ProfileRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ProfileRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'ProfileViewModel(com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.feature.sessions.data.SessionDao,com.algorithmx.q_base.feature.content_import.data.CollectionDao,com.algorithmx.q_base.feature.content_import.data.QuestionDao,AuthRepository,ProfileRepository,com.algorithmx.q_base.core.data.DataClearingRepository,com.algorithmx.q_base.data.sync.ActionQueueDao,com.algorithmx.q_base.util.NetworkMonitor)' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.feature.settings.presentation.ProfileViewModel
+    => element (CONSTRUCTOR): ProfileViewModel(com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.feature.sessions.data.SessionDao,com.algorithmx.q_base.feature.content_import.data.CollectionDao,com.algorithmx.q_base.feature.content_import.data.QuestionDao,AuthRepository,ProfileRepository,com.algorithmx.q_base.core.data.DataClearingRepository,com.algorithmx.q_base.data.sync.ActionQueueDao,com.algorithmx.q_base.util.NetworkMonitor)
+    => type (EXECUTABLE constructor): (com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.feature.sessions.data.SessionDao,com.algorithmx.q_base.feature.content_import.data.CollectionDao,com.algorithmx.q_base.feature.content_import.data.QuestionDao,AuthRepository,ProfileRepository,com.algorithmx.q_base.core.data.DataClearingRepository,com.algorithmx.q_base.data.sync.ActionQueueDao,com.algorithmx.q_base.util.NetworkMonitor)void
+    => type (ERROR parameter type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'ChatViewModel(java.util.stream.SliceOps$1@5271ead9, ...)' because 'ChatDao' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.feature.chat.presentation.ChatViewModel
+    => element (CONSTRUCTOR): ChatViewModel(java.util.stream.SliceOps$1@2555b1f6, ...)
+    => type (EXECUTABLE constructor): (ChatDao,MessageDao,com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.sync.orchestration.SyncRepository,AuthRepository,com.algorithmx.q_base.core.ai.data.AiRepository,com.algorithmx.q_base.feature.content_import.data.CollectionDao,com.algorithmx.q_base.feature.sessions.data.SessionDao,com.algorithmx.q_base.core.data.util.MockExporter,com.algorithmx.q_base.core.data.util.MockDownloader,com.algorithmx.q_base.util.NetworkMonitor)void
+    => type (ERROR parameter type): ChatDao
+
+If type 'ChatDao' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDao' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'ContactSelectorViewModel(com.algorithmx.q_base.core.data.UserDao,ProfileRepository)' because 'ProfileRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.feature.chat.presentation.ContactSelectorViewModel
+    => element (CONSTRUCTOR): ContactSelectorViewModel(com.algorithmx.q_base.core.data.UserDao,ProfileRepository)
+    => type (EXECUTABLE constructor): (com.algorithmx.q_base.core.data.UserDao,ProfileRepository)void
+    => type (ERROR parameter type): ProfileRepository
+
+If type 'ProfileRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ProfileRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'AuthViewModel(AuthRepository,ProfileRepository)' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.feature.auth.presentation.AuthViewModel
+    => element (CONSTRUCTOR): AuthViewModel(AuthRepository,ProfileRepository)
+    => type (EXECUTABLE constructor): (AuthRepository,ProfileRepository)void
+    => type (ERROR parameter type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'ImportViewModel(com.algorithmx.q_base.feature.content_import.data.ImportRepository,com.algorithmx.q_base.core.ai.data.AiRepository,com.algorithmx.q_base.feature.content_import.data.ExploreRepository,AuthRepository)' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.feature.content_import.presentation.ImportViewModel
+    => element (CONSTRUCTOR): ImportViewModel(com.algorithmx.q_base.feature.content_import.data.ImportRepository,com.algorithmx.q_base.core.ai.data.AiRepository,com.algorithmx.q_base.feature.content_import.data.ExploreRepository,AuthRepository)
+    => type (EXECUTABLE constructor): (com.algorithmx.q_base.feature.content_import.data.ImportRepository,com.algorithmx.q_base.core.ai.data.AiRepository,com.algorithmx.q_base.feature.content_import.data.ExploreRepository,AuthRepository)void
+    => type (ERROR parameter type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'cryptoManager' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.MainActivity
+    => element (FIELD): authRepository
+    => type (ERROR field type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'syncRepository' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.MainActivity
+    => element (FIELD): authRepository
+    => type (ERROR field type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'notificationHelper' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.MainActivity
+    => element (FIELD): authRepository
+    => type (ERROR field type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'dataStoreManager' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.MainActivity
+    => element (FIELD): authRepository
+    => type (ERROR field type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'databaseSeeder' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.MainActivity
+    => element (FIELD): authRepository
+    => type (ERROR field type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'authRepository' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.MainActivity
+    => element (FIELD): authRepository
+    => type (ERROR field type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'networkMonitor' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.MainActivity
+    => element (FIELD): authRepository
+    => type (ERROR field type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'universalQueueManager' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.MainActivity
+    => element (FIELD): authRepository
+    => type (ERROR field type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'HomeRepository(com.algorithmx.q_base.feature.sessions.data.SessionDao,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.feature.content_import.data.CollectionDao,com.algorithmx.q_base.core.data.UserDao,ChatDao)' because 'ChatDao' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.core.data.HomeRepository
+    => element (CONSTRUCTOR): HomeRepository(com.algorithmx.q_base.feature.sessions.data.SessionDao,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.feature.content_import.data.CollectionDao,com.algorithmx.q_base.core.data.UserDao,ChatDao)
+    => type (EXECUTABLE constructor): (com.algorithmx.q_base.feature.sessions.data.SessionDao,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.feature.content_import.data.CollectionDao,com.algorithmx.q_base.core.data.UserDao,ChatDao)void
+    => type (ERROR parameter type): ChatDao
+
+If type 'ChatDao' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDao' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'ConfigRepository(android.content.Context,CoreDatabase,com.algorithmx.q_base.core_crypto.CryptoManager)' because 'CoreDatabase' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.core.data.ConfigRepository
+    => element (CONSTRUCTOR): ConfigRepository(android.content.Context,CoreDatabase,com.algorithmx.q_base.core_crypto.CryptoManager)
+    => type (EXECUTABLE constructor): (android.content.Context,CoreDatabase,com.algorithmx.q_base.core_crypto.CryptoManager)void
+    => type (ERROR parameter type): CoreDatabase
+
+If type 'CoreDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'CoreDatabase' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'DataClearingRepository(ChatDao,MessageDao,com.algorithmx.q_base.feature.sessions.data.SessionDao,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.core.ai.data.AiResponseDao,com.algorithmx.q_base.core.ai.data.BrainUsageDao,com.algorithmx.q_base.feature.content_import.data.CollectionDao,com.algorithmx.q_base.core_crypto.CryptoManager)' because 'ChatDao' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.core.data.DataClearingRepository
+    => element (CONSTRUCTOR): DataClearingRepository(ChatDao,MessageDao,com.algorithmx.q_base.feature.sessions.data.SessionDao,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.core.ai.data.AiResponseDao,com.algorithmx.q_base.core.ai.data.BrainUsageDao,com.algorithmx.q_base.feature.content_import.data.CollectionDao,com.algorithmx.q_base.core_crypto.CryptoManager)
+    => type (EXECUTABLE constructor): (ChatDao,MessageDao,com.algorithmx.q_base.feature.sessions.data.SessionDao,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.core.ai.data.AiResponseDao,com.algorithmx.q_base.core.ai.data.BrainUsageDao,com.algorithmx.q_base.feature.content_import.data.CollectionDao,com.algorithmx.q_base.core_crypto.CryptoManager)void
+    => type (ERROR parameter type): ChatDao
+
+If type 'ChatDao' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDao' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'DatabaseSeeder(android.content.Context,com.algorithmx.q_base.core.data.AppDatabase,ChatDatabase,ChatDao,MessageDao,com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager,com.algorithmx.q_base.data.auth.AuthRepository)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.core.data.DatabaseSeeder
+    => element (CONSTRUCTOR): DatabaseSeeder(android.content.Context,com.algorithmx.q_base.core.data.AppDatabase,ChatDatabase,ChatDao,MessageDao,com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager,com.algorithmx.q_base.data.auth.AuthRepository)
+    => type (EXECUTABLE constructor): (android.content.Context,com.algorithmx.q_base.core.data.AppDatabase,ChatDatabase,ChatDao,MessageDao,com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.core_ai.brain.BrainDataStoreManager,com.algorithmx.q_base.data.auth.AuthRepository)void
+    => type (ERROR parameter type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'HomeViewModel(com.algorithmx.q_base.core.data.HomeRepository,AuthRepository)' because 'AuthRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.ui.home.HomeViewModel
+    => element (CONSTRUCTOR): HomeViewModel(com.algorithmx.q_base.core.data.HomeRepository,AuthRepository)
+    => type (EXECUTABLE constructor): (com.algorithmx.q_base.core.data.HomeRepository,AuthRepository)void
+    => type (ERROR parameter type): AuthRepository
+
+If type 'AuthRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AuthRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'ChatManagerRepository(CoreDatabase,AuthRepository,com.algorithmx.q_base.data.auth.ProfileRepository,ChatRemoteRepository,ChatDao,MessageDao,dagger.Lazy<com.algorithmx.q_base.sync.orchestration.MessageSyncRepository>)' because 'CoreDatabase' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.sync.orchestration.ChatManagerRepository
+    => element (CONSTRUCTOR): ChatManagerRepository(CoreDatabase,AuthRepository,com.algorithmx.q_base.data.auth.ProfileRepository,ChatRemoteRepository,ChatDao,MessageDao,dagger.Lazy<com.algorithmx.q_base.sync.orchestration.MessageSyncRepository>)
+    => type (EXECUTABLE constructor): (CoreDatabase,AuthRepository,com.algorithmx.q_base.data.auth.ProfileRepository,ChatRemoteRepository,ChatDao,MessageDao,dagger.Lazy<com.algorithmx.q_base.sync.orchestration.MessageSyncRepository>)void
+    => type (ERROR parameter type): CoreDatabase
+
+If type 'CoreDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'CoreDatabase' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'MessageSyncRepository(java.util.stream.SliceOps$1@280a3df5, ...)' because 'CoreDatabase' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.sync.orchestration.MessageSyncRepository
+    => element (CONSTRUCTOR): MessageSyncRepository(java.util.stream.SliceOps$1@7d94326c, ...)
+    => type (EXECUTABLE constructor): (io.appwrite.Client,CoreDatabase,AuthRepository,ChatRemoteRepository,ChatDao,MessageDao,com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.core_crypto.CryptoManager,dagger.Lazy<com.algorithmx.q_base.sync.orchestration.CollectionSyncRepository>,dagger.Lazy<com.algorithmx.q_base.sync.orchestration.SessionSyncRepository>,dagger.Lazy<com.algorithmx.q_base.sync.orchestration.ChatManagerRepository>)void
+    => type (ERROR parameter type): CoreDatabase
+
+If type 'CoreDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'CoreDatabase' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'CollectionSyncRepository(java.util.stream.SliceOps$1@1f077d1f, ...)' because 'CoreDatabase' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.sync.orchestration.CollectionSyncRepository
+    => element (CONSTRUCTOR): CollectionSyncRepository(java.util.stream.SliceOps$1@2a07a3b4, ...)
+    => type (EXECUTABLE constructor): (io.appwrite.Client,CoreDatabase,AuthRepository,io.appwrite.services.Storage,ChatDao,com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.core_crypto.CryptoManager,com.algorithmx.q_base.core.data.util.MockDownloader,com.algorithmx.q_base.feature.content_import.data.CollectionDao,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.feature.content_import.data.CollectionVersionLedgerDao,dagger.Lazy<com.algorithmx.q_base.sync.orchestration.MessageSyncRepository>)void
+    => type (ERROR parameter type): CoreDatabase
+
+If type 'CoreDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'CoreDatabase' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'UniversalQueueManager(com.algorithmx.q_base.sync.orchestration.ActionQueueDao,ChatRemoteRepository,ProfileRepository,com.algorithmx.q_base.feature.content_import.data.ProblemReportDao)' because 'ChatRemoteRepository' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.sync.orchestration.UniversalQueueManager
+    => element (CONSTRUCTOR): UniversalQueueManager(com.algorithmx.q_base.sync.orchestration.ActionQueueDao,ChatRemoteRepository,ProfileRepository,com.algorithmx.q_base.feature.content_import.data.ProblemReportDao)
+    => type (EXECUTABLE constructor): (com.algorithmx.q_base.sync.orchestration.ActionQueueDao,ChatRemoteRepository,ProfileRepository,com.algorithmx.q_base.feature.content_import.data.ProblemReportDao)void
+    => type (ERROR parameter type): ChatRemoteRepository
+
+If type 'ChatRemoteRepository' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatRemoteRepository' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'SessionSyncRepository(io.appwrite.Client,CoreDatabase,AuthRepository,ChatDao,com.algorithmx.q_base.feature.sessions.data.SessionDao,dagger.Lazy<com.algorithmx.q_base.sync.orchestration.MessageSyncRepository>)' because 'CoreDatabase' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.sync.orchestration.SessionSyncRepository
+    => element (CONSTRUCTOR): SessionSyncRepository(io.appwrite.Client,CoreDatabase,AuthRepository,ChatDao,com.algorithmx.q_base.feature.sessions.data.SessionDao,dagger.Lazy<com.algorithmx.q_base.sync.orchestration.MessageSyncRepository>)
+    => type (EXECUTABLE constructor): (io.appwrite.Client,CoreDatabase,AuthRepository,ChatDao,com.algorithmx.q_base.feature.sessions.data.SessionDao,dagger.Lazy<com.algorithmx.q_base.sync.orchestration.MessageSyncRepository>)void
+    => type (ERROR parameter type): CoreDatabase
+
+If type 'CoreDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'CoreDatabase' is on your classpath.
+e: [ksp] InjectProcessingStep was unable to process 'ReportSyncRepository(CoreDatabase,AuthRepository,ChatRemoteRepository,com.algorithmx.q_base.feature.sessions.data.SessionDao)' because 'CoreDatabase' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.sync.orchestration.ReportSyncRepository
+    => element (CONSTRUCTOR): ReportSyncRepository(CoreDatabase,AuthRepository,ChatRemoteRepository,com.algorithmx.q_base.feature.sessions.data.SessionDao)
+    => type (EXECUTABLE constructor): (CoreDatabase,AuthRepository,ChatRemoteRepository,com.algorithmx.q_base.feature.sessions.data.SessionDao)void
+    => type (ERROR parameter type): CoreDatabase
+
+If type 'CoreDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'CoreDatabase' is on your classpath.
+e: [ksp] ModuleProcessingStep was unable to process 'com.algorithmx.q_base.core.data.di.DatabaseModule' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] ModuleProcessingStep was unable to process 'com.algorithmx.q_base.core.ai.di.BrainModule' because 'com.algorithmx.q_base.data.collections.CollectionDao' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.ai.di.BrainModule
+    => element (METHOD): provideAiRepository(com.algorithmx.q_base.core_ai.brain.AiBrainManager,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.data.collections.CollectionDao,com.algorithmx.q_base.data.ai.AiResponseDao)
+    => element (PARAMETER): collectionDao
+    => type (ERROR parameter type): com.algorithmx.q_base.data.collections.CollectionDao
+
+If type 'com.algorithmx.q_base.data.collections.CollectionDao' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'com.algorithmx.q_base.data.collections.CollectionDao' is on your classpath.
+e: [ksp] ModuleProcessingStep was unable to process 'com.algorithmx.q_base.core.ai.di.AiIntegrationModule' because 'AiUsageLoggerImpl' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.core.ai.di.AiIntegrationModule
+    => element (METHOD): bindAiUsageLogger(AiUsageLoggerImpl)
+    => element (PARAMETER): impl
+    => type (ERROR parameter type): AiUsageLoggerImpl
+
+If type 'AiUsageLoggerImpl' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AiUsageLoggerImpl' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideDatabase(android.content.Context)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideQuestionDao(com.algorithmx.q_base.core.data.AppDatabase)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideCollectionDao(com.algorithmx.q_base.core.data.AppDatabase)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideSessionDao(com.algorithmx.q_base.core.data.AppDatabase)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideProblemReportDao(com.algorithmx.q_base.core.data.AppDatabase)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideUserDao(com.algorithmx.q_base.core.data.AppDatabase)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideChatDatabase(android.content.Context)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideChatDao(ChatDatabase)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideMessageDao(ChatDatabase)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideAiResponseDao(com.algorithmx.q_base.core.data.AppDatabase)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideBrainUsageDao(com.algorithmx.q_base.core.data.AppDatabase)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideCollectionVersionLedgerDao(com.algorithmx.q_base.core.data.AppDatabase)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideActionQueueDao(com.algorithmx.q_base.core.data.AppDatabase)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideExploreRepository(com.algorithmx.q_base.feature.content_import.data.CollectionDao,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.feature.sessions.data.SessionDao,com.algorithmx.q_base.feature.content_import.data.ProblemReportDao,com.algorithmx.q_base.core.data.UserDao)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideSessionRepository(com.algorithmx.q_base.feature.sessions.data.SessionDao,com.algorithmx.q_base.feature.content_import.data.CollectionDao,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.core.data.UserDao)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideHomeRepository(com.algorithmx.q_base.feature.sessions.data.SessionDao,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.feature.content_import.data.CollectionDao,com.algorithmx.q_base.core.data.UserDao,ChatDao)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideImportRepository(android.content.Context)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideDataClearingRepository(ChatDao,MessageDao,com.algorithmx.q_base.feature.sessions.data.SessionDao,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.core.data.UserDao,com.algorithmx.q_base.core.ai.data.AiResponseDao,com.algorithmx.q_base.core.ai.data.BrainUsageDao,com.algorithmx.q_base.feature.content_import.data.CollectionDao,com.algorithmx.q_base.core_crypto.CryptoManager)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideProfileCache(com.algorithmx.q_base.core.data.UserDao)' because 'ChatDatabase' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.data.di.DatabaseModule
+    => element (METHOD): provideChatDatabase(android.content.Context)
+    => type (ERROR return type): ChatDatabase
+
+If type 'ChatDatabase' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'ChatDatabase' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'provideAiRepository(com.algorithmx.q_base.core_ai.brain.AiBrainManager,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.data.collections.CollectionDao,com.algorithmx.q_base.data.ai.AiResponseDao)' because 'com.algorithmx.q_base.data.collections.CollectionDao' could not be resolved.
+
+Dependency trace:
+    => element (OBJECT): com.algorithmx.q_base.core.ai.di.BrainModule
+    => element (METHOD): provideAiRepository(com.algorithmx.q_base.core_ai.brain.AiBrainManager,com.algorithmx.q_base.feature.content_import.data.QuestionDao,com.algorithmx.q_base.data.collections.CollectionDao,com.algorithmx.q_base.data.ai.AiResponseDao)
+    => element (PARAMETER): collectionDao
+    => type (ERROR parameter type): com.algorithmx.q_base.data.collections.CollectionDao
+
+If type 'com.algorithmx.q_base.data.collections.CollectionDao' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'com.algorithmx.q_base.data.collections.CollectionDao' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'bindAiUsageLogger(AiUsageLoggerImpl)' because 'AiUsageLoggerImpl' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.core.ai.di.AiIntegrationModule
+    => element (METHOD): bindAiUsageLogger(AiUsageLoggerImpl)
+    => element (PARAMETER): impl
+    => type (ERROR parameter type): AiUsageLoggerImpl
+
+If type 'AiUsageLoggerImpl' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AiUsageLoggerImpl' is on your classpath.
+e: [ksp] BindingMethodProcessingStep was unable to process 'bindBrainConfigProvider(BrainConfigProviderImpl)' because 'AiUsageLoggerImpl' could not be resolved.
+
+Dependency trace:
+    => element (CLASS): com.algorithmx.q_base.core.ai.di.AiIntegrationModule
+    => element (METHOD): bindAiUsageLogger(AiUsageLoggerImpl)
+    => element (PARAMETER): impl
+    => type (ERROR parameter type): AiUsageLoggerImpl
+
+If type 'AiUsageLoggerImpl' is a generated type, check above for compilation errors that may have prevented the type from being generated. Otherwise, ensure that type 'AiUsageLoggerImpl' is on your classpath.
+
+> Task :app:kspDebugKotlin FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:kspDebugKotlin' (registered by plugin 'com.android.internal.application').
+> A failure occurred while executing com.google.devtools.ksp.gradle.KspAAWorkerAction
+   > KSP failed with exit code: PROCESSING_ERROR
+
+* Try:
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+* Exception is:
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:kspDebugKotlin' (registered by plugin 'com.android.internal.application').
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
+	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:121)
+	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:41)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+	at org.gradle.execution.plan.DefaultNodeExecutor.executeLocalTaskNode(DefaultNodeExecutor.java:55)
+	at org.gradle.execution.plan.DefaultNodeExecutor.execute(DefaultNodeExecutor.java:34)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:355)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:343)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:339)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:84)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:339)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:328)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
+Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing com.google.devtools.ksp.gradle.KspAAWorkerAction
+	at org.gradle.workers.internal.DefaultWorkerExecutor$WorkItemExecution.waitForCompletion(DefaultWorkerExecutor.java:278)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.lambda$waitForItemsAndGatherFailures$2(DefaultAsyncWorkTracker.java:132)
+	at org.gradle.internal.Factories$1.create(Factories.java:30)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.lambda$withoutLocksBlocking$3(DefaultWorkerLeaseService.java:390)
+	at org.gradle.internal.work.ResourceLockStatistics$1.measure(ResourceLockStatistics.java:43)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocksBlocking(DefaultWorkerLeaseService.java:385)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.blocking(DefaultWorkerLeaseService.java:239)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.blocking(DefaultWorkerLeaseService.java:221)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.lambda$waitForItemsAndGatherFailures$3(DefaultAsyncWorkTracker.java:128)
+	at org.gradle.internal.Factories$1.create(Factories.java:30)
+	at org.gradle.internal.resources.AbstractResourceLockRegistry.whileDisallowingLockChanges(AbstractResourceLockRegistry.java:50)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.whileDisallowingProjectLockChanges(DefaultWorkerLeaseService.java:244)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:127)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:93)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForAll(DefaultAsyncWorkTracker.java:79)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForCompletion(DefaultAsyncWorkTracker.java:67)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:267)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:27)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:48)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeAction(TaskExecution.java:244)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeActions(TaskExecution.java:227)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeWithPreviousOutputFiles(TaskExecution.java:210)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.execute(TaskExecution.java:176)
+	at org.gradle.internal.execution.steps.ExecuteStep.executeInternal(ExecuteStep.java:167)
+	at org.gradle.internal.execution.steps.ExecuteStep.access$000(ExecuteStep.java:47)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:137)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:134)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:134)
+	at org.gradle.internal.execution.steps.ExecuteStep$Mutable.execute(ExecuteStep.java:80)
+	at org.gradle.internal.execution.steps.CancelExecutionStep.execute(CancelExecutionStep.java:42)
+	at org.gradle.internal.execution.steps.TimeoutStep.executeWithoutTimeout(TimeoutStep.java:75)
+	at org.gradle.internal.execution.steps.TimeoutStep.execute(TimeoutStep.java:55)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:51)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:29)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.executeMutable(RemovePreviousOutputsStep.java:67)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.executeMutable(RemovePreviousOutputsStep.java:39)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:42)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:24)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:69)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:46)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.executeMutable(ResolveInputChangesStep.java:39)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.executeMutable(ResolveInputChangesStep.java:28)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithoutCache(BuildCacheStep.java:189)
+	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$execute$1(BuildCacheStep.java:76)
+	at org.gradle.internal.Either$Right.fold(Either.java:176)
+	at org.gradle.internal.execution.caching.CachingState.fold(CachingState.java:62)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:74)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:49)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.executeMutable(StoreExecutionStateStep.java:46)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.executeMutable(StoreExecutionStateStep.java:35)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.executeBecause(SkipUpToDateStep.java:75)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.lambda$execute$2(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:35)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:37)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:27)
+	at org.gradle.internal.execution.steps.ResolveMutableCachingStateStep.executeDelegate(ResolveMutableCachingStateStep.java:70)
+	at org.gradle.internal.execution.steps.ResolveMutableCachingStateStep.executeDelegate(ResolveMutableCachingStateStep.java:32)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:69)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:37)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.executeMutable(ResolveChangesStep.java:63)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.executeMutable(ResolveChangesStep.java:34)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.ValidateStep$Mutable.executeDelegate(ValidateStep.java:79)
+	at org.gradle.internal.execution.steps.ValidateStep$Mutable.executeDelegate(ValidateStep.java:65)
+	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:99)
+	at org.gradle.internal.execution.steps.ValidateStep$Mutable.execute(ValidateStep.java:65)
+	at org.gradle.internal.execution.steps.CaptureMutableStateBeforeExecutionStep.executeMutable(CaptureMutableStateBeforeExecutionStep.java:86)
+	at org.gradle.internal.execution.steps.CaptureMutableStateBeforeExecutionStep.execute(CaptureMutableStateBeforeExecutionStep.java:65)
+	at org.gradle.internal.execution.steps.CaptureMutableStateBeforeExecutionStep.execute(CaptureMutableStateBeforeExecutionStep.java:45)
+	at org.gradle.internal.execution.steps.SkipEmptyMutableWorkStep.executeWithNonEmptySources(SkipEmptyMutableWorkStep.java:210)
+	at org.gradle.internal.execution.steps.SkipEmptyMutableWorkStep.executeMutable(SkipEmptyMutableWorkStep.java:90)
+	at org.gradle.internal.execution.steps.SkipEmptyMutableWorkStep.executeMutable(SkipEmptyMutableWorkStep.java:53)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.executeMutable(LoadPreviousExecutionStateStep.java:36)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.executeMutable(LoadPreviousExecutionStateStep.java:23)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.executeMutable(HandleStaleOutputsStep.java:77)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.executeMutable(HandleStaleOutputsStep.java:43)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.lambda$executeMutable$0(AssignMutableWorkspaceStep.java:34)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$4.withWorkspace(TaskExecution.java:305)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.executeMutable(AssignMutableWorkspaceStep.java:30)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.executeMutable(AssignMutableWorkspaceStep.java:21)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:40)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:23)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.lambda$execute$2(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:39)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:46)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:34)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:56)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:38)
+	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:68)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:132)
+	... 30 more
+Caused by: java.lang.Exception: KSP failed with exit code: PROCESSING_ERROR
+	at com.google.devtools.ksp.gradle.KspAAWorkerAction.execute(KspAATask.kt:765)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:68)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:64)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:61)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:102)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:61)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:58)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:191)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$500(DefaultConditionalExecutionQueue.java:112)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:168)
+	at org.gradle.internal.Factories$1.create(Factories.java:30)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.lambda$withLocksAcquired$0(DefaultWorkerLeaseService.java:280)
+	at org.gradle.internal.work.ResourceLockStatistics$1.measure(ResourceLockStatistics.java:43)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocksAcquired(DefaultWorkerLeaseService.java:278)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:270)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:129)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:134)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:163)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:125)
+	... 2 more
+
+
+BUILD FAILED in 2m 19s
+45 actionable tasks: 9 executed, 36 up-to-date

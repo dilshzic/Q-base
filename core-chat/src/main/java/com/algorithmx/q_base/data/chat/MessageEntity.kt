@@ -1,4 +1,4 @@
-package com.algorithmx.q_base.data.chat
+package com.algorithmx.q_base.core.data.chat
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
