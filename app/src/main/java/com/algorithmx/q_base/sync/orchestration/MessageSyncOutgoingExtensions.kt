@@ -27,20 +27,10 @@ suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
     val wrapFailures = mutableListOf<String>()
 
     val resolvedKeys = participants.map { targetId ->
-        var publicKeyBase64: String? = if (targetId == senderUid) {
+        val publicKeyBase64: String? = if (targetId == senderUid) {
             cryptoManager.initializeAndGetPublicKey()
         } else {
             userDao.getUserById(targetId)?.publicKey
-        }
-        
-        if (publicKeyBase64.isNullOrBlank() && targetId != senderUid) {
-            Log.d("MessageSyncRepository", "Public key missing locally for $targetId, attempting remote fetch...")
-            try {
-                profileRepository.syncUserProfile(targetId)
-                publicKeyBase64 = userDao.getUserById(targetId)?.publicKey
-            } catch (e: Exception) {
-                Log.e("MessageSyncRepository", "Failed to fetch missing profile for $targetId", e)
-            }
         }
         
         targetId to publicKeyBase64
