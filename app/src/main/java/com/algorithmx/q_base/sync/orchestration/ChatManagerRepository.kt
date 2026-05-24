@@ -1,11 +1,10 @@
 package com.algorithmx.q_base.sync.orchestration
 
 import android.util.Log
-import com.algorithmx.q_base.core.data.chat.ChatDao
 import com.algorithmx.q_base.core.data.chat.ChatEntity
 import com.algorithmx.q_base.core.data.chat.isAdmin
+import com.algorithmx.q_base.core.data.chat.ChatLocalDataSource
 import com.algorithmx.q_base.core.data.chat.ChatRemoteRepository
-import com.algorithmx.q_base.core.data.chat.MessageDao
 import com.algorithmx.q_base.core.data.auth.AuthRepository
 import com.algorithmx.q_base.core.data.backend.CoreDatabase
 import com.algorithmx.q_base.core.data.backend.CoreQuery
@@ -24,11 +23,10 @@ import dagger.Lazy
 class ChatManagerRepository @Inject constructor(
     private val databases: CoreDatabase,
     private val authRepository: AuthRepository,
-    private val profileRepository: com.algorithmx.q_base.core.data.auth.ProfileRepository,
+        private val profileRepository: com.algorithmx.q_base.core.data.auth.ProfileRepository,
     private val chatRemoteRepository: ChatRemoteRepository,
-    private val chatDao: ChatDao,
-    private val messageDao: MessageDao,
-    private val userDao: com.algorithmx.q_base.core.data.UserDao,
+    private val chatLocalDataSource: ChatLocalDataSource,
+        private val userDao: com.algorithmx.q_base.core.data.UserDao,
     private val messageSyncRepository: Lazy<MessageSyncRepository>
 ) {
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -57,7 +55,7 @@ class ChatManagerRepository @Inject constructor(
     }
 
     suspend fun getChatById(chatId: String): ChatEntity? {
-        return chatDao.getChatById(chatId)
+        return chatLocalDataSource.getChatById(chatId)
     }
 
     suspend fun syncUserChatsFromRemote() {
@@ -91,7 +89,7 @@ class ChatManagerRepository @Inject constructor(
                             participantIds = participantsList.joinToString(","),
                             adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList())
                         )
-                        chatDao.insertChat(chat)
+                        chatLocalDataSource.upsertChat(chat)
                         Log.d("ChatManagerRepository", "Synced chat from remote: ${chat.chatId} (${chat.chatName}), participants: ${chat.participantIds}")
 
                         // Fetch and sync profiles for all participants
@@ -129,7 +127,7 @@ class ChatManagerRepository @Inject constructor(
 
     suspend fun findExistingP2PChat(uid: String, userId: String): ChatEntity? {
         try {
-            val localChats = chatDao.getAllChats().first()
+            val localChats = chatLocalDataSource.getAllChats().first()
             val existing = localChats.find { chat ->
                 if (chat.isGroup) return@find false
                 val list = chat.participantIds.split(",").map { it.trim() }
@@ -163,7 +161,7 @@ class ChatManagerRepository @Inject constructor(
                         participantIds = participantsList.joinToString(","),
                         adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList())
                     )
-                    chatDao.insertChat(chat)
+                    chatLocalDataSource.upsertChat(chat)
                     return chat
                 }
             }
@@ -174,11 +172,11 @@ class ChatManagerRepository @Inject constructor(
     }
 
     suspend fun ensureChatExistsLocally(chatId: String, senderId: String? = null) {
-        val localChat = chatDao.getChatById(chatId)
+        val localChat = chatLocalDataSource.getChatById(chatId)
         if (localChat == null) {
             // Try to fetch the real metadata first
             fetchAndSyncChatMetadata(chatId)
-            val updatedChat = chatDao.getChatById(chatId)
+            val updatedChat = chatLocalDataSource.getChatById(chatId)
             if (updatedChat == null) {
                 // Insert a minimal placeholder with null chatName so a later real sync
                 // can overwrite it cleanly without a hardcoded name poisoning the cache
@@ -186,12 +184,12 @@ class ChatManagerRepository @Inject constructor(
                 val peerId = senderId ?: ""
                 val dummyChat = ChatEntity(
                     chatId = chatId,
-                    chatName = null,  // never hardcode a name here
+                    chatName = null,
                     isGroup = false,
                     participantIds = if (peerId.isNotEmpty()) "$userId,$peerId" else userId,
                     adminIds = emptyList()
                 )
-                chatDao.insertChat(dummyChat)
+                chatLocalDataSource.upsertChat(dummyChat)
             }
         } else if (localChat.chatName.isNullOrBlank()) {
             // Local chat exists but has no name yet — refresh metadata from remote
@@ -199,7 +197,7 @@ class ChatManagerRepository @Inject constructor(
         }
 
         // Fetch/sync the profile for the other participant if missing
-        val finalChat = chatDao.getChatById(chatId)
+        val finalChat = chatLocalDataSource.getChatById(chatId)
         val uid = currentUserId
         val otherParticipantId = finalChat?.participantIds?.split(",")
             ?.firstOrNull { it != uid && it.isNotBlank() }
@@ -229,7 +227,7 @@ class ChatManagerRepository @Inject constructor(
             val remoteAdminId = doc["adminId"] as? String
             val remoteName = doc["chatName"] as? String
 
-            val localChat = chatDao.getChatById(chatId)
+            val localChat = chatLocalDataSource.getChatById(chatId)
             val chat = if (localChat != null) {
                 // Always apply remote name if present, preserving all other local fields
                 localChat.copy(
@@ -249,7 +247,7 @@ class ChatManagerRepository @Inject constructor(
                                else (remoteAdminId?.let { listOf(it) } ?: emptyList())
                 )
             }
-            chatDao.insertChat(chat)
+            chatLocalDataSource.upsertChat(chat)
             Log.d("ChatManagerRepository", "fetchAndSyncChatMetadata: chatId=$chatId name='${chat.chatName}'")
 
             // Sync user profiles for all other participants
@@ -278,15 +276,15 @@ class ChatManagerRepository @Inject constructor(
         repositoryScope.launch {
             try {
                 Log.d("ChatManagerRepository", "deleteChatAndMessagesGlobally: Starting for chatId=$chatId")
-                val chat = chatDao.getChatById(chatId)
+                val chat = chatLocalDataSource.getChatById(chatId)
                 Log.d("ChatManagerRepository", "deleteChatAndMessagesGlobally: chat=$chat, isGroup=${chat?.isGroup}, adminIds=${chat?.adminIds}, currentUserId=$currentUserId")
-                
+
                 if (chat != null && !chat.isAdmin(currentUserId ?: "") && chat.isGroup) {
                     // Non-admin leaving a group: remove from participants first, then local
                     Log.d("ChatManagerRepository", "deleteChatAndMessagesGlobally: Removing participant from group")
                     removeParticipantFromRemote(chatId, currentUserId ?: "")
-                    chatDao.deleteChatById(chatId)
-                    messageDao.deleteMessagesByChatId(chatId)
+                    chatLocalDataSource.deleteChatById(chatId)
+                    chatLocalDataSource.deleteMessagesByChatId(chatId)
                     Log.d("ChatManagerRepository", "deleteChatAndMessagesGlobally: Group leave complete")
                 } else {
                     // Delete from Appwrite FIRST (before local), so the network call completes
@@ -304,8 +302,8 @@ class ChatManagerRepository @Inject constructor(
                         Log.e("ChatManagerRepository", "deleteChatAndMessagesGlobally: Failed to delete chat from Appwrite", e)
                     }
                     // Now delete locally
-                    chatDao.deleteChatById(chatId)
-                    messageDao.deleteMessagesByChatId(chatId)
+                    chatLocalDataSource.deleteChatById(chatId)
+                    chatLocalDataSource.deleteMessagesByChatId(chatId)
                     Log.d("ChatManagerRepository", "deleteChatAndMessagesGlobally: Local deletion complete")
                 }
             } catch (e: Exception) {

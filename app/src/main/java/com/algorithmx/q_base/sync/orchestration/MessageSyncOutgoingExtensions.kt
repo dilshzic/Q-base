@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 class MissingEncryptionKeysException(message: String) : IllegalStateException(message)
 
 suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
-    val chat = chatDao.getChatById(message.chatId)
+    val chat = chatLocalDataSource.getChatById(message.chatId)
     val participants = chat?.participantIds?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
     val senderUid = currentUserId ?: throw IllegalStateException("User not authenticated")
 
@@ -80,7 +80,7 @@ suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
     
     repositoryScope.launch {
         try {
-            chatDao.getChatById(message.chatId)?.let { chat ->
+            chatLocalDataSource.getChatById(message.chatId)?.let { chat ->
                 chatManagerRepository.get().createChatOnRemote(chat)
             }
         } catch (e: Exception) {
@@ -96,7 +96,7 @@ suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
         ).getOrThrow()
 
         repositoryScope.launch {
-            messageDao.insertMessage(message.copy(
+            chatLocalDataSource.upsertMessage(message.copy(
                 keyFingerprint = myFingerprint,
                 wrappedKey = wrappedKeys[senderUid],
                 decryptionStatus = "SUCCESS"
@@ -110,12 +110,12 @@ suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
 
 suspend fun MessageSyncRepository.flushQueue() {
     try {
-        val pendingMessages = messageDao.getPendingMessages()
+        val pendingMessages = chatLocalDataSource.getPendingMessages()
         Log.d("MessageSyncRepository", "Flushing ${pendingMessages.size} pending messages...")
         for (message in pendingMessages) {
             try {
                 sendMessage(message)
-                messageDao.updateMessageStatus(message.messageId, "SENT")
+                chatLocalDataSource.updateMessageStatus(message.messageId, "SENT")
                 Log.d("MessageSyncRepository", "Successfully flushed message ${message.messageId}")
             } catch (e: Exception) {
                 Log.e("MessageSyncRepository", "Failed to flush pending message ${message.messageId}", e)

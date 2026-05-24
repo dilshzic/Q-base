@@ -1,7 +1,6 @@
 package com.algorithmx.q_base.core.data
 
-import com.algorithmx.q_base.core.data.chat.ChatDao
-import com.algorithmx.q_base.core.data.chat.MessageDao
+import com.algorithmx.q_base.core.data.chat.ChatLocalDataSource
 import com.algorithmx.q_base.feature.sessions.data.SessionDao
 import com.algorithmx.q_base.data.collections.QuestionDao
 import com.algorithmx.q_base.core.data.UserDao
@@ -15,8 +14,7 @@ import javax.inject.Singleton
 
 @Singleton
 class DataClearingRepository @Inject constructor(
-    private val chatDao: ChatDao,
-    private val messageDao: MessageDao,
+    private val chatLocalDataSource: ChatLocalDataSource,
     private val sessionDao: SessionDao,
     private val questionDao: QuestionDao,
     private val userDao: UserDao,
@@ -27,8 +25,7 @@ class DataClearingRepository @Inject constructor(
 ) {
     suspend fun clearAllData(clearCollections: Boolean) = withContext(Dispatchers.IO) {
         // Always clear chats and sessions
-        chatDao.deleteAllChats()
-        messageDao.deleteAllMessages()
+        chatLocalDataSource.clearAllChatsAndMessages()
         sessionDao.deleteAllSessions()
         sessionDao.deleteAllAttempts()
         sessionDao.deleteAllSets()

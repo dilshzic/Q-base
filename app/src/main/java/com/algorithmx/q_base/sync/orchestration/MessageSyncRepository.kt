@@ -1,9 +1,8 @@
 package com.algorithmx.q_base.sync.orchestration
 
 import android.util.Log
-import com.algorithmx.q_base.core.data.chat.ChatDao
+import com.algorithmx.q_base.core.data.chat.ChatLocalDataSource
 import com.algorithmx.q_base.core.data.chat.ChatRemoteRepository
-import com.algorithmx.q_base.core.data.chat.MessageDao
 import com.algorithmx.q_base.core.data.UserDao
 import com.algorithmx.q_base.core.data.auth.AuthRepository
 import com.algorithmx.q_base.core_crypto.CryptoManager
@@ -23,8 +22,7 @@ class MessageSyncRepository @Inject constructor(
     internal val databases: CoreDatabase,
     internal val authRepository: AuthRepository,
     internal val chatRemoteRepository: ChatRemoteRepository,
-    internal val chatDao: ChatDao,
-    internal val messageDao: MessageDao,
+    internal val chatLocalDataSource: ChatLocalDataSource,
     internal val userDao: UserDao,
     internal val cryptoManager: CryptoManager,
     internal val collectionSyncRepository: Lazy<CollectionSyncRepository>,
@@ -66,7 +64,7 @@ class MessageSyncRepository @Inject constructor(
     ) {
         if (senderId == currentUserId) return
 
-        val chat = chatDao.getChatById(chatId) ?: return
+        val chat = chatLocalDataSource.getChatById(chatId) ?: return
         if (!chat.isGroup) {
             try {
                 databases.deleteDocument("messages", messageId).getOrThrow()

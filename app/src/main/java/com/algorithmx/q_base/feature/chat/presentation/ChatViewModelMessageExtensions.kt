@@ -35,7 +35,7 @@ fun ChatViewModel.startNewChat(userId: String, userName: String) {
             participantIds = "$uid,$userId",
             adminIds = listOf(uid)
         )
-        chatDao.insertChat(newChat)
+        chatLocalDataSource.upsertChat(newChat)
         
         // Log onto Firestore as well (don't sync AI chats to global chat list if they are local)
         if (userId != ChatViewModel.QBASE_AI_BOT_ID) {
@@ -70,7 +70,7 @@ fun ChatViewModel.startNewGroup(participantIds: List<String>, groupName: String)
             adminIds = listOf(uid)
         )
         
-        chatDao.insertChat(newChat)
+        chatLocalDataSource.upsertChat(newChat)
         syncRepository.createChatOnRemote(newChat)
 
         refreshChatParticipantProfiles(chatId)
@@ -90,7 +90,7 @@ fun ChatViewModel.sendMessage(chatId: String, text: String, type: String = "TEXT
     val timestamp = System.currentTimeMillis()
     
     viewModelScope.launch {
-        val chat = chatDao.getChatById(chatId)
+        val chat = chatLocalDataSource.getChatById(chatId)
         val isAiChat = chat?.participantIds
             ?.split(",")
             ?.any { it.trim() == ChatViewModel.QBASE_AI_BOT_ID } == true
@@ -107,7 +107,7 @@ fun ChatViewModel.sendMessage(chatId: String, text: String, type: String = "TEXT
             status = if (isOffline) "PENDING" else "SENT"
         )
         
-        messageDao.insertMessage(message)
+        chatLocalDataSource.upsertMessage(message)
         
         if (!isAiChat) {
             if (isOffline) {
@@ -118,13 +118,13 @@ fun ChatViewModel.sendMessage(chatId: String, text: String, type: String = "TEXT
             try {
                 syncRepository.sendMessage(message)
             } catch (e: MissingEncryptionKeysException) {
-                messageDao.updateMessageStatus(message.messageId, "PENDING")
+                chatLocalDataSource.updateMessageStatus(message.messageId, "PENDING")
                 _actionFeedback.emit("Refreshing encryption keys. Message queued.")
                 refreshMissingKeysForChat(chatId)
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Error sending message: ${e.message}")
                 // Generic network/timeout error during sending
-                messageDao.updateMessageStatus(message.messageId, "PENDING")
+                chatLocalDataSource.updateMessageStatus(message.messageId, "PENDING")
                 _actionFeedback.emit("Network error: Message queued.")
             }
         } else if (senderId == currentUserId) {

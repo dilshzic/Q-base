@@ -23,8 +23,7 @@ class DatabaseSeeder @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val database: AppDatabase,
     private val chatDatabase: ChatDatabase,
-    private val chatDao: ChatDao,
-    private val messageDao: MessageDao,
+    private val chatLocalDataSource: com.algorithmx.q_base.core.data.chat.ChatLocalDataSource,
     private val userDao: UserDao,
     private val dataStoreManager: com.algorithmx.q_base.core.ai.brain.BrainDataStoreManager,
         private val authRepository: com.algorithmx.q_base.core.data.auth.AuthRepository
@@ -40,7 +39,7 @@ class DatabaseSeeder @Inject constructor(
         val seedApplied = dataStoreManager.isSeedAppliedFlow.first()
         val collectionCount = collectionDao.getStudyCollectionCount()
 
-        val chatList = chatDao.getAllChats().first()
+        val chatList = chatLocalDataSource.getAllChats().first()
         if (chatList.isEmpty()) {
             Log.d("DatabaseSeeder", "Chat database is empty. Seeding sample chats...")
             seedSampleChats()
@@ -246,9 +245,9 @@ class DatabaseSeeder @Inject constructor(
                     participantIds = "mentor_1,$currentUserId",
                     adminIds = listOf("mentor_1")
                 )
-                chatDao.insertChat(p2pChat)
+                chatLocalDataSource.upsertChat(p2pChat)
                 
-                messageDao.insertMessage(MessageEntity(
+                chatLocalDataSource.upsertMessage(MessageEntity(
                     messageId = "m1", chatId = "sample_p2p", senderId = "mentor_1",
                     payload = "Hello! I saw your recent progress on the General Knowledge collection. Great work!",
                     type = "TEXT", timestamp = System.currentTimeMillis() - 3600000
@@ -262,14 +261,14 @@ class DatabaseSeeder @Inject constructor(
                     participantIds = "mentor_1,peer_1,peer_2,$currentUserId",
                     adminIds = listOf("mentor_1")
                 )
-                chatDao.insertChat(groupChat)
+                chatLocalDataSource.upsertChat(groupChat)
 
-                messageDao.insertMessage(MessageEntity(
+                chatLocalDataSource.upsertMessage(MessageEntity(
                     messageId = "m2", chatId = "sample_group", senderId = "peer_1",
                     payload = "Has anyone explored the new Space Science module?",
                     type = "TEXT", timestamp = System.currentTimeMillis() - 7200000
                 ))
-                messageDao.insertMessage(MessageEntity(
+                chatLocalDataSource.upsertMessage(MessageEntity(
                     messageId = "m3", chatId = "sample_group", senderId = "peer_2",
                     payload = "Yes! The section on orbital mechanics is quite detailed.",
                     type = "TEXT", timestamp = System.currentTimeMillis() - 3600000
@@ -317,7 +316,7 @@ class DatabaseSeeder @Inject constructor(
                     }
                 """.trimIndent()
 
-                messageDao.insertMessage(MessageEntity(
+                chatLocalDataSource.upsertMessage(MessageEntity(
                     messageId = "m_col_1", chatId = "sample_p2p", senderId = "mentor_1",
                     payload = scienceCollectionJson,
                     type = "COLLECTION", timestamp = System.currentTimeMillis()

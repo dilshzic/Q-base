@@ -80,7 +80,7 @@ fun ChatViewModel.importSharedCollection(payload: String) {
 
 fun ChatViewModel.shareCollection(chatId: String, collectionId: String) {
     viewModelScope.launch {
-        val chat = chatDao.getChatById(chatId) ?: return@launch
+        val chat = chatLocalDataSource.getChatById(chatId) ?: return@launch
         _isSharing.value = true
         try {
             val collection = collectionDao.getStudyCollectionByIdOnce(collectionId) ?: throw Exception("Collection not found")
@@ -138,7 +138,7 @@ fun ChatViewModel.resendCollection(collectionId: String) {
             val collection = collectionDao.getStudyCollectionByIdOnce(collectionId)
                 ?: throw Exception("Collection not found in local library")
             // RESTRICTION: Non-resendable if admin-only and user is not admin
-            val chat = chatDao.getChatById(chatId)
+            val chat = chatLocalDataSource.getChatById(chatId)
             if (collection.isAdminOnly) {
                 if (chat == null || !chat.isAdmin(currentUserId)) {
                     _actionFeedback.emit("Cannot resend: This collection is restricted to group admins only.")
@@ -181,7 +181,7 @@ fun ChatViewModel.shareSession(chatId: String, sessionId: String) {
             val session = sessionDao.getSessionById(sessionId) ?: throw Exception("Session not found")
             val sessionTitle = session.title
             
-            val chat = chatDao.getChatById(chatId) ?: throw Exception("Chat not found")
+            val chat = chatLocalDataSource.getChatById(chatId) ?: throw Exception("Chat not found")
             
             // RESTRICTION: Non-sharable if admin-only and user is not admin
             if (session.isAdminOnly) {

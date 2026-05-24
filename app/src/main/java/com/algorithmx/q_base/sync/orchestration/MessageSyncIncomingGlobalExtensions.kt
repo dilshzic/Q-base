@@ -83,11 +83,11 @@ fun MessageSyncRepository.observeAllIncomingMessages(notificationHelper: Notific
                         wrappedKey = wrappedKey ?: ""
                     )
 
-                    if (messageDao.getMessageById(docId) == null) {
-                        messageDao.insertMessage(message)
-                        chatDao.incrementUnreadCount(docChatId)
+                    if (chatLocalDataSource.getMessageById(docId) == null) {
+                        chatLocalDataSource.upsertMessage(message)
+                        chatLocalDataSource.incrementUnreadCount(docChatId)
 
-                        val localChat = chatDao.getChatById(docChatId)
+                        val localChat = chatLocalDataSource.getChatById(docChatId)
                         if (localChat?.isMuted != true && localChat?.isBlocked != true) {
                             val senderUser = userDao.getUserById(senderId)
                             val senderName = senderUser?.displayName 
@@ -146,8 +146,8 @@ fun MessageSyncRepository.observeAllIncomingMessages(notificationHelper: Notific
 
                 if (event.events.any { it.contains(".delete") }) {
                     repositoryScope.launch {
-                        chatDao.deleteChatById(docId)
-                        messageDao.deleteMessagesByChatId(docId)
+                        chatLocalDataSource.deleteChatById(docId)
+                        chatLocalDataSource.deleteMessagesByChatId(docId)
                     }
                 } else if (event.events.any { it.contains(".create") || it.contains(".update") }) {
                     repositoryScope.launch {
@@ -168,14 +168,14 @@ fun MessageSyncRepository.observeAllIncomingMessages(notificationHelper: Notific
                                     participantIds = participantsList.joinToString(","),
                                     adminIds = if (remoteAdminIds.isNotEmpty()) remoteAdminIds else (if (remoteAdminId.isNotBlank()) listOf(remoteAdminId) else emptyList())
                                 )
-                                chatDao.insertChat(chat)
+                                chatLocalDataSource.upsertChat(chat)
                             } else {
-                                chatDao.deleteChatById(docId)
-                                messageDao.deleteMessagesByChatId(docId)
+                                chatLocalDataSource.deleteChatById(docId)
+                                chatLocalDataSource.deleteMessagesByChatId(docId)
                             }
                         }
                         
-                        val localChat = chatDao.getChatById(docId)
+                        val localChat = chatLocalDataSource.getChatById(docId)
                         if (localChat != null) {
                             val remoteAdminIds = payloadObj.optJSONArray("adminIds")?.let { arr ->
                                 List(arr.length()) { arr.getString(it) }
@@ -186,7 +186,7 @@ fun MessageSyncRepository.observeAllIncomingMessages(notificationHelper: Notific
                                 participantIds = participantsList.joinToString(","),
                                 adminIds = if (remoteAdminIds.isNotEmpty()) remoteAdminIds else (if (remoteAdminId.isNotBlank()) listOf(remoteAdminId) else emptyList())
                             )
-                            chatDao.insertChat(updatedChat)
+                            chatLocalDataSource.upsertChat(updatedChat)
                         }
                     }
                 }
@@ -259,8 +259,8 @@ suspend fun MessageSyncRepository.fetchAndSyncMessages(chatId: String) {
                 wrappedKey = wrappedKey ?: ""
             )
 
-            if (messageDao.getMessageById(docId) == null) {
-                messageDao.insertMessage(message)
+            if (chatLocalDataSource.getMessageById(docId) == null) {
+                chatLocalDataSource.upsertMessage(message)
             }
             repositoryScope.launch {
                 acknowledgeMessageDelivery(docId, chatId, senderId, wrappedKeyStr ?: "")

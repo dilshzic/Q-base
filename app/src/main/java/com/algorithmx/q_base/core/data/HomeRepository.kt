@@ -1,6 +1,6 @@
 package com.algorithmx.q_base.core.data
 
-import com.algorithmx.q_base.core.data.chat.ChatDao
+import com.algorithmx.q_base.core.data.chat.ChatLocalDataSource
 import com.algorithmx.q_base.data.collections.CollectionDao
 import com.algorithmx.q_base.data.collections.QuestionDao
 import com.algorithmx.q_base.feature.sessions.data.SessionDao
@@ -10,7 +10,6 @@ import com.algorithmx.q_base.data.collections.Question
 import com.algorithmx.q_base.feature.sessions.data.StudySession
 import com.algorithmx.q_base.data.collections.StudyCollectionWithCount
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,7 +19,7 @@ class HomeRepository @Inject constructor(
     private val questionDao: QuestionDao,
     private val collectionDao: CollectionDao,
     private val userDao: UserDao,
-    private val chatDao: ChatDao
+    private val chatLocalDataSource: ChatLocalDataSource
 ) {
     fun getCurrentUser(userId: String): Flow<com.algorithmx.q_base.core.data.UserEntity?> = 
         userDao.getCurrentUser(userId)
@@ -36,5 +35,5 @@ class HomeRepository @Inject constructor(
     fun getAllStudyCollectionsWithCount(): Flow<List<StudyCollectionWithCount>> =
         collectionDao.getAllStudyCollectionsWithCount()
 
-    fun getTotalUnreadCount(): Flow<Int> = chatDao.getTotalUnreadCount().map { it ?: 0 }
+    fun getTotalUnreadCount(): Flow<Int> = chatLocalDataSource.getTotalUnreadCount()
 }

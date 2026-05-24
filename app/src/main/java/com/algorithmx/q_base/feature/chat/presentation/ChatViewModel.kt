@@ -4,10 +4,10 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.algorithmx.q_base.core.data.chat.ChatDao
+import com.algorithmx.q_base.core.data.chat.ChatLocalDataSource
 import com.algorithmx.q_base.core.data.chat.ChatEntity
 import com.algorithmx.q_base.core.data.chat.isAdmin
-import com.algorithmx.q_base.core.data.chat.MessageDao
+// Message flows provided by ChatLocalDataSource
 import com.algorithmx.q_base.core.data.chat.MessageEntity
 import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.data.collections.CollectionDao
@@ -32,8 +32,7 @@ import com.algorithmx.q_base.util.NetworkMonitor
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
-    internal val chatDao: ChatDao,
-    internal val messageDao: MessageDao,
+    internal val chatLocalDataSource: ChatLocalDataSource,
     internal val userDao: UserDao,
     internal val syncRepository: SyncRepository,
     internal val authRepository: AuthRepository,
@@ -114,7 +113,7 @@ class ChatViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    val totalUnreadCount = chatDao.getTotalUnreadCount()
+    val totalUnreadCount = chatLocalDataSource.getTotalUnreadCount()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     val allStudyCollections: StateFlow<List<StudyCollection>> = collectionDao.getAllStudyCollections()
@@ -122,7 +121,7 @@ class ChatViewModel @Inject constructor(
 
     // State for the Inbox/Chat List
     val chatListState: StateFlow<ChatListState> = combine(
-        chatDao.getChatSummaries(),
+        chatLocalDataSource.getChatSummaries(),
         userDao.getAllUsers()
     ) { summaries, users ->
         val userMap = users.associateBy { it.userId }
@@ -172,7 +171,7 @@ class ChatViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ChatListState())
     
     val blockedChatsState: StateFlow<List<ChatUiModel>> = combine(
-        chatDao.getChatSummaries(),
+        chatLocalDataSource.getChatSummaries(),
         userDao.getAllUsers()
     ) { summaries, users ->
         val userMap = users.associateBy { it.userId }
@@ -216,8 +215,8 @@ class ChatViewModel @Inject constructor(
         if (chatId == null) flowOf(ChatDetailState())
         else {
             combine(
-                chatDao.getChatByIdFlow(chatId),
-                messageDao.getMessagesForChat(chatId),
+                chatLocalDataSource.getChatByIdFlow(chatId),
+                chatLocalDataSource.getMessagesForChat(chatId),
                 userDao.getAllUsers()
             ) { chat, messages, users ->
                 val userMap = users.associateBy { it.userId }
@@ -276,7 +275,7 @@ class ChatViewModel @Inject constructor(
 
     fun canSendToChat(chatId: String): Flow<Boolean> {
         return combine(
-            chatDao.getChatByIdFlow(chatId),
+            chatLocalDataSource.getChatByIdFlow(chatId),
             isOnline
         ) { chat, online ->
             if (chat == null) false
@@ -339,16 +338,16 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 idsToDelete.forEach { chatId ->
-                    val chat = chatDao.getChatById(chatId)
+                    val chat = chatLocalDataSource.getChatById(chatId)
                     if (chat != null && !chat.isAdmin(currentUserId) && chat.isGroup) {
                         val currentParticipants = chat.participantIds.split(",").toMutableList()
                         currentParticipants.remove(currentUserId)
-                        chatDao.deleteChatById(chatId)
-                        messageDao.deleteMessagesByChatId(chatId)
+                        chatLocalDataSource.deleteChatById(chatId)
+                        chatLocalDataSource.deleteMessagesByChatId(chatId)
                         syncRepository.removeParticipantFromRemote(chatId, currentUserId)
                     } else {
-                        chatDao.deleteChatById(chatId)
-                        messageDao.deleteMessagesByChatId(chatId)
+                        chatLocalDataSource.deleteChatById(chatId)
+                        chatLocalDataSource.deleteMessagesByChatId(chatId)
                         syncRepository.deleteChatOnRemote(chatId)
                     }
                 }
@@ -384,13 +383,13 @@ class ChatViewModel @Inject constructor(
         _currentChatId.value = chatId
         prefetchChatParticipantProfiles(chatId)
         viewModelScope.launch {
-            chatDao.clearUnreadCount(chatId)
+            chatLocalDataSource.clearUnreadCount(chatId)
             
             messageSyncJob = syncRepository.observeAndSyncMessages(chatId)
                 .catch { e -> Log.e("ChatViewModel", "Error syncing messages for $chatId: ${e.message}") }
                 .launchIn(viewModelScope)
                 
-            val chat = chatDao.getChatById(chatId)
+            val chat = chatLocalDataSource.getChatById(chatId)
             if (chat?.isGroup == true) {
                 groupLibraryJob = viewModelScope.launch {
                     syncRepository.observeGroupLibrary(chatId)
@@ -432,7 +431,7 @@ class ChatViewModel @Inject constructor(
     }
 
     internal suspend fun refreshChatParticipantProfiles(chatId: String) {
-        val chat = chatDao.getChatById(chatId) ?: return
+        val chat = chatLocalDataSource.getChatById(chatId) ?: return
         chat.participantIds
             .split(",")
             .map { it.trim() }

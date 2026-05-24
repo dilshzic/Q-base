@@ -1,7 +1,6 @@
 package com.algorithmx.q_base.sync.orchestration
 
 import android.util.Log
-import com.algorithmx.q_base.core.data.chat.ChatDao
 import com.algorithmx.q_base.core.data.chat.MessageEntity
 import com.algorithmx.q_base.feature.sessions.data.SessionDao
 import com.algorithmx.q_base.feature.sessions.data.SessionAttempt
@@ -28,7 +27,6 @@ class SessionSyncRepository @Inject constructor(
     private val appwriteClient: Client,
     private val databases: CoreDatabase,
     private val authRepository: AuthRepository,
-    private val chatDao: ChatDao,
     private val sessionDao: SessionDao,
     private val messageSyncRepository: Lazy<MessageSyncRepository>
 ) {

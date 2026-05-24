@@ -109,8 +109,8 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
                         wrappedKey = wrappedKey ?: ""
                     )
 
-                    if (messageDao.getMessageById(docId) == null) {
-                        messageDao.insertMessage(message)
+                    if (chatLocalDataSource.getMessageById(docId) == null) {
+                        chatLocalDataSource.upsertMessage(message)
                         
                         if (type == "COLLECTION_PATCH" && decryptionStatus == "SUCCESS") {
                             collectionSyncRepository.get().applyCollectionPatch(payload)
@@ -121,9 +121,9 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
                         }
 
                         if (decryptionStatus == "SUCCESS" && keyFingerprint != null) {
-                            chatDao.getChatById(chatId)?.let { chat ->
+                            chatLocalDataSource.getChatById(chatId)?.let { chat ->
                                 if (chat.lastUsedKeyFingerprint != keyFingerprint) {
-                                    chatDao.insertChat(chat.copy(lastUsedKeyFingerprint = keyFingerprint))
+                                    chatLocalDataSource.upsertChat(chat.copy(lastUsedKeyFingerprint = keyFingerprint))
                                 }
                             }
                         }
@@ -215,8 +215,8 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
                             wrappedKey = wrappedKey ?: ""
                         )
 
-                        if (messageDao.getMessageById(docId) == null) {
-                            messageDao.insertMessage(message)
+                        if (chatLocalDataSource.getMessageById(docId) == null) {
+                            chatLocalDataSource.upsertMessage(message)
 
                             if (type == "COLLECTION_PATCH" && decryptionStatus == "SUCCESS") {
                                 collectionSyncRepository.get().applyCollectionPatch(payload)
@@ -227,9 +227,9 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
                             }
 
                             if (decryptionStatus == "SUCCESS" && keyFingerprint != null) {
-                                chatDao.getChatById(chatId)?.let { chat ->
+                                chatLocalDataSource.getChatById(chatId)?.let { chat ->
                                     if (chat.lastUsedKeyFingerprint != keyFingerprint) {
-                                        chatDao.insertChat(chat.copy(lastUsedKeyFingerprint = keyFingerprint))
+                                        chatLocalDataSource.upsertChat(chat.copy(lastUsedKeyFingerprint = keyFingerprint))
                                     }
                                 }
                             }

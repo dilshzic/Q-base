@@ -1,7 +1,7 @@
 package com.algorithmx.q_base.sync.orchestration
 
 import com.algorithmx.q_base.BuildConfig
-import com.algorithmx.q_base.core.data.chat.ChatDao
+import com.algorithmx.q_base.core.data.chat.ChatLocalDataSource
 import com.algorithmx.q_base.data.collections.CollectionDao
 import com.algorithmx.q_base.data.collections.CollectionVersionLedgerDao
 import com.algorithmx.q_base.data.collections.QuestionDao
@@ -25,7 +25,7 @@ class CollectionSyncRepository @Inject constructor(
     internal val databases: CoreDatabase,
     internal val authRepository: AuthRepository,
     internal val storage: Storage,
-    internal val chatDao: ChatDao,
+    internal val chatDao: ChatLocalDataSource,
     internal val userDao: UserDao,
     internal val cryptoManager: CryptoManager,
     internal val mockDownloader: MockDownloader,
