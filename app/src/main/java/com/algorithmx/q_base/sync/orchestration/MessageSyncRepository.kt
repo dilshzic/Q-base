@@ -24,6 +24,7 @@ class MessageSyncRepository @Inject constructor(
     internal val chatRemoteRepository: ChatRemoteRepository,
     internal val chatLocalDataSource: ChatLocalDataSource,
     internal val userDao: UserDao,
+    internal val profileRepository: com.algorithmx.q_base.core.data.auth.ProfileRepository,
     internal val cryptoManager: CryptoManager,
     internal val collectionSyncRepository: Lazy<CollectionSyncRepository>,
     internal val sessionSyncRepository: Lazy<SessionSyncRepository>,

@@ -97,13 +97,10 @@ class ChatManagerRepository @Inject constructor(
                             Log.d("ChatManagerRepository", "Checking participant: '$participantId' against uid: '$uid'")
                             if (participantId.isNotBlank() && participantId != uid) {
                                 Log.d("ChatManagerRepository", "Syncing profile for other participant: $participantId")
-                                // Run this without throwing exceptions to ensure it doesn't block message sync
-                                repositoryScope.launch {
-                                    try {
-                                        profileRepository.syncUserProfile(participantId)
-                                    } catch (e: Exception) {
-                                        Log.e("ChatManagerRepository", "Failed to sync profile for $participantId", e)
-                                    }
+                                try {
+                                    profileRepository.syncUserProfile(participantId)
+                                } catch (e: Exception) {
+                                    Log.e("ChatManagerRepository", "Failed to sync profile for $participantId", e)
                                 }
                             }
                         }
@@ -204,12 +201,10 @@ class ChatManagerRepository @Inject constructor(
         if (otherParticipantId != null) {
             val user = userDao.getUserById(otherParticipantId)
             if (user == null) {
-                repositoryScope.launch {
-                    try {
-                        profileRepository.syncUserProfile(otherParticipantId)
-                    } catch (e: Exception) {
-                        Log.e("ChatManagerRepository", "Failed to sync profile for missing participant $otherParticipantId", e)
-                    }
+                try {
+                    profileRepository.syncUserProfile(otherParticipantId)
+                } catch (e: Exception) {
+                    Log.e("ChatManagerRepository", "Failed to sync profile for missing participant $otherParticipantId", e)
                 }
             }
         }
@@ -254,12 +249,10 @@ class ChatManagerRepository @Inject constructor(
             val uid = currentUserId
             participantsList.forEach { participantId ->
                 if (participantId.isNotBlank() && participantId != uid) {
-                    repositoryScope.launch {
-                        try {
-                            profileRepository.syncUserProfile(participantId)
-                        } catch (e: Exception) {
-                            Log.e("ChatManagerRepository", "Failed to sync profile for participant $participantId during metadata update", e)
-                        }
+                    try {
+                        profileRepository.syncUserProfile(participantId)
+                    } catch (e: Exception) {
+                        Log.e("ChatManagerRepository", "Failed to sync profile for participant $participantId during metadata update", e)
                     }
                 }
             }

@@ -167,7 +167,38 @@ class ProfileRepository @Inject constructor(
                 Log.d("ProfileRepository", "Private settings fetched")
 
                 val privateEmail = privateDoc?.get("email") as? String ?: ""
-                p.copy(email = privateEmail)
+                var finalProfile = p.copy(email = privateEmail)
+                
+                val sessionUser = coreAuth.currentUser.firstOrNull() ?: coreAuth.checkCurrentSession().getOrNull()
+                if (sessionUser != null && sessionUser.uid == userId) {
+                    val sessionName = sessionUser.displayName
+                    val currentName = finalProfile.displayName
+                    var needsUpdate = false
+                    
+                    if (!sessionName.isNullOrBlank() && (currentName.isBlank() || currentName == "Learner" || currentName == "Knowledge Seeker" || currentName != sessionName)) {
+                        Log.d("ProfileRepository", "Updating remote profile name from Auth session: $sessionName")
+                        finalProfile = finalProfile.copy(displayName = sessionName)
+                        needsUpdate = true
+                    }
+                    
+                    val sessionEmail = sessionUser.email
+                    if (!sessionEmail.isNullOrBlank() && (finalProfile.email.isBlank() || finalProfile.email != sessionEmail)) {
+                        Log.d("ProfileRepository", "Updating private email from Auth session: $sessionEmail")
+                        finalProfile = finalProfile.copy(email = sessionEmail)
+                        needsUpdate = true
+                    }
+                    
+                    if (needsUpdate) {
+                        try {
+                            val updatedMap = userProfileToMap(finalProfile)
+                            coreDatabase.updateDocument("users", userId, updatedMap).getOrThrow()
+                            coreDatabase.updateDocument("user_private_settings", userId, mapOf("email" to finalProfile.email)).getOrThrow()
+                        } catch (e: Exception) {
+                            Log.e("ProfileRepository", "Failed to update profile name/email on remote", e)
+                        }
+                    }
+                }
+                finalProfile
             } else {
                 Log.d("ProfileRepository", "User doc does not exist, checking current user session...")
                 val sessionUser = coreAuth.currentUser.firstOrNull() ?: coreAuth.checkCurrentSession().getOrNull()
@@ -198,8 +229,12 @@ class ProfileRepository @Inject constructor(
                 if (p.friendCode.isBlank()) {
                     Log.d("ProfileRepository", "Generating new friend code for ${p.userId}")
                     p = p.copy(friendCode = generateUniqueFriendCode()).also { updated ->
-                        val updatedMap = userProfileToMap(updated)
-                        coreDatabase.createDocument("users", userId, updatedMap)
+                        try {
+                            val updatedMap = userProfileToMap(updated)
+                            coreDatabase.updateDocument("users", userId, updatedMap).getOrThrow()
+                        } catch (e: Exception) {
+                            Log.e("ProfileRepository", "Failed to update friend code", e)
+                        }
                     }
                 }
 
@@ -209,8 +244,12 @@ class ProfileRepository @Inject constructor(
                     if (p.publicKey != localPk) {
                         Log.d("ProfileRepository", "Device public key mismatch! Updating CoreDatabase with local key.")
                         p = p.copy(publicKey = localPk)
-                        val updatedMap = userProfileToMap(p)
-                        coreDatabase.createDocument("users", p.userId, updatedMap)
+                        try {
+                            val updatedMap = userProfileToMap(p)
+                            coreDatabase.updateDocument("users", p.userId, updatedMap).getOrThrow()
+                        } catch (e: Exception) {
+                            Log.e("ProfileRepository", "Failed to update public key on remote", e)
+                        }
                     }
                 }
 

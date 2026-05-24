@@ -71,3 +71,6 @@ venv/
 /app/src/main/java/**/*_Impl.java
 /app/src/main/java/**/*_Impl.kt
 /app/src/main/java/**/BuildConfig.java
+logcat*.txt
+build_compile*.txt
+profile_update*.txt
