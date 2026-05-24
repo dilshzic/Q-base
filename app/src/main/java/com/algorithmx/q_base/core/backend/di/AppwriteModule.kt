@@ -1,5 +1,11 @@
 package com.algorithmx.q_base.core.backend.di
 
+// TODO: RELOCATE_IN_PHASE6 - This Appwrite DI module currently lives in the
+// `app` module because it depends on `BuildConfig.APPWRITE_PROJECT_ID` which
+// is provided at the app build level. During Phase 6, move this provider into
+// `core-auth` (or a new `core-backend` module) and change the project ID to be
+// injected via config or resources so the module can be reusable across features.
+
 import android.content.Context
 import com.algorithmx.q_base.BuildConfig
 import dagger.Module
