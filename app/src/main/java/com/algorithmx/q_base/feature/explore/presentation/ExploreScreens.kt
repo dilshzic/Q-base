@@ -190,7 +190,7 @@ fun ExploreQuestionPagerScreen(
                     pageSpacing = 16.dp
                 ) { page ->
                     val state = questionStates[page]
-                    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+                    val clipboard = LocalClipboardManager.current
                     
                     QuestionViewer(
                         question = state.question,
@@ -237,7 +237,7 @@ fun ExploreQuestionPagerScreen(
         val currentQuestion = questionStates.getOrNull(pagerState.currentPage)?.question
         ReportDialog(
             itemType = "Question",
-            itemName = currentQuestion?.stem?.take(30) + "..." ?: "this question",
+            itemName = currentQuestion?.stem?.take(30)?.let { "$it..." } ?: "this question",
             onDismiss = { showReportDialog = false },
             onConfirm = { reason ->
                 onReportSubmitted(pagerState.currentPage, reason)
@@ -291,7 +291,7 @@ fun ExploreQuestionPagerScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         MarkdownText(
-                            markdown = currentQuestionState.aiResponse!!,
+                            markdown = currentQuestionState.aiResponse,
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 color = MaterialTheme.colorScheme.onSurface,
                                 lineHeight = 24.sp

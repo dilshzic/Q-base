@@ -62,7 +62,6 @@ class AiBrainManager @Inject constructor(
             BrainProvider.LOCAL_GEMMA -> {
                 null
             }
-            else -> null
         }
     }
 

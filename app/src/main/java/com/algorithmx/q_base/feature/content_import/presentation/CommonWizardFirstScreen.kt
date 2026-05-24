@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.algorithmx.q_base.data.collections.StudyCollection
@@ -72,7 +73,7 @@ fun CommonWizardFirstScreen(
             rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
                 it?.let { onPdfPicked(it) }
             }
-    val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+        val clipboardManager = LocalClipboardManager.current
 
     // A side effect that automatically generates a collection title from the first few words of the
     // description if the name is blank.

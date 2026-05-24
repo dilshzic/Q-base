@@ -91,7 +91,7 @@ fun OptionsList(
         }
 
         options.forEach { option ->
-            val letter = option.optionLetter ?: ""
+            val letter = option.optionLetter
             
             val isTrueSelected = if (isMTF) {
                 when {

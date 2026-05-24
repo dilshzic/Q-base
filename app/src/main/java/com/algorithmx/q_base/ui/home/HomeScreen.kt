@@ -339,7 +339,7 @@ fun PinnedQuestionItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = question.stem ?: "",
+                    text = question.stem,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     maxLines = 2,

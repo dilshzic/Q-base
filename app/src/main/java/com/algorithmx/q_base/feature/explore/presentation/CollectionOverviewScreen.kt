@@ -379,7 +379,8 @@ fun CollectionOverviewScreen(
     val collectionAiResponse by viewModel?.collectionAiResponse?.collectAsState() ?: remember { mutableStateOf(null) }
     val isCollectionAiLoading by viewModel?.isCollectionAiLoading?.collectAsState() ?: remember { mutableStateOf(false) }
 
-    if (collectionAiResponse != null) {
+    val collectionAiResp = collectionAiResponse
+    if (collectionAiResp != null) {
         ModalBottomSheet(
             onDismissRequest = { viewModel?.clearCollectionAiResponse() },
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -422,7 +423,7 @@ fun CollectionOverviewScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         MarkdownText(
-                            markdown = collectionAiResponse!!,
+                            markdown = collectionAiResp,
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 color = MaterialTheme.colorScheme.onSurface,
                                 lineHeight = 24.sp

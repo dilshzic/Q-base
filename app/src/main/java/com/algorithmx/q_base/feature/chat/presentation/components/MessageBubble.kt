@@ -19,9 +19,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.Clipboard
-import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -95,7 +94,7 @@ fun MessageBubble(
     isFirstInGroup: Boolean = true,
     isLastInGroup: Boolean = true
 ) {
-    val clipboard = LocalClipboard.current
+    val clipboard = LocalClipboardManager.current
     val scope = rememberCoroutineScope()
     val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
     val timeString = remember(message.timestamp) { timeFormat.format(Date(message.timestamp)) }
@@ -259,7 +258,7 @@ private fun MessageContent(
     localCollections: List<StudyCollection>,
     onReportMessage: () -> Unit,
     onDeleteChat: () -> Unit,
-    clipboard: Clipboard,
+    clipboard: ClipboardManager,
     scope: CoroutineScope
 ) {
     var showDropdown by remember { mutableStateOf(false) }
@@ -302,15 +301,15 @@ private fun MessageContent(
                     }
                 )
             }
-            DropdownMenuItem(
+                DropdownMenuItem(
                 text = { Text("Copy Text") },
                 leadingIcon = { Icon(Icons.Rounded.ContentCopy, contentDescription = null) },
-                onClick = { 
-                    scope.launch {
-                        clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Chat Message", message.payload)))
+                    onClick = {
+                        scope.launch {
+                            clipboard.setText(androidx.compose.ui.text.AnnotatedString(message.payload))
+                        }
+                        showDropdown = false
                     }
-                    showDropdown = false 
-                }
             )
         }
     }

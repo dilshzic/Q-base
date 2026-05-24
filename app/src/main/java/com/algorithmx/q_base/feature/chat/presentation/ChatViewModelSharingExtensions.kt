@@ -6,11 +6,13 @@ import com.algorithmx.q_base.core.data.chat.isAdmin
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
+private val sharedJson = Json { ignoreUnknownKeys = true }
+
 fun ChatViewModel.addSharedCollection(jsonPayload: String) {
     viewModelScope.launch {
         try {
             Log.d("ChatViewModel", "Attempting to add AI collection from JSON")
-            val response = Json { ignoreUnknownKeys = true }.decodeFromString<AiCollectionResponse>(jsonPayload)
+            val response = sharedJson.decodeFromString<AiCollectionResponse>(jsonPayload)
 
             // Since this is already triggered by a "Save" button in the bubble, it represents explicit consent.
             aiRepository.saveAsCollection(response)

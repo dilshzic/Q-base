@@ -342,7 +342,8 @@ fun ActiveSessionScreen(
         }
     }
 
-    if (aiResponse != null) {
+    val aiResp = aiResponse
+    if (aiResp != null) {
         AlertDialog(
             onDismissRequest = { viewModel.clearAiResponse() },
             title = {
@@ -373,7 +374,7 @@ fun ActiveSessionScreen(
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
                     } else {
                         MarkdownText(
-                            markdown = aiResponse!!,
+                            markdown = aiResp,
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -409,7 +410,7 @@ fun ActiveSessionScreen(
     if (showReportQuestionDialog) {
         com.algorithmx.q_base.core.designsystem.components.reusable.ReportDialog(
             itemType = "Question",
-            itemName = currentQuestion?.stem?.take(30) + "..." ?: "this question",
+            itemName = currentQuestion?.stem?.take(30)?.let { "$it..." } ?: "this question",
             onDismiss = { showReportQuestionDialog = false },
             onConfirm = { reason ->
                 viewModel.reportQuestion(reason)

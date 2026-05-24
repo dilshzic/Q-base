@@ -60,8 +60,8 @@ fun CategoryStep(
                     Spacer(modifier = Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(category.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                        if (!category.description.isNullOrEmpty()) {
-                            Text(category.description!!, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                        category.description?.takeIf { it.isNotBlank() }?.let { description ->
+                            Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
                         }
                     }
                     Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outlineVariant)
@@ -149,7 +149,7 @@ fun QuestionSelectionStep(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = question.stem ?: "Untitled Question",
+                                text = question.stem,
                                 maxLines = 2,
                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.bodyMedium

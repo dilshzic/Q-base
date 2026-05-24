@@ -203,8 +203,11 @@ fun ProfileContent(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Identity Block
+                val displayName = user?.displayName?.takeIf { it.isNotBlank() } ?: "Knowledge Seeker"
+                val email = user?.email?.takeIf { it.isNotBlank() } ?: "guest@qbase.io"
+
                 Text(
-                    text = if (!user?.displayName.isNullOrBlank()) user?.displayName!! else "Knowledge Seeker",
+                    text = displayName,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -212,7 +215,7 @@ fun ProfileContent(
                 )
                 
                 Text(
-                    text = if (!user?.email.isNullOrBlank()) user?.email!! else "guest@qbase.io",
+                    text = email,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center

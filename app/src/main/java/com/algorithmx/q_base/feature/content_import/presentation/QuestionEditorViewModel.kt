@@ -55,8 +55,8 @@ class QuestionEditorViewModel @Inject constructor(
                     
                     optionsFlow.combine(answerFlow) { opts, ans ->
                         _state.value = _state.value.copy(
-                            stem = q.stem ?: "",
-                            options = opts.map { (it.optionLetter ?: "") to (it.optionText ?: "") },
+                            stem = q.stem,
+                            options = opts.map { it.optionLetter to (it.optionText ?: "") },
                             correctAnswer = ans?.correctAnswerString ?: "A",
                             explanation = ans?.generalExplanation ?: "",
                             references = ans?.references ?: ""

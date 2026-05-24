@@ -135,7 +135,7 @@ class SessionRepository @Inject constructor(
                     val userSelections = attempt.userSelectedAnswers.split(",")
                     
                     options.forEach { option ->
-                        val letter = option.optionLetter ?: ""
+                        val letter = option.optionLetter
                         val userValue = when {
                             userSelections.contains("${letter}_T") -> true
                             userSelections.contains("${letter}_F") -> false

@@ -140,7 +140,7 @@ fun ManualQuestionItem(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = question.stem ?: "",
+                text = question.stem,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 3,
                 fontWeight = FontWeight.Medium

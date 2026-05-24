@@ -138,7 +138,7 @@ fun GroupOverviewScreen(
                         .padding(24.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    val isAdmin = chat?.isAdmin(viewModel.currentUserId ?: "") == true
+                    val isAdmin = chat?.isAdmin(viewModel.currentUserId) == true
                     
                     ActionButton(
                         icon = Icons.Rounded.PersonAdd,
@@ -178,7 +178,7 @@ fun GroupOverviewScreen(
 
             items(participants) { participant ->
                 val isAdminOfGroup = chat?.isAdmin(participant.userId) == true
-                val isCurrentUserAdmin = chat?.isAdmin(viewModel.currentUserId ?: "") == true
+                val isCurrentUserAdmin = chat?.isAdmin(viewModel.currentUserId) == true
                 val isSelf = participant.userId == viewModel.currentUserId
                 
                 var showActionDialog by remember { mutableStateOf(false) }
