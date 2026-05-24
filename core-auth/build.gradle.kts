@@ -45,4 +45,6 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.material.icons.extended)
+    // Moshi KSP processor (for future Moshi models)
+    ksp(libs.moshi-kotlin-codegen)
 }

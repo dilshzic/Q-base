@@ -33,4 +33,6 @@ dependencies {
     implementation(libs.firebase.firestore)
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.compiler)
+    // Moshi KSP processor (in case modules use Moshi annotations)
+    ksp(libs.moshi-kotlin-codegen)
 }
