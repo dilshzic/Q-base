@@ -100,6 +100,12 @@ class ProfileRepository @Inject constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("ProfileRepository", "Failed to update profile", e)
+            // Cache locally so UI reflects the change immediately and will be synced later
+            try {
+                profileCache.upsert(profile)
+            } catch (cacheEx: Exception) {
+                Log.e("ProfileRepository", "Failed to cache profile locally after update failure", cacheEx)
+            }
             Result.failure(e)
         }
     }
