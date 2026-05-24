@@ -14,8 +14,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.appwrite.Client
-import io.appwrite.services.Databases
 import io.appwrite.services.Storage
+import io.appwrite.services.TablesDB
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -140,22 +140,5 @@ object AppwriteModule {
 
     @Provides
     @Singleton
-    fun provideAppwriteDatabases(client: Client): Databases = Databases(client)
-
-    @Provides
-    @Singleton
-    fun provideAppwriteTables(client: Client): Any? {
-        return try {
-            val cls = try {
-                Class.forName("io.appwrite.services.Tables")
-            } catch (e: ClassNotFoundException) {
-                Class.forName("io.appwrite.services.TablesDB")
-            }
-            val constructor = cls.getConstructor(io.appwrite.Client::class.java)
-            constructor.newInstance(client)
-        } catch (e: Exception) {
-            android.util.Log.w("QbaseReflection", "Tables client not available in SDK", e)
-            null
-        }
-    }
+    fun provideAppwriteTables(client: Client): TablesDB = TablesDB(client)
 }
