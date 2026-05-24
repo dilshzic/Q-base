@@ -134,11 +134,13 @@ class ChatViewModel @Inject constructor(
                 return@mapNotNull null
             }
 
-            val resolvedName = (if (summary.isGroup) {
-                summary.chatName
+            val resolvedName = if (summary.isGroup) {
+                summary.chatName?.takeIf { it.isNotBlank() } ?: "Chat"
             } else {
-                otherUser?.displayName ?: summary.chatName
-            }) ?: "Chat"
+                otherUser?.displayName?.takeIf { it.isNotBlank() }
+                    ?: summary.chatName?.takeIf { it.isNotBlank() }
+                    ?: "Chat"
+            }
 
             ChatUiModel(
                 chat = ChatEntity(
@@ -179,11 +181,13 @@ class ChatViewModel @Inject constructor(
             val otherParticipantId = summary.participantIds.split(",")
                 .firstOrNull { it != currentUserId && it.isNotEmpty() }
             val otherUser = userMap[otherParticipantId]
-            val resolvedName = (if (summary.isGroup) {
-                summary.chatName
+            val resolvedName = if (summary.isGroup) {
+                summary.chatName?.takeIf { it.isNotBlank() } ?: "Chat"
             } else {
-                otherUser?.displayName ?: summary.chatName
-            }) ?: "Chat"
+                otherUser?.displayName?.takeIf { it.isNotBlank() }
+                    ?: summary.chatName?.takeIf { it.isNotBlank() }
+                    ?: "Chat"
+            }
 
             ChatUiModel(
                 chat = ChatEntity(
@@ -220,13 +224,15 @@ class ChatViewModel @Inject constructor(
                 userDao.getAllUsers()
             ) { chat, messages, users ->
                 val userMap = users.associateBy { it.userId }
-                val resolvedName = (if (chat?.isGroup == true) {
-                    chat.chatName
+                val resolvedName = if (chat?.isGroup == true) {
+                    chat.chatName?.takeIf { it.isNotBlank() } ?: "Chat"
                 } else {
                     val otherParticipantId = chat?.participantIds?.split(",")
                         ?.firstOrNull { it != currentUserId && it.isNotEmpty() }
-                    userMap[otherParticipantId]?.displayName ?: chat?.chatName
-                }) ?: "Chat"
+                    userMap[otherParticipantId]?.displayName?.takeIf { it.isNotBlank() }
+                        ?: chat?.chatName?.takeIf { it.isNotBlank() }
+                        ?: "Chat"
+                }
 
                 ChatDetailState(
                     chat = chat,

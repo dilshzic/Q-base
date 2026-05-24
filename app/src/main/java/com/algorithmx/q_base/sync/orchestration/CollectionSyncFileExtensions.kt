@@ -84,9 +84,11 @@ suspend fun CollectionSyncRepository.shareCollectionToGroup(chatId: String, coll
                             val remoteKey = docData?.get("publicKey") as? String
                             if (!remoteKey.isNullOrBlank() && docData != null) {
                                 candidateKey = remoteKey
+                                val remoteDisplay = (docData["displayName"] as? String)?.takeIf { it.isNotBlank() }
+                                val localDisplay = local?.displayName?.takeIf { it.isNotBlank() }
                                 val cached = UserEntity(
                                     userId = targetId,
-                                    displayName = (docData["displayName"] as? String) ?: (local?.displayName ?: "Unknown"),
+                                    displayName = remoteDisplay ?: localDisplay ?: "Unknown",
                                     email = local?.email,
                                     intro = (docData["intro"] as? String) ?: local?.intro,
                                     profilePictureUrl = (docData["profilePictureUrl"] as? String) ?: local?.profilePictureUrl,

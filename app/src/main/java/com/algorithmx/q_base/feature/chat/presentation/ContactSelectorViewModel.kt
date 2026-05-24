@@ -66,9 +66,10 @@ class ContactSelectorViewModel @Inject constructor(
                             _state.update { it.copy(isSearching = false, searchError = "You can't start a chat with yourself") }
                             return@onSuccess
                         }
+                        val resolvedDisplayName = profile.displayName.ifBlank { profile.friendCode.ifBlank { "Learner" } }
                         val userEntity = UserEntity(
                             userId = profile.userId,
-                            displayName = profile.displayName,
+                            displayName = resolvedDisplayName,
                             email = profile.email.ifBlank { null },
                             profilePictureUrl = profile.profilePictureUrl,
                             friendCode = profile.friendCode,
