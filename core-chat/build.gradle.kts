@@ -34,5 +34,5 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.compiler)
     // Moshi KSP processor (in case modules use Moshi annotations)
-    ksp(libs.moshi-kotlin-codegen)
+    ksp(libs.moshi.kotlin.codegen)
 }

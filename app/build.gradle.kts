@@ -102,7 +102,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     // Moshi KSP codegen (stay ready for @JsonClass usage)
-    ksp(libs.moshi-kotlin-codegen)
+    ksp(libs.moshi.kotlin.codegen)
 
     // Networking
     implementation(libs.retrofit)
