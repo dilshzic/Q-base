@@ -1,4 +1,4 @@
-package com.algorithmx.q_base.core_ai.brain.models
+package com.algorithmx.q_base.core.ai.brain.models
 
 import kotlinx.serialization.Serializable
 

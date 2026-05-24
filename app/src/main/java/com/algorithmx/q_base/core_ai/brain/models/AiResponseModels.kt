@@ -1,4 +1,4 @@
-package com.algorithmx.q_base.core_ai.brain.models
+package com.algorithmx.q_base.core.ai.brain.models
 
 import kotlinx.serialization.Serializable
 
@@ -33,4 +33,3 @@ data class AiCollectionResponse(
     val parsingWarnings: List<String> = emptyList(),
     val skippedSegments: List<String> = emptyList()
 )
-

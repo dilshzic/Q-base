@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.algorithmx.q_base.core_chat"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 24
@@ -33,4 +33,6 @@ dependencies {
     implementation(libs.firebase.firestore)
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.compiler)
+    // Moshi KSP processor (in case modules use Moshi annotations)
+    ksp(libs.moshi.kotlin.codegen)
 }

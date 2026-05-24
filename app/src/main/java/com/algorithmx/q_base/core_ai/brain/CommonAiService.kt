@@ -1,10 +1,10 @@
-package com.algorithmx.q_base.core_ai.brain
+package com.algorithmx.q_base.core.ai.brain
 
 import android.util.Log
-import com.algorithmx.q_base.core_ai.brain.models.AiGeneratedBlock
-import com.algorithmx.q_base.core_ai.brain.models.AiGeneratedTab
-import com.algorithmx.q_base.core_ai.brain.models.BlockType
-import com.algorithmx.q_base.core_ai.brain.models.NoteContext
+import com.algorithmx.q_base.core.ai.brain.models.AiGeneratedBlock
+import com.algorithmx.q_base.core.ai.brain.models.AiGeneratedTab
+import com.algorithmx.q_base.core.ai.brain.models.BlockType
+import com.algorithmx.q_base.core.ai.brain.models.NoteContext
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -46,7 +46,7 @@ class CommonAiService @Inject constructor(
             CRITICAL: Do not include any text outside the JSON array.
         """.trimIndent()
 
-        return aiBrainManager.askBrain(com.algorithmx.q_base.core_ai.brain.models.BrainTask.NOTE_STRUCTURE, prompt).mapCatching { rawResponse ->
+        return aiBrainManager.askBrain(com.algorithmx.q_base.core.ai.brain.models.BrainTask.NOTE_STRUCTURE, prompt).mapCatching { rawResponse ->
             val jsonString = extractJsonFromResponse(rawResponse)
             json.decodeFromString<List<AiGeneratedTab>>(jsonString)
         }
@@ -63,7 +63,7 @@ class CommonAiService @Inject constructor(
         
         val prompt = constructGenerationPrompt(topic, context, requestedTypes)
         
-        return aiBrainManager.askBrain(com.algorithmx.q_base.core_ai.brain.models.BrainTask.NOTE_BLOCKS, prompt).mapCatching { rawResponse ->
+        return aiBrainManager.askBrain(com.algorithmx.q_base.core.ai.brain.models.BrainTask.NOTE_BLOCKS, prompt).mapCatching { rawResponse ->
             // Extract JSON from the response (in case the AI adds markdown backticks)
             val jsonString = extractJsonFromResponse(rawResponse)
             json.decodeFromString<List<AiGeneratedBlock>>(jsonString)
