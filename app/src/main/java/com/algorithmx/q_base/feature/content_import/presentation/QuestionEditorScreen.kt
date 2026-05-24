@@ -125,6 +125,9 @@ fun QuestionEditorScreen(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 
+                // TODO: REMOVE_IN_PHASE6 - AI preview UI is temporary during the
+                // refactor/migration. Remove or consolidate once `temporaryAiExplanation`
+                // is either renamed or folded into the main `explanation` workflow.
                 if (state.temporaryAiExplanation != null) {
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),

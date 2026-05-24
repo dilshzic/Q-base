@@ -19,6 +19,9 @@ data class QuestionEditorState(
     val explanation: String = "",
     val references: String = "",
     val aiSuggestions: String? = null,
+    // TODO: REMOVE_IN_PHASE6 - temporary AI preview field. Replace with
+    // a stable field name or remove after AI feature finalization and UI
+    // flow consolidation.
     val temporaryAiExplanation: String? = null,
     val isAiLoading: Boolean = false,
     val isSaving: Boolean = false,

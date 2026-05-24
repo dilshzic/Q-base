@@ -16,6 +16,10 @@ import com.algorithmx.q_base.feature.explore.presentation.*
 import com.algorithmx.q_base.feature.sessions.presentation.*
 import com.algorithmx.q_base.feature.settings.presentation.*
 
+// TODO: REMOVE_IN_PHASE6 - Navigation wrapper helpers. These are lightweight
+// adapters used during refactor to keep navigation stable; review and remove
+// or consolidate into a central navigation module during Phase 6 cleanup.
+
 @Composable
 fun ExplorePagerWrapper(key: Screen.ExplorePager, navigator: Navigator) {
     val viewModel: ExploreViewModel = hiltViewModel()
