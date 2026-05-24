@@ -1,5 +1,9 @@
 package com.algorithmx.q_base.core.backend.di
 
+// TODO: RELOCATE_IN_PHASE6 - Firestore providers live in `app` but are owned
+// by backend/auth concerns; move to `core-auth` and make provider configuration
+// injectable during Phase 6.
+
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
