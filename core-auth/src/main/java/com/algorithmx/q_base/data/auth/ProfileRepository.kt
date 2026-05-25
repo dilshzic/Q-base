@@ -370,11 +370,13 @@ class ProfileRepository @Inject constructor(
                 ) {
                     normalizeUsersRow(p.userId, remoteRowId, p)
                 } else if (p.userId == myUid) {
-                    // Re-apply row permissions on existing canonical rows.
+                    // Force an update to re-apply correct document permissions (Self-healing logic)
                     try {
                         coreDatabase.updateDocument("users", p.userId, userProfileToMap(p)).getOrThrow()
+                        coreDatabase.updateDocument("user_private_settings", p.userId, mapOf("userId" to p.userId)).getOrThrow()
+                        Log.d("ProfileRepository", "Repaired permissions for users and user_private_settings for ${p.userId}")
                     } catch (e: Exception) {
-                        logDocumentFailure("updateDocument", "users", p.userId, e)
+                        logDocumentFailure("repairPermissions", "users/settings", p.userId, e)
                     }
                 }
 

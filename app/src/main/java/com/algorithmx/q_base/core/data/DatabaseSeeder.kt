@@ -39,12 +39,6 @@ class DatabaseSeeder @Inject constructor(
         val seedApplied = dataStoreManager.isSeedAppliedFlow.first()
         val collectionCount = collectionDao.getStudyCollectionCount()
 
-        val chatList = chatLocalDataSource.getAllChats().first()
-        if (chatList.isEmpty()) {
-            Log.d("DatabaseSeeder", "Chat database is empty. Seeding sample chats...")
-            seedSampleChats()
-        }
-
         if (seedApplied && collectionCount > 0) {
             Log.d("DatabaseSeeder", "Seed already applied and data exists. Skipping.")
             return@withContext
@@ -208,9 +202,6 @@ class DatabaseSeeder @Inject constructor(
                         }
                         if (batch.isNotEmpty()) collectionDao.insertCrossRefs(batch)
                     }
-
-                    // --- Step 5: Seed Sample Chats ---
-                    seedSampleChats()
                     
                     dataStoreManager.markSeedAsApplied()
                 }

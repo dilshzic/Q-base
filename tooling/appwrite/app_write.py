@@ -52,7 +52,8 @@ collections = {
         "name": "user_private_settings",
         "dls": True,
         "permissions": [
-            Permission.create(Role.users())
+            Permission.create(Role.users()),
+            Permission.read(Role.users())
         ],
         "attributes": [
             {"method": db.create_text_column, "args": [DATABASE_ID, "user_private_settings", "userId", 36, True]},

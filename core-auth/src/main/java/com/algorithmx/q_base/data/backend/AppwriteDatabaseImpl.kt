@@ -34,40 +34,16 @@ class AppwriteDatabaseImpl @Inject constructor(
      */
     private fun permissionsFor(collectionId: String, documentId: String, data: Map<String, Any>? = null): List<String>? {
         return when (collectionId) {
-            "users" -> listOf(
-                io.appwrite.Permission.read(io.appwrite.Role.users()), // Anyone logged in can read public profiles
-                io.appwrite.Permission.write(io.appwrite.Role.user(documentId))
-            )
+            "users" -> null
             "user_private_settings" -> listOf(
-                io.appwrite.Permission.read(io.appwrite.Role.user(documentId)), // Only owner can read
+                io.appwrite.Permission.read(io.appwrite.Role.user(documentId)),
                 io.appwrite.Permission.write(io.appwrite.Role.user(documentId))
             )
-            "chats" -> {
-                val participants = data?.get("participantIds") as? List<*>
-                if (participants != null) {
-                    val perms = mutableListOf<String>()
-                    // Grant read/write access to every participant in the chat
-                    participants.filterIsInstance<String>().forEach { uid ->
-                        perms.add(io.appwrite.Permission.read(io.appwrite.Role.user(uid)))
-                        perms.add(io.appwrite.Permission.write(io.appwrite.Role.user(uid)))
-                    }
-                    perms
-                } else null // Return null on simple updates to preserve existing permissions
-            }
-            "messages" -> {
-                val senderId = data?.get("senderId") as? String
-                val receiverId = data?.get("receiverId") as? String
-                if (senderId != null) {
-                    val perms = mutableListOf<String>()
-                    perms.add(io.appwrite.Permission.read(io.appwrite.Role.user(senderId)))
-                    perms.add(io.appwrite.Permission.write(io.appwrite.Role.user(senderId)))
-                    receiverId?.let { 
-                        perms.add(io.appwrite.Permission.read(io.appwrite.Role.user(it))) 
-                    }
-                    perms
-                } else null
-            }
-            else -> null // Fallback to collection-level settings in Appwrite Console
+            // CRITICAL FIX: Client SDK cannot grant access to other UIDs.
+            // Return null to allow the Appwrite console's collection-level permissions to handle access.
+            "chats" -> null
+            "messages" -> null
+            else -> null
         }
     }
 

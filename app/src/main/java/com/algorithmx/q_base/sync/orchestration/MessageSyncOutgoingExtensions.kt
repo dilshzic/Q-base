@@ -33,12 +33,21 @@ private suspend fun MessageSyncRepository.refreshProfilesForMessage(message: Mes
 }
 
 suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
-    val chat = chatLocalDataSource.getChatById(message.chatId)
-    val participants = chat?.participantIds?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+    var chat = chatLocalDataSource.getChatById(message.chatId)
+    var participants = chat?.participantIds?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+
+    if (participants.isEmpty()) {
+        Log.d("MessageSyncRepository", "Missing chat info for ${message.chatId}. Attempting to fetch...")
+        chatManagerRepository.get().fetchAndSyncChatMetadata(message.chatId)
+        chat = chatLocalDataSource.getChatById(message.chatId)
+        participants = chat?.participantIds?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+    }
+
     val senderUid = currentUserId ?: throw IllegalStateException("User not authenticated")
 
     if (participants.isEmpty()) {
-        throw IllegalStateException("Cannot send message: No participants in chat.")
+        Log.w("MessageSyncRepository", "Skipping message flush: No participants found for chat ${message.chatId} after metadata refresh.")
+        return
     }
 
     val (ciphertextPayload, sessionKeyHandle) = cryptoManager.encryptWithSessionKey(message.payload)
