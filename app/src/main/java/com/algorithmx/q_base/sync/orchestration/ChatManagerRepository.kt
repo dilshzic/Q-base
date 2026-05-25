@@ -23,10 +23,10 @@ import dagger.Lazy
 class ChatManagerRepository @Inject constructor(
     private val databases: CoreDatabase,
     private val authRepository: AuthRepository,
-        private val profileRepository: com.algorithmx.q_base.core.data.auth.ProfileRepository,
+    private val profileRepository: com.algorithmx.q_base.core.data.auth.ProfileRepository,
     private val chatRemoteRepository: ChatRemoteRepository,
     private val chatLocalDataSource: ChatLocalDataSource,
-        private val userDao: com.algorithmx.q_base.core.data.UserDao,
+    private val userDao: com.algorithmx.q_base.core.data.UserDao,
     private val messageSyncRepository: Lazy<MessageSyncRepository>
 ) {
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -76,8 +76,16 @@ class ChatManagerRepository @Inject constructor(
 
                     for (doc in docs) {
                         @Suppress("UNCHECKED_CAST")
-                        val participantsList = doc["participantIds"] as? List<String> ?: emptyList()
-                        val remoteAdminIds = doc["adminIds"] as? List<String>
+                        val participantsList = when (val p = doc["participantIds"]) {
+                            is List<*> -> p.filterIsInstance<String>()
+                            is String -> p.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                            else -> emptyList()
+                        }
+                        val remoteAdminIds = when (val a = doc["adminIds"]) {
+                            is List<*> -> a.filterIsInstance<String>()
+                            is String -> a.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                            else -> emptyList()
+                        }
                         val remoteAdminId = doc["adminId"] as? String
                         val isGroupVal = doc["isGroup"] as? Boolean ?: false
 
@@ -146,10 +154,18 @@ class ChatManagerRepository @Inject constructor(
 
             for (doc in docs) {
                 @Suppress("UNCHECKED_CAST")
-                val participantsList = doc["participantIds"] as? List<String> ?: emptyList()
+                val participantsList = when (val p = doc["participantIds"]) {
+                    is List<*> -> p.filterIsInstance<String>()
+                    is String -> p.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                    else -> emptyList()
+                }
                 val trimmedParticipants = participantsList.map { it.trim() }
                 if (trimmedParticipants.contains(uid) && trimmedParticipants.contains(userId)) {
-                    val remoteAdminIds = doc["adminIds"] as? List<String>
+                    val remoteAdminIds = when (val a = doc["adminIds"]) {
+                        is List<*> -> a.filterIsInstance<String>()
+                        is String -> a.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                        else -> emptyList()
+                    }
                     val remoteAdminId = doc["adminId"] as? String
                     val chat = ChatEntity(
                         chatId = doc["\$id"] as String,
@@ -217,8 +233,16 @@ class ChatManagerRepository @Inject constructor(
                 documentId = chatId
             ).getOrThrow() ?: throw IllegalStateException("Chat not found")
             @Suppress("UNCHECKED_CAST")
-            val participantsList = doc["participantIds"] as? List<String> ?: emptyList()
-            val remoteAdminIds = doc["adminIds"] as? List<String>
+            val participantsList = when (val p = doc["participantIds"]) {
+                is List<*> -> p.filterIsInstance<String>()
+                is String -> p.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                else -> emptyList()
+            }
+            val remoteAdminIds = when (val a = doc["adminIds"]) {
+                is List<*> -> a.filterIsInstance<String>()
+                is String -> a.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                else -> emptyList()
+            }
             val remoteAdminId = doc["adminId"] as? String
             val remoteName = doc["chatName"] as? String
 

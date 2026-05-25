@@ -28,19 +28,19 @@ class AppwriteDatabaseImpl @Inject constructor(
         return when (collectionId) {
             "users" -> listOf(
                 io.appwrite.Permission.read(io.appwrite.Role.users()),
-                io.appwrite.Permission.write(io.appwrite.Role.user(documentId)),
+                io.appwrite.Permission.create(io.appwrite.Role.user(documentId)),
                 io.appwrite.Permission.update(io.appwrite.Role.user(documentId)),
                 io.appwrite.Permission.delete(io.appwrite.Role.user(documentId))
             )
             "user_private_settings" -> listOf(
                 io.appwrite.Permission.read(io.appwrite.Role.user(documentId)),
-                io.appwrite.Permission.write(io.appwrite.Role.user(documentId)),
+                io.appwrite.Permission.create(io.appwrite.Role.user(documentId)),
                 io.appwrite.Permission.update(io.appwrite.Role.user(documentId)),
                 io.appwrite.Permission.delete(io.appwrite.Role.user(documentId))
             )
             else -> listOf(
                 io.appwrite.Permission.read(io.appwrite.Role.users()),
-                io.appwrite.Permission.write(io.appwrite.Role.users()),
+                io.appwrite.Permission.create(io.appwrite.Role.users()),
                 io.appwrite.Permission.update(io.appwrite.Role.users()),
                 io.appwrite.Permission.delete(io.appwrite.Role.users())
             )

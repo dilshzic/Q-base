@@ -122,8 +122,8 @@ class ProfileRepository @Inject constructor(
         return UserProfile(
             userId = map["userId"] as? String ?: map["\$id"] as? String ?: "",
             email = map["email"] as? String ?: "",
-            displayName = map["displayName"] as? String ?: "",
-            profilePictureUrl = map["profilePictureUrl"] as? String,
+            displayName = map["displayName"] as? String ?: map["name"] as? String ?: "",
+            profilePictureUrl = map["profilePictureUrl"] as? String ?: map["avatar"] as? String,
             friendCode = map["friendCode"] as? String ?: "",
             intro = map["intro"] as? String ?: "",
             publicKey = map["publicKey"] as? String,
