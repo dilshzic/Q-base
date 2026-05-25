@@ -3,7 +3,6 @@ package com.algorithmx.q_base.sync.orchestration
 import android.util.Base64
 import android.util.Log
 import com.algorithmx.q_base.core.data.chat.MessageEntity
-import com.algorithmx.q_base.core.data.UserEntity
 import kotlinx.coroutines.launch
 
 open class MissingEncryptionKeysException(message: String) : IllegalStateException(message)
