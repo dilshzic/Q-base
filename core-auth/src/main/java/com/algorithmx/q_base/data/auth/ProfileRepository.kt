@@ -257,9 +257,9 @@ class ProfileRepository @Inject constructor(
         }
     }
 
-    suspend fun syncUserProfile(userId: String) {
+    suspend fun syncUserProfile(userId: String): UserProfile? {
         Log.d("ProfileRepository", "Starting syncUserProfile for $userId")
-        try {
+        return try {
             val myUid = coreAuth.currentUserId
             val remoteDoc = getUserDocWithFallback(userId)
             val doc = remoteDoc?.data
@@ -386,9 +386,14 @@ class ProfileRepository @Inject constructor(
                     "Cached profile for ${p.userId}: displayName='${p.displayName}', email='${p.email}', friendCode='${p.friendCode}', publicKey=${p.publicKey != null}"
                 )
                 Log.d("ProfileRepository", "Successfully cached profile locally")
-            } ?: Log.e("ProfileRepository", "Failed to get profile for $userId")
+                p
+            } ?: run {
+                Log.e("ProfileRepository", "Failed to get profile for $userId")
+                null
+            }
         } catch (e: Exception) {
             Log.e("ProfileRepository", "Error syncing user profile", e)
+            null
         }
     }
 
@@ -432,13 +437,9 @@ class ProfileRepository @Inject constructor(
         return "$prefix-$part1-$part2"
     }
 
-    /**
-     * Fetches a contact's profile from Appwrite (Read-only) and caches it locally.
-     * This is intended for participants in chats that are not the current user.
-     */
-    suspend fun fetchAndCacheContactProfile(userId: String) {
+    suspend fun fetchAndCacheContactProfile(userId: String): UserProfile? {
         Log.d("ProfileRepository", "Starting fetchAndCacheContactProfile for $userId")
-        try {
+        return try {
             val remoteDoc = getUserDocWithFallback(userId)
             val doc = remoteDoc?.data
             
@@ -446,11 +447,14 @@ class ProfileRepository @Inject constructor(
                 val profile = mapToUserProfile(doc).copy(userId = userId)
                 profileCache.upsert(profile)
                 Log.d("ProfileRepository", "Successfully fetched and cached contact profile for $userId")
+                profile
             } else {
                 Log.w("ProfileRepository", "Contact profile doc not found for $userId")
+                null
             }
         } catch (e: Exception) {
             Log.e("ProfileRepository", "Error fetching contact profile for $userId", e)
+            null
         }
     }
 

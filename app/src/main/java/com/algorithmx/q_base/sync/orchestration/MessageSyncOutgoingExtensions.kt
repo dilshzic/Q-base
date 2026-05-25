@@ -3,6 +3,7 @@ package com.algorithmx.q_base.sync.orchestration
 import android.util.Base64
 import android.util.Log
 import com.algorithmx.q_base.core.data.chat.MessageEntity
+import com.algorithmx.q_base.feature.chat.presentation.ChatViewModel
 import kotlinx.coroutines.launch
 
 open class MissingEncryptionKeysException(message: String) : IllegalStateException(message)
@@ -16,7 +17,24 @@ private suspend fun MessageSyncRepository.refreshProfiles(userIds: List<String>)
         .distinct()
         .forEach { targetId ->
             try {
-                profileRepository.syncUserProfile(targetId)
+                val profile = profileRepository.syncUserProfile(targetId)
+                // If it's a real user and we just got a profile, ensure it's in our local UserDao
+                // so resolveWrappedKeys can find it in the same transaction/pass.
+                profile?.let { p ->
+                    userDao.insertUser(
+                        com.algorithmx.q_base.core.data.UserEntity(
+                            userId = p.userId,
+                            displayName = p.displayName,
+                            email = p.email,
+                            intro = p.intro,
+                            profilePictureUrl = p.profilePictureUrl,
+                            friendCode = p.friendCode,
+                            publicKey = p.publicKey,
+                            isBanned = p.isBanned,
+                            isPhotoVisible = p.isPhotoVisible
+                        )
+                    )
+                }
             } catch (e: Exception) {
                 Log.e("MessageSyncRepository", "Failed to refresh profile for key resolution: $targetId", e)
             }
@@ -61,10 +79,10 @@ suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
         val wrapFailures = mutableListOf<String>()
 
         val resolvedKeys = participants.map { targetId ->
-            val publicKeyBase64: String? = if (targetId == senderUid) {
-                cryptoManager.initializeAndGetPublicKey()
-            } else {
-                userDao.getUserById(targetId)?.publicKey
+            val publicKeyBase64: String? = when (targetId) {
+                senderUid -> cryptoManager.initializeAndGetPublicKey()
+                ChatViewModel.QBASE_AI_BOT_ID -> "AI_BOT_NO_KEY" // Special marker
+                else -> userDao.getUserById(targetId)?.publicKey
             }
 
             targetId to publicKeyBase64
@@ -73,6 +91,9 @@ suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
         resolvedKeys.forEach { (targetId, publicKeyBase64) ->
             if (publicKeyBase64.isNullOrBlank()) {
                 missingKeyUserIds.add(targetId)
+            } else if (publicKeyBase64 == "AI_BOT_NO_KEY") {
+                // Skip encryption for AI bot, it will be handled by the server or ignored
+                wrappedKeys[targetId] = "plain"
             } else {
                 try {
                     wrappedKeys[targetId] = cryptoManager.encryptSessionKey(sessionKeyBytes, publicKeyBase64)

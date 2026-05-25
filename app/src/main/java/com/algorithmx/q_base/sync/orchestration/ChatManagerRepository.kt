@@ -58,6 +58,28 @@ class ChatManagerRepository @Inject constructor(
         return chatLocalDataSource.getChatById(chatId)
     }
 
+    private suspend fun syncParticipantProfile(participantId: String) {
+        try {
+            val profile = profileRepository.fetchAndCacheContactProfile(participantId)
+            profile?.let { p ->
+                userDao.insertUser(
+                    com.algorithmx.q_base.core.data.UserEntity(
+                        userId = p.userId,
+                        displayName = p.displayName.ifBlank { p.friendCode.ifBlank { "Learner" } },
+                        email = p.email.ifBlank { null },
+                        profilePictureUrl = p.profilePictureUrl,
+                        friendCode = p.friendCode,
+                        publicKey = p.publicKey,
+                        isBanned = p.isBanned,
+                        isPhotoVisible = p.isPhotoVisible
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("ChatManagerRepository", "Failed to sync profile for $participantId", e)
+        }
+    }
+
     suspend fun syncUserChatsFromRemote() {
         withContext(Dispatchers.IO) {
             val uid = currentUserId ?: return@withContext
@@ -105,11 +127,7 @@ class ChatManagerRepository @Inject constructor(
                             Log.d("ChatManagerRepository", "Checking participant: '$participantId' against uid: '$uid'")
                             if (participantId.isNotBlank() && participantId != uid) {
                                 Log.d("ChatManagerRepository", "Syncing profile for other participant: $participantId")
-                                try {
-                                    profileRepository.fetchAndCacheContactProfile(participantId)
-                                } catch (e: Exception) {
-                                    Log.e("ChatManagerRepository", "Failed to sync profile for $participantId", e)
-                                }
+                                syncParticipantProfile(participantId)
                             }
                         }
 
@@ -217,11 +235,7 @@ class ChatManagerRepository @Inject constructor(
         if (otherParticipantId != null) {
             val user = userDao.getUserById(otherParticipantId)
             if (user == null) {
-                try {
-                    profileRepository.fetchAndCacheContactProfile(otherParticipantId)
-                } catch (e: Exception) {
-                    Log.e("ChatManagerRepository", "Failed to sync profile for missing participant $otherParticipantId", e)
-                }
+                syncParticipantProfile(otherParticipantId)
             }
         }
     }
@@ -273,11 +287,7 @@ class ChatManagerRepository @Inject constructor(
             val uid = currentUserId
             participantsList.forEach { participantId ->
                 if (participantId.isNotBlank() && participantId != uid) {
-                    try {
-                        profileRepository.fetchAndCacheContactProfile(participantId)
-                    } catch (e: Exception) {
-                        Log.e("ChatManagerRepository", "Failed to sync profile for participant $participantId during metadata update", e)
-                    }
+                    syncParticipantProfile(participantId)
                 }
             }
         } catch (e: Exception) {

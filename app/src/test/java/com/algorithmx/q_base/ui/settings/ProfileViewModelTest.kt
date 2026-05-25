@@ -56,7 +56,7 @@ class ProfileViewModelTest {
         every { sessionDao.getAllSessions() } returns flowOf(emptyList<StudySession>())
         
         coEvery { profileRepository.checkHasSecureBackup(any()) } returns false
-        coEvery { profileRepository.syncUserProfile(any()) } returns Unit
+        coEvery { profileRepository.syncUserProfile(any()) } returns null
         every { networkMonitor.isOnline } returns onlineState
 
         viewModel = ProfileViewModel(
