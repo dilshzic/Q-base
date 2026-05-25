@@ -376,7 +376,18 @@ def setup_database():
             for attr in config['attributes']:
                 print(f"  Adding attribute: {attr['args'][2]}")
                 try:
-                    attr['method'](*attr['args'])
+                    # Legacy scripts used a numeric "size" argument as the 4th
+                    # positional parameter. Current Appwrite TablesDB column
+                    # creation signatures do not take a size parameter. If a
+                    # numeric size is present, drop it before calling the
+                    # SDK to preserve backwards compatibility with the
+                    # existing `collections` configuration.
+                    call_args = list(attr['args'])
+                    if len(call_args) >= 4 and type(call_args[3]) is int:
+                        # Only remove a true integer size sentinel; don't treat
+                        # booleans (subclass of int) as sizes.
+                        call_args.pop(3)
+                    attr['method'](*call_args)
                 except AppwriteException as e:
                     if e.code != 409: raise e
             
@@ -389,7 +400,20 @@ def setup_database():
                 try:
                     db.create_index(DATABASE_ID, coll_id, idx['key'], idx['type'], idx['attrs'])
                 except AppwriteException as e:
-                    if e.code != 409: raise e
+                    # Some SQL engines enforce a maximum index length; if the
+                    # server rejects the index for being too large, retry with
+                    # conservative per-column lengths (e.g. 191) so the index
+                    # can be created as a prefix index.
+                    msg = getattr(e, 'message', '') or str(e)
+                    if 'Index length is longer' in msg:
+                        try:
+                            lengths = [191] * len(idx['attrs'])
+                            print(f"    Index too long; retrying with lengths={lengths}")
+                            db.create_index(DATABASE_ID, coll_id, idx['key'], idx['type'], idx['attrs'], lengths=lengths)
+                        except AppwriteException:
+                            raise
+                    elif e.code != 409:
+                        raise e
 
         except Exception as e:
             print(f"Error processing {coll_id}: {e}")
