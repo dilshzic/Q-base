@@ -122,20 +122,27 @@ class ChatViewModel @Inject constructor(
     // State for the Inbox/Chat List
     val chatListState: StateFlow<ChatListState> = combine(
         chatLocalDataSource.getChatSummaries(),
-        userDao.getAllUsers()
-    ) { summaries, users ->
+        userDao.getAllUsers(),
+        authRepository.currentUser
+    ) { summaries, users, authUser ->
+        val myUid = authUser?.uid ?: ""
         val userMap = users.associateBy { it.userId }
         val chatUiModels = summaries.mapNotNull { summary ->
             val otherParticipantId = summary.participantIds.split(",")
-                .firstOrNull { it != currentUserId && it.isNotEmpty() }
+                .map { it.trim() }
+                .firstOrNull { it != myUid && it.isNotEmpty() }
             val otherUser = userMap[otherParticipantId]
+
+            if (otherParticipantId != null && otherUser == null) {
+                Log.d("ChatViewModel", "Resolution issue: otherParticipantId=$otherParticipantId not found in userMap. Map keys: ${userMap.keys}")
+            }
 
             if ((!summary.isGroup && otherUser?.isBanned == true) || summary.isBlocked) {
                 return@mapNotNull null
             }
 
             val resolvedName = if (summary.isGroup) {
-                summary.chatName?.takeIf { it.isNotBlank() } ?: "Chat"
+                summary.chatName?.takeIf { it.isNotBlank() } ?: "Group Chat"
             } else {
                 otherUser?.displayName?.takeIf { it.isNotBlank() }
                     ?: summary.chatName?.takeIf { it.isNotBlank() }
@@ -174,15 +181,18 @@ class ChatViewModel @Inject constructor(
     
     val blockedChatsState: StateFlow<List<ChatUiModel>> = combine(
         chatLocalDataSource.getChatSummaries(),
-        userDao.getAllUsers()
-    ) { summaries, users ->
+        userDao.getAllUsers(),
+        authRepository.currentUser
+    ) { summaries, users, authUser ->
+        val myUid = authUser?.uid ?: ""
         val userMap = users.associateBy { it.userId }
         summaries.filter { it.isBlocked }.map { summary ->
             val otherParticipantId = summary.participantIds.split(",")
-                .firstOrNull { it != currentUserId && it.isNotEmpty() }
+                .map { it.trim() }
+                .firstOrNull { it != myUid && it.isNotEmpty() }
             val otherUser = userMap[otherParticipantId]
             val resolvedName = if (summary.isGroup) {
-                summary.chatName?.takeIf { it.isNotBlank() } ?: "Chat"
+                summary.chatName?.takeIf { it.isNotBlank() } ?: "Group Chat"
             } else {
                 otherUser?.displayName?.takeIf { it.isNotBlank() }
                     ?: summary.chatName?.takeIf { it.isNotBlank() }
@@ -215,9 +225,15 @@ class ChatViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val chatDetailState: StateFlow<ChatDetailState> = _currentChatId.flatMapLatest { chatId ->
+    val chatDetailState: StateFlow<ChatDetailState> = combine(
+        _currentChatId,
+        authRepository.currentUser
+    ) { chatId, authUser ->
+        chatId to authUser
+    }.flatMapLatest { (chatId, authUser) ->
         if (chatId == null) flowOf(ChatDetailState())
         else {
+            val myUid = authUser?.uid ?: ""
             combine(
                 chatLocalDataSource.getChatByIdFlow(chatId),
                 chatLocalDataSource.getMessagesForChat(chatId),
@@ -225,10 +241,11 @@ class ChatViewModel @Inject constructor(
             ) { chat, messages, users ->
                 val userMap = users.associateBy { it.userId }
                 val resolvedName = if (chat?.isGroup == true) {
-                    chat.chatName?.takeIf { it.isNotBlank() } ?: "Chat"
+                    chat.chatName?.takeIf { it.isNotBlank() } ?: "Group Chat"
                 } else {
                     val otherParticipantId = chat?.participantIds?.split(",")
-                        ?.firstOrNull { it != currentUserId && it.isNotEmpty() }
+                        ?.map { it.trim() }
+                        ?.firstOrNull { it != myUid && it.isNotEmpty() }
                     userMap[otherParticipantId]?.displayName?.takeIf { it.isNotBlank() }
                         ?: chat?.chatName?.takeIf { it.isNotBlank() }
                         ?: "Chat"
@@ -239,7 +256,7 @@ class ChatViewModel @Inject constructor(
                     displayName = resolvedName,
                     messages = messages,
                     participants = userMap,
-                    currentUserId = currentUserId
+                    currentUserId = myUid
                 )
             }
         }

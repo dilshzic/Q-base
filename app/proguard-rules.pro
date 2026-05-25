@@ -24,3 +24,18 @@
 
 -keep class com.algorithmx.q_base.core_ai.brain.** { *; }
 -dontwarn com.algorithmx.q_base.core_ai.brain.**
+
+# Keep data models used for GSON/Serialization
+-keep class com.algorithmx.q_base.**.data.** { *; }
+-keep class com.algorithmx.q_base.core.data.** { *; }
+-keepclassmembers class com.algorithmx.q_base.**.data.** { <fields>; }
+-keepclassmembers class com.algorithmx.q_base.core.data.** { <fields>; }
+
+# GSON specific rules
+-keepattributes Signature
+-keepattributes *Annotation*
+-dontwarn sun.misc.**
+-keep class com.google.gson.stream.** { *; }
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+-keep class com.google.gson.internal.LinkedTreeMap { *; }

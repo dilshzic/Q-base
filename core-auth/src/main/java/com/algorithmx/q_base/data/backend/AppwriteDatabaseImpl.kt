@@ -57,21 +57,42 @@ class AppwriteDatabaseImpl @Inject constructor(
 
     /**
      * Converts an Appwrite Row object into a flat Map, injecting system metadata like ID and timestamps.
+     * Leverages the Network Interceptor which wraps custom fields into the 'data' property.
      */
-    private fun mapRow(row: Row<Map<String, Any>>): Map<String, Any> {
-        val mutableData = row.data.toMutableMap()
-        mutableData["\$id"] = row.id
-        mutableData["\$createdAt"] = row.createdAt
-        mutableData["\$updatedAt"] = row.updatedAt
-        mutableData["\$databaseId"] = row.databaseId
-        mutableData["\$tableId"] = row.tableId
-        return mutableData
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : Any> mapRow(row: Row<T>): Map<String, Any> {
+        val rawData = row.data
+        
+        // 1. Try to get data from the 'data' property (populated by our network interceptor)
+        val dataMap = if (rawData is Map<*, *>) {
+            rawData.entries.associate { it.key.toString() to (it.value ?: "") }.toMutableMap()
+        } else {
+            // Fallback: Serialize the whole Row and extract non-system fields
+            // This handles cases where the interceptor might have missed something
+            try {
+                val gson = com.google.gson.Gson()
+                val json = gson.toJson(row)
+                val fullMap = gson.fromJson<Map<String, Any>>(json, Map::class.java) ?: emptyMap()
+                fullMap.filterKeys { !listOf("id", "createdAt", "updatedAt", "databaseId", "tableId", "permissions").contains(it) && !it.startsWith("$") }.toMutableMap()
+            } catch (e: Exception) {
+                mutableMapOf<String, Any>()
+            }
+        }
+
+        // 2. Inject system metadata using standard $ prefix
+        dataMap["\$id"] = row.id
+        dataMap["\$createdAt"] = row.createdAt
+        dataMap["\$updatedAt"] = row.updatedAt
+        dataMap["\$databaseId"] = row.databaseId
+        dataMap["\$tableId"] = row.tableId
+        
+        return dataMap
     }
 
     /**
      * Maps a list of Appwrite Rows into a list of Maps.
      */
-    private fun mapRowList(rowList: RowList<Map<String, Any>>): List<Map<String, Any>> {
+    private fun <T : Any> mapRowList(rowList: RowList<T>): List<Map<String, Any>> {
         return rowList.rows.map { mapRow(it) }
     }
 
@@ -92,13 +113,12 @@ class AppwriteDatabaseImpl @Inject constructor(
     /** Fetches a single document by ID. */
     override suspend fun getDocument(collectionId: String, documentId: String): Result<Map<String, Any>?> {
         return runCatching {
-            mapRow(
-                tablesDB.getRow(
-                    databaseId = databaseId,
-                    tableId = collectionId,
-                    rowId = documentId
-                )
+            val row = tablesDB.getRow(
+                databaseId = databaseId,
+                tableId = collectionId,
+                rowId = documentId
             )
+            mapRow(row)
         }
     }
 
@@ -132,12 +152,11 @@ class AppwriteDatabaseImpl @Inject constructor(
     /** Lists all documents in a specific collection. */
     override suspend fun listDocuments(collectionId: String): Result<List<Map<String, Any>>> {
         return runCatching {
-            mapRowList(
-                tablesDB.listRows(
-                    databaseId = databaseId,
-                    tableId = collectionId
-                )
+            val rowList = tablesDB.listRows(
+                databaseId = databaseId,
+                tableId = collectionId
             )
+            mapRowList(rowList)
         }
     }
 
@@ -159,13 +178,12 @@ class AppwriteDatabaseImpl @Inject constructor(
                 }
             }
 
-            mapRowList(
-                tablesDB.listRows(
-                    databaseId = databaseId,
-                    tableId = collectionId,
-                    queries = appwriteQueries
-                )
+            val rowList = tablesDB.listRows(
+                databaseId = databaseId,
+                tableId = collectionId,
+                queries = appwriteQueries
             )
+            mapRowList(rowList)
         }
     }
 
@@ -184,13 +202,35 @@ class AppwriteDatabaseImpl @Inject constructor(
             val realtime = Realtime(client)
             val channel = "tablesdb.$databaseId.tables.$collectionId.rows.$documentId"
             val subscription = realtime.subscribe(channel) { event ->
-                val payloadObj = event.payload as? Map<*, *>
-                if (payloadObj != null) {
-                    val mutableData = payloadObj.entries.associate { (key, value) ->
-                        key.toString() to (value ?: "")
-                    }.toMutableMap()
-                    mutableData["\$id"] = documentId
-                    trySend(mutableData)
+                try {
+                    val payload = event.payload
+                    val data = if (payload is Map<*, *>) {
+                        val map = payload as Map<String, Any>
+                        // If it's already wrapped (unlikely for Realtime but good for consistency)
+                        if (map.containsKey("data") && map["data"] is Map<*, *>) {
+                            (map["data"] as Map<String, Any>).toMutableMap().apply {
+                                // Put back system fields if they are at the top level
+                                map.filterKeys { it.startsWith("$") }.forEach { (k, v) -> put(k, v) }
+                            }
+                        } else {
+                            map
+                        }
+                    } else {
+                        val gson = com.google.gson.Gson()
+                        val json = gson.toJson(payload)
+                        val mapType = object : com.google.gson.reflect.TypeToken<Map<String, Any>>() {}.type
+                        gson.fromJson<Map<String, Any>>(json, mapType) ?: emptyMap()
+                    }
+
+                    if (data.isNotEmpty()) {
+                        val mutableData = data.toMutableMap()
+                        if (!mutableData.containsKey("\$id")) {
+                            mutableData["\$id"] = documentId
+                        }
+                        trySend(mutableData)
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("AppwriteDatabase", "Failed to parse realtime payload for $documentId", e)
                 }
             }
             awaitClose { subscription.close() }

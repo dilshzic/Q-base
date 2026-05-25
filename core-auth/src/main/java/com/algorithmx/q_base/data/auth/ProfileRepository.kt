@@ -119,14 +119,21 @@ class ProfileRepository @Inject constructor(
     }
 
     private fun mapToUserProfile(map: Map<String, Any>): UserProfile {
+        val userId = map["userId"] as? String ?: map["\$id"] as? String ?: ""
+        val publicKey = map["publicKey"] as? String
+        
+        if (publicKey.isNullOrBlank()) {
+            Log.w("ProfileRepository", "PublicKey is missing for user: $userId. E2EE sync will be limited for this user.")
+        }
+
         return UserProfile(
-            userId = map["userId"] as? String ?: map["\$id"] as? String ?: "",
+            userId = userId,
             email = map["email"] as? String ?: "",
             displayName = map["displayName"] as? String ?: map["name"] as? String ?: "",
             profilePictureUrl = map["profilePictureUrl"] as? String ?: map["avatar"] as? String,
             friendCode = map["friendCode"] as? String ?: "",
             intro = map["intro"] as? String ?: "",
-            publicKey = map["publicKey"] as? String,
+            publicKey = publicKey,
             isBanned = map["isBanned"] as? Boolean ?: map["banned"] as? Boolean ?: false,
             isPhotoVisible = map["isPhotoVisible"] as? Boolean ?: map["photoVisible"] as? Boolean ?: true
         )

@@ -96,17 +96,31 @@ class ChatManagerRepository @Inject constructor(
                         queries = queries
                     ).getOrThrow()
 
+                    Log.d("ChatManagerRepository", "Fetched ${docs.size} chats from remote for $uid")
                     for (doc in docs) {
+                        Log.d("ChatManagerRepository", "Processing doc ${doc["\$id"]}. All keys: ${doc.keys}")
                         @Suppress("UNCHECKED_CAST")
                         val participantsList = when (val p = doc["participantIds"]) {
-                            is List<*> -> p.filterIsInstance<String>()
-                            is String -> p.split(",").map { it.trim() }.filter { it.isNotBlank() }
-                            else -> emptyList()
+                            is List<*> -> {
+                                Log.d("ChatManagerRepository", "participantIds is List of size ${p.size}")
+                                p.filterIsInstance<String>()
+                            }
+                            is String -> {
+                                Log.d("ChatManagerRepository", "participantIds is String: '$p'")
+                                p.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                            }
+                            else -> {
+                                Log.w("ChatManagerRepository", "Warning: 'participantIds' is missing or not a list/string in doc ${doc["\$id"]}. Type: ${doc["participantIds"]?.javaClass?.name}. Available keys: ${doc.keys}")
+                                emptyList<String>()
+                            }
                         }
                         val remoteAdminIds = when (val a = doc["adminIds"]) {
                             is List<*> -> a.filterIsInstance<String>()
                             is String -> a.split(",").map { it.trim() }.filter { it.isNotBlank() }
-                            else -> emptyList()
+                            else -> {
+                                Log.d("ChatManagerRepository", "'adminIds' missing or null for doc ${doc["\$id"]}, this is expected for some P2P chats.")
+                                emptyList<String>()
+                            }
                         }
                         val remoteAdminId = doc["adminId"] as? String
                         val isGroupVal = doc["isGroup"] as? Boolean ?: false
@@ -175,7 +189,10 @@ class ChatManagerRepository @Inject constructor(
                 val participantsList = when (val p = doc["participantIds"]) {
                     is List<*> -> p.filterIsInstance<String>()
                     is String -> p.split(",").map { it.trim() }.filter { it.isNotBlank() }
-                    else -> emptyList()
+                    else -> {
+                        Log.w("ChatManagerRepository", "findExistingP2PChat: 'participantIds' missing in doc ${doc["\$id"]}. Keys: ${doc.keys}")
+                        emptyList<String>()
+                    }
                 }
                 val trimmedParticipants = participantsList.map { it.trim() }
                 if (trimmedParticipants.contains(uid) && trimmedParticipants.contains(userId)) {
@@ -250,7 +267,10 @@ class ChatManagerRepository @Inject constructor(
             val participantsList = when (val p = doc["participantIds"]) {
                 is List<*> -> p.filterIsInstance<String>()
                 is String -> p.split(",").map { it.trim() }.filter { it.isNotBlank() }
-                else -> emptyList()
+                else -> {
+                    Log.e("ChatManagerRepository", "fetchAndSyncChatMetadata: 'participantIds' missing in doc $chatId. Keys: ${doc.keys}")
+                    emptyList<String>()
+                }
             }
             val remoteAdminIds = when (val a = doc["adminIds"]) {
                 is List<*> -> a.filterIsInstance<String>()

@@ -63,8 +63,21 @@ class ContactSelectorViewModel @Inject constructor(
                     _state.update { it.copy(isSearching = false, searchError = "You can't start a chat with yourself") }
                 } else {
                     val refreshedUser = if (localUser.needsProfileRefresh()) {
-                        profileRepository.syncUserProfile(localUser.userId)
-                        userDao.getUserById(localUser.userId) ?: localUser
+                        val newProfile = profileRepository.syncUserProfile(localUser.userId)
+                        if (newProfile != null) {
+                            UserEntity(
+                                userId = newProfile.userId,
+                                displayName = newProfile.displayName.ifBlank { newProfile.friendCode.ifBlank { "Learner" } },
+                                email = newProfile.email.ifBlank { null },
+                                profilePictureUrl = newProfile.profilePictureUrl,
+                                friendCode = newProfile.friendCode,
+                                publicKey = newProfile.publicKey,
+                                isBanned = newProfile.isBanned,
+                                isPhotoVisible = newProfile.isPhotoVisible
+                            ).also { userDao.insertUser(it) }
+                        } else {
+                            userDao.getUserById(localUser.userId) ?: localUser
+                        }
                     } else {
                         localUser
                     }

@@ -79,24 +79,42 @@ object AppwriteModule {
                                 val json = org.json.JSONObject(bodyString)
                                 var modified = false
 
-                                fun shieldJsonObject(obj: org.json.JSONObject) {
-                                    // NO-OP: Disabling 'data' field shielding as it corrupts TablesDB responses 
-                                    // where 'data' is a reserved field for document content.
-                                    
-                                    if (obj.has("documents")) {
-                                        val docs = obj.optJSONArray("documents")
-                                        if (docs != null) {
-                                            for (i in 0 until docs.length()) {
-                                                val doc = docs.optJSONObject(i)
-                                                if (doc != null) {
-                                                    shieldJsonObject(doc)
-                                                }
+                                fun wrapTablesDbRow(obj: org.json.JSONObject): Boolean {
+                                    if (obj.has("\$id") && obj.has("\$tableId") && !obj.has("data")) {
+                                        val dataObj = org.json.JSONObject()
+                                        val keys = obj.keys()
+                                        val toMove = mutableListOf<String>()
+                                        while (keys.hasNext()) {
+                                            val key = keys.next()
+                                            if (!key.startsWith("\$") && key != "permissions") {
+                                                toMove.add(key)
+                                            }
+                                        }
+                                        if (toMove.isNotEmpty()) {
+                                            toMove.forEach { key ->
+                                                dataObj.put(key, obj.get(key))
+                                                obj.remove(key)
+                                            }
+                                            obj.put("data", dataObj)
+                                            return true
+                                        }
+                                    }
+                                    return false
+                                }
+
+                                if (json.has("rows")) {
+                                    val rows = json.optJSONArray("rows")
+                                    if (rows != null) {
+                                        for (i in 0 until rows.length()) {
+                                            val row = rows.optJSONObject(i)
+                                            if (row != null) {
+                                                if (wrapTablesDbRow(row)) modified = true
                                             }
                                         }
                                     }
+                                } else {
+                                    if (wrapTablesDbRow(json)) modified = true
                                 }
-
-                                shieldJsonObject(json)
 
                                 if (modified) {
                                     val shieldedBodyString = json.toString()
