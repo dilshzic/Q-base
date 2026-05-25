@@ -6,7 +6,23 @@ import com.algorithmx.q_base.core.data.chat.MessageEntity
 import com.algorithmx.q_base.core.data.UserEntity
 import kotlinx.coroutines.launch
 
-class MissingEncryptionKeysException(message: String) : IllegalStateException(message)
+open class MissingEncryptionKeysException(message: String) : IllegalStateException(message)
+class UnreadableProfileException(message: String) : MissingEncryptionKeysException(message)
+
+private suspend fun MessageSyncRepository.refreshProfiles(userIds: List<String>) {
+    userIds
+        .asSequence()
+        .map { it.trim() }
+        .filter { it.isNotBlank() }
+        .distinct()
+        .forEach { targetId ->
+            try {
+                profileRepository.syncUserProfile(targetId)
+            } catch (e: Exception) {
+                Log.e("MessageSyncRepository", "Failed to refresh profile for key resolution: $targetId", e)
+            }
+        }
+}
 
 suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
     val chat = chatLocalDataSource.getChatById(message.chatId)
@@ -20,54 +36,75 @@ suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
     val (ciphertextPayload, sessionKeyHandle) = cryptoManager.encryptWithSessionKey(message.payload)
     val sessionKeyBytes = Base64.decode(sessionKeyHandle, Base64.NO_WRAP)
 
-    val wrappedKeys = mutableMapOf<String, String>()
     val myFingerprint = cryptoManager.getPublicKeyFingerprint()
-    
-    val missingKeyUserIds = mutableListOf<String>()
-    val wrapFailures = mutableListOf<String>()
 
-    val resolvedKeys = participants.map { targetId ->
-        val publicKeyBase64: String? = if (targetId == senderUid) {
-            cryptoManager.initializeAndGetPublicKey()
-        } else {
-            userDao.getUserById(targetId)?.publicKey
+    suspend fun resolveWrappedKeys(refreshAndRetry: Boolean): Map<String, String> {
+        val wrappedKeys = mutableMapOf<String, String>()
+        val missingKeyUserIds = mutableListOf<String>()
+        val wrapFailures = mutableListOf<String>()
+
+        val resolvedKeys = participants.map { targetId ->
+            val publicKeyBase64: String? = if (targetId == senderUid) {
+                cryptoManager.initializeAndGetPublicKey()
+            } else {
+                userDao.getUserById(targetId)?.publicKey
+            }
+
+            targetId to publicKeyBase64
         }
-        
-        targetId to publicKeyBase64
-    }
-    
-    resolvedKeys.forEach { (targetId, publicKeyBase64) ->
-        if (publicKeyBase64.isNullOrBlank()) {
-            missingKeyUserIds.add(targetId)
-        } else {
-            try {
-                wrappedKeys[targetId] = cryptoManager.encryptSessionKey(sessionKeyBytes, publicKeyBase64)
-            } catch (e: Exception) {
-                Log.e("MessageSyncRepository", "Key wrap failed for $targetId", e)
-                wrapFailures.add(targetId)
+
+        resolvedKeys.forEach { (targetId, publicKeyBase64) ->
+            if (publicKeyBase64.isNullOrBlank()) {
+                missingKeyUserIds.add(targetId)
+            } else {
+                try {
+                    wrappedKeys[targetId] = cryptoManager.encryptSessionKey(sessionKeyBytes, publicKeyBase64)
+                } catch (e: Exception) {
+                    Log.e("MessageSyncRepository", "Key wrap failed for $targetId", e)
+                    wrapFailures.add(targetId)
+                }
             }
         }
+
+        if (refreshAndRetry && (missingKeyUserIds.isNotEmpty() || wrapFailures.isNotEmpty())) {
+            refreshProfiles(missingKeyUserIds + wrapFailures)
+            return resolveWrappedKeys(refreshAndRetry = false)
+        }
+
+        if (missingKeyUserIds.isNotEmpty()) {
+            val unreadableProfileUserIds = missingKeyUserIds.filter { userDao.getUserById(it) == null }
+            val missingKeyOnlyUserIds = missingKeyUserIds - unreadableProfileUserIds.toSet()
+
+            if (unreadableProfileUserIds.isNotEmpty()) {
+                throw UnreadableProfileException(
+                    "Cannot send encrypted message: peer profile is unreadable for ${unreadableProfileUserIds.joinToString(", ")}. " +
+                        "Check Appwrite users row permissions."
+                )
+            }
+
+            throw MissingEncryptionKeysException(
+                "Cannot send encrypted message: missing encryption keys for ${missingKeyOnlyUserIds.joinToString(", ")}. " +
+                    "Ask them to sign in at least once on the latest app version."
+            )
+        }
+
+        if (wrapFailures.isNotEmpty()) {
+            throw MissingEncryptionKeysException(
+                "Cannot send encrypted message: failed to encrypt for ${wrapFailures.joinToString(", ")}."
+            )
+        }
+
+        val missingWrappedRecipients = participants.filter { wrappedKeys[it].isNullOrBlank() }
+        if (missingWrappedRecipients.isNotEmpty()) {
+            throw MissingEncryptionKeysException(
+                "Security abort: missing wrapped session keys for ${missingWrappedRecipients.joinToString(", ")}."
+            )
+        }
+
+        return wrappedKeys
     }
 
-    if (missingKeyUserIds.isNotEmpty()) {
-        throw MissingEncryptionKeysException(
-            "Cannot send encrypted message: missing encryption keys for ${missingKeyUserIds.joinToString(", ")}. " +
-                "Ask them to sign in at least once on the latest app version."
-        )
-    }
-
-    if (wrapFailures.isNotEmpty()) {
-        throw MissingEncryptionKeysException(
-            "Cannot send encrypted message: failed to encrypt for ${wrapFailures.joinToString(", ")}."
-        )
-    }
-
-    val missingWrappedRecipients = participants.filter { wrappedKeys[it].isNullOrBlank() }
-    if (missingWrappedRecipients.isNotEmpty()) {
-        throw MissingEncryptionKeysException(
-            "Security abort: missing wrapped session keys for ${missingWrappedRecipients.joinToString(", ")}."
-        )
-    }
+    val wrappedKeys = resolveWrappedKeys(refreshAndRetry = true)
 
     val messageMap = mapOf(
         "chatId" to message.chatId,

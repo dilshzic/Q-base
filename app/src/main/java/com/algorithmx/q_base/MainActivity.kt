@@ -32,6 +32,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
 import com.algorithmx.q_base.core.data.DatabaseSeeder
 import com.algorithmx.q_base.core.data.auth.AuthRepository
+import com.algorithmx.q_base.core.data.auth.ProfileRepository
 import com.algorithmx.q_base.sync.orchestration.SyncRepository
 import com.algorithmx.q_base.core.state.AppAccessState
 import com.algorithmx.q_base.core.state.LocalAppAccessState
@@ -88,6 +89,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var authRepository: AuthRepository
+
+    @Inject
+    lateinit var profileRepository: ProfileRepository
 
     @Inject
     lateinit var networkMonitor: NetworkMonitor
@@ -149,6 +153,8 @@ class MainActivity : ComponentActivity() {
                     if (userId != null && isOnline) {
                         restSyncJob = launch {
                             try {
+                                profileRepository.syncUserProfile(userId)
+
                                 // Flush pending offline messages first
                                 syncRepository.flushQueue()
                                 

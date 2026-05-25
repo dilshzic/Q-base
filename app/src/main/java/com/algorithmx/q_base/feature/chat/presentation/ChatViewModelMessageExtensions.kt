@@ -6,6 +6,7 @@ import com.algorithmx.q_base.core.data.chat.MessageEntity
 import kotlinx.coroutines.launch
 import java.util.UUID
 import com.algorithmx.q_base.sync.orchestration.MissingEncryptionKeysException
+import com.algorithmx.q_base.sync.orchestration.UnreadableProfileException
 
 fun ChatViewModel.startNewChat(userId: String, userName: String) {
     viewModelScope.launch {
@@ -117,6 +118,10 @@ fun ChatViewModel.sendMessage(chatId: String, text: String, type: String = "TEXT
             
             try {
                 syncRepository.sendMessage(message)
+            } catch (e: UnreadableProfileException) {
+                chatLocalDataSource.updateMessageStatus(message.messageId, "PENDING")
+                _actionFeedback.emit("Peer profile is unreadable. Message queued until profile permissions are fixed.")
+                refreshMissingKeysForChat(chatId)
             } catch (e: MissingEncryptionKeysException) {
                 chatLocalDataSource.updateMessageStatus(message.messageId, "PENDING")
                 _actionFeedback.emit("Refreshing encryption keys. Message queued.")

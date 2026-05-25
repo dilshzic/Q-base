@@ -30,7 +30,7 @@ collections = {
         "name": "users",
         "dls": True,
         "permissions": [
-            Permission.read(Role.any()),
+            Permission.read(Role.users()),
             Permission.create(Role.users())
         ],
         "attributes": [

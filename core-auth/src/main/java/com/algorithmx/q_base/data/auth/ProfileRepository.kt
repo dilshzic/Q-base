@@ -5,6 +5,7 @@ import com.algorithmx.q_base.core.data.backend.CoreAuth
 import com.algorithmx.q_base.core.data.backend.CoreDatabase
 import com.algorithmx.q_base.core.data.backend.CoreQuery
 import com.algorithmx.q_base.core.data.backend.CoreQueryOperator
+import io.appwrite.exceptions.AppwriteException
 import kotlinx.coroutines.flow.firstOrNull
 import kotlin.random.Random
 import javax.inject.Inject
@@ -17,6 +18,105 @@ class ProfileRepository @Inject constructor(
     private val profileCache: ProfileCache,
     private val cryptoManager: com.algorithmx.q_base.core_crypto.CryptoManager
 ) {
+    private data class RemoteDoc(
+        val rowId: String,
+        val data: Map<String, Any>
+    )
+
+    private fun logDocumentFailure(
+        operation: String,
+        collectionId: String,
+        documentId: String,
+        error: Throwable
+    ) {
+        val appwriteCode = (error as? AppwriteException)?.code
+        Log.e(
+            "ProfileRepository",
+            "$operation failed: collection=$collectionId documentId=$documentId appwriteCode=${appwriteCode ?: "n/a"} message=${error.message}",
+            error
+        )
+    }
+
+    private fun safeDisplayName(existing: String, userId: String): String {
+        return existing.takeIf { it.isNotBlank() } ?: "User ${userId.take(6)}"
+    }
+
+    private suspend fun getUserDocWithFallback(userId: String): RemoteDoc? {
+        val directResult = try {
+            coreDatabase.getDocument("users", userId)
+        } catch (e: Exception) {
+            logDocumentFailure("getDocument", "users", userId, e)
+            Result.failure(e)
+        }
+        val directDoc = directResult.getOrNull()
+        if (directDoc != null && directDoc.isNotEmpty()) {
+            return RemoteDoc(rowId = userId, data = directDoc)
+        }
+
+        val fallbackResult = try {
+            coreDatabase.queryDocuments(
+                "users",
+                listOf(CoreQuery("userId", CoreQueryOperator.EQUAL, userId))
+            )
+        } catch (e: Exception) {
+            logDocumentFailure("queryDocuments", "users", "userId=$userId", e)
+            Result.failure(e)
+        }
+        val fallbackDoc = fallbackResult.getOrNull()?.firstOrNull { it.isNotEmpty() } ?: return null
+        val fallbackRowId = fallbackDoc["\$id"] as? String ?: userId
+        return RemoteDoc(rowId = fallbackRowId, data = fallbackDoc)
+    }
+
+    private suspend fun getPrivateSettingsDoc(userId: String): Map<String, Any>? {
+        val directResult = try {
+            coreDatabase.getDocument("user_private_settings", userId)
+        } catch (e: Exception) {
+            logDocumentFailure("getDocument", "user_private_settings", userId, e)
+            Result.failure(e)
+        }
+        val directDoc = directResult.getOrNull()
+        if (directDoc != null && directDoc.isNotEmpty()) {
+            return directDoc
+        }
+
+        val fallbackResult = try {
+            coreDatabase.queryDocuments(
+                "user_private_settings",
+                listOf(CoreQuery("userId", CoreQueryOperator.EQUAL, userId))
+            )
+        } catch (e: Exception) {
+            logDocumentFailure("queryDocuments", "user_private_settings", "userId=$userId", e)
+            Result.failure(e)
+        }
+        return fallbackResult.getOrNull()?.firstOrNull { it.isNotEmpty() }
+    }
+
+    private suspend fun normalizeUsersRow(
+        userId: String,
+        rowId: String,
+        profile: UserProfile
+    ) {
+        if (rowId != userId) {
+            Log.w(
+                "ProfileRepository",
+                "Legacy users row id mismatch detected: rowId=$rowId userId=$userId. Normalizing to canonical UID row."
+            )
+        }
+
+        try {
+            coreDatabase.createDocument("users", userId, userProfileToMap(profile)).getOrThrow()
+        } catch (e: Exception) {
+            logDocumentFailure("createDocument", "users", userId, e)
+        }
+
+        if (rowId != userId) {
+            try {
+                coreDatabase.deleteDocument("users", rowId).getOrThrow()
+            } catch (e: Exception) {
+                logDocumentFailure("deleteDocument", "users", rowId, e)
+            }
+        }
+    }
 
     private fun mapToUserProfile(map: Map<String, Any>): UserProfile {
         return UserProfile(
@@ -154,16 +254,14 @@ class ProfileRepository @Inject constructor(
     suspend fun syncUserProfile(userId: String) {
         Log.d("ProfileRepository", "Starting syncUserProfile for $userId")
         try {
-            Log.d("ProfileRepository", "Fetching user doc from CoreDatabase...")
-            val docResult = coreDatabase.getDocument("users", userId)
-            val doc = docResult.getOrNull()
-            Log.d("ProfileRepository", "User doc fetched, exists: ${doc != null}")
+            val myUid = coreAuth.currentUserId
+            val remoteDoc = getUserDocWithFallback(userId)
+            val doc = remoteDoc?.data
+            Log.d("ProfileRepository", "User doc fetched, exists: ${doc != null}, rowId=${remoteDoc?.rowId}")
             
             val profile = if (doc != null && doc.isNotEmpty()) {
                 val p = mapToUserProfile(doc).copy(userId = userId)
-                Log.d("ProfileRepository", "Fetching private settings...")
-                val privateDocResult = coreDatabase.getDocument("user_private_settings", userId)
-                val privateDoc = privateDocResult.getOrNull()
+                val privateDoc = getPrivateSettingsDoc(userId)
                 Log.d("ProfileRepository", "Private settings fetched")
 
                 val privateEmail = privateDoc?.get("email") as? String ?: ""
@@ -194,7 +292,7 @@ class ProfileRepository @Inject constructor(
                             coreDatabase.updateDocument("users", userId, updatedMap).getOrThrow()
                             coreDatabase.updateDocument("user_private_settings", userId, mapOf("email" to finalProfile.email)).getOrThrow()
                         } catch (e: Exception) {
-                            Log.e("ProfileRepository", "Failed to update profile name/email on remote", e)
+                            logDocumentFailure("updateDocument", "users", userId, e)
                         }
                     }
                 }
@@ -226,6 +324,10 @@ class ProfileRepository @Inject constructor(
                 var p = initialProfile
                 Log.d("ProfileRepository", "Syncing profile for ${p.userId}: ${p.displayName}, code: ${p.friendCode}")
 
+                if (p.displayName.isBlank()) {
+                    p = p.copy(displayName = safeDisplayName(p.displayName, p.userId))
+                }
+
                 if (p.friendCode.isBlank()) {
                     Log.d("ProfileRepository", "Generating new friend code for ${p.userId}")
                     p = p.copy(friendCode = generateUniqueFriendCode()).also { updated ->
@@ -233,23 +335,39 @@ class ProfileRepository @Inject constructor(
                             val updatedMap = userProfileToMap(updated)
                             coreDatabase.updateDocument("users", userId, updatedMap).getOrThrow()
                         } catch (e: Exception) {
-                            Log.e("ProfileRepository", "Failed to update friend code", e)
+                            logDocumentFailure("updateDocument", "users", userId, e)
                         }
                     }
                 }
 
-                val myUid = coreAuth.currentUserId
                 if (p.userId == myUid) {
                     val localPk = cryptoManager.initializeAndGetPublicKey()
-                    if (p.publicKey != localPk) {
+                    if (p.publicKey.isNullOrBlank() || p.publicKey != localPk) {
                         Log.d("ProfileRepository", "Device public key mismatch! Updating CoreDatabase with local key.")
                         p = p.copy(publicKey = localPk)
                         try {
                             val updatedMap = userProfileToMap(p)
                             coreDatabase.updateDocument("users", p.userId, updatedMap).getOrThrow()
                         } catch (e: Exception) {
-                            Log.e("ProfileRepository", "Failed to update public key on remote", e)
+                            logDocumentFailure("updateDocument", "users", p.userId, e)
                         }
+                    }
+                }
+
+                val remoteRowId = remoteDoc?.rowId ?: p.userId
+                if (
+                    remoteRowId != p.userId ||
+                    p.displayName.isBlank() ||
+                    p.friendCode.isBlank() ||
+                    (p.userId == myUid && p.publicKey.isNullOrBlank())
+                ) {
+                    normalizeUsersRow(p.userId, remoteRowId, p)
+                } else {
+                    // Re-apply row permissions on existing canonical rows.
+                    try {
+                        coreDatabase.updateDocument("users", p.userId, userProfileToMap(p)).getOrThrow()
+                    } catch (e: Exception) {
+                        logDocumentFailure("updateDocument", "users", p.userId, e)
                     }
                 }
 

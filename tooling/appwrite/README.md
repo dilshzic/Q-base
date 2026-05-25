@@ -13,3 +13,9 @@ Run the initializer (edit `app_write.py` to set `PROJECT_ID` and `API_KEY` first
 ```bash
 python3 app_write.py
 ```
+
+Run one-time users row repair/backfill (legacy ID normalization + permissions reapply):
+
+```bash
+python3 repair_users_rows.py
+```
