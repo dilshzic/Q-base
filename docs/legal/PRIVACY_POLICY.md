@@ -7,7 +7,7 @@ This Privacy Policy explains how Q-base ("we", "us", or "our") collects, uses, a
 ## 1. Information We Collect
 
 ### A. Information You Provide to Us
-*   **Account Information:** When you create an account, we collect your email address and authentication details via Firebase Authentication.
+*   **Account Information:** When you create an account, we collect your email address and authentication details via our cloud authentication provider.
 *   **User-Generated Content:** Questions, collections, study sessions, chat messages, and custom AI prompts you create or upload are stored to provide the App's core functionality.
 
 ### B. Information Collected Automatically
@@ -18,23 +18,23 @@ This Privacy Policy explains how Q-base ("we", "us", or "our") collects, uses, a
 
 We use the collected information for the following purposes:
 *   To provide, maintain, and improve the App's features (e.g., syncing your progress, enabling multi-device access).
-*   To facilitate Universal Collection Sharing and live chat sessions via Firebase Firestore and Appwrite.
+*   To facilitate Universal Collection Sharing and live chat sessions via Appwrite and our cloud synchronization layer.
 *   To process AI requests (such as generating notes or extracting questions) by securely transmitting your prompts to selected third-party AI providers.
 
 ## 3. Data Storage and Third-Party Services
 
 Your data is processed and stored using the following trusted third-party services. By using the App, you consent to their respective privacy policies:
 
-*   **Firebase (Google):** We use Firebase Authentication for login identity and Firestore for syncing chat messages and real-time sessions.
-*   **Appwrite:** We use Appwrite Storage for temporarily hosting ZIP/JSON files when you share Universal Collections with other users.
+*   **Appwrite:** We use Appwrite Authentication for login identity and Appwrite Storage for temporarily hosting ZIP/JSON files when you share Universal Collections with other users.
+*   **Cloud Synchronization:** We use our backend synchronization layer for syncing chat messages and real-time sessions.
 *   **AI Providers (Gemini, Groq):** When you interact with the Qbase AI Chatbot, Note Generator, or Question Extractor, the specific text prompts and context you provide are sent to the AI provider you have selected in your settings to generate a response. AI processing is subject to the respective provider's terms (Google Gemini for text generation/extraction, GroqCloud for high-performance inference). We do not use your personal data to train these third-party models.
 
 ## 4. End-to-End Encryption (E2EE)
 
 To ensure maximum privacy for your interpersonal communications:
-*   **Chat Messages:** All chat messages are encrypted on your device using the **AES-GCM-256** algorithm before being sent to Firestore. The symmetric keys used for encryption are derived from user-specific key pairs managed via the Android Keystore system.
+*   **Chat Messages:** All chat messages are encrypted on your device using the **AES-GCM-256** algorithm before being sent to our synchronization backend. The symmetric keys used for encryption are derived from user-specific key pairs managed via the Android Keystore system.
 *   **File Transfers:** Question bank ZIP files shared via Appwrite are similarly encrypted.
-*   **Zero Access:** Because the encryption keys remain on the participants' devices, neither Q-base staff nor our cloud providers (Google/Appwrite) can read the contents of your private messages or shared collections.
+*   **Zero Access:** Because the encryption keys remain on the participants' devices, neither Q-base staff nor our cloud providers can read the contents of your private messages or shared collections.
 
 ## 5. Local Storage
 

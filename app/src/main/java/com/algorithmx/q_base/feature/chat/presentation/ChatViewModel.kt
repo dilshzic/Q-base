@@ -107,9 +107,9 @@ class ChatViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val currentUser: StateFlow<UserEntity?> = authRepository.currentUser
-        .flatMapLatest { firebaseUser ->
-            if (firebaseUser == null) flowOf<UserEntity?>(null)
-            else userDao.getCurrentUser(firebaseUser.uid)
+        .flatMapLatest { authUser ->
+            if (authUser == null) flowOf<UserEntity?>(null)
+            else userDao.getCurrentUser(authUser.uid)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 

@@ -24,9 +24,9 @@ class HomeViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val currentUser: StateFlow<UserEntity?> = authRepository.currentUser
-        .flatMapLatest { firebaseUser ->
-            if (firebaseUser != null) {
-                repository.getCurrentUser(firebaseUser.uid)
+        .flatMapLatest { authUser ->
+            if (authUser != null) {
+                repository.getCurrentUser(authUser.uid)
             } else {
                 flowOf(null)
             }

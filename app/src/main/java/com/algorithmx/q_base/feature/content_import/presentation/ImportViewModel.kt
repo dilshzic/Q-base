@@ -124,8 +124,8 @@ class ImportViewModel @Inject constructor(
     }
 
     val currentUser = authRepository.currentUser
-        .map { firebaseUser ->
-            firebaseUser?.let {
+        .map { authUser ->
+            authUser?.let {
                 UserEntity(
                     userId = it.uid,
                     displayName = it.displayName ?: "User",

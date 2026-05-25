@@ -5,7 +5,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.google.services)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -121,12 +120,6 @@ dependencies {
 
     // Storage
     implementation(libs.androidx.datastore.preferences)
-
-    // Firebase
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.analytics)
-    implementation(libs.firebase.auth)
-    implementation(libs.firebase.firestore)
 
     // Appwrite
     implementation(libs.appwrite.sdk)

@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "users")
 data class UserEntity(
-    @PrimaryKey val userId: String, // Matches Firebase Auth UID
+    @PrimaryKey val userId: String, // Matches the active account ID
     val displayName: String,
     val email: String? = null,
     val intro: String? = null,

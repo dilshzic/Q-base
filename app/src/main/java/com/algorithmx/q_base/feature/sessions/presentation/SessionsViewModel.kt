@@ -26,9 +26,9 @@ class SessionsViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val currentUser: StateFlow<UserEntity?> = authRepository.currentUser
-        .flatMapLatest { firebaseUser ->
-            if (firebaseUser != null) {
-                userDao.getCurrentUser(firebaseUser.uid)
+        .flatMapLatest { authUser ->
+            if (authUser != null) {
+                userDao.getCurrentUser(authUser.uid)
             } else {
                 flowOf<UserEntity?>(null)
             }

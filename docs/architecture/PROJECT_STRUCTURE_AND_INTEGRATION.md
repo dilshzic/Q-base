@@ -11,8 +11,8 @@ Qbase is organized as a high-performance, modularized Android application confor
 ```mermaid
 graph TD
     App[":app (Compose UI, ViewModels, DI)"]
-    CoreChat[":core-chat (Firestore Rooms, SQL Caches)"]
-    CoreAuth[":core-auth (Firebase Auth, Profiles)"]
+   CoreChat[":core-chat (Chat Rooms, SQL Caches)"]
+   CoreAuth[":core-auth (Auth, Profiles)"]
     CoreCrypto[":core-crypto (ECDH, AES-GCM Envelope)"]
 
     App --> CoreChat
@@ -31,9 +31,9 @@ graph TD
    - Central cryptosystem handling Android KeyStore keypairs, ECDH (Elliptic Curve Diffie-Hellman) shared-secret generation, and AES-GCM encryption/decryption envelopes.
    - Provides completely decentralized End-to-End Encryption (E2EE) utilities for transit message security.
 3. **`:core-auth`**:
-   - Manages user identity, secure Firebase Authentication sessions, and profile caches.
+   - Manages user identity, secure authentication sessions, and profile caches.
 4. **`:core-chat`**:
-   - Controls chat databases, peer directory lookups, active group channels, and handles Firestore real-time network subscriptions.
+   - Controls chat databases, peer directory lookups, active group channels, and handles real-time network subscriptions.
 
 ---
 
@@ -51,15 +51,15 @@ sequenceDiagram
     participant Sync as SyncRepository (:app / :core-chat)
     participant Crypto as CryptoManager (:core-crypto)
     participant DB as SQLite DB (Room)
-    participant Firestore as Cloud Firestore (E2EE Transit)
+   participant CloudSync as Cloud Sync (E2EE Transit)
 
     User->>VM: Select Option / Flag Question
     VM->>DB: Upsert SessionAttempt (Local Cache)
     VM->>Sync: sendSessionPatch(op, data)
     Sync->>Crypto: encryptMessage(payload)
     Crypto-->>Sync: Return Encrypted Envelope
-    Sync->>Firestore: Publish encrypted message to Chat Channel
-    Firestore-->>Sync: Sync to target peer devices
+   Sync->>CloudSync: Publish encrypted message to Chat Channel
+   CloudSync-->>Sync: Sync to target peer devices
     Sync->>Crypto: decryptMessage(envelope)
     Sync->>DB: applySessionPatch() (Direct Room Mutation)
 ```
@@ -93,4 +93,4 @@ graph TD
 Qbase handles data resilience using offline-first SQLite synchronization:
 - **`AppDatabase`**: Room Database caching collections, questions, options, answers, sessions, and session attempts locally.
 - **`ChatDatabase`**: Room Database caching chat rooms, group info, and messages.
-- **`SyncRepository`**: Coordinates the data bridge, transforming database entities into serializable payloads, executing cryptographic routines, and performing background tasks to reconcile cloud Firestore streams into offline caches.
+- **`SyncRepository`**: Coordinates the data bridge, transforming database entities into serializable payloads, executing cryptographic routines, and performing background tasks to reconcile cloud sync streams into offline caches.

@@ -28,9 +28,6 @@ dependencies {
     implementation(libs.appwrite.sdk)
     implementation(project(":core-crypto"))
     implementation(project(":core-auth"))
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.auth)
-    implementation(libs.firebase.firestore)
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.compiler)
 }

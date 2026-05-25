@@ -1,6 +1,5 @@
 package com.algorithmx.q_base.sync.orchestration
 
-import com.google.firebase.firestore.ServerTimestamp
 import java.util.Date
 
 data class SyncRequest(
@@ -11,5 +10,5 @@ data class SyncRequest(
     val status: String = "PENDING", // PENDING, UPLOADED, DOWNLOADED, FAILED
     val downloadUrl: String? = null,
     val fileId: String? = null, // Appwrite fileId for cleanup
-    @ServerTimestamp val timestamp: Date? = null
+    val timestamp: Date? = null
 )

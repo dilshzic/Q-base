@@ -1,6 +1,6 @@
 # End-to-End Encryption (E2EE) Implementation Plan
 
-Integrating E2EE into Qbase ensures that neither the application host, Firebase, nor Appwrite can read the contents of user chats, shared collections, or files. 
+Integrating E2EE into Qbase ensures that neither the application host nor the backend can read the contents of user chats, shared collections, or files. 
 
 ## 1. Cryptographic Architecture
 We will use an authenticated encryption protocol (AES-GCM) for message/file payload encryption.
@@ -49,7 +49,7 @@ When exporting and sharing a `.zip` collection via `MockExporter`:
 ## 5. Security Considerations and Challenges
 
 *   **Multi-Device Sync:** If a user logs into a new device, they don't have their Private Key (it's in the old device's KeyStore). To fix this, you need a mechanism to sync the private key securely (e.g., generating a backup passphrase/QR code, or forwarding keys from the old device to the new device). Wait, Signal handles this via Linked Devices.
-*   **Firebase Functions / Qbase AI bot:** The AI bot lives on the server or acts directly. If chats are E2EE, the AI bot *must* have its own Public/Private key pair, or it can only run locally on the device (as it currently does). Since `GeminiBrainImpl` runs locally on the Android device, it can read the decrypted local Room database perfectly! Sending E2EE messages to the AI bot simply means the AI operates on the decrypted local text.
+*   **Server-side functions / Qbase AI bot:** The AI bot lives on the server or acts directly. If chats are E2EE, the AI bot *must* have its own Public/Private key pair, or it can only run locally on the device (as it currently does). Since `GeminiBrainImpl` runs locally on the Android device, it can read the decrypted local Room database perfectly! Sending E2EE messages to the AI bot simply means the AI operates on the decrypted local text.
 
 ## 6. Draft Implementation Steps
 1.  **Add Tink dependency** and initialize it in `QbaseApplication`.

@@ -70,14 +70,14 @@ If you build Qbase into a production APK or AAB (Android App Bundle) and publish
 * Suspended developer keys from Google/Groq/DeepSeek due to policy violations.
 
 ### Recommended Fix:
-1. **Backend Proxy (Best Practice)**: Instead of calling the Generative AI models directly from the client application using a local key, route AI-assisted queries through a secure Firebase Cloud Function or external server wrapper that holds the API keys.
+1. **Backend Proxy (Best Practice)**: Instead of calling the Generative AI models directly from the client application using a local key, route AI-assisted queries through a secure server-side function or external wrapper that holds the API keys.
 2. **Key Obfuscation (Alternative)**: If a backend proxy is not viable for initial launch, use **DexGuard** or specialized ProGuard rules to obfuscate keys, or store them in a secure Native C/C++ library wrapper (JNI/NDK) which is significantly harder to reverse-engineer.
 
 ---
 
 ## 4. Play Console App Signing Certificate Bridging (OAuth & Sync)
 
-**Technical Check**: Qbase uses Firebase Authentication (Google Sign-In) and Appwrite backend integrations.
+**Technical Check**: Qbase uses Google Sign-In and Appwrite backend integrations.
 
 ### The Barrier:
 When you build the app locally, Google Sign-In works because the app is signed with your local `debug.keystore`. However, when you publish on Google Play, Google strips your upload signature and signs the final APK using **Google Play App Signing**. 
@@ -87,9 +87,8 @@ When you build the app locally, Google Sign-In works because the app is signed w
 1. Go to **Google Play Console** -> **Setup** -> **App Integrity**.
 2. Copy the **SHA-1** and **SHA-256** certificate fingerprints of the **App Signing Key**.
 3. Paste these fingerprints into your:
-   * **Firebase Console** (under Project Settings -> General -> Android apps).
    * **Appwrite Project Console** (under Platforms).
-4. Re-download and update the `google-services.json` config.
+4. Update the backend configuration used by sign-in and sync.
 
 ---
 
