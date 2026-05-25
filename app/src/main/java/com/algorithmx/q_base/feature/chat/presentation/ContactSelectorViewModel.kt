@@ -37,6 +37,15 @@ class ContactSelectorViewModel @Inject constructor(
         }
     }
 
+    private fun UserEntity.needsProfileRefresh(): Boolean {
+        val name = displayName.trim()
+        return publicKey.isNullOrBlank() ||
+            name.isBlank() ||
+            name == "Learner" ||
+            name == "Knowledge Seeker" ||
+            name.startsWith("User ")
+    }
+
     fun searchByFriendCode(code: String, excludedUserId: String? = null) {
         // Normalize: trim whitespace and uppercase for consistent matching
         val normalizedCode = code.trim().uppercase()
@@ -53,7 +62,13 @@ class ContactSelectorViewModel @Inject constructor(
                 if (localUser.userId == excludedUserId) {
                     _state.update { it.copy(isSearching = false, searchError = "You can't start a chat with yourself") }
                 } else {
-                    _state.update { it.copy(searchResult = localUser, isSearching = false) }
+                    val refreshedUser = if (localUser.needsProfileRefresh()) {
+                        profileRepository.syncUserProfile(localUser.userId)
+                        userDao.getUserById(localUser.userId) ?: localUser
+                    } else {
+                        localUser
+                    }
+                    _state.update { it.copy(searchResult = refreshedUser, isSearching = false) }
                 }
                 return@launch
             }

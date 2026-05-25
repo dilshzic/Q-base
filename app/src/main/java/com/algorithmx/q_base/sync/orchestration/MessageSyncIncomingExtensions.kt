@@ -143,7 +143,7 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
         }
 
         val realtime = io.appwrite.services.Realtime(appwriteClient)
-        val subscription = realtime.subscribe("databases.qbase_db.collections.messages.documents") { event ->
+        val subscription = realtime.subscribe("tablesdb.qbase_db.tables.messages.rows") { event ->
             try {
                 val payloadObj = if (event.payload is Map<*, *>) {
                     JSONObject(event.payload as Map<*, *>)

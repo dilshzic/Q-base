@@ -18,7 +18,7 @@ fun MessageSyncRepository.observeAllIncomingMessages(notificationHelper: Notific
     val userId = currentUserId ?: return emptyFlow()
     return callbackFlow {
         val realtime = io.appwrite.services.Realtime(appwriteClient)
-        val subscription = realtime.subscribe("databases.qbase_db.collections.messages.documents") { event ->
+        val subscription = realtime.subscribe("tablesdb.qbase_db.tables.messages.rows") { event ->
             try {
                 val payloadObj = if (event.payload is Map<*, *>) {
                     JSONObject(event.payload as Map<*, *>)
@@ -134,7 +134,7 @@ fun MessageSyncRepository.observeAllIncomingMessages(notificationHelper: Notific
             }
         }
 
-        val chatsSubscription = realtime.subscribe("databases.qbase_db.collections.chats.documents") { event ->
+        val chatsSubscription = realtime.subscribe("tablesdb.qbase_db.tables.chats.rows") { event ->
             try {
                 val payloadObj = if (event.payload is Map<*, *>) {
                     JSONObject(event.payload as Map<*, *>)

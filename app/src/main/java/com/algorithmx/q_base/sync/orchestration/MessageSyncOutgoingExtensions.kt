@@ -23,6 +23,15 @@ private suspend fun MessageSyncRepository.refreshProfiles(userIds: List<String>)
         }
 }
 
+private suspend fun MessageSyncRepository.refreshProfilesForMessage(message: MessageEntity) {
+    val participantIds = chatLocalDataSource.getChatById(message.chatId)
+        ?.participantIds
+        ?.split(",")
+        .orEmpty()
+
+    refreshProfiles(participantIds)
+}
+
 suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
     val chat = chatLocalDataSource.getChatById(message.chatId)
     val participants = chat?.participantIds?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
@@ -151,6 +160,7 @@ suspend fun MessageSyncRepository.flushQueue() {
         Log.d("MessageSyncRepository", "Flushing ${pendingMessages.size} pending messages...")
         for (message in pendingMessages) {
             try {
+                refreshProfilesForMessage(message)
                 sendMessage(message)
                 chatLocalDataSource.updateMessageStatus(message.messageId, "SENT")
                 Log.d("MessageSyncRepository", "Successfully flushed message ${message.messageId}")

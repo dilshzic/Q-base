@@ -155,13 +155,13 @@ class MainActivity : ComponentActivity() {
                             try {
                                 profileRepository.syncUserProfile(userId)
 
-                                // Flush pending offline messages first
+                                syncRepository.syncUserChatsFromRemote()
+
+                                // Flush pending messages after chat metadata and participant keys are fresh.
                                 syncRepository.flushQueue()
-                                
+
                                 // Flush universal background actions (Profile updates, Moderation, Admin changes)
                                 universalQueueManager.flushUniversalQueue()
-                                
-                                syncRepository.syncUserChatsFromRemote()
                             } catch (e: Exception) {
                                 android.util.Log.e("MainActivity", "Failed to sync or flush on network restore", e)
                             }
