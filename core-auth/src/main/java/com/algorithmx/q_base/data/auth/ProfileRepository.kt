@@ -193,8 +193,11 @@ class ProfileRepository @Inject constructor(
 
     suspend fun updateProfile(profile: UserProfile): Result<Unit> {
         return try {
-            val publicProfileMap = userProfileToMap(profile)
-            coreDatabase.createDocument("users", profile.userId, publicProfileMap)
+            val myUid = coreAuth.currentUserId
+            if (profile.userId == myUid) {
+                val publicProfileMap = userProfileToMap(profile)
+                coreDatabase.createDocument("users", profile.userId, publicProfileMap)
+            }
 
             profileCache.upsert(profile)
             Result.success(Unit)
@@ -212,18 +215,21 @@ class ProfileRepository @Inject constructor(
 
     private suspend fun saveProfile(profile: UserProfile, email: String) {
         try {
-            val publicProfileMap = userProfileToMap(profile)
-            coreDatabase.createDocument("users", profile.userId, publicProfileMap)
+            val myUid = coreAuth.currentUserId
+            if (profile.userId == myUid) {
+                val publicProfileMap = userProfileToMap(profile)
+                coreDatabase.createDocument("users", profile.userId, publicProfileMap)
 
-            // Save private settings
-            coreDatabase.createDocument(
-                "user_private_settings",
-                profile.userId,
-                mapOf(
-                    "userId" to profile.userId,
-                    "email" to email
+                // Save private settings
+                coreDatabase.createDocument(
+                    "user_private_settings",
+                    profile.userId,
+                    mapOf(
+                        "userId" to profile.userId,
+                        "email" to email
+                    )
                 )
-            )
+            }
 
             profileCache.upsert(profile)
         } catch (e: Exception) {
@@ -286,7 +292,7 @@ class ProfileRepository @Inject constructor(
                         needsUpdate = true
                     }
                     
-                    if (needsUpdate) {
+                    if (needsUpdate && userId == myUid) {
                         try {
                             val updatedMap = userProfileToMap(finalProfile)
                             coreDatabase.updateDocument("users", userId, updatedMap).getOrThrow()
@@ -328,7 +334,7 @@ class ProfileRepository @Inject constructor(
                     p = p.copy(displayName = safeDisplayName(p.displayName, p.userId))
                 }
 
-                if (p.friendCode.isBlank()) {
+                if (p.friendCode.isBlank() && p.userId == myUid) {
                     Log.d("ProfileRepository", "Generating new friend code for ${p.userId}")
                     p = p.copy(friendCode = generateUniqueFriendCode()).also { updated ->
                         try {
@@ -356,13 +362,14 @@ class ProfileRepository @Inject constructor(
 
                 val remoteRowId = remoteDoc?.rowId ?: p.userId
                 if (
-                    remoteRowId != p.userId ||
+                    (remoteRowId != p.userId ||
                     p.displayName.isBlank() ||
                     p.friendCode.isBlank() ||
-                    (p.userId == myUid && p.publicKey.isNullOrBlank())
+                    (p.userId == myUid && p.publicKey.isNullOrBlank())) &&
+                    p.userId == myUid
                 ) {
                     normalizeUsersRow(p.userId, remoteRowId, p)
-                } else {
+                } else if (p.userId == myUid) {
                     // Re-apply row permissions on existing canonical rows.
                     try {
                         coreDatabase.updateDocument("users", p.userId, userProfileToMap(p)).getOrThrow()
@@ -421,6 +428,28 @@ class ProfileRepository @Inject constructor(
         val part1 = (1..4).map { chars[Random.nextInt(chars.length)] }.joinToString("")
         val part2 = (1..4).map { chars[Random.nextInt(chars.length)] }.joinToString("")
         return "$prefix-$part1-$part2"
+    }
+
+    /**
+     * Fetches a contact's profile from Appwrite (Read-only) and caches it locally.
+     * This is intended for participants in chats that are not the current user.
+     */
+    suspend fun fetchAndCacheContactProfile(userId: String) {
+        Log.d("ProfileRepository", "Starting fetchAndCacheContactProfile for $userId")
+        try {
+            val remoteDoc = getUserDocWithFallback(userId)
+            val doc = remoteDoc?.data
+            
+            if (doc != null && doc.isNotEmpty()) {
+                val profile = mapToUserProfile(doc).copy(userId = userId)
+                profileCache.upsert(profile)
+                Log.d("ProfileRepository", "Successfully fetched and cached contact profile for $userId")
+            } else {
+                Log.w("ProfileRepository", "Contact profile doc not found for $userId")
+            }
+        } catch (e: Exception) {
+            Log.e("ProfileRepository", "Error fetching contact profile for $userId", e)
+        }
     }
 
     suspend fun setupSecureBackup(userId: String, passphrase: String): Result<Unit> {

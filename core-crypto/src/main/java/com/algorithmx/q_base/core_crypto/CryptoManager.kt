@@ -34,14 +34,23 @@ class CryptoManager @Inject constructor(
 
     private var privateKeysetHandle: KeysetHandle? = null
 
-    fun initializeAndGetPublicKey(): String {
-        val keysetManager = AndroidKeysetManager.Builder()
-            .withSharedPref(context, KEYSET_NAME, PREF_FILE_NAME)
-            .withKeyTemplate(HybridKeyTemplates.ECIES_P256_HKDF_HMAC_SHA256_AES128_GCM)
-            .withMasterKeyUri(MASTER_KEY_URI)
-            .build()
+    private fun getKeysetWithFallback(keysetName: String, prefFileName: String, builderFactory: () -> AndroidKeysetManager.Builder): KeysetHandle {
+        return try {
+            builderFactory().build().keysetHandle
+        } catch (e: Exception) {
+            Log.e("CryptoManager", "Failed to load keyset $keysetName, attempting to recreate", e)
+            context.getSharedPreferences(prefFileName, Context.MODE_PRIVATE).edit().clear().apply()
+            builderFactory().build().keysetHandle
+        }
+    }
 
-        val handle = keysetManager.keysetHandle
+    fun initializeAndGetPublicKey(): String {
+        val handle = getKeysetWithFallback(KEYSET_NAME, PREF_FILE_NAME) {
+            AndroidKeysetManager.Builder()
+                .withSharedPref(context, KEYSET_NAME, PREF_FILE_NAME)
+                .withKeyTemplate(HybridKeyTemplates.ECIES_P256_HKDF_HMAC_SHA256_AES128_GCM)
+                .withMasterKeyUri(MASTER_KEY_URI)
+        }
         privateKeysetHandle = handle
 
         val publicHandle = handle.publicKeysetHandle
@@ -99,12 +108,12 @@ class CryptoManager @Inject constructor(
 
     private fun decryptRaw(ciphertextBase64: String): ByteArray {
         if (privateKeysetHandle == null) {
-            val keysetManager = AndroidKeysetManager.Builder()
-                .withSharedPref(context, KEYSET_NAME, PREF_FILE_NAME)
-                .withKeyTemplate(HybridKeyTemplates.ECIES_P256_HKDF_HMAC_SHA256_AES128_GCM)
-                .withMasterKeyUri(MASTER_KEY_URI)
-                .build()
-            privateKeysetHandle = keysetManager.keysetHandle
+            privateKeysetHandle = getKeysetWithFallback(KEYSET_NAME, PREF_FILE_NAME) {
+                AndroidKeysetManager.Builder()
+                    .withSharedPref(context, KEYSET_NAME, PREF_FILE_NAME)
+                    .withKeyTemplate(HybridKeyTemplates.ECIES_P256_HKDF_HMAC_SHA256_AES128_GCM)
+                    .withMasterKeyUri(MASTER_KEY_URI)
+            }
         }
 
         val hybridDecrypt = privateKeysetHandle?.getPrimitive(HybridDecrypt::class.java)
@@ -291,13 +300,17 @@ class CryptoManager @Inject constructor(
         val existing = localAead
         if (existing != null) return existing
 
-        val keysetManager = AndroidKeysetManager.Builder()
-            .withSharedPref(context, "qbase_local_aead_keyset", "qbase_local_crypto_prefs")
-            .withKeyTemplate(KeyTemplates.get("AES256_GCM"))
-            .withMasterKeyUri(MASTER_KEY_URI)
-            .build()
+        val handle = getKeysetWithFallback(
+            "qbase_local_aead_keyset",
+            "qbase_local_crypto_prefs"
+        ) {
+            AndroidKeysetManager.Builder()
+                .withSharedPref(context, "qbase_local_aead_keyset", "qbase_local_crypto_prefs")
+                .withKeyTemplate(KeyTemplates.get("AES256_GCM"))
+                .withMasterKeyUri(MASTER_KEY_URI)
+        }
         
-        val aead = keysetManager.keysetHandle.getPrimitive(Aead::class.java)
+        val aead = handle.getPrimitive(Aead::class.java)
         localAead = aead
         return aead
     }
