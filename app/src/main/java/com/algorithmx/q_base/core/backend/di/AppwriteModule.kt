@@ -10,6 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import io.appwrite.Client
 import io.appwrite.services.Databases
 import io.appwrite.services.Storage
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import javax.inject.Singleton
@@ -56,9 +57,17 @@ object AppwriteModule {
 
                         android.util.Log.e("QbaseAppwriteError", "Appwrite error response - URL: ${request.url}, Status: $code, Body: $bodyString")
 
-                        if (bodyString != null && (!bodyString.trim().startsWith("{") || !bodyString.trim().endsWith("}"))) {
-                            val fakeJsonError = "{\"message\": ${com.google.gson.Gson().toJson(bodyString)}, \"code\": $code, \"type\": \"appwrite_error\"}"
-                            val mediaType = response.body?.contentType()
+                        // CRITICAL SHIELD: If project is paused (403), return a sanitized JSON error.
+                        // This prevents the SDK from attempting to parse a non-JSON body or deep objects
+                        // that trigger reflection-based crashes in Gson on Android 15.
+                        if (code == 403 || (bodyString != null && (!bodyString.trim().startsWith("{") || !bodyString.trim().endsWith("}")))) {
+                            val message = if (code == 403) {
+                                "Project is paused or access is forbidden. Please check Appwrite console."
+                            } else {
+                                bodyString ?: "Unknown error"
+                            }
+                            val fakeJsonError = "{\"message\": ${com.google.gson.Gson().toJson(message)}, \"code\": $code, \"type\": \"appwrite_error\"}"
+                            val mediaType = "application/json; charset=utf-8".toMediaType()
                             val newBody = okhttp3.ResponseBody.create(mediaType, fakeJsonError)
                             return@addInterceptor response.newBuilder()
                                 .body(newBody)

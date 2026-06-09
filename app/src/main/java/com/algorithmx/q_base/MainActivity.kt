@@ -282,10 +282,12 @@ class MainActivity : ComponentActivity() {
                         intent?.getStringExtra("CHAT_ID")?.let { chatId ->
                             android.util.Log.d("MainActivity", "Deep link to chat: $chatId")
                             navigator.navigate(Screen.ChatDetail(chatId))
+                            intent?.removeExtra("CHAT_ID")
                         }
                         intent?.getStringExtra("SESSION_ID")?.let { sessionId ->
                             android.util.Log.d("MainActivity", "Deep link to session: $sessionId")
                             navigator.navigate(Screen.ActiveSession(sessionId))
+                            intent?.removeExtra("SESSION_ID")
                         }
                     }
                 }

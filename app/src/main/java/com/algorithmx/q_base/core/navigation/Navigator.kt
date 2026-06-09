@@ -68,7 +68,6 @@ class Navigator(val state: NavigationState) {
         } else {
             val currentStack = state.backStacks[state.topLevelRoute]
                 ?: error("Stack for ${state.topLevelRoute} not found")
-            currentStack.clear()
             currentStack.add(normalizedRoute)
             state.tabHistory.clear()
             state.tabHistory.add(state.topLevelRoute)

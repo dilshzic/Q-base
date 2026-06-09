@@ -152,6 +152,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onBack = { navigator.goBack() },
                 onProfileClick = { navigator.navigate(Screen.Profile) },
                 onNavigateToManualEditor = { targetId, name ->
+                    navigator.goBack()
                     navigator.navigate(Screen.ManualBuilder(targetId, name))
                 }
             )
@@ -229,6 +230,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onBack = { navigator.goBack() },
                 onProfileClick = { navigator.navigate(Screen.Profile) },
                 onNavigateToManualEditor = { setId, name ->
+                    navigator.goBack()
                     navigator.navigate(Screen.ManualBuilder(setId, name))
                 }
             )
