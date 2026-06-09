@@ -136,6 +136,23 @@ class MockDownloader @Inject constructor(
         sharedWithGroupId: String?,
         isAdminOnly: Boolean
     ) {
+        // 0. Ensure the collection name is unique to prevent merging with existing collections
+        // If we already have this collectionId, it's an update, so we don't need a new unique name
+        val existingCollection = collectionDao.getStudyCollectionByIdOnce(exportData.collection.collectionId)
+        var finalName = exportData.collection.name
+        
+        if (existingCollection == null) {
+            var counter = 1
+            var uniqueName = finalName
+            while (collectionDao.getStudyCollectionByNameOnce(uniqueName) != null) {
+                uniqueName = "${exportData.collection.name} ($counter)"
+                counter++
+            }
+            finalName = uniqueName
+        } else {
+            finalName = existingCollection.name // Preserve existing name to avoid breaking references
+        }
+
         // 1. Generate new UUIDs for questions to avoid conflicts
         val oldToNewQuestionIds = mutableMapOf<String, String>()
         val isShared = sharedWithGroupId != null
@@ -143,7 +160,11 @@ class MockDownloader @Inject constructor(
         val newQuestions = exportData.questions.map { qData ->
             val newId = if (isShared) qData.question.questionId else java.util.UUID.randomUUID().toString()
             oldToNewQuestionIds[qData.question.questionId] = newId
-            qData.question.copy(questionId = newId)
+            qData.question.copy(
+                questionId = newId,
+                collection = finalName, // Align master_category to the unique name
+                category = finalName    // Align category to the unique name
+            )
         }
         
         val newOptions = exportData.questions.flatMap { qData ->
@@ -164,6 +185,7 @@ class MockDownloader @Inject constructor(
 
         // 2. Insert Collection
         val collection = exportData.collection.copy(
+            name = finalName,
             isShared = sharedWithGroupId != null,
             sharedWithGroupId = sharedWithGroupId,
             isAdminOnly = isAdminOnly
@@ -183,15 +205,43 @@ class MockDownloader @Inject constructor(
     }
 
     private suspend fun importMockData(mockData: MockExport) {
+        // 0. Ensure parent StudyCollection exists (FK requirement)
+        val parentId = mockData.collection.parentCollectionId
+        val existingParent = collectionDao.getStudyCollectionByIdOnce(parentId)
+        
+        var finalName = existingParent?.name ?: "Imported Collection"
+        
+        if (existingParent == null) {
+            var counter = 1
+            var uniqueName = finalName
+            while (collectionDao.getStudyCollectionByNameOnce(uniqueName) != null) {
+                uniqueName = "Imported Collection ($counter)"
+                counter++
+            }
+            finalName = uniqueName
+            
+            collectionDao.insertStudyCollections(listOf(
+                com.algorithmx.q_base.data.collections.StudyCollection(
+                    collectionId = parentId,
+                    name = finalName,
+                    isUserCreated = true
+                )
+            ))
+        }
+
         // Generate new UUIDs for questions
         val oldToNewQuestionIds = mutableMapOf<String, String>()
         
         val newQuestions = mockData.questions.map { qData ->
             val newId = java.util.UUID.randomUUID().toString()
             oldToNewQuestionIds[qData.question.questionId] = newId
-            qData.question.copy(questionId = newId)
+            qData.question.copy(
+                questionId = newId,
+                collection = finalName,
+                category = finalName
+            )
         }
-        
+
         val newOptions = mockData.questions.flatMap { qData ->
             val newId = oldToNewQuestionIds[qData.question.questionId]!!
             qData.options.map { it.copy(questionId = newId) }
@@ -200,18 +250,6 @@ class MockDownloader @Inject constructor(
         val newAnswers = mockData.questions.mapNotNull { qData ->
             val newId = oldToNewQuestionIds[qData.question.questionId]!!
             qData.answer?.copy(questionId = newId)
-        }
-
-        // 0. Ensure parent StudyCollection exists (FK requirement)
-        val parentId = mockData.collection.parentCollectionId
-        if (collectionDao.getStudyCollectionByIdOnce(parentId) == null) {
-            collectionDao.insertStudyCollections(listOf(
-                com.algorithmx.q_base.data.collections.StudyCollection(
-                    collectionId = parentId,
-                    name = "Imported Collection",
-                    isUserCreated = true
-                )
-            ))
         }
 
         // 1. Insert Set (Was QuestionCollection)

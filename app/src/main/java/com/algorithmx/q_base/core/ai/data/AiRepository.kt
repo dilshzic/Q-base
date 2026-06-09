@@ -19,7 +19,11 @@ class AiRepository @Inject constructor(
     private val aiResponseDao: AiResponseDao
 ) {
     private val TAG = "AiRepository"
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json = Json { 
+        ignoreUnknownKeys = true
+        isLenient = true
+        coerceInputValues = true
+    }
 
     suspend fun generateCollection(
         topic: String,
@@ -120,7 +124,16 @@ class AiRepository @Inject constructor(
         overrideName: String? = null
     ): String = withContext(Dispatchers.IO) { // Return the setId
         val collectionId = UUID.randomUUID().toString()
-        val collectionName = overrideName ?: response.collectionTitle
+        var collectionName = overrideName ?: response.collectionTitle
+        
+        // Ensure collection name is unique to prevent merging with existing collections
+        var counter = 1
+        var uniqueName = collectionName
+        while (collectionDao.getStudyCollectionByNameOnce(uniqueName) != null) {
+            uniqueName = "$collectionName ($counter)"
+            counter++
+        }
+        collectionName = uniqueName
         
         // 1. Create a new top-level Collection
         val collection = StudyCollection(
