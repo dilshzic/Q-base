@@ -9,6 +9,7 @@ import com.algorithmx.androidmodules.coreai.brain.models.BrainProvider
 import com.algorithmx.q_base.core.ai.brain.models.StoredBrainConfig
 import com.algorithmx.q_base.core.ai.brain.models.BrainTask
 import com.algorithmx.q_base.core.ai.brain.models.TaskConfig
+import com.algorithmx.androidmodules.coreai.brain.registry.BrainRegistry
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -52,9 +53,16 @@ class BrainDataStoreManager @Inject constructor(
             emptyMap()
         }
         
+        val defaultModel = BrainRegistry.allModelCodes.firstOrNull { 
+            BrainRegistry.getProviderForModel(it) == BrainProvider.GEMINI 
+        } ?: "gemini-3.1-flash-lite"
+        
+        val rawModelName = preferences[PreferencesKeys.MODEL] ?: defaultModel
+        val modelName = if (BrainRegistry.allModelCodes.contains(rawModelName)) rawModelName else defaultModel
+
         StoredBrainConfig(
             provider = try { BrainProvider.valueOf(providerName) } catch (e: Exception) { BrainProvider.GEMINI },
-            modelName = preferences[PreferencesKeys.MODEL] ?: "gemini-3.1-flash-lite-preview",
+            modelName = modelName,
             systemInstruction = preferences[PreferencesKeys.SYSTEM_INSTRUCTION] ?: "You are a helpful knowledge assistant.",
             totalRequests = preferences[PreferencesKeys.TOTAL_REQUESTS] ?: 0,
             totalTokens = preferences[PreferencesKeys.TOTAL_TOKENS] ?: 0,

@@ -64,7 +64,7 @@ android {
 }
 
 dependencies {
-    implementation("com.github.dilshzic:alx-core-ai:v1.0.2")
+    implementation("com.github.dilshzic:alx-core-ai:v1.0.3")
     implementation(project(":core-chat"))
     implementation(project(":core-auth"))
     implementation(project(":core-crypto"))
