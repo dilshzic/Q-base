@@ -133,6 +133,10 @@ class ChatViewModel @Inject constructor(
                 .firstOrNull { it != myUid && it.isNotEmpty() }
             val otherUser = userMap[otherParticipantId]
 
+            if (otherParticipantId == QBASE_AI_BOT_ID) {
+                return@mapNotNull null
+            }
+
             if (otherParticipantId != null && otherUser == null) {
                 Log.d("ChatViewModel", "Resolution issue: otherParticipantId=$otherParticipantId not found in userMap. Map keys: ${userMap.keys}")
             }
