@@ -77,16 +77,20 @@ fun CommonWizardFirstScreen(
 
     // A side effect that automatically generates a collection title from the first few words of the
     // description if the name is blank.
-    LaunchedEffect(description) {
-        if (name.isBlank() && description.isNotBlank()) {
-            val words = description.trim().split("\\s+".toRegex())
-            val autoName =
-                    if (words.size >= 2) {
-                        words.take(3).joinToString(" ").replace("[^a-zA-Z0-9 ]".toRegex(), "")
-                    } else {
-                        "Practice Set"
-                    }
-            onNameChanged(autoName)
+    LaunchedEffect(description, extractedText) {
+        if (name.isBlank()) {
+            if (description.isNotBlank()) {
+                val words = description.trim().split("\\s+".toRegex())
+                val autoName =
+                        if (words.size >= 2) {
+                            words.take(3).joinToString(" ").replace("[^a-zA-Z0-9 ]".toRegex(), "")
+                        } else {
+                            "Practice Set"
+                        }
+                onNameChanged(autoName)
+            } else if (extractedText.isNotBlank()) {
+                onNameChanged("Practice Set")
+            }
         }
     }
 
@@ -249,7 +253,7 @@ fun CommonWizardFirstScreen(
                 onClick = onNext,
                 modifier = Modifier.fillMaxWidth().height(58.dp),
                 shape = RoundedCornerShape(18.dp),
-                enabled = description.isNotBlank(),
+                enabled = description.isNotBlank() || extractedText.isNotBlank(),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
         ) {
             Text(

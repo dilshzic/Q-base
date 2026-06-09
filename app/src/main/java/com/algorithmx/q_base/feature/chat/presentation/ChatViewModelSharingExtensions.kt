@@ -11,6 +11,10 @@ private val sharedJson = Json { ignoreUnknownKeys = true }
 fun ChatViewModel.addSharedCollection(jsonPayload: String) {
     viewModelScope.launch {
         try {
+            if (jsonPayload.contains("|E2EE_KEY|")) {
+                importSharedCollection(jsonPayload)
+                return@launch
+            }
             Log.d("ChatViewModel", "Attempting to add AI collection from JSON")
             val response = sharedJson.decodeFromString<AiCollectionResponse>(jsonPayload)
 
