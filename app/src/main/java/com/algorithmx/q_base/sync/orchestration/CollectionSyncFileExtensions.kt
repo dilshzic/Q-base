@@ -53,11 +53,10 @@ suspend fun CollectionSyncRepository.shareCollectionToGroup(chatId: String, coll
         var targetDocId: String? = null
         try {
             val queries = listOf(
-                CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId),
                 CoreQuery("collectionId", CoreQueryOperator.EQUAL, collectionId)
             )
             val existingDocs = databases.queryDocuments("shared_collections", queries).getOrThrow()
-            val existingDoc = existingDocs.firstOrNull()
+            val existingDoc = existingDocs.firstOrNull { it["chatId"] == chatId }
             
             if (existingDoc != null) {
                 targetDocId = existingDoc["\$id"] as? String
@@ -178,10 +177,9 @@ suspend fun CollectionSyncRepository.acknowledgeCollectionDownload(chatId: Strin
         try {
             val doc = if (chatId != null) {
                 val queries = listOf(
-                    CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId),
                     CoreQuery("collectionId", CoreQueryOperator.EQUAL, collectionId)
                 )
-                databases.queryDocuments("shared_collections", queries).getOrNull()?.firstOrNull()
+                databases.queryDocuments("shared_collections", queries).getOrNull()?.firstOrNull { it["chatId"] == chatId }
             } else {
                 val queries = listOf(CoreQuery("collectionId", CoreQueryOperator.EQUAL, collectionId))
                 databases.queryDocuments("shared_collections", queries).getOrNull()?.firstOrNull()
@@ -225,28 +223,30 @@ fun CollectionSyncRepository.observeGroupLibrary(chatId: String): Flow<List<Map<
     return callbackFlow {
         repositoryScope.launch {
             try {
-                val queries = listOf(CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId))
                 val docs = databases.queryDocuments(
                     collectionId = "shared_collections",
-                    queries = queries
-                ).getOrThrow()
+                    queries = emptyList()
+                ).getOrThrow().filter { it["chatId"] == chatId }
                 val mapped = mapGroupLibrary(docs)
                 trySend(mapped).isSuccess
-            } catch (e: Exception) {}
+            } catch (e: Exception) {
+                Log.e("CollectionSyncRepository", "Initial fetch in observeGroupLibrary failed", e)
+            }
         }
 
         val realtime = io.appwrite.services.Realtime(appwriteClient)
         val subscription = realtime.subscribe("databases.qbase_db.collections.shared_collections.documents") { event ->
             repositoryScope.launch {
                 try {
-                    val queries = listOf(CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId))
                     val docs = databases.queryDocuments(
                         collectionId = "shared_collections",
-                        queries = queries
-                    ).getOrThrow()
+                        queries = emptyList()
+                    ).getOrThrow().filter { it["chatId"] == chatId }
                     val mapped = mapGroupLibrary(docs)
                     trySend(mapped).isSuccess
-                } catch (e: Exception) {}
+                } catch (e: Exception) {
+                    Log.e("CollectionSyncRepository", "Realtime update in observeGroupLibrary failed", e)
+                }
             }
         }
         awaitClose { subscription.close() }

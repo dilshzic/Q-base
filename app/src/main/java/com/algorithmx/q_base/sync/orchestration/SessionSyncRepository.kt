@@ -114,11 +114,10 @@ class SessionSyncRepository @Inject constructor(
         return callbackFlow {
             repositoryScope.launch {
                 try {
-                    val queries = listOf(CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId))
                     val docs = databases.queryDocuments(
                         collectionId = "shared_sessions",
-                        queries = queries
-                    ).getOrThrow()
+                        queries = emptyList()
+                    ).getOrThrow().filter { it["chatId"] == chatId }
                     val mapped = docs.map { doc ->
                         val data = doc.toMutableMap()
                         val rawTimestamp = (data["timestamp"] as? Number)?.toLong() ?: 0L
@@ -133,11 +132,10 @@ class SessionSyncRepository @Inject constructor(
             val subscription = realtime.subscribe("databases.qbase_db.collections.shared_sessions.documents") { event ->
                 repositoryScope.launch {
                     try {
-                        val queries = listOf(CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId))
                         val docs = databases.queryDocuments(
                             collectionId = "shared_sessions",
-                            queries = queries
-                        ).getOrThrow()
+                            queries = emptyList()
+                        ).getOrThrow().filter { it["chatId"] == chatId }
                         val mapped = docs.map { doc ->
                             val data = doc.toMutableMap()
                             val rawTimestamp = (data["timestamp"] as? Number)?.toLong() ?: 0L
