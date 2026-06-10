@@ -60,7 +60,7 @@ fun ChatViewModel.importSharedCollection(payload: String) {
                 
                 if (collectionId.isNotEmpty()) {
                     try {
-                        syncRepository.acknowledgeCollectionDownload(collectionId)
+                        syncRepository.acknowledgeCollectionDownload(groupId.ifBlank { null }, collectionId)
                         Log.d("ChatViewModel", "Acknowledged collection download for $collectionId")
                     } catch (ae: Exception) {
                         Log.e("ChatViewModel", "Failed to acknowledge download receipt", ae)

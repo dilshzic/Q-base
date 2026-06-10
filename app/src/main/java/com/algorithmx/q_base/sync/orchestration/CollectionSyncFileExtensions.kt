@@ -50,15 +50,25 @@ suspend fun CollectionSyncRepository.shareCollectionToGroup(chatId: String, coll
         val collectionId = collectionMetadata["collectionId"] as String
         val symmetricKey = collectionMetadata["symmetricKey"] as? String ?: ""
         
+        var targetDocId: String? = null
         try {
-            val existingDoc = databases.getDocument("shared_collections", collectionId).getOrNull()
-            val oldUrl = existingDoc?.get("downloadUrl") as? String
-            if (oldUrl != null) {
-                val oldFileId = extractFileIdFromUrl(oldUrl)
-                if (oldFileId != null) {
-                    try {
-                        deleteQuestionBankZip(oldFileId)
-                    } catch (de: Exception) {}
+            val queries = listOf(
+                CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId),
+                CoreQuery("collectionId", CoreQueryOperator.EQUAL, collectionId)
+            )
+            val existingDocs = databases.queryDocuments("shared_collections", queries).getOrThrow()
+            val existingDoc = existingDocs.firstOrNull()
+            
+            if (existingDoc != null) {
+                targetDocId = existingDoc["\$id"] as? String
+                val oldUrl = existingDoc["downloadUrl"] as? String
+                if (oldUrl != null) {
+                    val oldFileId = extractFileIdFromUrl(oldUrl)
+                    if (oldFileId != null) {
+                        try {
+                            deleteQuestionBankZip(oldFileId)
+                        } catch (de: Exception) {}
+                    }
                 }
             }
         } catch (e: Exception) {}
@@ -138,15 +148,14 @@ suspend fun CollectionSyncRepository.shareCollectionToGroup(chatId: String, coll
         )
 
         try {
-            databases.createDocument("shared_collections", collectionId, secureMetadata).getOrThrow()
-        } catch (e: Exception) {
-            // Check for conflict/existing document code mapping or retry using updateDocument
-            try {
-                databases.updateDocument("shared_collections", collectionId, secureMetadata).getOrThrow()
-            } catch (ue: Exception) {
-                Log.e("CollectionSyncRepository", "Failed to create/update shared collection", ue)
-                throw ue
+            if (targetDocId != null) {
+                databases.updateDocument("shared_collections", targetDocId, secureMetadata).getOrThrow()
+            } else {
+                databases.createDocument("shared_collections", ID.unique(), secureMetadata).getOrThrow()
             }
+        } catch (e: Exception) {
+            Log.e("CollectionSyncRepository", "Failed to create/update shared collection", e)
+            throw e
         }
     } catch (e: Exception) {
         Log.e("CollectionSyncRepository", "Failed to share collection in Appwrite", e)
@@ -164,11 +173,21 @@ internal fun CollectionSyncRepository.extractFileIdFromUrl(url: String): String?
     }
 }
 
-suspend fun CollectionSyncRepository.acknowledgeCollectionDownload(collectionId: String) {
+suspend fun CollectionSyncRepository.acknowledgeCollectionDownload(chatId: String?, collectionId: String) {
     withContext(Dispatchers.IO) {
         try {
-            val doc = databases.getDocument("shared_collections", collectionId).getOrNull()
+            val doc = if (chatId != null) {
+                val queries = listOf(
+                    CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId),
+                    CoreQuery("collectionId", CoreQueryOperator.EQUAL, collectionId)
+                )
+                databases.queryDocuments("shared_collections", queries).getOrNull()?.firstOrNull()
+            } else {
+                val queries = listOf(CoreQuery("collectionId", CoreQueryOperator.EQUAL, collectionId))
+                databases.queryDocuments("shared_collections", queries).getOrNull()?.firstOrNull()
+            }
             if (doc != null) {
+                val targetDocId = doc["\$id"] as? String ?: return@withContext
                 val url = doc["downloadUrl"] as? String ?: ""
                 val pendingDownloadsList = (doc["pendingDownloads"] as? List<*>)?.mapNotNull { it?.toString() }?.toMutableList() ?: mutableListOf()
                 
@@ -177,7 +196,7 @@ suspend fun CollectionSyncRepository.acknowledgeCollectionDownload(collectionId:
                     
                     databases.updateDocument(
                         collectionId = "shared_collections",
-                        documentId = collectionId,
+                        documentId = targetDocId,
                         data = mapOf(
                             "pendingDownloads" to pendingDownloadsList
                         )

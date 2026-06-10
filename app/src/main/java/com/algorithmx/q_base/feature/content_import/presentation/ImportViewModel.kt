@@ -242,13 +242,26 @@ class ImportViewModel @Inject constructor(
         
         viewModelScope.launch {
             val catName = _collections.value.find { it.collectionId == catId }?.name ?: _newCollectionName.value.ifBlank { "Generated" }
+            
+            val baseText = _extractedText.value.trim()
+            val desc = _newCollectionDescription.value.trim()
+            val combinedText = if (baseText.isNotEmpty() && desc.isNotEmpty()) {
+                "Topic/Context: $desc\n\nReference Text:\n$baseText"
+            } else if (baseText.isNotEmpty()) {
+                baseText
+            } else if (desc.isNotEmpty()) {
+                desc
+            } else {
+                "General knowledge"
+            }
+
             val result = aiRepository.extractQuestionsFromText(
-                text = _extractedText.value,
+                text = combinedText,
                 collectionId = catId,
                 collectionName = catName,
                 difficulty = config.difficulty,
                 types = config.types,
-                customInstructions = "Generate ${config.count} questions. ${config.customInstructions}"
+                customInstructions = "Generate ${config.count} questions. ${config.customInstructions}".trim()
             )
             handleGenerationResult(result)
         }

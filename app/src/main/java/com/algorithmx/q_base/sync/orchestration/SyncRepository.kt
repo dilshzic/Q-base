@@ -139,8 +139,8 @@ class SyncRepository @Inject constructor(
         collectionSyncRepository.shareCollectionToGroup(chatId, collectionMetadata)
     }
 
-    suspend fun acknowledgeCollectionDownload(collectionId: String) {
-        collectionSyncRepository.acknowledgeCollectionDownload(collectionId)
+    suspend fun acknowledgeCollectionDownload(chatId: String?, collectionId: String) {
+        collectionSyncRepository.acknowledgeCollectionDownload(chatId, collectionId)
     }
 
     suspend fun applyCollectionMicroUpdate(payload: String) {

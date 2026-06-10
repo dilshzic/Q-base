@@ -161,8 +161,13 @@ suspend fun CollectionSyncRepository.grantCollectionAccess(chatId: String, colle
             ?: throw IllegalStateException("Requester's E2EE public key not found")
 
         // 2. Fetch the existing shared collection record to update its wrappedKeys map
-        val sharedCollDoc = databases.getDocument("shared_collections", collectionId).getOrNull()
-            ?: throw IllegalStateException("Shared collection record not found")
+        val queries = listOf(
+            CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId),
+            CoreQuery("collectionId", CoreQueryOperator.EQUAL, collectionId)
+        )
+        val sharedCollDocs = databases.queryDocuments("shared_collections", queries).getOrNull() ?: emptyList()
+        val sharedCollDoc = sharedCollDocs.firstOrNull() ?: throw IllegalStateException("Shared collection record not found")
+        val targetDocId = sharedCollDoc["\$id"] as? String ?: throw IllegalStateException("Shared collection document ID not found")
         val existingWrappedKeysStr = sharedCollDoc["wrappedKeys"] as? String ?: "{}"
         
         // 3. Find the plain symmetricKey from the admin's local collections database
@@ -183,7 +188,7 @@ suspend fun CollectionSyncRepository.grantCollectionAccess(chatId: String, colle
         existingWrappedKeysObj.put(requesterId, newWrappedKeyForRequester)
         databases.updateDocument(
             collectionId = "shared_collections",
-            documentId = collectionId,
+            documentId = targetDocId,
             data = mapOf("wrappedKeys" to existingWrappedKeysObj.toString())
         ).getOrThrow()
 
