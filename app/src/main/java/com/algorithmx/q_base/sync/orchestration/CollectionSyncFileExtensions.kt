@@ -226,8 +226,12 @@ fun CollectionSyncRepository.observeGroupLibrary(chatId: String): Flow<List<Map<
                 val docs = databases.queryDocuments(
                     collectionId = "shared_collections",
                     queries = emptyList()
-                ).getOrThrow().filter { it["chatId"] == chatId }
-                val mapped = mapGroupLibrary(docs)
+                ).getOrThrow()
+                Log.e("CollectionSyncRepository", "observeGroupLibrary: fetched ${docs.size} docs from Appwrite. Filtering for chatId=$chatId")
+                docs.forEach { Log.e("CollectionSyncRepository", "Doc found: id=${it["\$id"]} chatId=${it["chatId"]} collectionId=${it["collectionId"]}") }
+                val filtered = docs.filter { it["chatId"] == chatId }
+                Log.e("CollectionSyncRepository", "observeGroupLibrary: filtered down to ${filtered.size} docs")
+                val mapped = mapGroupLibrary(filtered)
                 trySend(mapped).isSuccess
             } catch (e: Exception) {
                 Log.e("CollectionSyncRepository", "Initial fetch in observeGroupLibrary failed", e)
@@ -241,8 +245,10 @@ fun CollectionSyncRepository.observeGroupLibrary(chatId: String): Flow<List<Map<
                     val docs = databases.queryDocuments(
                         collectionId = "shared_collections",
                         queries = emptyList()
-                    ).getOrThrow().filter { it["chatId"] == chatId }
-                    val mapped = mapGroupLibrary(docs)
+                    ).getOrThrow()
+                    Log.e("CollectionSyncRepository", "observeGroupLibrary Realtime: fetched ${docs.size} docs. Filtering for chatId=$chatId")
+                    val filtered = docs.filter { it["chatId"] == chatId }
+                    val mapped = mapGroupLibrary(filtered)
                     trySend(mapped).isSuccess
                 } catch (e: Exception) {
                     Log.e("CollectionSyncRepository", "Realtime update in observeGroupLibrary failed", e)

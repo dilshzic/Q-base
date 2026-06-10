@@ -152,9 +152,14 @@ class AppwriteDatabaseImpl @Inject constructor(
     /** Lists all documents in a specific collection. */
     override suspend fun listDocuments(collectionId: String): Result<List<Map<String, Any>>> {
         return runCatching {
+            val appwriteQueries = listOf(
+                Query.limit(5000),
+                Query.orderDesc("\$createdAt")
+            )
             val rowList = tablesDB.listRows(
                 databaseId = databaseId,
-                tableId = collectionId
+                tableId = collectionId,
+                queries = appwriteQueries
             )
             mapRowList(rowList)
         }
@@ -176,7 +181,11 @@ class AppwriteDatabaseImpl @Inject constructor(
                     CoreQueryOperator.LESS_THAN -> Query.lessThan(query.key, wrapValue(query.value).first())
                     CoreQueryOperator.ARRAY_CONTAINS -> Query.contains(query.key, wrapValue(query.value))
                 }
-            }
+            }.toMutableList()
+            
+            // Add high limit and order by descending to ensure newest items are fetched when there is no index
+            appwriteQueries.add(Query.limit(5000))
+            appwriteQueries.add(Query.orderDesc("\$createdAt"))
 
             val rowList = tablesDB.listRows(
                 databaseId = databaseId,
