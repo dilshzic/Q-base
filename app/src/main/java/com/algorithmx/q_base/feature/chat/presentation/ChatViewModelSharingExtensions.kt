@@ -117,7 +117,7 @@ fun ChatViewModel.shareCollection(chatId: String, collectionId: String) {
                     "isAdminOnly" to collection.isAdminOnly
                 )
                 syncRepository.shareCollectionToGroup(chatId, metadata)
-                sendMessage(chatId, "shared a collection to the group library: ${collection.name}", type = "DB_CHANGE")
+                sendMessage(chatId, "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId|NAME|${collection.name}", type = "FILE_TRANSFER")
             } else {
                 // P2P: Message-based (Ephemeral)
                 sendMessage(chatId, "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId", type = "FILE_TRANSFER")
@@ -170,7 +170,7 @@ fun ChatViewModel.resendCollection(collectionId: String) {
             syncRepository.shareCollectionToGroup(chatId, metadata)
             mockExporter.cleanup(zipFile)
             _actionFeedback.emit("Collection resent and re-uploaded successfully!")
-            sendMessage(chatId, "re-uploaded and updated collection in group library: ${collection.name}", type = "DB_CHANGE")
+            sendMessage(chatId, "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId|NAME|${collection.name}", type = "FILE_TRANSFER")
         } catch (e: Exception) {
             Log.e("ChatViewModel", "Resend failed", e)
             _actionFeedback.emit("Resend failed: ${e.message}")
@@ -203,7 +203,7 @@ fun ChatViewModel.shareSession(chatId: String, sessionId: String) {
             
             if (chat.isGroup) {
                 syncRepository.addSharedSessionToGroup(chatId, sessionId, sessionTitle, downloadUrl, symmetricKey)
-                sendMessage(chatId, "shared a study session: $sessionTitle", type = "DB_CHANGE")
+                sendMessage(chatId, "$sessionId|$sessionTitle", type = "SESSION_INVITE")
             } else {
                 syncRepository.sendSessionInvite(chatId, sessionId, sessionTitle, downloadUrl, symmetricKey)
             }

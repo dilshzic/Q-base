@@ -62,8 +62,8 @@ fun CollectionBubbleContent(
 @Composable
 fun SessionBubbleContent(payload: String, onJoin: (String) -> Unit, isMine: Boolean) {
     val parts = payload.split("|")
-    val sessionId = parts.getOrNull(0) ?: ""
-    val sessionTitle = parts.getOrNull(1) ?: "Active Session"
+    val sessionId = if (parts.contains("SESSION_ID")) parts[parts.indexOf("SESSION_ID") + 1] else parts.getOrNull(0) ?: ""
+    val sessionTitle = if (parts.contains("TITLE")) parts[parts.indexOf("TITLE") + 1] else parts.getOrNull(1) ?: "Active Session"
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
