@@ -129,7 +129,7 @@ class SessionSyncRepository @Inject constructor(
             }
 
             val realtime = io.appwrite.services.Realtime(appwriteClient)
-            val subscription = realtime.subscribe("databases.qbase_db.collections.shared_sessions.documents") { event ->
+            val subscription = realtime.subscribe("tablesdb.qbase_db.tables.shared_sessions.rows") { event ->
                 repositoryScope.launch {
                     try {
                         val docs = databases.queryDocuments(

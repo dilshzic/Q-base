@@ -57,7 +57,7 @@ fun CollectionSyncRepository.observeIncomingRequests(): Flow<List<SyncRequest>> 
     }
 
     val realtime = io.appwrite.services.Realtime(appwriteClient)
-    val subscription = realtime.subscribe("databases.qbase_db.collections.sync_requests.documents") { event ->
+    val subscription = realtime.subscribe("tablesdb.qbase_db.tables.sync_requests.rows") { event ->
         repositoryScope.launch {
             try {
                 val queries = listOf(
@@ -127,7 +127,7 @@ fun CollectionSyncRepository.observeAccessRequests(chatId: String): Flow<List<Ma
         }
 
         val realtime = io.appwrite.services.Realtime(appwriteClient)
-        val subscription = realtime.subscribe("databases.qbase_db.collections.access_requests.documents") { event ->
+        val subscription = realtime.subscribe("tablesdb.qbase_db.tables.access_requests.rows") { event ->
             repositoryScope.launch {
                 try {
                     val queries = listOf(

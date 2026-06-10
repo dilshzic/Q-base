@@ -239,7 +239,7 @@ fun CollectionSyncRepository.observeGroupLibrary(chatId: String): Flow<List<Map<
         }
 
         val realtime = io.appwrite.services.Realtime(appwriteClient)
-        val subscription = realtime.subscribe("databases.qbase_db.collections.shared_collections.documents") { event ->
+        val subscription = realtime.subscribe("tablesdb.qbase_db.tables.shared_collections.rows") { event ->
             repositoryScope.launch {
                 try {
                     val docs = databases.queryDocuments(
