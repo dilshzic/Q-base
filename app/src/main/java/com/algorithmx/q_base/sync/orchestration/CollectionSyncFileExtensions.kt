@@ -53,10 +53,10 @@ suspend fun CollectionSyncRepository.shareCollectionToGroup(chatId: String, coll
         var targetDocId: String? = null
         try {
             val queries = listOf(
-                CoreQuery("collectionId", CoreQueryOperator.EQUAL, collectionId)
+                CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId)
             )
             val existingDocs = databases.queryDocuments("shared_collections", queries).getOrThrow()
-            val existingDoc = existingDocs.firstOrNull { it["chatId"] == chatId }
+            val existingDoc = existingDocs.firstOrNull { it["collectionId"] == collectionId }
             
             if (existingDoc != null) {
                 targetDocId = existingDoc["\$id"] as? String
@@ -150,7 +150,8 @@ suspend fun CollectionSyncRepository.shareCollectionToGroup(chatId: String, coll
             if (targetDocId != null) {
                 databases.updateDocument("shared_collections", targetDocId, secureMetadata).getOrThrow()
             } else {
-                databases.createDocument("shared_collections", ID.unique(), secureMetadata).getOrThrow()
+                val newDocId = java.util.UUID.randomUUID().toString().replace("-", "").take(20)
+                databases.createDocument("shared_collections", newDocId, secureMetadata).getOrThrow()
             }
         } catch (e: Exception) {
             Log.e("CollectionSyncRepository", "Failed to create/update shared collection", e)
