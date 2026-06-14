@@ -261,6 +261,10 @@ suspend fun MessageSyncRepository.fetchAndSyncMessages(chatId: String) {
 
             if (chatLocalDataSource.getMessageById(docId) == null) {
                 chatLocalDataSource.upsertMessage(message)
+                
+                if (type == "COLLECTION_MICRO_UPDATE" && decryptionStatus == "SUCCESS") {
+                    collectionSyncRepository.get().applyCollectionMicroUpdate(payload)
+                }
             }
             repositoryScope.launch {
                 acknowledgeMessageDelivery(docId, chatId, senderId, wrappedKeyStr ?: "")

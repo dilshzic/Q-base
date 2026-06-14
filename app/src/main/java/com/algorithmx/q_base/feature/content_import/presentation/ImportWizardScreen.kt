@@ -39,9 +39,11 @@ fun ImportWizardScreen(
     }
 
     // BackHandler for wizard step navigation
-    val isNotAtStart = uiState !is ImportStep.NameAndDestination && uiState !is ImportStep.MediaInput && uiState !is ImportStep.ExtractionIngest
+    val isNotAtStart = uiState !is ImportStep.ChooseMethod
     androidx.activity.compose.BackHandler(enabled = isNotAtStart) {
         when (uiState) {
+            is ImportStep.NameAndDestination, is ImportStep.MediaInput -> viewModel.navigateTo(ImportStep.ChooseMethod)
+            is ImportStep.ExtractionIngest -> viewModel.navigateTo(ImportStep.ChooseMethod)
             is ImportStep.Configure -> viewModel.navigateTo(ImportStep.NameAndDestination)
             is ImportStep.Review -> viewModel.navigateTo(ImportStep.NameAndDestination)
             is ImportStep.ExtractionOverview -> viewModel.navigateTo(ImportStep.ExtractionIngest)
@@ -67,9 +69,11 @@ fun ImportWizardScreen(
                     IconButton(onClick = {
                         if (isNotAtStart) {
                             when (uiState) {
+                                is ImportStep.NameAndDestination -> viewModel.navigateTo(ImportStep.ChooseMethod)
                                 is ImportStep.Configure -> viewModel.navigateTo(ImportStep.NameAndDestination)
                                 is ImportStep.Review -> viewModel.navigateTo(ImportStep.NameAndDestination)
                                 is ImportStep.ExtractionOverview -> viewModel.navigateTo(ImportStep.ExtractionIngest)
+                                is ImportStep.ExtractionIngest -> viewModel.navigateTo(ImportStep.ChooseMethod)
                                 is ImportStep.Error -> viewModel.reset()
                                 else -> onBack()
                             }
@@ -100,6 +104,11 @@ fun ImportWizardScreen(
                 modifier = Modifier.weight(1f)
             ) { step ->
                 when (step) {
+                    is ImportStep.ChooseMethod -> ChooseMethodScreen(
+                        onGenerateClick = { viewModel.navigateTo(ImportStep.NameAndDestination) },
+                        onExtractClick = { viewModel.navigateTo(ImportStep.ExtractionIngest) },
+                        onManualClick = { onNavigateToManualEditor("new", "Manual Collection") }
+                    )
                     // Map both states to the same CommonWizardFirstScreen so importing references does not proceed
                     is ImportStep.NameAndDestination, is ImportStep.MediaInput -> CommonWizardFirstScreen(
                         name = collectionName,
@@ -113,9 +122,6 @@ fun ImportWizardScreen(
                         onRawTextUpdated = { viewModel.onRawTextUpdated(it) },
                         onImagePicked = { viewModel.onImagePicked(it) },
                         onPdfPicked = { viewModel.onPdfPicked(it) },
-                        onDirectExtractionClick = {
-                            viewModel.navigateTo(ImportStep.ExtractionIngest)
-                        },
                         onNext = {
                             viewModel.selectMethod("GENERATE")
                             viewModel.navigateTo(ImportStep.Configure("GENERATE"))

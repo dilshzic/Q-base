@@ -15,7 +15,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.font.FontWeight
@@ -62,7 +64,6 @@ fun CommonWizardFirstScreen(
         onRawTextUpdated: (String) -> Unit,
         onImagePicked: (Uri) -> Unit,
         onPdfPicked: (Uri) -> Unit,
-        onDirectExtractionClick: () -> Unit,
         onNext: () -> Unit
 ) {
     val imagePicker =
@@ -116,13 +117,22 @@ fun CommonWizardFirstScreen(
                             "e.g. Create practice questions about neurology emphasizing neurotransmitters..."
                     )
                 },
-                modifier = Modifier.fillMaxWidth().height(180.dp),
+                modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .graphicsLayer {
+                            shadowElevation = 2f
+                            shape = RoundedCornerShape(16.dp)
+                            clip = true
+                        },
                 shape = RoundedCornerShape(16.dp),
                 minLines = 4,
                 colors =
                         OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                         )
         )
 
@@ -218,31 +228,6 @@ fun CommonWizardFirstScreen(
                     }
                 }
             }
-        }
-
-        // 5. Direct Extraction Button: A distinctly styled button that navigates the user to a
-        // specialized flow for extracting questions from structured documents like exam papers.
-        val extractionButtonColor = Color(0xFF43A047) // Shade of premium light green
-        OutlinedButton(
-                onClick = onDirectExtractionClick,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = extractionButtonColor),
-                border = BorderStroke(2.dp, extractionButtonColor.copy(alpha = 0.4f))
-        ) {
-            Icon(
-                    imageVector = Icons.Rounded.FolderZip,
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp),
-                    tint = extractionButtonColor
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(
-                    text = "Direct Exam Paper Extraction",
-                    fontWeight = FontWeight.ExtraBold,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = extractionButtonColor
-            )
         }
 
         Spacer(Modifier.weight(1f))

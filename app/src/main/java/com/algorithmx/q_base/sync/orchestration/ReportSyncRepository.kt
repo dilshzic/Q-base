@@ -35,7 +35,8 @@ class ReportSyncRepository @Inject constructor(
             "reporterId" to reporterId,
             "reason" to reason,
             "reportedAt" to System.currentTimeMillis() / 1000,
-            "sessionId" to session.sessionId
+            "sessionId" to session.sessionId,
+            "contentJson" to com.google.gson.Gson().toJson(session)
         )
 
         try {
@@ -58,11 +59,18 @@ class ReportSyncRepository @Inject constructor(
         val reporterId = currentUserId ?: throw IllegalStateException("User not authenticated")
         val reportRefId = UUID.randomUUID().toString()
         
+        val contentMap = mapOf(
+            "question" to question,
+            "options" to options,
+            "answer" to answer
+        )
+
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
             "reportedAt" to System.currentTimeMillis() / 1000,
-            "questionId" to question.questionId
+            "questionId" to question.questionId,
+            "contentJson" to com.google.gson.Gson().toJson(contentMap)
         )
 
         try {
@@ -87,7 +95,8 @@ class ReportSyncRepository @Inject constructor(
             "reporterId" to reporterId,
             "reason" to reason,
             "reportedAt" to System.currentTimeMillis() / 1000,
-            "reportedUserId" to user.userId
+            "reportedUserId" to user.userId,
+            "contentJson" to com.google.gson.Gson().toJson(user)
         )
         try {
             databases.createDocument(
@@ -107,7 +116,8 @@ class ReportSyncRepository @Inject constructor(
             "reporterId" to reporterId,
             "reason" to reason,
             "reportedAt" to System.currentTimeMillis() / 1000,
-            "collectionId" to collection.collectionId
+            "collectionId" to collection.collectionId,
+            "contentJson" to com.google.gson.Gson().toJson(collection)
         )
         try {
             databases.createDocument(

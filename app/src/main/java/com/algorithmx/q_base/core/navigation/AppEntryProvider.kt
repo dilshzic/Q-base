@@ -21,6 +21,7 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
             LoginScreen(
                 onLoginSuccess = { navigator.resetTo(Screen.Home) },
                 onNavigateToSignup = { navigator.navigate(Screen.Signup) },
+                onRestoreBackupRequired = { userId -> navigator.navigate(Screen.RestoreBackup(userId)) },
                 viewModel = viewModel
             )
         }
@@ -31,6 +32,16 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 onSignupSuccess = { navigator.resetTo(Screen.Home) },
                 onBackToLogin = { navigator.goBack() },
                 viewModel = viewModel
+            )
+        }
+
+        entry<Screen.RestoreBackup> { key ->
+            val viewModel: RestoreBackupViewModel = hiltViewModel()
+            RestoreBackupScreen(
+                userId = key.userId,
+                viewModel = viewModel,
+                onRestoreSuccess = { navigator.resetTo(Screen.Home) },
+                onStartFresh = { navigator.resetTo(Screen.Home) }
             )
         }
 

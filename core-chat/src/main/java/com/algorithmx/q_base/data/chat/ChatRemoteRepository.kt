@@ -237,7 +237,8 @@ class ChatRemoteRepository @Inject constructor(
             "reporterId" to reporterId,
             "reason" to reason,
             "reportedAt" to System.currentTimeMillis() / 1000,
-            "groupId" to group.chatId
+            "groupId" to group.chatId,
+            "contentJson" to com.google.gson.Gson().toJson(group)
         )
         try {
             databases.createDocument(
@@ -257,7 +258,8 @@ class ChatRemoteRepository @Inject constructor(
             "reporterId" to reporterId,
             "reason" to reason,
             "reportedAt" to System.currentTimeMillis() / 1000,
-            "messageId" to message.messageId
+            "messageId" to message.messageId,
+            "contentJson" to com.google.gson.Gson().toJson(message)
         )
         try {
             databases.createDocument(

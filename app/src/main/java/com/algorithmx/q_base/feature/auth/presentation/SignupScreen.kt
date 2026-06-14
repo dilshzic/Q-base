@@ -160,12 +160,20 @@ fun SignupScreen(
                     onValueChange = { username = it },
                     label = { Text("Display Name") },
                     leadingIcon = { Icon(Icons.Rounded.Person, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            shadowElevation = 2f
+                            shape = RoundedCornerShape(16.dp)
+                            clip = true
+                        },
                     singleLine = true,
-                    shape = MaterialTheme.shapes.large,
+                    shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                     )
                 )
 
@@ -176,12 +184,20 @@ fun SignupScreen(
                     onValueChange = { email = it },
                     label = { Text("Email Address") },
                     leadingIcon = { Icon(Icons.Rounded.Mail, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            shadowElevation = 2f
+                            shape = RoundedCornerShape(16.dp)
+                            clip = true
+                        },
                     singleLine = true,
-                    shape = MaterialTheme.shapes.large,
+                    shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                     )
                 )
 
@@ -192,13 +208,21 @@ fun SignupScreen(
                     onValueChange = { password = it },
                     label = { Text("Password") },
                     leadingIcon = { Icon(Icons.Rounded.Lock, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            shadowElevation = 2f
+                            shape = RoundedCornerShape(16.dp)
+                            clip = true
+                        },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
-                    shape = MaterialTheme.shapes.large,
+                    shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                     )
                 )
 
@@ -209,13 +233,21 @@ fun SignupScreen(
                     onValueChange = { confirmPassword = it },
                     label = { Text("Confirm Password") },
                     leadingIcon = { Icon(Icons.Rounded.Lock, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            shadowElevation = 2f
+                            shape = RoundedCornerShape(16.dp)
+                            clip = true
+                        },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
-                    shape = MaterialTheme.shapes.large,
+                    shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                     )
                 )
 

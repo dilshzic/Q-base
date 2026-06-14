@@ -116,8 +116,28 @@ class ChatViewModel @Inject constructor(
     val totalUnreadCount = chatLocalDataSource.getTotalUnreadCount()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
-    val allStudyCollections: StateFlow<List<StudyCollection>> = collectionDao.getAllStudyCollections()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val allStudyCollections: StateFlow<List<StudyCollection>> = combine(
+        collectionDao.getAllStudyCollections(),
+        chatLocalDataSource.getAllChats(),
+        authRepository.currentUser
+    ) { collections, chats, authUser ->
+        val uid = authUser?.uid ?: return@combine emptyList()
+        val chatMap = chats.associateBy { it.chatId }
+        
+        collections.filter { collection ->
+            if (!collection.isAdminOnly) {
+                true
+            } else {
+                val groupId = collection.sharedWithGroupId
+                if (groupId == null) {
+                    true
+                } else {
+                    val chat = chatMap[groupId]
+                    chat?.isAdmin(uid) == true
+                }
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // State for the Inbox/Chat List
     val chatListState: StateFlow<ChatListState> = combine(
@@ -323,6 +343,16 @@ class ChatViewModel @Inject constructor(
                 _actionFeedback.emit("Access request sent to group admins")
             } catch (e: Exception) {
                 _actionFeedback.emit("Failed to send request: ${e.message}")
+            }
+        }
+    }
+
+    fun updateCollectionAdminStatus(collectionId: String, isAdminOnly: Boolean) {
+        viewModelScope.launch {
+            try {
+                collectionDao.updateStudyCollectionAdminOnly(collectionId, isAdminOnly)
+            } catch (e: Exception) {
+                Log.e("ChatViewModel", "Failed to update admin status", e)
             }
         }
     }

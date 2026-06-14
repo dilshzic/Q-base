@@ -14,6 +14,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -78,10 +80,22 @@ fun QuestionEditorScreen(
                 OutlinedTextField(
                     value = state.stem,
                     onValueChange = { viewModel.updateStem(it) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            shadowElevation = 2f
+                            shape = RoundedCornerShape(12.dp)
+                            clip = true
+                        },
                     minLines = 3,
                     shape = RoundedCornerShape(12.dp),
-                    placeholder = { Text("Enter the question scenario or stem...") }
+                    placeholder = { Text("Enter the question scenario or stem...") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                    )
                 )
             }
 
@@ -99,10 +113,22 @@ fun QuestionEditorScreen(
                     OutlinedTextField(
                         value = text,
                         onValueChange = { viewModel.updateOption(letter, it) },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .graphicsLayer {
+                                shadowElevation = 1.5f
+                                shape = RoundedCornerShape(12.dp)
+                                clip = true
+                            },
                         shape = RoundedCornerShape(12.dp),
                         placeholder = { Text("Option $letter text") },
-                        singleLine = true
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                        )
                     )
                 }
             }
@@ -165,10 +191,22 @@ fun QuestionEditorScreen(
                 OutlinedTextField(
                     value = state.explanation,
                     onValueChange = { viewModel.updateExplanation(it) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            shadowElevation = 2f
+                            shape = RoundedCornerShape(12.dp)
+                            clip = true
+                        },
                     minLines = 3,
                     shape = RoundedCornerShape(12.dp),
-                    placeholder = { Text("Explain why the answer is correct...") }
+                    placeholder = { Text("Explain why the answer is correct...") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                    )
                 )
             }
 
@@ -178,9 +216,21 @@ fun QuestionEditorScreen(
                 OutlinedTextField(
                     value = state.references,
                     onValueChange = { viewModel.updateReferences(it) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            shadowElevation = 2f
+                            shape = RoundedCornerShape(12.dp)
+                            clip = true
+                        },
                     shape = RoundedCornerShape(12.dp),
-                    placeholder = { Text("Source, Textbook, Year") }
+                    placeholder = { Text("Source, Textbook, Year") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                    )
                 )
             }
             

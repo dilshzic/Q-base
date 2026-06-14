@@ -47,6 +47,8 @@ fun ChatDetailScreen(
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var reportingMessage by remember { mutableStateOf<MessageEntity?>(null) }
     var showReportGroupDialog by remember { mutableStateOf(false) }
+    var pendingShareCollectionId by remember { mutableStateOf<String?>(null) }
+    var shareAsAdminOnly by remember { mutableStateOf(false) }
     val collections by viewModel.allStudyCollections.collectAsStateWithLifecycle()
     val appAccessState = LocalAppAccessState.current
     val canSend by remember(state.chat?.chatId) {
@@ -98,7 +100,7 @@ fun ChatDetailScreen(
             ChatDetailTopBar(
                 displayName = state.displayName,
                 chat = state.chat,
-                participantsCount = state.participants.size,
+                participantsCount = state.chat?.participantIds?.split(",")?.size ?: 0,
                 isAiLoading = isAiLoading,
                 appAccessState = appAccessState,
                 currentUser = currentUser,
@@ -269,8 +271,66 @@ fun ChatDetailScreen(
             collections = collections,
             onDismiss = { showCollectionPicker = false },
             onCollectionSelected = { collectionId ->
-                state.chat?.chatId?.let { viewModel.shareCollection(it, collectionId) }
+                pendingShareCollectionId = collectionId
+                val selectedCollection = collections.find { it.collectionId == collectionId }
+                shareAsAdminOnly = selectedCollection?.isAdminOnly == true
                 showCollectionPicker = false
+            }
+        )
+    }
+
+    if (pendingShareCollectionId != null) {
+        val selectedCollection = collections.find { it.collectionId == pendingShareCollectionId }
+        AlertDialog(
+            onDismissRequest = { pendingShareCollectionId = null },
+            title = { Text("Share Collection") },
+            text = {
+                Column {
+                    val warningText = if (state.chat?.isGroup == true) {
+                        "This will be converted into a Shared collection and sent to this chat."
+                    } else {
+                        "This collection will be securely sent to this chat."
+                    }
+                    Text(
+                        warningText,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    if (state.chat?.isGroup == true) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Checkbox(
+                                checked = shareAsAdminOnly,
+                                onCheckedChange = { shareAsAdminOnly = it }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Make Admin-Only", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val id = pendingShareCollectionId!!
+                    state.chat?.chatId?.let { 
+                        if (state.chat?.isGroup == true && selectedCollection?.isAdminOnly != shareAsAdminOnly) {
+                            viewModel.updateCollectionAdminStatus(id, shareAsAdminOnly)
+                        }
+                        viewModel.shareCollection(it, id) 
+                    }
+                    pendingShareCollectionId = null
+                }) {
+                    Text("Share")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingShareCollectionId = null }) {
+                    Text("Cancel")
+                }
             }
         )
     }

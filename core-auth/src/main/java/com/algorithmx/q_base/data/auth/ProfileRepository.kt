@@ -441,7 +441,25 @@ class ProfileRepository @Inject constructor(
         val prefix = "QBS"
         val part1 = (1..4).map { chars[Random.nextInt(chars.length)] }.joinToString("")
         val part2 = (1..4).map { chars[Random.nextInt(chars.length)] }.joinToString("")
-        return "$prefix-$part1-$part2"
+        val part3 = (1..4).map { chars[Random.nextInt(chars.length)] }.joinToString("")
+        return "$prefix-$part1-$part2-$part3"
+    }
+
+    suspend fun regenerateFriendCodeManually(userId: String): Result<UserProfile> {
+        return try {
+            val docResult = coreDatabase.getDocument("users", userId)
+            val existingDoc = docResult.getOrNull() ?: throw IllegalStateException("User profile not found")
+            val currentProfile = mapToUserProfile(existingDoc).copy(userId = userId)
+            val newCode = generateUniqueFriendCode()
+            val updatedProfile = currentProfile.copy(friendCode = newCode)
+            
+            coreDatabase.updateDocument("users", userId, userProfileToMap(updatedProfile)).getOrThrow()
+            profileCache.upsert(updatedProfile)
+            Result.success(updatedProfile)
+        } catch (e: Exception) {
+            Log.e("ProfileRepository", "Failed to regenerate friend code", e)
+            Result.failure(e)
+        }
     }
 
     suspend fun fetchAndCacheContactProfile(userId: String): UserProfile? {
@@ -490,6 +508,16 @@ class ProfileRepository @Inject constructor(
         } catch (e: Exception) {
             Log.e("ProfileRepository", "Failed to check secure backup", e)
             false
+        }
+    }
+
+    suspend fun deleteSecureBackup(userId: String): Result<Unit> {
+        return try {
+            coreDatabase.deleteDocument("user_private_settings", userId)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("ProfileRepository", "Failed to delete secure backup", e)
+            Result.failure(e)
         }
     }
 

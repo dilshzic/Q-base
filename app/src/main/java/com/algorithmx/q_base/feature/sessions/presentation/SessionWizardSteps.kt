@@ -5,14 +5,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,7 +19,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.algorithmx.q_base.data.collections.StudyCollection
+import com.algorithmx.q_base.data.collections.Question
 
 @Composable
 fun CategoryStep(
@@ -34,11 +35,13 @@ fun CategoryStep(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(categories) { category ->
-            Surface(
+            Card(
                 onClick = { onSelect(category.name) },
-                shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                ),
+                border = androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
             ) {
                 Row(
                     modifier = Modifier.padding(20.dp),
@@ -46,15 +49,15 @@ fun CategoryStep(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape),
+                            .size(48.dp)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            Icons.Rounded.History,
+                            Icons.Rounded.FolderOpen,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(16.dp))
@@ -72,124 +75,22 @@ fun CategoryStep(
 }
 
 @Composable
-fun QuestionSelectionStep(
-    questions: List<com.algorithmx.q_base.data.collections.Question>,
+fun SessionSetupStep(
+    questions: List<Question>,
     selectedIds: Set<String>,
     lastRandomCount: Int?,
-    onToggle: (String) -> Unit,
-    onSelectAll: () -> Unit,
-    onDeselectAll: () -> Unit,
-    onRandomSelect: (Int) -> Unit,
-    onNext: () -> Unit
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 8.dp)
-        ) {
-            Text(
-                "Quick Select",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                listOf(10, 25, 50).forEach { count ->
-                    val isSelected = lastRandomCount == count
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { onRandomSelect(count) },
-                        label = { Text("$count") },
-                        modifier = Modifier.weight(1f),
-                        leadingIcon = if (isSelected) {
-                            { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
-                        } else null
-                    )
-                }
-            }
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            TextButton(onClick = onSelectAll, modifier = Modifier.weight(1f)) {
-                Text("Select All (${questions.size})")
-            }
-            TextButton(onClick = onDeselectAll, modifier = Modifier.weight(1f)) {
-                Text("Clear Selection")
-            }
-        }
-        
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp),
-            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp)
-        ) {
-            items(questions) { question ->
-                val isSelected = selectedIds.contains(question.questionId)
-                Surface(
-                    onClick = { onToggle(question.questionId) },
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    shape = MaterialTheme.shapes.medium,
-                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else Color.Transparent,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(checked = isSelected, onCheckedChange = { onToggle(question.questionId) })
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                text = question.stem,
-                                maxLines = 2,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Text(
-                                text = question.questionType ?: "SBA",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = onNext,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(56.dp),
-            enabled = selectedIds.isNotEmpty(),
-            shape = MaterialTheme.shapes.large
-        ) {
-            Text("Configure Session (${selectedIds.size})", fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-fun ConfigurationStep(
     order: String,
     timingType: String,
     timeLimitSeconds: Int,
+    isAdminOnly: Boolean,
+    onRandomSelect: (Int) -> Unit,
+    onSelectAll: () -> Unit,
     onOrderChange: (String) -> Unit,
     onTimingChange: (String) -> Unit,
     onTimeLimitChange: (Int) -> Unit,
-    selectedCount: Int,
-    isAdminOnly: Boolean,
     onIsAdminOnlyChange: (Boolean) -> Unit,
-    onLaunch: (String) -> Unit
+    onLaunch: (String) -> Unit,
+    onOpenCustomSelection: () -> Unit
 ) {
     var title by remember { mutableStateOf("") }
 
@@ -198,84 +99,142 @@ fun ConfigurationStep(
             .fillMaxWidth()
             .padding(24.dp)
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         OutlinedTextField(
             value = title,
             onValueChange = { title = it },
-            placeholder = { Text("Session Title") },
+            placeholder = { Text("Session Title (Optional)") },
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            )
         )
 
+        // 1. QUESTION SELECTION
         Column {
-            Text("QUESTION ORDER", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ConfigToggle(selected = order == "SEQUENTIAL", label = "Sequential", icon = Icons.Rounded.History, onClick = { onOrderChange("SEQUENTIAL") }, modifier = Modifier.weight(1f))
-                ConfigToggle(selected = order == "RANDOM", label = "Random", icon = Icons.Rounded.AutoAwesome, onClick = { onOrderChange("RANDOM") }, modifier = Modifier.weight(1f))
-            }
-        }
-
-        Column {
-            Text("TIMING MODE", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ConfigToggle(selected = timingType == "NONE", label = "No Timer", icon = null, onClick = { onTimingChange("NONE") }, modifier = Modifier.weight(1f))
-                ConfigToggle(selected = timingType == "TOTAL", label = "Total Time", icon = Icons.Rounded.Timer, onClick = { onTimingChange("TOTAL") }, modifier = Modifier.weight(1f))
-                ConfigToggle(selected = timingType == "PER_QUESTION", label = "Per Question", icon = Icons.Rounded.Timer, onClick = { onTimingChange("PER_QUESTION") }, modifier = Modifier.weight(1f))
-            }
-            
-            if (timingType != "NONE") {
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Time Limit: ${timeLimitSeconds / 60}m", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                    Slider(
-                        value = timeLimitSeconds.toFloat(),
-                        onValueChange = { onTimeLimitChange(it.toInt()) },
-                        valueRange = 30f..3600f,
-                        steps = 59,
-                        modifier = Modifier.weight(1f).padding(horizontal = 16.dp)
+            Text("QUESTION AMOUNT", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf(10, 25, 50).forEach { count ->
+                    val isSelected = lastRandomCount == count && selectedIds.size == count
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { onRandomSelect(count) },
+                        label = { Text("$count", modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center) },
+                        modifier = Modifier.weight(1f)
                     )
+                }
+                val isAllSelected = selectedIds.size == questions.size && questions.isNotEmpty()
+                FilterChip(
+                    selected = isAllSelected,
+                    onClick = onSelectAll,
+                    label = { Text("All", modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${selectedIds.size} questions selected",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                TextButton(onClick = onOpenCustomSelection) {
+                    Text("Custom Selection")
                 }
             }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Admin-Only Session",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Only group admins can answer, submit, or edit attempts.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+        Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+        // 2. ORDER
+        Column {
+            Text("QUESTION ORDER", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                ConfigToggle(selected = order == "SEQUENTIAL", label = "Sequential", icon = Icons.Rounded.FormatListNumbered, onClick = { onOrderChange("SEQUENTIAL") }, modifier = Modifier.weight(1f))
+                ConfigToggle(selected = order == "RANDOM", label = "Random", icon = Icons.Rounded.Shuffle, onClick = { onOrderChange("RANDOM") }, modifier = Modifier.weight(1f))
             }
-            Switch(
-                checked = isAdminOnly,
-                onCheckedChange = onIsAdminOnlyChange
-            )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        // 3. TIMING
+        Column {
+            Text("TIMING MODE", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ConfigToggle(selected = timingType == "NONE", label = "No Timer", icon = null, onClick = { onTimingChange("NONE") }, modifier = Modifier.weight(1f))
+                ConfigToggle(selected = timingType == "TOTAL", label = "Total Time", icon = Icons.Rounded.HourglassEmpty, onClick = { onTimingChange("TOTAL") }, modifier = Modifier.weight(1f))
+                ConfigToggle(selected = timingType == "PER_QUESTION", label = "Per Q", icon = Icons.Rounded.Timer, onClick = { onTimingChange("PER_QUESTION") }, modifier = Modifier.weight(1f))
+            }
+            
+            if (timingType != "NONE") {
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+                    shape = RoundedCornerShape(16.dp),
+                    border = androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Limit:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("${timeLimitSeconds / 60}m", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black)
+                        Slider(
+                            value = timeLimitSeconds.toFloat(),
+                            onValueChange = { onTimeLimitChange(it.toInt()) },
+                            valueRange = 30f..3600f,
+                            steps = 59,
+                            modifier = Modifier.weight(1f).padding(start = 16.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        // 4. ADMIN ONLY
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+            shape = RoundedCornerShape(16.dp),
+            border = androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
+                    Text("Admin-Only Session", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Text("Only group admins can answer or edit.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Switch(checked = isAdminOnly, onCheckedChange = onIsAdminOnlyChange)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         Button(
             onClick = { 
-                val finalTitle = title.takeIf { it.isNotBlank() } ?: "Exam Session ${java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(System.currentTimeMillis())}"
+                val finalTitle = title.takeIf { it.isNotBlank() } ?: "Session ${java.text.SimpleDateFormat("MMM dd, HH:mm", java.util.Locale.getDefault()).format(System.currentTimeMillis())}"
                 onLaunch(finalTitle) 
             },
             modifier = Modifier.fillMaxWidth().height(56.dp),
-            enabled = selectedCount > 0,
-            shape = MaterialTheme.shapes.large
+            enabled = selectedIds.isNotEmpty(),
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Text("Launch $selectedCount Questions", fontWeight = FontWeight.Bold)
+            Icon(Icons.Rounded.PlayArrow, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Launch Session", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
         }
     }
 }
@@ -288,12 +247,15 @@ fun ConfigToggle(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    Card(
         onClick = onClick,
         modifier = modifier.height(56.dp),
-        shape = MaterialTheme.shapes.medium,
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        border = if (selected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        ),
+        border = if (selected) androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) 
+                 else androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -302,9 +264,91 @@ fun ConfigToggle(
         ) {
             if (icon != null) {
                 Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
             }
             Text(label, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomSelectionDialog(
+    questions: List<Question>,
+    selectedIds: Set<String>,
+    onToggle: (String) -> Unit,
+    onSelectAll: () -> Unit,
+    onDeselectAll: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                TopAppBar(
+                    title = { Text("Select Questions") },
+                    navigationIcon = {
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Rounded.Close, contentDescription = "Close")
+                        }
+                    },
+                    actions = {
+                        TextButton(onClick = onSelectAll) { Text("All") }
+                        TextButton(onClick = onDeselectAll) { Text("Clear") }
+                    }
+                )
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(questions) { question ->
+                        val isSelected = selectedIds.contains(question.questionId)
+                        Card(
+                            onClick = { onToggle(question.questionId) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) 
+                                                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp, 
+                                if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) 
+                                else Color.Transparent
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Checkbox(checked = isSelected, onCheckedChange = { onToggle(question.questionId) })
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = question.stem,
+                                        maxLines = 3,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = question.questionType ?: "SBA",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

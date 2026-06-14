@@ -20,11 +20,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
+import android.util.Log
+import com.algorithmx.q_base.core.data.DataClearingRepository
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val dataStoreManager: BrainDataStoreManager,
     private val database: AppDatabase,
+    private val dataClearingRepository: DataClearingRepository,
     @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -32,7 +35,7 @@ class SettingsViewModel @Inject constructor(
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
-            StoredBrainConfig(BrainProvider.GEMINI, "gemini-2.5-flash", "", 0, 0)
+            StoredBrainConfig(BrainProvider.GEMINI, "gemini-3.1-flash-lite", "", 0, 0)
         )
 
     val dbSizeMb: StateFlow<Double> = dataStoreManager.brainConfigFlow.map {
@@ -64,9 +67,34 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun toggleMasterAiFreeze(freeze: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setMasterAiFreeze(freeze)
+        }
+    }
+
     fun saveTaskConfig(task: BrainTask, config: TaskConfig) {
         viewModelScope.launch {
             dataStoreManager.saveTaskConfig(task, config)
+        }
+    }
+
+    fun updateMasterAiConfig(modelName: String, fallbackModelName: String?, systemPrompt: String) {
+        viewModelScope.launch {
+            // Update global settings
+            val provider = BrainRegistry.getProviderForModel(modelName)
+            dataStoreManager.saveEngineConfiguration(
+                provider = provider,
+                modelName = modelName,
+                category = BrainCategory.TEXT_TO_TEXT,
+                systemInstruction = systemPrompt
+            )
+            
+            // Update all individual task configs to use this master config
+            val newTaskConfig = TaskConfig(modelName, fallbackModelName, systemPrompt)
+            BrainTask.values().forEach { task ->
+                dataStoreManager.saveTaskConfig(task, newTaskConfig)
+            }
         }
     }
 
@@ -84,8 +112,15 @@ class SettingsViewModel @Inject constructor(
 
     fun clearAllData(onComplete: () -> Unit) {
         viewModelScope.launch {
-            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                database.clearAllTables()
+            try {
+                dataClearingRepository.clearRemoteData()
+            } catch (e: Exception) {
+                Log.e("SettingsViewModel", "Error clearing remote data", e)
+            }
+            try {
+                dataClearingRepository.clearAllData(clearCollections = true)
+            } catch (e: Exception) {
+                Log.e("SettingsViewModel", "Error clearing local data", e)
             }
             onComplete()
         }

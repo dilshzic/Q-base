@@ -66,6 +66,12 @@ interface CollectionDao {
     @Update
     suspend fun updateStudyCollection(collection: StudyCollection)
 
+    @Query("UPDATE StudyCollections SET is_shared = :isShared, shared_with_group_id = :groupId WHERE collection_id = :collectionId")
+    suspend fun updateCollectionSharingStatus(collectionId: String, isShared: Boolean, groupId: String?)
+
+    @Query("UPDATE StudyCollections SET is_admin_only = :isAdminOnly WHERE collection_id = :collectionId")
+    suspend fun updateStudyCollectionAdminOnly(collectionId: String, isAdminOnly: Boolean)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSets(sets: List<QuestionSet>)
 

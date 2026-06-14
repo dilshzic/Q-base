@@ -11,7 +11,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -157,9 +159,22 @@ fun ExtractionConfigScreen(
                 OutlinedTextField(
                     value = customInstructions,
                     onValueChange = { customInstructions = it },
-                    modifier = Modifier.fillMaxWidth().height(120.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    placeholder = { Text("E.g., Include detailed explanations for incorrect distractors, focus mostly on treatments...") }
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .graphicsLayer {
+                            shadowElevation = 2f
+                            shape = RoundedCornerShape(16.dp)
+                            clip = true
+                        },
+                    shape = RoundedCornerShape(16.dp),
+                    placeholder = { Text("E.g., Include detailed explanations for incorrect distractors, focus mostly on treatments...") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                    )
                 )
             }
 

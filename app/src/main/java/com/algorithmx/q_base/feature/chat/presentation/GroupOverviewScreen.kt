@@ -2,6 +2,7 @@ package com.algorithmx.q_base.feature.chat.presentation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -92,7 +93,7 @@ fun GroupOverviewScreen(
                             .background(
                                 Brush.verticalGradient(
                                     colors = listOf(
-                                        MaterialTheme.colorScheme.secondaryContainer,
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                                         MaterialTheme.colorScheme.background
                                     )
                                 )
@@ -103,8 +104,8 @@ fun GroupOverviewScreen(
                         Surface(
                             modifier = Modifier.size(120.dp),
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            tonalElevation = 4.dp
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
@@ -122,7 +123,7 @@ fun GroupOverviewScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "${participants.size} Participants",
+                            text = "${chat?.participantIds?.split(",")?.size ?: 0} Participants",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.secondary
                         )
@@ -157,8 +158,11 @@ fun GroupOverviewScreen(
                         icon = Icons.Rounded.Edit,
                         label = "Edit",
                         onClick = { 
-                            if (isAdmin) { /* Edit logic */ } 
-                            else coroutineScope.launch { snackbarHostState.showSnackbar("Only admins can edit group info") }
+                            if (isAdmin) {
+                                coroutineScope.launch { snackbarHostState.showSnackbar("Editing group info is coming soon") }
+                            } else {
+                                coroutineScope.launch { snackbarHostState.showSnackbar("Only admins can edit group info") }
+                            }
                         }
                     )
                 }
@@ -326,6 +330,35 @@ fun GroupOverviewScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun ActionButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit
+) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable { 
+            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+            onClick() 
+        }
+    ) {
+        FilledIconButton(
+            onClick = onClick,
+            modifier = Modifier.size(56.dp),
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        ) {
+            Icon(icon, contentDescription = null)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(text = label, style = MaterialTheme.typography.labelMedium)
     }
 }
 

@@ -1,5 +1,7 @@
 package com.algorithmx.q_base.feature.chat.presentation.components
 import androidx.compose.animation.*
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -8,8 +10,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,6 +19,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.algorithmx.q_base.core.data.chat.ChatEntity
@@ -121,20 +126,11 @@ fun ChatDetailTopBar(
                         Text(
                             text = if (isAiLoading) "Typing..."
                             else if (chat?.isGroup == true) "$participantsCount participants"
-                            else if (chat?.isBlocked == true) "Blocked" else "Active now",
+                            else if (chat?.isBlocked == true) "Blocked" else "Tap for info",
                             style = MaterialTheme.typography.labelSmall,
                             color = if (chat?.isBlocked == true) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "• ${accessStateLabel(appAccessState)}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = when (appAccessState) {
-                                AppAccessState.Online -> MaterialTheme.colorScheme.primary
-                                AppAccessState.Offline -> MaterialTheme.colorScheme.error
-                                AppAccessState.NotLoggedIn -> MaterialTheme.colorScheme.tertiary
-                            }
-                        )
                     }
                 }
             }
@@ -219,6 +215,7 @@ fun ChatDetailBottomBar(
     onSessionClick: () -> Unit,
     onSendClick: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     if (chat?.isBlocked == true) {
         Surface(
             color = MaterialTheme.colorScheme.errorContainer,
@@ -236,11 +233,18 @@ fun ChatDetailBottomBar(
         }
     } else if (!isLibraryMode) {
         Surface(
-            tonalElevation = 1.dp,
-            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 0.dp,
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
             modifier = Modifier
                 .navigationBarsPadding()
                 .imePadding()
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .graphicsLayer {
+                    shadowElevation = 8f
+                    shape = RoundedCornerShape(24.dp)
+                    clip = true
+                }
         ) {
             Row(
                 modifier = Modifier
@@ -306,18 +310,21 @@ fun ChatDetailBottomBar(
                 val isNotEmpty = messageText.isNotBlank()
                 AnimatedVisibility(
                     visible = isNotEmpty,
-                    enter = scaleIn() + fadeIn(),
-                    exit = scaleOut() + fadeOut()
+                    enter = scaleIn(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)) + fadeIn(),
+                    exit = scaleOut(animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy)) + fadeOut()
                 ) {
                     IconButton(
-                        onClick = onSendClick,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onSendClick()
+                        },
                         modifier = Modifier
                             .padding(start = 4.dp)
                             .size(48.dp)
                             .background(MaterialTheme.colorScheme.primary, CircleShape)
                     ) {
                         Icon(
-                            Icons.AutoMirrored.Rounded.Send, 
+                            Icons.AutoMirrored.Filled.Send, 
                             contentDescription = "Send",
                             tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(20.dp)

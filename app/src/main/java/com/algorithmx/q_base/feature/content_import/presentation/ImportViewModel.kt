@@ -72,7 +72,7 @@ class ImportViewModel @Inject constructor(
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    private val _uiState = MutableStateFlow<ImportStep>(ImportStep.NameAndDestination)
+    private val _uiState = MutableStateFlow<ImportStep>(ImportStep.ChooseMethod)
     val uiState = _uiState.asStateFlow()
 
     private val _collections = MutableStateFlow<List<StudyCollection>>(emptyList())
@@ -147,7 +147,7 @@ class ImportViewModel @Inject constructor(
         // If a source is pre-specified, skip ahead
         when (source?.uppercase()) {
             "IMAGE", "PDF", "TOPIC" -> _uiState.value = ImportStep.MediaInput
-            else -> _uiState.value = ImportStep.NameAndDestination
+            else -> _uiState.value = ImportStep.ChooseMethod
         }
     }
 
@@ -421,7 +421,7 @@ class ImportViewModel @Inject constructor(
     }
 
     fun reset() {
-        _uiState.value = ImportStep.NameAndDestination
+        _uiState.value = ImportStep.ChooseMethod
         _extractedText.value = ""
         _extractedDocs.value = emptyList()
         docTexts.clear()
@@ -447,6 +447,7 @@ class ImportViewModel @Inject constructor(
      * Transient states (Extracting, legacy) never change the bar.
      */
     fun currentStepNumber(): Int = when (val s = _uiState.value) {
+        is ImportStep.ChooseMethod,
         is ImportStep.NameAndDestination,
         is ImportStep.MediaInput -> 1
         is ImportStep.Configure -> 2

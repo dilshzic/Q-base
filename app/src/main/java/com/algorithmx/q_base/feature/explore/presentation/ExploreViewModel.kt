@@ -156,7 +156,11 @@ class ExploreViewModel @Inject constructor(
     fun loadQuestionsBySet(setId: String) {
         viewModelScope.launch {
             repository.getQuestionsBySet(setId).collect { questions ->
-                val states = questions.map { ExploreQuestionState(it) }
+                val collectionName = questions.firstOrNull()?.collection
+                val collection = collectionName?.let { repository.getStudyCollectionByNameOnce(it) }
+                val isEditable = checkIsEditable(collection)
+                
+                val states = questions.map { ExploreQuestionState(it, isEditable = isEditable) }
                 _questionStates.value = states
                 if (states.isNotEmpty()) loadQuestionDetails(0)
             }
@@ -168,14 +172,18 @@ class ExploreViewModel @Inject constructor(
         if (!collection.isAdminOnly) return true
         val groupId = collection.sharedWithGroupId ?: return true
         val chat = syncRepository.getChatById(groupId)
-        val currentUid = authRepository.currentUser.first()?.uid
+        val currentUid = authRepository.currentUser.firstOrNull()?.uid
         return chat?.isAdmin(currentUid ?: "") == true
     }
 
     fun loadPinnedQuestions() {
         viewModelScope.launch {
             repository.getPinnedQuestions().collect { questions ->
-                val states = questions.map { ExploreQuestionState(it) }
+                val states = questions.map { question ->
+                    val collection = question.collection?.let { repository.getStudyCollectionByNameOnce(it) }
+                    val isEditable = checkIsEditable(collection)
+                    ExploreQuestionState(question, isEditable = isEditable)
+                }
                 _questionStates.value = states
                 if (states.isNotEmpty()) loadQuestionDetails(0)
             }

@@ -39,10 +39,12 @@ class AppwriteDatabaseImpl @Inject constructor(
                 io.appwrite.Permission.read(io.appwrite.Role.user(documentId)),
                 io.appwrite.Permission.write(io.appwrite.Role.user(documentId))
             )
-            // CRITICAL FIX: Client SDK cannot grant access to other UIDs.
-            // Return null to allow the Appwrite console's collection-level permissions to handle access.
-            "chats" -> null
-            "messages" -> null
+            "chats", "messages", "shared_collections", "shared_sessions" -> {
+                listOf(
+                    io.appwrite.Permission.read(io.appwrite.Role.users()),
+                    io.appwrite.Permission.write(io.appwrite.Role.users())
+                )
+            }
             else -> null
         }
     }

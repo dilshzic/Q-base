@@ -29,12 +29,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.R
+import com.algorithmx.q_base.ui.components.AuthFormSection
+import com.algorithmx.q_base.ui.components.GoogleSignInButton
 import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToSignup: () -> Unit,
+    onRestoreBackupRequired: (String) -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -44,9 +47,11 @@ fun LoginScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(state.isSuccess) {
+    LaunchedEffect(state.isSuccess, state.requiresBackupRestore) {
         if (state.isSuccess) {
             onLoginSuccess()
+        } else if (state.requiresBackupRestore && state.user != null) {
+            onRestoreBackupRequired(state.user!!.uid)
         }
     }
 
@@ -114,35 +119,13 @@ fun LoginScreen(
             
             Spacer(modifier = Modifier.height(48.dp))
 
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email Address") },
-                leadingIcon = { Icon(Icons.Rounded.Mail, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                shape = MaterialTheme.shapes.large,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                )
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                leadingIcon = { Icon(Icons.Rounded.Lock, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation(),
-                singleLine = true,
-                shape = MaterialTheme.shapes.large,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                )
+            AuthFormSection(
+                emailValue = email,
+                onEmailChange = { email = it },
+                passwordValue = password,
+                onPasswordChange = { password = it },
+                isSubmitting = state.isLoading,
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
 
             AnimatedVisibility(
@@ -198,40 +181,16 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
             
-            OutlinedButton(
+            GoogleSignInButton(
                 onClick = {
                     val activity = context as? androidx.activity.ComponentActivity
                     if (activity != null) {
                         viewModel.signInWithGoogle(activity)
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = MaterialTheme.shapes.large,
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                ),
-                border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.outline,
-                            MaterialTheme.colorScheme.outlineVariant
-                        )
-                    )
-                )
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        "Sign in with Google",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+                modifier = Modifier.padding(horizontal = 8.dp),
+                enabled = !state.isLoading
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 

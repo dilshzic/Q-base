@@ -26,6 +26,20 @@ fun ExploreViewModel.clearSelection() {
 
 fun ExploreViewModel.deleteCollectionSet(setId: String) {
     viewModelScope.launch {
+        val setWithQuestions = questionDao.getSetWithContent(setId)
+        val collectionId = setWithQuestions?.set?.parentCollectionId
+        val collection = collectionId?.let { repository.getStudyCollectionByIdOnce(it) }
+        if (collection != null && collection.isAdminOnly) {
+            val groupId = collection.sharedWithGroupId
+            if (groupId != null) {
+                val chat = syncRepository.getChatById(groupId)
+                val currentUid = authRepository.currentUser.firstOrNull()?.uid
+                if (chat == null || currentUid == null || !chat.adminIds.contains(currentUid)) {
+                    _actionFeedback.emit("Only a group admin can modify this collection")
+                    return@launch
+                }
+            }
+        }
         questionDao.deleteSetById(setId)
         loadSetsAndSessions()
     }
@@ -40,6 +54,29 @@ fun ExploreViewModel.deleteSelectedSets() {
     if (idsToDelete.isEmpty()) return
     
     viewModelScope.launch {
+        var unauthorized = false
+        for (setId in idsToDelete) {
+            val setWithQuestions = questionDao.getSetWithContent(setId)
+            val collectionId = setWithQuestions?.set?.parentCollectionId
+            val collection = collectionId?.let { repository.getStudyCollectionByIdOnce(it) }
+            if (collection != null && collection.isAdminOnly) {
+                val groupId = collection.sharedWithGroupId
+                if (groupId != null) {
+                    val chat = syncRepository.getChatById(groupId)
+                    val currentUid = authRepository.currentUser.firstOrNull()?.uid
+                    if (chat == null || currentUid == null || !chat.adminIds.contains(currentUid)) {
+                        unauthorized = true
+                        break
+                    }
+                }
+            }
+        }
+
+        if (unauthorized) {
+            _actionFeedback.emit("Only a group admin can modify this collection")
+            return@launch
+        }
+
         questionDao.deleteCrossRefsForSets(idsToDelete)
         questionDao.deleteSetsByIds(idsToDelete)
         clearSelection()
@@ -93,6 +130,19 @@ fun ExploreViewModel.addQuestionToSession(index: Int, sessionId: String) {
 
 fun ExploreViewModel.createSet(title: String, description: String, collectionId: String) {
     viewModelScope.launch {
+        val collection = repository.getStudyCollectionByIdOnce(collectionId)
+        if (collection != null && collection.isAdminOnly) {
+            val groupId = collection.sharedWithGroupId
+            if (groupId != null) {
+                val chat = syncRepository.getChatById(groupId)
+                val currentUid = authRepository.currentUser.firstOrNull()?.uid
+                if (chat == null || currentUid == null || !chat.adminIds.contains(currentUid)) {
+                    _actionFeedback.emit("Only a group admin can modify this collection")
+                    return@launch
+                }
+            }
+        }
+
         repository.saveSet(
             QuestionSet(
                 setId = java.util.UUID.randomUUID().toString(),

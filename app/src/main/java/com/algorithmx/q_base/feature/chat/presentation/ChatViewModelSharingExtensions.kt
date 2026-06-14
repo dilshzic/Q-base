@@ -117,13 +117,18 @@ fun ChatViewModel.shareCollection(chatId: String, collectionId: String) {
                     "isAdminOnly" to collection.isAdminOnly
                 )
                 syncRepository.shareCollectionToGroup(chatId, metadata)
-                sendMessage(chatId, "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId|NAME|${collection.name}", type = "FILE_TRANSFER")
+                sendMessage(chatId, "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId|ADMIN_ONLY|${collection.isAdminOnly}|GROUP_ID|$chatId|NAME|${collection.name}", type = "FILE_TRANSFER")
             } else {
                 // P2P: Message-based (Ephemeral)
-                sendMessage(chatId, "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId", type = "FILE_TRANSFER")
+                sendMessage(chatId, "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId|ADMIN_ONLY|${collection.isAdminOnly}", type = "FILE_TRANSFER")
             }
             
             mockExporter.cleanup(zipFile)
+            
+            if (chat.isGroup) {
+                collectionDao.updateCollectionSharingStatus(collectionId, true, chatId)
+            }
+            
             _actionFeedback.emit("Collection shared successfully")
         } catch (e: Exception) {
             Log.e("ChatViewModel", "Sharing failed", e)
@@ -167,10 +172,17 @@ fun ChatViewModel.resendCollection(collectionId: String) {
                 "timestamp" to System.currentTimeMillis(),
                 "isAdminOnly" to collection.isAdminOnly
             )
-            syncRepository.shareCollectionToGroup(chatId, metadata)
+            val isGroup = chat?.isGroup == true
+            if (isGroup) {
+                syncRepository.shareCollectionToGroup(chatId, metadata)
+                sendMessage(chatId, "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId|ADMIN_ONLY|${collection.isAdminOnly}|GROUP_ID|$chatId|NAME|${collection.name}", type = "FILE_TRANSFER")
+            } else {
+                sendMessage(chatId, "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId|ADMIN_ONLY|${collection.isAdminOnly}", type = "FILE_TRANSFER")
+            }
             mockExporter.cleanup(zipFile)
+            val sharedGroupId = if (isGroup) chatId else null
+            collectionDao.updateCollectionSharingStatus(collectionId, true, sharedGroupId)
             _actionFeedback.emit("Collection resent and re-uploaded successfully!")
-            sendMessage(chatId, "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId|NAME|${collection.name}", type = "FILE_TRANSFER")
         } catch (e: Exception) {
             Log.e("ChatViewModel", "Resend failed", e)
             _actionFeedback.emit("Resend failed: ${e.message}")

@@ -41,6 +41,15 @@ class AiRepository @Inject constructor(
             Difficulty Level: $difficulty level scenario.
             Number of Options: Each question must have exactly $optionCount options.
             
+            SPECIAL INSTRUCTIONS FOR QUESTION TYPES:
+            If Question Type is MTF (Multiple True False):
+            - Each option should be an independent statement related to the stem.
+            - The "correctLetter" in "answer" MUST be a comma-separated string of "T" and "F" matching the exact order and number of options (e.g., "T,F,T,T,F").
+            - The "explanation" field within EACH option must explicitly explain why that specific statement is True or False.
+            
+            For all other types (e.g., SBA, EMQ):
+            - The "correctLetter" should simply be the letter of the correct option (e.g., "A").
+            
             Return ONLY a valid JSON object with this exact structure:
             {
               "collectionTitle": "Physics Basics",
@@ -218,6 +227,15 @@ class AiRepository @Inject constructor(
             Question Types: ${types.joinToString(", ")}
             Target Difficulty: $difficulty level questions.
             ${if (!customInstructions.isNullOrBlank()) "ADDITIONAL INSTRUCTIONS: $customInstructions" else ""}
+            
+            SPECIAL INSTRUCTIONS FOR QUESTION TYPES:
+            If extracting MTF (Multiple True False) questions:
+            - Treat each statement as an option.
+            - The "correctLetter" in "answer" MUST be a comma-separated string of "T" and "F" indicating the true/false status of each option in order (e.g., "T,F,T,T,F").
+            - The "explanation" field within EACH option must explicitly explain why that specific statement is True or False.
+            
+            For all other types (e.g., SBA, EMQ):
+            - The "correctLetter" should simply be the letter of the correct option (e.g., "A").
             
             Return ONLY a valid JSON object with this exact structure:
             {

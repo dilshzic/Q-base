@@ -233,6 +233,13 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun regenerateFriendCode() {
+        val current = userState.value ?: return
+        viewModelScope.launch {
+            profileRepository.regenerateFriendCodeManually(current.userId)
+        }
+    }
+
     fun signOut(clearCollections: Boolean, onComplete: () -> Unit) {
         viewModelScope.launch {
             // Sign out first — this nulls currentUser which cancels active sync jobs

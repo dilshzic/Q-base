@@ -26,6 +26,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.hilt.android)
     implementation(libs.appwrite.sdk)
+    implementation(libs.gson)
     implementation(project(":core-crypto"))
     implementation(project(":core-auth"))
     ksp(libs.androidx.room.compiler)

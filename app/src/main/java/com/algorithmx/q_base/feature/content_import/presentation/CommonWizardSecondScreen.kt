@@ -7,6 +7,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -30,7 +32,7 @@ fun ImportConfigView(onProceed: (List<String>, String) -> Unit) {
             Text("Target Layout Formats", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                listOf("SBA", "MCQ").forEach { type ->
+                listOf("SBA", "MTF").forEach { type ->
                     FilterChip(
                         selected = selectedTypes.contains(type), 
                         onClick = {
@@ -50,13 +52,20 @@ fun ImportConfigView(onProceed: (List<String>, String) -> Unit) {
             onValueChange = { instructions = it }, 
             modifier = Modifier
                 .fillMaxWidth()
-                .height(150.dp), 
+                .height(150.dp)
+                .graphicsLayer {
+                    shadowElevation = 2f
+                    shape = RoundedCornerShape(16.dp)
+                    clip = true
+                },
             label = { Text("Custom Focus Instructions for AI") }, 
             placeholder = { Text("e.g. Only extract pathology questions. Emphasize laboratory markers...") },
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
             )
         )
         
@@ -166,7 +175,7 @@ fun GenerateConfigView(onProceed: (ExtractionConfigData) -> Unit) {
             Text("Target Question Formats", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                listOf("SBA", "MCQ").forEach { type -> 
+                listOf("SBA", "MTF").forEach { type -> 
                     FilterChip(
                         selected = selectedTypes.contains(type), 
                         onClick = { 
@@ -186,13 +195,20 @@ fun GenerateConfigView(onProceed: (ExtractionConfigData) -> Unit) {
             onValueChange = { instructions = it }, 
             modifier = Modifier
                 .fillMaxWidth()
-                .height(120.dp), 
+                .height(120.dp)
+                .graphicsLayer {
+                    shadowElevation = 2f
+                    shape = RoundedCornerShape(16.dp)
+                    clip = true
+                },
             label = { Text("Special Context & Core Focus") }, 
             placeholder = { Text("Focus on mechanism of action, key diagnostics...") },
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
             )
         )
         

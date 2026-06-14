@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun ProfileCardSection(
@@ -27,10 +28,11 @@ fun ProfileCardSection(
             .padding(vertical = 8.dp)
     ) {
         Text(
-            text = title,
-            style = MaterialTheme.typography.labelLarge,
+            text = title.uppercase(),
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 1.2.sp,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
         )
         Card(
@@ -39,7 +41,7 @@ fun ProfileCardSection(
                 .padding(horizontal = 16.dp),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
             ),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
         ) {

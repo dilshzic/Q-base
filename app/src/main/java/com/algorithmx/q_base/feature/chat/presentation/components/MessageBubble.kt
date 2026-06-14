@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,7 +63,13 @@ fun AnimatedMessageItem(
     AnimatedVisibility(
         visible = visible,
         enter = slideInHorizontally(
-            initialOffsetX = { if (isMine) it / 2 else -it / 2 },
+            initialOffsetX = { if (isMine) it / 4 else -it / 4 },
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            )
+        ) + scaleIn(
+            initialScale = 0.95f,
             animationSpec = spring(
                 dampingRatio = Spring.DampingRatioMediumBouncy,
                 stiffness = Spring.StiffnessLow
@@ -148,8 +156,8 @@ fun MessageBubble(
                 Surface(
                     color = when {
                         isMine -> MaterialTheme.colorScheme.primary
-                        isAi -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
-                        else -> MaterialTheme.colorScheme.secondaryContainer
+                        isAi -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                        else -> MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp).copy(alpha = 0.8f)
                     },
                     contentColor = when {
                         isMine -> MaterialTheme.colorScheme.onPrimary
@@ -157,6 +165,7 @@ fun MessageBubble(
                         else -> MaterialTheme.colorScheme.onSecondaryContainer
                     },
                     shape = bubbleShape,
+                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
                     modifier = Modifier.widthIn(max = 280.dp)
                 ) {
                     Column {
@@ -215,7 +224,7 @@ private fun SenderAvatar(avatarUrl: String?, onClick: () -> Unit) {
                     .padding(start = 8.dp, bottom = 4.dp)
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                 contentScale = ContentScale.Crop
             )
         } else {
@@ -227,7 +236,7 @@ private fun SenderAvatar(avatarUrl: String?, onClick: () -> Unit) {
                     .padding(start = 8.dp, bottom = 4.dp)
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             )
         }
     }

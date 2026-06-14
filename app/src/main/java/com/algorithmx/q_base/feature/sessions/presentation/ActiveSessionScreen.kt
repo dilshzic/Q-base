@@ -155,19 +155,23 @@ fun ActiveSessionScreen(
                     OutlinedButton(
                         onClick = { viewModel.navigateToQuestion(currentIndex - 1) },
                         enabled = currentIndex > 0,
-                        shape = MaterialTheme.shapes.large
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.weight(1f).height(56.dp)
                     ) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("PREV")
+                        Text("PREV", fontWeight = FontWeight.Bold)
                     }
+                    
+                    Spacer(modifier = Modifier.width(16.dp))
                     
                     Button(
                         onClick = { viewModel.navigateToQuestion(currentIndex + 1) },
                         enabled = currentIndex < attempts.size - 1,
-                        shape = MaterialTheme.shapes.large
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.weight(1f).height(56.dp)
                     ) {
-                        Text("NEXT")
+                        Text("NEXT", fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null)
                     }
@@ -294,9 +298,15 @@ fun ActiveSessionScreen(
 
             LinearProgressIndicator(
                 progress = { (currentIndex + 1).toFloat() / attempts.size.coerceAtLeast(1) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
                 strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
             )
+            
+            Spacer(modifier = Modifier.height(8.dp))
 
             HorizontalPager(
                 state = pagerState,

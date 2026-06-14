@@ -118,12 +118,12 @@ def main():
             pass
         return
 
-    # Fetch chat document and check adminIds
+    # Fetch chat document and check adminIds and participantIds
     try:
         chat_doc = db.get_row(os.getenv('APPWRITE_DATABASE_ID'), 'chats', chat_id)
         doc_data = chat_doc.data if hasattr(chat_doc, 'data') else (chat_doc if isinstance(chat_doc, dict) else {})
+        
         chat_admins = doc_data.get('adminIds')
-        # Normalize admin list
         if isinstance(chat_admins, str):
             try:
                 admin_list = json.loads(chat_admins)
@@ -131,16 +131,42 @@ def main():
                 admin_list = [s.strip() for s in chat_admins.split(',') if s.strip()]
         else:
             admin_list = list(chat_admins) if chat_admins else []
+            
+        chat_participants = doc_data.get('participantIds')
+        if isinstance(chat_participants, str):
+            try:
+                participant_list = json.loads(chat_participants)
+            except Exception:
+                participant_list = [s.strip() for s in chat_participants.split(',') if s.strip()]
+        else:
+            participant_list = list(chat_participants) if chat_participants else []
+            
     except AppwriteException as e:
         print('Failed to fetch chat document:', e)
         admin_list = []
+        participant_list = []
 
-    if actor_id not in admin_list:
+    is_admin = actor_id in admin_list
+    is_participant = actor_id in participant_list
+    
+    is_admin_only = data.get('isAdminOnly', False)
+    if isinstance(is_admin_only, str):
+        is_admin_only = is_admin_only.lower() == 'true'
+
+    unauthorized_reason = None
+    if not is_participant and not is_admin:
+        unauthorized_reason = 'actor_not_in_participants'
+    elif is_admin_only and not is_admin:
+        unauthorized_reason = 'actor_not_admin_for_admin_only_content'
+
+    if unauthorized_reason:
         # Unauthorized write: log and attempt to remove the document
         details = {
-            'reason': 'actor_not_in_admins',
+            'reason': unauthorized_reason,
             'actorId': actor_id,
+            'isAdminOnly': is_admin_only,
             'adminList': admin_list,
+            'participantList': participant_list,
             'payload': data
         }
         try:

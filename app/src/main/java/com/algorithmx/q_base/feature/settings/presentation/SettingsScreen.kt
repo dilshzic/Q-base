@@ -133,24 +133,17 @@ fun SettingsContent(
 
             item {
                 SettingsSection(title = "AI ENGINE") {
+                    val displayModelName = if (config.modelName.contains("gemini-3.1-flash-lite", ignoreCase = true)) "Gemini 3.1 Flash Lite" else config.modelName
                     SettingsCard(
                         title = "AI Brain Manager",
-                        subtitle = "Configure ${config.provider.name} (${config.modelName})",
+                        subtitle = "Configure ${config.provider.name} ($displayModelName)",
                         icon = Icons.Rounded.Psychology,
                         onClick = onNavigateToBrainManager
                     )
                 }
             }
 
-            item {
-                SettingsSection(title = "USAGE TELEMETRY") {
-                    UsageStatsCard(
-                        requests = config.totalRequests,
-                        tokens = config.totalTokens
-                    )
-                }
-            }
-            
+
             item {
                 SettingsSection(title = "DATA & PRIVACY") {
                     SettingsCard(
@@ -191,10 +184,12 @@ fun SettingsContent(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             "Q-BASE CORE",
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Black,
-                            color = MaterialTheme.colorScheme.outline
+                            letterSpacing = 2.sp,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             "Version 1.1.2 Build (STABLE)",
                             style = MaterialTheme.typography.labelSmall,
@@ -250,22 +245,52 @@ fun SettingsContent(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "1. Data Storage",
+                        text = "1. Data Collection & Storage",
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleSmall
                     )
                     Text(
-                        text = "All personal statistics, custom study sets, and peer connection details are securely stored inside Appwrite cloud instances and encrypted using AES-256 local caches on your device.",
+                        text = "Your personal study habits, custom collections, and application configurations are cached locally on your device using AES-256 encryption. Core data necessary for multi-device sync, including peer connections and session records, are stored securely on our Appwrite cloud infrastructure.",
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "2. AI Interactions",
+                        text = "2. End-to-End Encrypted Communications",
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleSmall
                     )
                     Text(
-                        text = "AI requests processed through the brain system rely on official Google Gemini APIs. No private friend data or conversational records are shared with third-party advertising algorithms.",
+                        text = "All direct messages, shared study collections, and session micro-updates between peers use End-to-End Encryption (E2EE). Q-Base servers only route the encrypted payloads and cannot decrypt your private discussions or shared materials.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "3. AI Interactions",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        text = "AI requests processed through the brain system rely on official Google Gemini and Groq APIs. No private friend data, conversational records, or PII are shared with third-party advertising algorithms.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "4. Usage Telemetry",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        text = "We do not collect granular usage telemetry for advertising purposes. Limited diagnostic logs may be collected to improve application stability if you explicitly opt-in.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "5. User Rights & Data Deletion",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        text = "You retain full control over your data. You may initiate a complete wipe of your local cache and remote cloud presence at any time via the Settings menu. This action is irreversible.",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }

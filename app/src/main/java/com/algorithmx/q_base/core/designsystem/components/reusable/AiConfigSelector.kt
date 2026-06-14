@@ -18,7 +18,8 @@ fun AiConfigSelector(
     currentConfig: TaskConfig?,
     availableModels: List<String>,
     onConfigChange: (TaskConfig) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    titleOverride: String? = null
 ) {
     var primaryModel by remember(currentConfig) { mutableStateOf(currentConfig?.modelName ?: availableModels.firstOrNull() ?: "") }
     var fallbackModel by remember(currentConfig) { mutableStateOf(currentConfig?.fallbackModelName ?: "") }
@@ -35,7 +36,7 @@ fun AiConfigSelector(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "${task.displayName} Configuration",
+            text = titleOverride ?: "${task.displayName} Configuration",
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary
         )

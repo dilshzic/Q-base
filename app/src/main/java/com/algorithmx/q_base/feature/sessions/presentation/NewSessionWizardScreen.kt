@@ -35,6 +35,8 @@ fun NewSessionWizardScreen(
     val timingType by viewModel.timingType.collectAsStateWithLifecycle()
     val timeLimitSeconds by viewModel.timeLimitSeconds.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    
+    var showCustomSelection by remember { mutableStateOf(false) }
 
     // Intercept OS back to navigate wizard steps before popping the screen
     androidx.activity.compose.BackHandler(enabled = step > 1) {
@@ -42,7 +44,7 @@ fun NewSessionWizardScreen(
     }
 
     val stepProgress by animateFloatAsState(
-        targetValue = step.toFloat() / 3f,
+        targetValue = step.toFloat() / 2f,
         animationSpec = tween(400), label = "progress"
     )
 
@@ -51,11 +53,10 @@ fun NewSessionWizardScreen(
             UnifiedTopAppBar(
                 title = when(step) {
                     1 -> "Choose Collection"
-                    2 -> "Select Questions"
-                    3 -> "Configure Session"
+                    2 -> "Configure & Launch"
                     else -> "New Session"
                 },
-                subtitle = "Step $step of 3",
+                subtitle = "Step $step of 2",
                 currentUser = currentUser,
                 onProfileClick = {},
                 navigationIcon = {
@@ -104,35 +105,41 @@ fun NewSessionWizardScreen(
                                 CategoryStep(collections) { viewModel.selectCollection(it) }
                             }
                         }
-                        2 -> QuestionSelectionStep(
-                            questions = availableQuestions,
-                            selectedIds = selectedIds,
-                            lastRandomCount = viewModel.lastRandomCount.collectAsStateWithLifecycle().value,
-                            onToggle = { viewModel.toggleQuestionSelection(it) },
-                            onSelectAll = { viewModel.selectAllQuestions() },
-                            onDeselectAll = { viewModel.deselectAllQuestions() },
-                            onRandomSelect = { viewModel.selectRandomQuestions(it) },
-                            onNext = { viewModel.setWizardStep(3) }
-                        )
-                        3 -> {
+                        2 -> {
                             val isAdminOnly by viewModel.sessionIsAdminOnly.collectAsStateWithLifecycle()
-                            ConfigurationStep(
+                            SessionSetupStep(
+                                questions = availableQuestions,
+                                selectedIds = selectedIds,
+                                lastRandomCount = viewModel.lastRandomCount.collectAsStateWithLifecycle().value,
                                 order = order,
                                 timingType = timingType,
                                 timeLimitSeconds = timeLimitSeconds,
+                                isAdminOnly = isAdminOnly,
+                                onRandomSelect = { viewModel.selectRandomQuestions(it) },
+                                onSelectAll = { viewModel.selectAllQuestions() },
                                 onOrderChange = { viewModel.setOrder(it) },
                                 onTimingChange = { viewModel.setTimingType(it) },
                                 onTimeLimitChange = { viewModel.setTimeLimit(it) },
-                                selectedCount = selectedIds.size,
-                                isAdminOnly = isAdminOnly,
                                 onIsAdminOnlyChange = { viewModel.setSessionIsAdminOnly(it) },
-                                onLaunch = { title -> viewModel.launchSession(title) }
+                                onLaunch = { title -> viewModel.launchSession(title) },
+                                onOpenCustomSelection = { showCustomSelection = true }
                             )
                         }
                     }
                 }
             }
         }
+    }
+
+    if (showCustomSelection) {
+        CustomSelectionDialog(
+            questions = availableQuestions,
+            selectedIds = selectedIds,
+            onToggle = { viewModel.toggleQuestionSelection(it) },
+            onSelectAll = { viewModel.selectAllQuestions() },
+            onDeselectAll = { viewModel.deselectAllQuestions() },
+            onDismiss = { showCustomSelection = false }
+        )
     }
 }
 

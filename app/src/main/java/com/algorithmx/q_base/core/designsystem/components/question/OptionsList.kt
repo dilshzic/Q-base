@@ -111,7 +111,7 @@ fun OptionsList(
             // Expressive Color Tones based on User Requirements
             val targetBackgroundColor = when {
                 !isAnswerRevealed -> {
-                    if (isSelected) MaterialTheme.colorScheme.primaryContainer 
+                    if (isSelected && !isMTF) MaterialTheme.colorScheme.primaryContainer 
                     else MaterialTheme.colorScheme.surface
                 }
                 isMTF -> {
@@ -150,7 +150,7 @@ fun OptionsList(
 
             val targetBorderColor = when {
                 !isAnswerRevealed -> {
-                    if (isSelected) MaterialTheme.colorScheme.primary 
+                    if (isSelected && !isMTF) MaterialTheme.colorScheme.primary 
                     else MaterialTheme.colorScheme.outlineVariant
                 }
                 isMTF -> {
@@ -183,7 +183,7 @@ fun OptionsList(
             )
 
             val scale by animateFloatAsState(
-                targetValue = if (isSelected && !isAnswerRevealed) 1.02f else 1f,
+                targetValue = if (isSelected && !isAnswerRevealed && !isMTF) 1.02f else 1f,
                 animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy),
                 label = "scale"
             )
@@ -200,7 +200,7 @@ fun OptionsList(
                             scaleX = scale
                             scaleY = scale
                         },
-                    tonalElevation = if (isSelected) 4.dp else 0.dp
+                    tonalElevation = if (isSelected && !isMTF) 4.dp else 0.dp
                 ) {
                     Row(
                         modifier = Modifier.padding(18.dp),

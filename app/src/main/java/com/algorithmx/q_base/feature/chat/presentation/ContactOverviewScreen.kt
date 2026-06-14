@@ -1,6 +1,7 @@
 package com.algorithmx.q_base.feature.chat.presentation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -89,7 +90,7 @@ fun ContactOverviewScreen(
                             .background(
                                 Brush.verticalGradient(
                                     colors = listOf(
-                                        MaterialTheme.colorScheme.primaryContainer,
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                                         MaterialTheme.colorScheme.background
                                     )
                                 )
@@ -100,15 +101,15 @@ fun ContactOverviewScreen(
                         Surface(
                             modifier = Modifier.size(120.dp),
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.secondaryContainer,
-                            tonalElevation = 4.dp
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     Icons.Rounded.Person,
                                     contentDescription = null,
                                     modifier = Modifier.size(64.dp),
-                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -192,14 +193,18 @@ fun ContactOverviewScreen(
 }
 
 @Composable
-fun ActionButton(
+private fun ActionButton(
     icon: ImageVector,
     label: String,
     onClick: () -> Unit
 ) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable { onClick() }
+        modifier = Modifier.clickable { 
+            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+            onClick() 
+        }
     ) {
         FilledIconButton(
             onClick = onClick,

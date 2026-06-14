@@ -11,6 +11,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.background
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.algorithmx.q_base.core.ai.brain.models.BrainTask
 import com.algorithmx.q_base.core.designsystem.components.reusable.AiConfigSelector
@@ -50,7 +54,45 @@ fun AiBrainManagerScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
+
             item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        .padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Master AI Freeze",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Globally disables all AI features across the app when enabled.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = config.isMasterAiFreeze,
+                        onCheckedChange = { viewModel.toggleMasterAiFreeze(it) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.error,
+                            checkedTrackColor = MaterialTheme.colorScheme.errorContainer,
+                            uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    )
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     "CONFIGURE AI ENGINE",
                     style = MaterialTheme.typography.labelLarge,
@@ -68,39 +110,36 @@ fun AiBrainManagerScreen(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                     )
                 ) {
-                    AiConfigSelector(
-                        task = BrainTask.COLLECTION_GEN,
-                        currentConfig = config.taskConfigs[BrainTask.COLLECTION_GEN],
-                        availableModels = availableModels,
-                        onConfigChange = { viewModel.saveTaskConfig(BrainTask.COLLECTION_GEN, it) }
+                    // Create a dummy TaskConfig from the master model config
+                    val masterConfig = com.algorithmx.q_base.core.ai.brain.models.TaskConfig(
+                        modelName = config.modelName,
+                        fallbackModelName = null, // Or derive if needed
+                        systemPrompt = config.systemInstruction
                     )
-                }
-            }
-
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                    )
-                ) {
+                    
                     AiConfigSelector(
-                        task = BrainTask.QUESTION_EXTRACTION,
-                        currentConfig = config.taskConfigs[BrainTask.QUESTION_EXTRACTION],
+                        task = com.algorithmx.q_base.core.ai.brain.models.BrainTask.CHAT_BOT,
+                        currentConfig = masterConfig,
                         availableModels = availableModels,
-                        onConfigChange = { viewModel.saveTaskConfig(BrainTask.QUESTION_EXTRACTION, it) }
+                        titleOverride = "Master Model Configuration",
+                        onConfigChange = { newTaskConfig -> 
+                            viewModel.updateMasterAiConfig(
+                                newTaskConfig.modelName,
+                                newTaskConfig.fallbackModelName,
+                                newTaskConfig.systemPrompt
+                            ) 
+                        }
                     )
                 }
             }
             
-            item {
+            /*item {
                 Spacer(modifier = Modifier.height(24.dp))
                 UsageStatsCard(
                     requests = config.totalRequests,
                     tokens = config.totalTokens
                 )
-            }
+            }*/
         }
     }
 }

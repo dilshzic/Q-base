@@ -208,6 +208,7 @@ fun ExploreQuestionPagerScreen(
                         onDelete = { onDeleteQuestion(page) },
                         isEditable = state.isEditable,
                         onEditQuestion = { onEditQuestion(page) },
+                        onReport = { showReportDialog = true },
                         onAskAi = {
                             // Open the interactive AI chat bottom sheet and seed with the question
                             aiQuestionStem = state.question.stem

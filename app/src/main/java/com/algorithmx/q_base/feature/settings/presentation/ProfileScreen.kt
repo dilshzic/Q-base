@@ -1,6 +1,7 @@
 package com.algorithmx.q_base.feature.settings.presentation
 
 import android.content.Intent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -67,6 +68,7 @@ fun ProfileScreen(
             val shareIntent = Intent.createChooser(sendIntent, "Share Friend Code")
             context.startActivity(shareIntent)
         },
+        onRegenerateFriendCode = { viewModel.regenerateFriendCode() },
         onSignOut = { clearCollections, onComplete -> 
             viewModel.signOut(clearCollections) { onComplete() }
         }
@@ -84,6 +86,7 @@ fun ProfileContent(
     onLoggedOut: () -> Unit,
     onCopyFriendCode: (String) -> Unit,
     onShareFriendCode: (String) -> Unit,
+    onRegenerateFriendCode: () -> Unit,
     onSignOut: (Boolean, () -> Unit) -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -246,6 +249,9 @@ fun ProfileContent(
                         icon = Icons.Rounded.QrCode,
                         trailingContent = {
                             Row {
+                                IconButton(onClick = { onRegenerateFriendCode() }) {
+                                    Icon(Icons.Rounded.Refresh, contentDescription = "Regenerate")
+                                }
                                 IconButton(onClick = { user?.friendCode?.let { onCopyFriendCode(it) } }) {
                                     Icon(Icons.Rounded.ContentCopy, contentDescription = "Copy")
                                 }
@@ -278,7 +284,8 @@ fun ProfileContent(
                         .padding(horizontal = 16.dp)
                         .bounceClick { showLogoutDialog = true },
                     shape = RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
                 ) {
                     Row(
                         modifier = Modifier.padding(16.dp),
@@ -341,6 +348,7 @@ fun ProfileContentPreview() {
             onLoggedOut = {},
             onCopyFriendCode = {},
             onShareFriendCode = {},
+            onRegenerateFriendCode = {},
             onSignOut = { _, _ -> }
         )
     }
