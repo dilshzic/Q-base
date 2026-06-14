@@ -25,6 +25,8 @@
             --border-hover: rgba(255, 255, 255, 0.15);
             --glow: rgba(244, 63, 94, 0.15);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --navbar-bg: rgba(11, 15, 25, 0.8);
+            --footer-bg: rgba(8, 12, 20, 0.5);
         }
 
         [data-theme="light"] {
@@ -37,6 +39,8 @@
             --border: rgba(15, 23, 42, 0.08);
             --border-hover: rgba(15, 23, 42, 0.15);
             --glow: rgba(244, 63, 94, 0.05);
+            --navbar-bg: rgba(248, 250, 252, 0.8);
+            --footer-bg: rgba(241, 245, 249, 0.5);
         }
 
         * {
@@ -107,7 +111,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            background: rgba(var(--background) === '#0B0F19' ? '11, 15, 25' : '248, 250, 252', 0.8);
+            background: var(--navbar-bg);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
@@ -470,7 +474,7 @@
             text-align: center;
             color: var(--text-muted);
             font-size: 0.9rem;
-            background: rgba(var(--background) === '#0B0F19' ? '8, 12, 20' : '241, 245, 249', 0.5);
+            background: var(--footer-bg);
         }
 
         footer p {
@@ -592,13 +596,13 @@
                 <h3>A. Information You Provide to Us</h3>
                 <ul>
                     <li><strong>Account Information:</strong> When you create an account, we collect your email address and authentication details via our cloud authentication provider.</li>
-                    <li><strong>User-Generated Content:</strong> Questions, collections, study sessions, chat messages, and custom AI prompts you create or upload are stored to provide the App's core functionality.</li>
+                    <li><strong>User-Generated Content:</strong> Questions, collections, study sessions, chat messages, custom AI prompts, and your interactions with questions (such as answer selections, study attempts, performance telemetry, and custom tags) you create or upload are stored to provide the App's core functionality.</li>
                 </ul>
 
                 <h3>B. Information Collected Automatically</h3>
                 <ul>
                     <li><strong>Device Information:</strong> We may collect basic device information required for crash reporting and analytics to improve the App's stability.</li>
-                    <li><strong>Usage Data:</strong> We track your interaction with the AI features (e.g., token usage, model preferences) to manage API quotas and improve the "Brain Engine" performance.</li>
+                    <li><strong>Usage Data:</strong> We track your interaction with the AI features (e.g., token usage, model preferences) to manage API quotas and improve the "Brain Engine" performance. We also collect aggregated, non-identifiable chat and interaction statistics (such as message counts, active chat channels, and session metrics) to monitor sync reliability and system health.</li>
                 </ul>
             </section>
 
@@ -607,8 +611,8 @@
                 <p>We process your information to maintain a reliable, modern study application. Specifically:</p>
                 <ul>
                     <li>To provide, maintain, and improve the App's features (e.g., syncing your progress, enabling multi-device access).</li>
-                    <li>To facilitate Universal Collection Sharing and live chat sessions via Appwrite and our cloud synchronization layer.</li>
-                    <li>To process AI requests (such as generating notes or extracting questions) by securely transmitting your prompts to selected third-party AI providers.</li>
+                    <li>To facilitate Universal Collection Sharing and chat sessions via Appwrite and our cloud synchronization layer.</li>
+                    <li>To process AI requests (such as generating or extracting questions or question answers) by securely transmitting your prompts to selected third-party AI providers.</li>
                 </ul>
             </section>
 
@@ -618,7 +622,8 @@
                 <ul>
                     <li><strong>Appwrite:</strong> We use Appwrite Authentication for login identity and Appwrite Storage for temporarily hosting ZIP/JSON files when you share Universal Collections with other users.</li>
                     <li><strong>Cloud Synchronization:</strong> We use our backend synchronization layer for syncing chat messages and real-time sessions.</li>
-                    <li><strong>AI Providers (Gemini, Groq):</strong> When you interact with the Qbase AI Chatbot, Note Generator, or Question Extractor, the specific text prompts and context you provide are sent to the AI provider you have selected in your settings to generate a response. AI processing is subject to the respective provider's terms (Google Gemini for text generation/extraction, GroqCloud for high-performance inference). We do not use your personal data to train these third-party models.</li>
+                    <li><strong>AI Providers (Gemini, Groq):</strong> When you interact with the Qbase AI Chatbot, Note Generator, or Question Extractor, the specific text prompts and context you provide are sent to the AI provider you have selected in your settings to generate a response. AI processing is subject to the respective provider's terms (Google Gemini and Groq/GroqCloud for text generation, question extraction, and high-performance inference). We do not use your personal data to train these third-party models.</li>
+                    <li><strong>Appwrite and Cloud Sync Data Minimization:</strong> Apart from basic user identification details (such as your account email/profile) and structural metadata (specifically Group IDs, Chat IDs, and Group/Shared Collection IDs), no other user data is stored persistently in the Appwrite backend. When sharing data—including peer-to-peer (P2P) or group collections, real-time study sessions, and chat messages—it is temporarily hosted on our cloud synchronization layer in an end-to-end encrypted format (<span class="code-badge">AES-GCM-256</span>). This transient data is automatically deleted immediately after successful delivery to the recipient, or purged after a maximum 7-day window if undelivered. If you delete chat messages or collections from your device, they are immediately and permanently removed from our cloud synchronization layer as well.</li>
                 </ul>
             </section>
 
@@ -629,6 +634,7 @@
                     <li><strong>Chat Messages:</strong> All chat messages are encrypted on your device using the <span class="code-badge">AES-GCM-256</span> algorithm before being sent to our synchronization backend. The symmetric keys used for encryption are derived from user-specific key pairs managed via the Android Keystore system.</li>
                     <li><strong>File Transfers:</strong> Question bank ZIP files shared via Appwrite are similarly encrypted.</li>
                     <li><strong>Zero Access:</strong> Because the encryption keys remain on the participants' devices, neither Q-base staff nor our cloud providers can read the contents of your private messages or shared collections.</li>
+                    <li><strong>Encrypted Key Backups:</strong> To facilitate account recovery, you have the option to back up your cryptographic encryption keys. If enabled, backup keys are encrypted on your device using a key derived from your self-selected passphrase (which is never sent to our servers). You have full control over whether to store these encrypted backup keys on our cloud servers or manage them manually and offline.</li>
                 </ul>
             </section>
 
@@ -659,9 +665,9 @@
                 <div class="contact-box">
                     <div>
                         <p><strong>Support Email</strong></p>
-                        <p style="color: var(--text-secondary); font-size: 0.95rem;">support@qbase.intelligence</p>
+                        <p style="color: var(--text-secondary); font-size: 0.95rem;">supportqbase@gmail.com</p>
                     </div>
-                    <button class="btn-copy" onclick="navigator.clipboard.writeText('support@qbase.intelligence'); alert('Email address copied to clipboard!');">Copy Email</button>
+                    <button class="btn-copy" onclick="navigator.clipboard.writeText('supportqbase@gmail.com'); alert('Email address copied to clipboard!');">Copy Email</button>
                 </div>
             </section>
         </main>

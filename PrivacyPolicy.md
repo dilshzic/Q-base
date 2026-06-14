@@ -7,12 +7,12 @@ This Privacy Policy explains how Q-base ("we", "us", or "our") collects, uses, a
 ## 1. Information We Collect
 
 ### A. Information You Provide to Us
-*   **Account Information:** When you create an account, we collect your email address and authentication details via our cloud authentication provider. 
-*   **User-Generated Content:** Questions, collections, study sessions, chat messages, and custom AI prompts you create or upload are stored to provide the App's core functionality. // interactions with questions
+*   **Account Information:** When you create an account, we collect your email address and authentication details via our cloud authentication provider.
+*   **User-Generated Content:** Questions, collections, study sessions, chat messages, custom AI prompts, and your interactions with questions (such as answer selections, study attempts, performance telemetry, and custom tags) you create or download are stored to provide the App's core functionality.
 
 ### B. Information Collected Automatically
 *   **Device Information:** We may collect basic device information required for crash reporting and analytics to improve the App's stability.
-*   **Usage Data:** We track your interaction with the AI features (e.g., token usage, model preferences) to manage API quotas and improve the "Brain Engine" performance. // Include chat stats like thing
+*   **Usage Data:** We track your interaction with the AI features (e.g., token usage, model preferences) to manage API quotas and improve the "Brain Engine" performance. We also collect aggregated, non-identifiable chat and interaction statistics (such as message counts, active chat channels, and session metrics) to monitor sync reliability and system health.
 
 ## 2. How We Use Your Information
 
@@ -27,8 +27,8 @@ Your data is processed and stored using the following trusted third-party servic
 
 *   **Appwrite:** We use Appwrite Authentication for login identity and Appwrite Storage for temporarily hosting ZIP/JSON files when you share Universal Collections with other users.
 *   **Cloud Synchronization:** We use our backend synchronization layer for syncing chat messages and real-time sessions.
-*   **AI Providers (Gemini, Groq):** When you interact with the Qbase AI Chatbot, Note Generator, or Question Extractor, the specific text prompts and context you provide are sent to the AI provider you have selected in your settings to generate a response. AI processing is subject to the respective provider's terms (Google Gemini and groq  for text generation/extraction, GroqCloud for high-performance inference). We do not use your personal data to train these third-party models.
-// Apartfrom groupids, chat ids and group collectiuon ids,  data an basic user identification data. Non of other data not stored in appwrite backend. In sharing P2P or groups collection or sessions or messages we temporaliy store them in AES-GCM-256 encypted form and deleted after receiving or window of 7-day period. If you delete messages or collection from your device it will be deleted from cloud also. 
+*   **AI Providers (Gemini, Groq):** When you interact with the Qbase AI Chatbot, Note Generator, or Question Extractor, the specific text prompts and context you provide are sent to the AI provider you have selected in your settings to generate a response. AI processing is subject to the respective provider's terms (Google Gemini and Groq/GroqCloud for text generation, question extraction, and high-performance inference). We do not use your personal data to train these third-party models.
+*   **Appwrite and Cloud Sync Data Minimization:** Apart from basic user identification details (such as your account email/profile) and structural metadata (specifically Group IDs, Chat IDs, and Group/Shared Collection IDs), no other user data is stored persistently in the Appwrite backend. When sharing data—including peer-to-peer (P2P) or group collections, real-time study sessions, and chat messages—it is temporarily hosted on our cloud synchronization layer in an end-to-end encrypted format (**AES-GCM-256**). This transient data is automatically deleted immediately after successful delivery to the recipient, or purged after a maximum 7-day window if undelivered. If you delete chat messages or collections from your device, they are immediately and permanently removed from our cloud synchronization layer as well.
 
 ## 4. End-to-End Encryption (E2EE)
 
@@ -36,7 +36,7 @@ To ensure maximum privacy for your interpersonal communications:
 *   **Chat Messages:** All chat messages are encrypted on your device using the **AES-GCM-256** algorithm before being sent to our synchronization backend. The symmetric keys used for encryption are derived from user-specific key pairs managed via the Android Keystore system.
 *   **File Transfers:** Question bank ZIP files shared via Appwrite are similarly encrypted.
 *   **Zero Access:** Because the encryption keys remain on the participants' devices, neither Q-base staff nor our cloud providers can read the contents of your private messages or shared collections.
-// back up encryption keys are stored that can only be decrypted via your passphrase you can decide whether to store back up keys on our cloud or not
+*   **Encrypted Key Backups:** To facilitate account recovery, you have the option to back up your cryptographic encryption keys. If enabled, backup keys are encrypted on your device using a key derived from your self-selected passphrase (which is never sent to our servers). You have full control over whether to store these encrypted backup keys on our cloud servers or manage them manually and offline.
 
 ## 5. Local Storage
 
@@ -56,4 +56,4 @@ We take reasonable measures to help protect your personal information from loss,
 ## 8. Contact Us
 
 If you have any questions or suggestions about our Privacy Policy, do not hesitate to contact us at:
-support@qbase.intelligence
+supportqbase@gmail.com
