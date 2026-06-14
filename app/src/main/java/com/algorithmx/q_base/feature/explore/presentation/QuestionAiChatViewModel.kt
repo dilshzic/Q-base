@@ -27,15 +27,25 @@ class QuestionAiChatViewModel @Inject constructor(
 
     private var currentQuestionId: String? = null
     var aiQuestionStem: String? = null
+    private var chatJob: kotlinx.coroutines.Job? = null
 
     fun loadChatForQuestion(questionId: String, initialContext: String? = null) {
         if (currentQuestionId == questionId) return
         currentQuestionId = questionId
         aiQuestionStem = initialContext
         
-        viewModelScope.launch {
+        chatJob?.cancel()
+        chatJob = viewModelScope.launch {
+            var isFirstLoad = true
             questionAiMessageDao.getMessagesForQuestion(questionId).collect { msgs ->
                 _messages.value = msgs
+                
+                if (isFirstLoad) {
+                    isFirstLoad = false
+                    if (msgs.isEmpty()) {
+                        sendMessage("Can you provide a brief overview of this question, and then ask me what I would like to explore regarding it?")
+                    }
+                }
             }
         }
     }
@@ -58,9 +68,12 @@ class QuestionAiChatViewModel @Inject constructor(
             
             _isAiLoading.value = true
             try {
-                // Build a conversation history prompt for better context
                 val fullPrompt = buildString {
                     appendLine("You are an expert educational AI tutor. You are helping a user with a specific multiple choice question.")
+                    if (!aiQuestionStem.isNullOrBlank()) {
+                        appendLine("The question context is:")
+                        appendLine(aiQuestionStem)
+                    }
                     appendLine("The conversation history is as follows:")
                     _messages.value.forEach { m ->
                         appendLine("${m.sender}: ${m.payload}")
