@@ -29,18 +29,18 @@ class ConfigRepository @Inject constructor(
     val geminiApiKey: Flow<String> = context.dataStore.data.map { prefs ->
         val encrypted = prefs[GEMINI_KEY]
         if (encrypted.isNullOrBlank()) {
-            BuildConfig.GEMINI_API_KEY
+            ""
         } else {
-            cryptoManager.decryptLocalString(encrypted).getOrDefault(BuildConfig.GEMINI_API_KEY)
+            cryptoManager.decryptLocalString(encrypted).getOrDefault("")
         }
     }
     
     val groqApiKey: Flow<String> = context.dataStore.data.map { prefs ->
         val encrypted = prefs[GROQ_KEY]
         if (encrypted.isNullOrBlank()) {
-            BuildConfig.GROQ_API_KEY
+            ""
         } else {
-            cryptoManager.decryptLocalString(encrypted).getOrDefault(BuildConfig.GROQ_API_KEY)
+            cryptoManager.decryptLocalString(encrypted).getOrDefault("")
         }
     }
 
@@ -105,9 +105,9 @@ class ConfigRepository @Inject constructor(
             val rawGemini = getGeminiKeyDirectly()
             val rawGroq = getGroqKeyDirectly()
             
-            // Validate that these are user-entered custom keys, not the build config fallbacks
-            val isCustomGemini = rawGemini.isNotBlank() && rawGemini != BuildConfig.GEMINI_API_KEY
-            val isCustomGroq = rawGroq.isNotBlank() && rawGroq != BuildConfig.GROQ_API_KEY
+            // Validate that these are user-entered custom keys
+            val isCustomGemini = rawGemini.isNotBlank()
+            val isCustomGroq = rawGroq.isNotBlank()
             
             if (!isCustomGemini && !isCustomGroq) return
             
