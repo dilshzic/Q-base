@@ -167,6 +167,19 @@ class ChatRemoteRepository @Inject constructor(
         }
     }
 
+    suspend fun updateChatNameOnRemote(chatId: String, newName: String) {
+        try {
+            databases.updateDocument(
+                collectionId = "chats",
+                documentId = chatId,
+                data = mapOf("chatName" to newName)
+            ).getOrThrow()
+        } catch (e: Exception) {
+            Log.e("ChatRemoteRepository", "Failed to update chat name in Appwrite", e)
+            throw e
+        }
+    }
+
     suspend fun clearChatMessagesOnRemote(chatId: String) {
         try {
             var hasMore = true

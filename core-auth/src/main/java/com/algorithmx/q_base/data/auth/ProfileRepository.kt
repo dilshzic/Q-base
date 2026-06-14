@@ -184,7 +184,7 @@ class ProfileRepository @Inject constructor(
                 )
             }
 
-            val finalProfile = if (profile.profilePictureUrl == null) {
+            val finalProfile = if (profile.profilePictureUrl.isNullOrBlank()) {
                 val authPhotoUrl = coreAuth.currentUser.firstOrNull()?.photoUrl
                 profile.copy(profilePictureUrl = authPhotoUrl)
             } else {
@@ -296,6 +296,13 @@ class ProfileRepository @Inject constructor(
                     if (!sessionEmail.isNullOrBlank() && (finalProfile.email.isBlank() || finalProfile.email != sessionEmail)) {
                         Log.d("ProfileRepository", "Updating private email from Auth session: $sessionEmail")
                         finalProfile = finalProfile.copy(email = sessionEmail)
+                        needsUpdate = true
+                    }
+
+                    val sessionPhotoUrl = sessionUser.photoUrl
+                    if (!sessionPhotoUrl.isNullOrBlank() && (finalProfile.profilePictureUrl.isNullOrBlank() || finalProfile.profilePictureUrl != sessionPhotoUrl)) {
+                        Log.d("ProfileRepository", "Updating profile photo from Auth session: $sessionPhotoUrl")
+                        finalProfile = finalProfile.copy(profilePictureUrl = sessionPhotoUrl)
                         needsUpdate = true
                     }
                     

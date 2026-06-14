@@ -57,6 +57,10 @@ class SyncRepository @Inject constructor(
         chatManagerRepository.createChatOnRemote(chat)
     }
 
+    suspend fun updateChatName(chatId: String, newName: String) {
+        chatManagerRepository.updateChatName(chatId, newName)
+    }
+
     fun observeAllIncomingMessages(notificationHelper: NotificationHelper): Flow<Unit> {
         return messageSyncRepository.observeAllIncomingMessages(notificationHelper)
     }

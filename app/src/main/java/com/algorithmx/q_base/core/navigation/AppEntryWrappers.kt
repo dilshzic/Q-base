@@ -288,6 +288,9 @@ fun ChatDetailWrapper(key: Screen.ChatDetail, navigator: Navigator) {
         onJoinSession = { sessionId ->
             navigator.navigate(Screen.ActiveSession(sessionId = sessionId, chatId = key.chatId))
         },
+        onNavigateToCollection = { collectionId ->
+            navigator.navigate(Screen.CollectionOverview(collectionId))
+        },
         onDeleteAndRestart = {
             navigator.navigate(Screen.NewChat)
         }

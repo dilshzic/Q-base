@@ -11,6 +11,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import android.util.Log
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,13 +38,49 @@ class AppwriteAuthImpl @Inject constructor(
         }
     }
 
-    private fun mapUser(user: User<*>): CoreUser {
+    private fun mapUser(user: User<*>, photoUrl: String? = null): CoreUser {
         return CoreUser(
             uid = user.id,
             email = user.email.ifBlank { null },
             displayName = user.name.ifBlank { null },
-            photoUrl = null
+            photoUrl = photoUrl
         )
+    }
+
+    private suspend fun fetchGooglePhotoUrl(): String? {
+        var connection: HttpURLConnection? = null
+        return try {
+            val session = appwriteAccount.getSession("current")
+            val accessToken = session.providerAccessToken
+            if (accessToken.isNullOrBlank()) {
+                Log.d("AppwriteAuthImpl", "No provider access token available")
+                return null
+            }
+
+            val url = URL("https://www.googleapis.com/oauth2/v3/userinfo")
+            connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.setRequestProperty("Authorization", "Bearer $accessToken")
+            connection.connectTimeout = 5000
+            connection.readTimeout = 5000
+
+            if (connection.responseCode == 200) {
+                val response = connection.inputStream.bufferedReader().use { it.readText() }
+                val json = JSONObject(response)
+                val picture = if (json.has("picture")) json.getString("picture") else null
+                Log.d("AppwriteAuthImpl", "Fetched Google photo URL: $picture")
+                picture
+            } else {
+                Log.w("AppwriteAuthImpl", "Google userinfo returned ${connection.responseCode}")
+                connection.errorStream?.use { it.readBytes() }
+                null
+            }
+        } catch (e: Exception) {
+            Log.d("AppwriteAuthImpl", "Could not fetch Google photo (non-OAuth session or expired): ${e.message}")
+            null
+        } finally {
+            connection?.disconnect()
+        }
     }
 
     override suspend fun signInWithEmail(email: String, pass: String): Result<CoreUser> {
@@ -95,7 +135,8 @@ class AppwriteAuthImpl @Inject constructor(
                 provider = OAuthProvider.GOOGLE
             )
             val user = appwriteAccount.get()
-            val coreUser = mapUser(user)
+            val photoUrl = fetchGooglePhotoUrl()
+            val coreUser = mapUser(user, photoUrl)
             _currentUser.value = coreUser
             Result.success(coreUser)
         } catch (e: Exception) {
@@ -116,7 +157,8 @@ class AppwriteAuthImpl @Inject constructor(
     override suspend fun checkCurrentSession(): Result<CoreUser?> {
         return try {
             val user = appwriteAccount.get()
-            val coreUser = mapUser(user)
+            val photoUrl = fetchGooglePhotoUrl()
+            val coreUser = mapUser(user, photoUrl)
             _currentUser.value = coreUser
             Result.success(coreUser)
         } catch (e: Exception) {

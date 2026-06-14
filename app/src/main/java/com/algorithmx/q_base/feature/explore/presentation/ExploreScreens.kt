@@ -210,9 +210,25 @@ fun ExploreQuestionPagerScreen(
                         onEditQuestion = { onEditQuestion(page) },
                         onReport = { showReportDialog = true },
                         onAskAi = {
-                            // Open the interactive AI chat bottom sheet and seed with the question
-                            aiQuestionStem = state.question.stem
-                            chatViewModel.startAiChat()
+                            // Open the interactive AI chat bottom sheet and seed with the full question context
+                            val typeString = when (state.question.questionType) {
+                                "SBA" -> "Single Best Answer (SBA)"
+                                "MTF" -> "Multiple True False (MTF)"
+                                else -> state.question.questionType
+                            }
+                            
+                            val fullQuestionContext = buildString {
+                                appendLine("Question Type: $typeString")
+                                appendLine()
+                                appendLine("Q: ${state.question.stem}")
+                                appendLine()
+                                appendLine("Options:")
+                                state.options.forEachIndexed { i, opt ->
+                                    appendLine("${(i + 'A'.code).toChar()}. ${opt.optionText}")
+                                }
+                            }
+                            
+                            aiQuestionStem = fullQuestionContext
                             showAiSheet = true
                         },
                         onCopy = {
@@ -331,11 +347,14 @@ fun ExploreQuestionPagerScreen(
 
     // New interactive AI Chat Bottom Sheet
     if (showAiSheet) {
-        AiChatBottomSheet(
-            questionStem = aiQuestionStem,
-            onDismiss = { showAiSheet = false; aiQuestionStem = null },
-            viewModel = chatViewModel
-        )
+        val currentQuestion = questionStates.getOrNull(pagerState.currentPage)?.question
+        if (currentQuestion != null) {
+            AiChatBottomSheet(
+                questionId = currentQuestion.questionId,
+                questionStem = aiQuestionStem,
+                onDismiss = { showAiSheet = false; aiQuestionStem = null }
+            )
+        }
     }
 
     // Collection Selector Dialog

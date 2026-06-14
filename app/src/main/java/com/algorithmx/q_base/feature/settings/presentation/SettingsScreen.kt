@@ -260,7 +260,7 @@ fun SettingsContent(
                         style = MaterialTheme.typography.titleSmall
                     )
                     Text(
-                        text = "All direct messages, shared study collections, and session micro-updates between peers use End-to-End Encryption (E2EE). Q-Base servers only route the encrypted payloads and cannot decrypt your private discussions or shared materials.",
+                        text = "All direct messages and shared study collections between peers use End-to-End Encryption (E2EE). Q-Base servers only route the encrypted payloads and cannot decrypt your private discussions or shared materials.",
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -335,7 +335,7 @@ fun SettingsContent(
                         style = MaterialTheme.typography.titleSmall
                     )
                     Text(
-                        text = "Use the 'Study Sync' tab to share complete question sets, chat in real-time, or launch joint practice lobbies with other students using their unique friend codes.",
+                        text = "Use the 'Study Sync' tab to share complete question sets and chat in real-time with other students using their unique friend codes.",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }

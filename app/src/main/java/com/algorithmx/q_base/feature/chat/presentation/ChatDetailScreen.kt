@@ -20,6 +20,7 @@ import com.algorithmx.q_base.core.data.chat.isAdmin
 import com.algorithmx.q_base.feature.chat.presentation.components.*
 import com.algorithmx.q_base.core.state.LocalAppAccessState
 import kotlinx.coroutines.launch
+import androidx.activity.compose.BackHandler
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,6 +29,7 @@ fun ChatDetailScreen(
     onHeaderClick: (String) -> Unit,
     onProfileClick: () -> Unit,
     onJoinSession: (String) -> Unit,
+    onNavigateToCollection: (String) -> Unit,
     onDeleteAndRestart: () -> Unit,
     viewModel: ChatViewModel = hiltViewModel()
 ) {
@@ -42,7 +44,6 @@ fun ChatDetailScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var savedCollections by remember { mutableStateOf(setOf<String>()) }
     var showCollectionPicker by remember { mutableStateOf(false) }
-    var showSessionPicker by remember { mutableStateOf(false) }
     var showClearConfirm by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var reportingMessage by remember { mutableStateOf<MessageEntity?>(null) }
@@ -56,6 +57,11 @@ fun ChatDetailScreen(
     }.collectAsState(initial = false)
 
     val currentChatId by viewModel.currentChatId.collectAsStateWithLifecycle()
+    val isLibraryMode by viewModel.isLibraryMode.collectAsStateWithLifecycle()
+    
+    BackHandler(enabled = isLibraryMode) {
+        viewModel.toggleLibraryMode(false)
+    }
     var hasLoadedActiveChat by remember(currentChatId) { mutableStateOf(false) }
 
     LaunchedEffect(state.chat, currentChatId) {
@@ -96,26 +102,49 @@ fun ChatDetailScreen(
         modifier = Modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets.statusBars,
         topBar = {
-            val isLibraryMode by viewModel.isLibraryMode.collectAsStateWithLifecycle()
-            ChatDetailTopBar(
-                displayName = state.displayName,
-                chat = state.chat,
-                participantsCount = state.chat?.participantIds?.split(",")?.size ?: 0,
-                isAiLoading = isAiLoading,
-                appAccessState = appAccessState,
-                currentUser = currentUser,
-                isLibraryMode = isLibraryMode,
-                onBack = onBack,
-                onHeaderClick = onHeaderClick,
-                onProfileClick = onProfileClick,
-                onToggleLibraryMode = { viewModel.toggleLibraryMode(it) },
-                onClearHistoryClick = { showClearConfirm = true },
-                onReportGroupClick = { showReportGroupDialog = true },
-                onDeleteChatClick = { showDeleteConfirm = true }
-            )
+            Column {
+                ChatDetailTopBar(
+                    displayName = state.displayName,
+                    chat = state.chat,
+                    participantsCount = state.chat?.participantIds?.split(",")?.size ?: 0,
+                    isAiLoading = isAiLoading,
+                    appAccessState = appAccessState,
+                    currentUser = currentUser,
+                    isLibraryMode = isLibraryMode,
+                    onBack = {
+                        if (isLibraryMode) {
+                            viewModel.toggleLibraryMode(false)
+                        } else {
+                            onBack()
+                        }
+                    },
+                    onHeaderClick = onHeaderClick,
+                    onProfileClick = onProfileClick,
+                    onToggleLibraryMode = { viewModel.toggleLibraryMode(it) },
+                    onClearHistoryClick = { showClearConfirm = true },
+                    onReportGroupClick = { showReportGroupDialog = true },
+                    onDeleteChatClick = { showDeleteConfirm = true }
+                )
+                if (state.chat?.isGroup == true) {
+                    TabRow(
+                        selectedTabIndex = if (isLibraryMode) 1 else 0,
+                        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+                    ) {
+                        Tab(
+                            selected = !isLibraryMode,
+                            onClick = { viewModel.toggleLibraryMode(false) },
+                            text = { Text("Chat") }
+                        )
+                        Tab(
+                            selected = isLibraryMode,
+                            onClick = { viewModel.toggleLibraryMode(true) },
+                            text = { Text("Question Collections") }
+                        )
+                    }
+                }
+            }
         },
         bottomBar = {
-            val isLibraryMode by viewModel.isLibraryMode.collectAsStateWithLifecycle()
             ChatDetailBottomBar(
                 chat = state.chat,
                 isLibraryMode = isLibraryMode,
@@ -123,7 +152,6 @@ fun ChatDetailScreen(
                 messageText = messageText,
                 onMessageTextChange = { messageText = it },
                 onAttachClick = { showCollectionPicker = true },
-                onSessionClick = { showSessionPicker = true },
                 onSendClick = {
                     state.chat?.chatId?.let { 
                         viewModel.sendMessage(it, messageText)
@@ -133,7 +161,6 @@ fun ChatDetailScreen(
             )
         }
     ) { padding ->
-        val isLibraryMode by viewModel.isLibraryMode.collectAsStateWithLifecycle()
         val sharedCollections by viewModel.sharedCollections.collectAsStateWithLifecycle()
 
         Box(
@@ -145,20 +172,17 @@ fun ChatDetailScreen(
             if (isLibraryMode && chat?.isGroup == true) {
                 val accessRequests by viewModel.accessRequests.collectAsStateWithLifecycle()
                 val isAdmin = chat.isAdmin(state.currentUserId)
-                val sharedSessions by viewModel.sharedSessions.collectAsStateWithLifecycle()
-                
                 SharedLibraryView(
                     chatId = chat.chatId,
                     collections = sharedCollections,
-                    sessions = sharedSessions,
                     onImport = { payload -> viewModel.importSharedCollection(payload) },
-                    onJoinSession = { sessionId -> viewModel.joinSession(sessionId, onJoinSession) },
                     onResend = { collectionId -> viewModel.resendCollection(collectionId) },
                     localCollections = localCollections,
                     isAdmin = isAdmin,
                     accessRequests = accessRequests,
                     onRequestAccess = { viewModel.requestAccess(it) },
-                    onGrantAccess = { collId, reqId -> viewModel.grantAccess(collId, reqId) }
+                    onGrantAccess = { collId, reqId -> viewModel.grantAccess(collId, reqId) },
+                    onNavigateToCollection = onNavigateToCollection
                 )
             } else {
                 val messagesByDate = remember(state.messages) {
@@ -253,19 +277,7 @@ fun ChatDetailScreen(
             }
         }
     }
-    
-    if (showSessionPicker) {
-        val sessions by viewModel.allSessions.collectAsStateWithLifecycle()
-        SessionPickerSheet(
-            sessions = sessions,
-            onDismiss = { showSessionPicker = false },
-            onSessionSelected = { sessionId ->
-                state.chat?.chatId?.let { viewModel.shareSession(it, sessionId) }
-                showSessionPicker = false
-            }
-        )
-    }
-    
+
     if (showCollectionPicker) {
         CollectionPickerSheet(
             collections = collections,

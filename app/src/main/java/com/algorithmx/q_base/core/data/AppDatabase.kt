@@ -25,9 +25,10 @@ import com.algorithmx.q_base.feature.sessions.data.*
         AiResponseEntity::class,
         BrainUsageEntity::class,
         CollectionVersionLedgerEntity::class,
-        com.algorithmx.q_base.sync.orchestration.OfflineActionEntity::class
+        com.algorithmx.q_base.sync.orchestration.OfflineActionEntity::class,
+        QuestionAiMessageEntity::class
     ],
-    version = 28,
+    version = 29,
     exportSchema = false
 )
 @TypeConverters(com.algorithmx.q_base.core.data.util.TypeConverters::class)
@@ -42,6 +43,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun brainUsageDao(): BrainUsageDao
     abstract fun collectionVersionLedgerDao(): CollectionVersionLedgerDao
     abstract fun actionQueueDao(): com.algorithmx.q_base.data.sync.ActionQueueDao
+    abstract fun questionAiMessageDao(): QuestionAiMessageDao
 
     companion object {
         @Volatile

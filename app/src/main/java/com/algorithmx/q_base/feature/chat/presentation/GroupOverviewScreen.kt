@@ -46,6 +46,7 @@ fun GroupOverviewScreen(
     var showReportDialog by remember { mutableStateOf(false) }
     var showLeaveDialog by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
     
     val allUsers by viewModel.allUsers.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -159,11 +160,62 @@ fun GroupOverviewScreen(
                         label = "Edit",
                         onClick = { 
                             if (isAdmin) {
-                                coroutineScope.launch { snackbarHostState.showSnackbar("Editing group info is coming soon") }
+                                showEditDialog = true
                             } else {
                                 coroutineScope.launch { snackbarHostState.showSnackbar("Only admins can edit group info") }
                             }
                         }
+                    )
+                }
+            }
+
+            item {
+                val sharedCollections by viewModel.sharedCollections.collectAsState()
+                val sharedSessions by viewModel.sharedSessions.collectAsState()
+                
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            viewModel.toggleLibraryMode(true)
+                            onBack()
+                        }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        modifier = Modifier.size(40.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Rounded.FolderZip,
+                                contentDescription = "Shared Library",
+                                modifier = Modifier.size(24.dp),
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Collections & Sessions",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "${sharedCollections.size} Collections • ${sharedSessions.size} Sessions",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Icon(
+                        Icons.Rounded.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -326,6 +378,40 @@ fun GroupOverviewScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showLeaveDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showEditDialog) {
+        var newGroupName by remember { mutableStateOf(chat?.chatName ?: "") }
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("Edit Group Name") },
+            text = {
+                OutlinedTextField(
+                    value = newGroupName,
+                    onValueChange = { newGroupName = it },
+                    label = { Text("Group Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (newGroupName.isNotBlank()) {
+                            viewModel.updateChatName(chatId, newGroupName.trim())
+                        }
+                        showEditDialog = false
+                    }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditDialog = false }) {
                     Text("Cancel")
                 }
             }

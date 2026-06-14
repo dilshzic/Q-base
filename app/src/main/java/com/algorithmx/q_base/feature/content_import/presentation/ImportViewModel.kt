@@ -272,11 +272,20 @@ class ImportViewModel @Inject constructor(
             val responseId = result.getOrThrow()
             viewModelScope.launch {
                 val entity = aiRepository.getAiResponseById(responseId)
-                val count = try {
+                val response = try {
                         json.decodeFromString<com.algorithmx.q_base.core.ai.brain.models.AiCollectionResponse>(entity?.rawJson ?: "")
-                        .questions.size
-                } catch (e: Exception) { 0 }
+                } catch (e: Exception) { null }
                 
+                if (response != null) {
+                    if (_newCollectionName.value.isBlank() && response.collectionTitle.isNotBlank()) {
+                        _newCollectionName.value = response.collectionTitle
+                    }
+                    if (_newCollectionDescription.value.isBlank() && response.collectionDescription.isNotBlank()) {
+                        _newCollectionDescription.value = response.collectionDescription
+                    }
+                }
+                
+                val count = response?.questions?.size ?: 0
                 _uiState.value = ImportStep.Review(count, responseId)
             }
         } else {

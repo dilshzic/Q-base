@@ -57,6 +57,9 @@ interface ChatDao {
     @Query("UPDATE chats SET participantIds = :participantIds WHERE chatId = :chatId")
     suspend fun updateParticipants(chatId: String, participantIds: String)
 
+    @Query("UPDATE chats SET chatName = :newName WHERE chatId = :chatId")
+    suspend fun updateChatName(chatId: String, newName: String)
+
     @Delete
     suspend fun deleteChat(chat: ChatEntity)
 

@@ -369,6 +369,17 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    fun updateChatName(chatId: String, newName: String) {
+        viewModelScope.launch {
+            try {
+                syncRepository.updateChatName(chatId, newName)
+                _actionFeedback.emit("Group name updated")
+            } catch (e: Exception) {
+                _actionFeedback.emit("Failed to update group name: ${e.message}")
+            }
+        }
+    }
+
     fun toggleLibraryMode(enabled: Boolean) {
         _isLibraryMode.value = enabled
     }

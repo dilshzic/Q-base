@@ -141,16 +141,7 @@ fun ChatDetailTopBar(
             }
         },
         actions = {
-            if (chat?.isGroup == true) {
-                CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.primary) {
-                    IconButton(onClick = { onToggleLibraryMode(!isLibraryMode) }) {
-                        Icon(
-                            if (isLibraryMode) Icons.Rounded.ChatBubble else Icons.Rounded.FolderZip,
-                            contentDescription = if (isLibraryMode) "Show Messages" else "Open Shared Library"
-                        )
-                    }
-                }
-            }
+
 
             var showMenu by remember { mutableStateOf(false) }
             IconButton(onClick = { showMenu = true }) {
@@ -212,7 +203,6 @@ fun ChatDetailBottomBar(
     messageText: String,
     onMessageTextChange: (String) -> Unit,
     onAttachClick: () -> Unit,
-    onSessionClick: () -> Unit,
     onSendClick: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
@@ -291,19 +281,7 @@ fun ChatDetailBottomBar(
                             textStyle = MaterialTheme.typography.bodyMedium
                         )
                         
-                        AnimatedVisibility(visible = messageText.isEmpty()) {
-                            IconButton(
-                                onClick = onSessionClick,
-                                enabled = canSend
-                            ) {
-                                Icon(
-                                    Icons.Rounded.RocketLaunch,
-                                    contentDescription = "Session",
-                                    tint = if (canSend) MaterialTheme.colorScheme.primary.copy(alpha = 0.7f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.26f),
-                                    modifier = Modifier.size(22.dp)
-                               )
-                            }
-                        }
+
                     }
                 }
                 

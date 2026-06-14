@@ -11,9 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.algorithmx.q_base.feature.chat.presentation.ChatViewModel
-import com.algorithmx.q_base.feature.chat.presentation.sendMessage
-import com.algorithmx.q_base.feature.chat.presentation.startAiChat
+import com.algorithmx.q_base.feature.explore.presentation.QuestionAiChatViewModel
+import com.algorithmx.q_base.core.data.chat.MessageEntity
 import com.algorithmx.q_base.feature.chat.presentation.components.AnimatedMessageItem
 import com.algorithmx.q_base.feature.chat.presentation.components.ChatDetailBottomBar
 import kotlinx.coroutines.launch
@@ -21,16 +20,16 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiChatBottomSheet(
+    questionId: String,
     questionStem: String?,
     onDismiss: () -> Unit,
-    viewModel: ChatViewModel = hiltViewModel()
+    viewModel: QuestionAiChatViewModel = hiltViewModel()
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(questionStem) {
-        // Ensure the AI chat exists and is selected
-        viewModel.startAiChat()
+    LaunchedEffect(questionId, questionStem) {
+        viewModel.loadChatForQuestion(questionId, questionStem)
     }
 
     ModalBottomSheet(
@@ -50,9 +49,24 @@ fun AiChatBottomSheet(
             }
 
             // Messages
-            val state by viewModel.chatDetailState.collectAsStateWithLifecycle()
-            val messages = state.messages
+            val rawMessages by viewModel.messages.collectAsStateWithLifecycle()
+            val isAiLoading by viewModel.isAiLoading.collectAsStateWithLifecycle()
             val listState = rememberLazyListState()
+
+            // Map QuestionAiMessageEntity to MessageEntity for the UI component
+            val messages = remember(rawMessages) {
+                rawMessages.map { msg ->
+                    MessageEntity(
+                        messageId = msg.messageId,
+                        chatId = msg.questionId,
+                        senderId = if (msg.sender == "AI") "AI_BOT" else "USER",
+                        payload = msg.payload,
+                        type = "TEXT",
+                        timestamp = msg.timestamp,
+                        status = "SENT"
+                    )
+                }
+            }
 
             LazyColumn(
                 state = listState,
@@ -62,7 +76,7 @@ fun AiChatBottomSheet(
                 contentPadding = PaddingValues(bottom = 8.dp),
             ) {
                 itemsIndexed(messages, key = { _, m -> m.messageId }) { index, message ->
-                    val isMine = message.senderId == viewModel.currentUserId
+                    val isMine = message.senderId == "USER"
                     val prev = if (index > 0) messages[index - 1] else null
                     val next = if (index < messages.size - 1) messages[index + 1] else null
                     val isFirst = prev == null || prev.senderId != message.senderId
@@ -81,7 +95,7 @@ fun AiChatBottomSheet(
                         onReportMessage = {},
                         onProfileClick = {},
                         onDeleteChat = {},
-                        isAiLoading = false,
+                        isAiLoading = isAiLoading && !isMine && index == messages.size - 1,
                         isFirstInGroup = isFirst,
                         isLastInGroup = isLast
                     )
@@ -89,25 +103,21 @@ fun AiChatBottomSheet(
             }
 
             // Input bar
-            var messageText by remember { mutableStateOf(questionStem ?: "") }
-            val canSendFlow = remember(state.chat?.chatId) {
-                state.chat?.chatId?.let { viewModel.canSendToChat(it) } ?: kotlinx.coroutines.flow.flowOf(false)
-            }
-            val canSend by canSendFlow.collectAsState(initial = true)
-
+            var messageText by remember(viewModel.aiQuestionStem) { mutableStateOf(viewModel.aiQuestionStem ?: "") }
+            
             ChatDetailBottomBar(
-                chat = state.chat,
+                chat = null,
                 isLibraryMode = false,
-                canSend = canSend,
+                canSend = true,
                 messageText = messageText,
                 onMessageTextChange = { messageText = it },
                 onAttachClick = {},
-                onSessionClick = {},
                 onSendClick = {
-                    state.chat?.chatId?.let { chatId ->
-                        viewModel.sendMessage(chatId, messageText)
+                    if (messageText.isNotBlank()) {
+                        viewModel.sendMessage(messageText)
                         messageText = ""
-                        scope.launch { listState.animateScrollToItem(state.messages.size) }
+                        viewModel.aiQuestionStem = ""
+                        scope.launch { listState.animateScrollToItem(messages.size) }
                     }
                 }
             )

@@ -119,11 +119,7 @@ fun ContactOverviewScreen(
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold
                         )
-                        Text(
-                            text = otherUser?.friendCode ?: "No code available",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
+
                     }
                 }
             }

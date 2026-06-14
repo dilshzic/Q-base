@@ -194,9 +194,26 @@ class AiRepository @Inject constructor(
                 questionDao.insertOption(option)
             }
 
+            val formattedCorrectAnswer = if (aiQ.type.uppercase() in listOf("MTF", "MCQ", "T/F", "MCQ1")) {
+                val tokens = aiQ.answer.correctLetter.split(",").map { it.trim().uppercase() }
+                if (tokens.all { it == "T" || it == "F" } && tokens.size == aiQ.options.size) {
+                    val trueLetters = mutableListOf<String>()
+                    tokens.forEachIndexed { index, token ->
+                        if (token == "T") {
+                            trueLetters.add(aiQ.options[index].letter)
+                        }
+                    }
+                    trueLetters.joinToString(",")
+                } else {
+                    aiQ.answer.correctLetter
+                }
+            } else {
+                aiQ.answer.correctLetter
+            }
+
             val answer = Answer(
                 questionId = questionId,
-                correctAnswerString = aiQ.answer.correctLetter,
+                correctAnswerString = formattedCorrectAnswer,
                 generalExplanation = aiQ.answer.explanation,
                 references = aiQ.answer.references
             )

@@ -58,6 +58,11 @@ class ChatManagerRepository @Inject constructor(
         return chatLocalDataSource.getChatById(chatId)
     }
 
+    suspend fun updateChatName(chatId: String, newName: String) {
+        chatRemoteRepository.updateChatNameOnRemote(chatId, newName)
+        chatLocalDataSource.updateChatName(chatId, newName)
+    }
+
     private suspend fun syncParticipantProfile(participantId: String) {
         try {
             val profile = profileRepository.fetchAndCacheContactProfile(participantId)

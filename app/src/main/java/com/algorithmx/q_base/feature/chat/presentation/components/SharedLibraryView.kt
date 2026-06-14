@@ -26,65 +26,29 @@ import java.util.*
 fun SharedLibraryView(
     chatId: String,
     collections: List<Map<String, Any>>,
-    sessions: List<Map<String, Any>>,
     onImport: (String) -> Unit,
-    onJoinSession: (String) -> Unit,
     onResend: (String) -> Unit,
     localCollections: List<StudyCollection>,
     isAdmin: Boolean,
     accessRequests: List<Map<String, Any>>,
     onRequestAccess: (String) -> Unit,
-    onGrantAccess: (String, String) -> Unit
+    onGrantAccess: (String, String) -> Unit,
+    onNavigateToCollection: (String) -> Unit
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Collections", "Sessions")
-
     Column(modifier = Modifier.fillMaxSize()) {
-        TabRow(
-            selectedTabIndex = selectedTab,
-            containerColor = Color.Transparent,
-            contentColor = MaterialTheme.colorScheme.primary,
-            indicator = { tabPositions ->
-                TabRowDefaults.SecondaryIndicator(
-                    Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                    color = MaterialTheme.colorScheme.primary
-                )
-            },
-            divider = {}
-        ) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { 
-                        Text(
-                            text = title, 
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
-                        ) 
-                    }
-                )
-            }
-        }
-
         Box(modifier = Modifier.fillMaxSize()) {
-            when (selectedTab) {
-                0 -> CollectionsTabContent(
-                    chatId = chatId,
-                    collections = collections,
-                    onImport = onImport,
-                    onResend = onResend,
-                    localCollections = localCollections,
-                    isAdmin = isAdmin,
-                    accessRequests = accessRequests,
-                    onRequestAccess = onRequestAccess,
-                    onGrantAccess = onGrantAccess
-                )
-                1 -> SessionsTabContent(
-                    sessions = sessions,
-                    onJoinSession = onJoinSession
-                )
-            }
+            CollectionsTabContent(
+                chatId = chatId,
+                collections = collections,
+                onImport = onImport,
+                onResend = onResend,
+                localCollections = localCollections,
+                isAdmin = isAdmin,
+                accessRequests = accessRequests,
+                onRequestAccess = onRequestAccess,
+                onGrantAccess = onGrantAccess,
+                onNavigateToCollection = onNavigateToCollection
+            )
         }
     }
 }
@@ -99,7 +63,8 @@ fun CollectionsTabContent(
     isAdmin: Boolean,
     accessRequests: List<Map<String, Any>>,
     onRequestAccess: (String) -> Unit,
-    onGrantAccess: (String, String) -> Unit
+    onGrantAccess: (String, String) -> Unit,
+    onNavigateToCollection: (String) -> Unit
 ) {
     if (collections.isEmpty()) {
         LibraryEmptyState("No collections shared yet.")
@@ -139,6 +104,7 @@ fun CollectionsTabContent(
                     onImport = { onImport(payload) },
                     onRequestAccess = { onRequestAccess(collectionId) },
                     onResend = { onResend(collectionId) },
+                    onNavigate = { onNavigateToCollection(collectionId) },
                     localCollections = localCollections
                 )
             }
@@ -146,37 +112,7 @@ fun CollectionsTabContent(
     }
 }
 
-@Composable
-fun SessionsTabContent(
-    sessions: List<Map<String, Any>>,
-    onJoinSession: (String) -> Unit
-) {
-    if (sessions.isEmpty()) {
-        LibraryEmptyState("No active sessions in this group.")
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                LibraryHeader("Group Sessions", "Persistent record of study sessions shared in this group.")
-            }
-            
-            items(sessions) { data ->
-                val sessionId = data["sessionId"] as? String ?: ""
-                val title = data["title"] as? String ?: "Untitled Session"
-                val timestamp = data["timestamp"] as? Long ?: 0L
-                
-                SharedSessionCard(
-                    title = title,
-                    timestamp = timestamp,
-                    onJoin = { onJoinSession(sessionId) }
-                )
-            }
-        }
-    }
-}
+
 
 @Composable
 fun LibraryEmptyState(message: String) {
@@ -250,6 +186,7 @@ fun SharedCollectionCard(
     onImport: () -> Unit,
     onRequestAccess: () -> Unit,
     onResend: (() -> Unit)? = null,
+    onNavigate: (() -> Unit)? = null,
     localCollections: List<StudyCollection>
 ) {
     val localCopy = localCollections.find { it.collectionId == collectionId }
@@ -312,15 +249,15 @@ fun SharedCollectionCard(
             Spacer(modifier = Modifier.height(16.dp))
             
             Button(
-                onClick = if (isExpired || isRestricted) onRequestAccess else onImport,
-                enabled = !isImported,
+                onClick = when {
+                    isImported -> { onNavigate ?: {} }
+                    isExpired || isRestricted -> onRequestAccess
+                    else -> onImport
+                },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = when {
-                    isImported -> ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    isImported -> ButtonDefaults.buttonColors()
                     isExpired || isRestricted -> ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -330,7 +267,7 @@ fun SharedCollectionCard(
             ) {
                 Icon(
                     when {
-                        isImported -> Icons.Rounded.CheckCircle
+                        isImported -> Icons.Rounded.OpenInNew
                         isExpired || isRestricted -> Icons.Rounded.LockOpen
                         else -> Icons.Rounded.CloudDownload
                     }, 
@@ -340,7 +277,7 @@ fun SharedCollectionCard(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     when {
-                        isImported -> "Imported to Library"
+                        isImported -> "Open Collection"
                         isExpired || isRestricted -> "Request Access"
                         else -> "Import to Library"
                     }
@@ -442,15 +379,14 @@ fun SharedLibraryViewPreview() {
         SharedLibraryView(
             chatId = "chat1",
             collections = mockCollections,
-            sessions = mockSessions,
             onImport = {},
-            onJoinSession = {},
             onResend = {},
             localCollections = emptyList(),
             isAdmin = true,
             accessRequests = mockRequests,
             onRequestAccess = {},
-            onGrantAccess = { _, _ -> }
+            onGrantAccess = { _, _ -> },
+            onNavigateToCollection = {}
         )
     }
 }

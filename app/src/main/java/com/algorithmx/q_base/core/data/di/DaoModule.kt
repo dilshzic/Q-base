@@ -49,4 +49,7 @@ object DaoModule {
 
     @Provides
     fun provideActionQueueDao(database: AppDatabase): com.algorithmx.q_base.data.sync.ActionQueueDao = database.actionQueueDao()
+
+    @Provides
+    fun provideQuestionAiMessageDao(database: AppDatabase): com.algorithmx.q_base.core.ai.data.QuestionAiMessageDao = database.questionAiMessageDao()
 }
