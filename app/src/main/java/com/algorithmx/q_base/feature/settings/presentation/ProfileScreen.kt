@@ -71,7 +71,8 @@ fun ProfileScreen(
         onRegenerateFriendCode = { viewModel.regenerateFriendCode() },
         onSignOut = { clearCollections, onComplete -> 
             viewModel.signOut(clearCollections) { onComplete() }
-        }
+        },
+        onBackupDismissed = { viewModel.checkBackupStatus() }
     )
 }
 
@@ -87,7 +88,8 @@ fun ProfileContent(
     onCopyFriendCode: (String) -> Unit,
     onShareFriendCode: (String) -> Unit,
     onRegenerateFriendCode: () -> Unit,
-    onSignOut: (Boolean, () -> Unit) -> Unit
+    onSignOut: (Boolean, () -> Unit) -> Unit,
+    onBackupDismissed: () -> Unit
 ) {
     val scrollState = rememberScrollState()
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -95,7 +97,12 @@ fun ProfileContent(
     var showBackupDialog by remember { mutableStateOf(false) }
 
     if (showBackupDialog) {
-        SecureBackupDialog(onDismiss = { showBackupDialog = false })
+        SecureBackupDialog(
+            onDismiss = { 
+                showBackupDialog = false
+                onBackupDismissed()
+            }
+        )
     }
 
     if (showLogoutDialog) {
@@ -349,7 +356,8 @@ fun ProfileContentPreview() {
             onCopyFriendCode = {},
             onShareFriendCode = {},
             onRegenerateFriendCode = {},
-            onSignOut = { _, _ -> }
+            onSignOut = { _, _ -> },
+            onBackupDismissed = {}
         )
     }
 }

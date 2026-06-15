@@ -12,6 +12,11 @@ import com.algorithmx.q_base.core.data.UserEntity
 import com.algorithmx.q_base.feature.sessions.data.SessionDao
 import com.algorithmx.q_base.core.data.auth.AuthRepository
 import com.algorithmx.q_base.core.data.backend.CoreDatabase
+import com.algorithmx.q_base.data.collections.CollectionDao
+import com.algorithmx.q_base.core.data.chat.ChatLocalDataSource
+import com.algorithmx.q_base.core.data.UserDao
+import kotlinx.coroutines.flow.firstOrNull
+import dagger.Lazy
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,10 +26,77 @@ class ReportSyncRepository @Inject constructor(
     private val databases: CoreDatabase,
     private val authRepository: AuthRepository,
     private val chatRemoteRepository: ChatRemoteRepository,
-    private val sessionDao: SessionDao
+    private val sessionDao: SessionDao,
+    private val collectionDao: Lazy<CollectionDao>,
+    private val chatLocalDataSource: Lazy<ChatLocalDataSource>,
+    private val messageSyncRepository: Lazy<MessageSyncRepository>,
+    private val chatManagerRepository: Lazy<ChatManagerRepository>,
+    private val userDao: Lazy<UserDao>
 ) {
     private val currentUserId: String?
         get() = authRepository.currentUserId
+
+    private suspend fun sendSystemMessageToUser(targetUserId: String, payloadText: String) {
+        val myId = currentUserId ?: return
+        if (myId == targetUserId) return
+        
+        try {
+            val chatManager = chatManagerRepository.get()
+            val localDataSource = chatLocalDataSource.get()
+            
+            val allChats = localDataSource.getAllChats().firstOrNull() ?: emptyList()
+            var existingChat = allChats.find { chat ->
+                !chat.isGroup && chat.participantIds.split(",").contains(myId) && chat.participantIds.split(",").contains(targetUserId)
+            }
+            
+            if (existingChat == null) {
+                val newChatId = UUID.randomUUID().toString()
+                val targetUser = userDao.get().getUserById(targetUserId)
+                val targetUserName = targetUser?.displayName ?: "User"
+                val newChat = ChatEntity(
+                    chatId = newChatId,
+                    chatName = targetUserName,
+                    isGroup = false,
+                    participantIds = "$myId,$targetUserId",
+                    adminIds = listOf(myId)
+                )
+                localDataSource.upsertChat(newChat)
+                try {
+                    chatManager.createChatOnRemote(newChat)
+                } catch (_: Exception) {}
+                existingChat = newChat
+            }
+            
+            val message = MessageEntity(
+                messageId = UUID.randomUUID().toString(),
+                chatId = existingChat.chatId,
+                senderId = myId,
+                payload = payloadText,
+                type = "TEXT",
+                timestamp = System.currentTimeMillis()
+            )
+            messageSyncRepository.get().sendMessage(message)
+        } catch (e: Exception) {
+            Log.e("ReportSyncRepository", "Failed to send warning message to user $targetUserId", e)
+        }
+    }
+
+    private suspend fun sendWarningToGroup(groupId: String, payloadText: String) {
+        val myId = currentUserId ?: return
+        try {
+            val message = MessageEntity(
+                messageId = UUID.randomUUID().toString(),
+                chatId = groupId,
+                senderId = myId,
+                payload = payloadText,
+                type = "TEXT",
+                timestamp = System.currentTimeMillis()
+            )
+            messageSyncRepository.get().sendMessage(message)
+        } catch (e: Exception) {
+            Log.e("ReportSyncRepository", "Failed to send warning to group $groupId", e)
+        }
+    }
 
     suspend fun reportSession(sessionId: String, reason: String) {
         val reporterId = currentUserId ?: return
@@ -47,6 +119,22 @@ class ReportSyncRepository @Inject constructor(
             ).getOrThrow()
         } catch (e: Exception) {
             Log.e("ReportSyncRepository", "Failed to submit reported session for $sessionId", e)
+        }
+
+        val colId = session.collectionId
+        if (!colId.isNullOrBlank()) {
+            try {
+                val collection = collectionDao.get().getStudyCollectionByIdOnce(colId)
+                val groupId = collection?.sharedWithGroupId
+                if (!groupId.isNullOrBlank()) {
+                    sendWarningToGroup(
+                        groupId = groupId,
+                        payloadText = "⚠️ PROBLEM REPORT: Issue with shared session '${session.title}'. Reason: $reason"
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("ReportSyncRepository", "Failed to send session warning to group", e)
+            }
         }
     }
 
@@ -107,6 +195,32 @@ class ReportSyncRepository @Inject constructor(
         } catch (e: Exception) {
             Log.e("ReportSyncRepository", "Failed to submit reported user ${user.userId}", e)
         }
+
+        sendSystemMessageToUser(
+            targetUserId = user.userId,
+            payloadText = "⚠️ WARNING: You have been reported for suspicious or abusive behavior. Reason: $reason"
+        )
+
+        try {
+            val allChats = chatLocalDataSource.get().getAllChats().firstOrNull() ?: emptyList()
+            for (chat in allChats) {
+                if (chat.isGroup) {
+                    val participants = chat.participantIds.split(",")
+                    if (participants.contains(reporterId) && participants.contains(user.userId)) {
+                        for (adminId in chat.adminIds) {
+                            if (adminId != reporterId) {
+                                sendSystemMessageToUser(
+                                    targetUserId = adminId,
+                                    payloadText = "⚠️ USER REPORT: Member '${user.displayName}' (ID: ${user.userId}) was reported by a participant in group '${chat.chatName}'. Reason: $reason"
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("ReportSyncRepository", "Failed to notify group admins of user report", e)
+        }
     }
 
     suspend fun reportCollection(collection: StudyCollection, reason: String) {
@@ -127,6 +241,14 @@ class ReportSyncRepository @Inject constructor(
             ).getOrThrow()
         } catch (e: Exception) {
             Log.e("ReportSyncRepository", "Failed to submit reported collection", e)
+        }
+
+        val groupId = collection.sharedWithGroupId
+        if (!groupId.isNullOrBlank()) {
+            sendWarningToGroup(
+                groupId = groupId,
+                payloadText = "⚠️ PROBLEM REPORT: Issue with shared collection '${collection.name}'. Reason: $reason"
+            )
         }
     }
 

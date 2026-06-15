@@ -209,7 +209,8 @@ fun rememberAppEntryProvider(navigator: Navigator) = remember(navigator) {
                 viewModel = viewModel,
                 onBack = { navigator.goBack() },
                 onNavigateToBrainManager = { navigator.navigate(Screen.AiBrainManager) },
-                onNavigateToAppTheme = { navigator.navigate(Screen.AppTheme) }
+                onNavigateToAppTheme = { navigator.navigate(Screen.AppTheme) },
+                onNavigateToProfile = { navigator.navigate(Screen.Profile) }
             )
         }
 

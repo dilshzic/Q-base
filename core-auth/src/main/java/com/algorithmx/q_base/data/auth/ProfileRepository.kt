@@ -493,15 +493,21 @@ class ProfileRepository @Inject constructor(
     suspend fun setupSecureBackup(userId: String, passphrase: String): Result<Unit> {
         return try {
             val encryptedBackup = cryptoManager.exportEncryptedKeyset(passphrase)
-            coreDatabase.createDocument(
-                "user_private_settings",
-                userId,
-                mapOf(
-                    "userId" to userId,
-                    "e2eeBackup" to encryptedBackup
-                )
+            val data = mapOf(
+                "userId" to userId,
+                "e2eeBackup" to encryptedBackup
             )
-            Result.success(Unit)
+            val updateResult = coreDatabase.updateDocument("user_private_settings", userId, data)
+            if (updateResult.isSuccess) {
+                Result.success(Unit)
+            } else {
+                val createResult = coreDatabase.createDocument("user_private_settings", userId, data)
+                if (createResult.isSuccess) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(createResult.exceptionOrNull() ?: updateResult.exceptionOrNull() ?: Exception("Failed to save secure backup"))
+                }
+            }
         } catch (e: Exception) {
             Log.e("ProfileRepository", "Failed to setup secure backup", e)
             Result.failure(e)

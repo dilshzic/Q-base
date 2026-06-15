@@ -1,5 +1,7 @@
 package com.algorithmx.q_base.feature.settings.presentation
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -35,7 +37,8 @@ fun SettingsScreen(
     viewModel: SettingsViewModel,
     onBack: () -> Unit,
     onNavigateToBrainManager: () -> Unit = {},
-    onNavigateToAppTheme: () -> Unit = {}
+    onNavigateToAppTheme: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {}
 ) {
     val config by viewModel.brainConfig.collectAsStateWithLifecycle()
     val dbSize by viewModel.dbSizeMb.collectAsStateWithLifecycle()
@@ -47,6 +50,7 @@ fun SettingsScreen(
         onBack = onBack,
         onNavigateToBrainManager = onNavigateToBrainManager,
         onNavigateToAppTheme = onNavigateToAppTheme,
+        onNavigateToProfile = onNavigateToProfile,
         onUpdateNotifications = { viewModel.updateNotifications(it) },
         onSaveTaskConfig = { task, taskConfig -> viewModel.saveTaskConfig(task, taskConfig) },
         onClearAllData = { onComplete -> viewModel.clearAllData(onComplete) }
@@ -62,13 +66,12 @@ fun SettingsContent(
     onBack: () -> Unit,
     onNavigateToBrainManager: () -> Unit,
     onNavigateToAppTheme: () -> Unit,
+    onNavigateToProfile: () -> Unit,
     onUpdateNotifications: (Boolean) -> Unit,
     onSaveTaskConfig: (BrainTask, com.algorithmx.q_base.core.ai.brain.models.TaskConfig) -> Unit,
     onClearAllData: (() -> Unit) -> Unit
 ) {
     var showClearDialog by remember { mutableStateOf(false) }
-    var showPrivacyDialog by remember { mutableStateOf(false) }
-    var showHelpDialog by remember { mutableStateOf(false) }
     var showBugDialog by remember { mutableStateOf(false) }
     var bugDescription by remember { mutableStateOf("") }
     
@@ -102,7 +105,7 @@ fun SettingsContent(
                         title = "My Profile",
                         subtitle = "Manage your information and friend code",
                         icon = Icons.Rounded.Person,
-                        onClick = onBack
+                        onClick = onNavigateToProfile
                     )
                 }
             }
@@ -154,21 +157,27 @@ fun SettingsContent(
                     )
                     SettingsCard(
                         title = "Privacy Policy",
-                        subtitle = "How we handle your data",
+                        subtitle = "Open our official Privacy Policy in browser",
                         icon = Icons.Rounded.PrivacyTip,
-                        onClick = { showPrivacyDialog = true }
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://dilshzic.github.io/Q-base/legal/privacy_policy.html"))
+                            context.startActivity(intent)
+                        }
+                    )
+                    SettingsCard(
+                        title = "Terms of Service",
+                        subtitle = "Open our official Terms of Service in browser",
+                        icon = Icons.Rounded.Gavel,
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://dilshzic.github.io/Q-base/legal/terms_of_service.html"))
+                            context.startActivity(intent)
+                        }
                     )
                 }
             }
             
             item {
                 SettingsSection(title = "SUPPORT") {
-                    SettingsCard(
-                        title = "Help Center",
-                        subtitle = "Guides and troubleshooting",
-                        icon = Icons.AutoMirrored.Rounded.Help,
-                        onClick = { showHelpDialog = true }
-                    )
                     SettingsCard(
                         title = "Report a Bug",
                         subtitle = "Help us improve Q-Base",
@@ -228,125 +237,7 @@ fun SettingsContent(
         )
     }
 
-    // Privacy Policy Dialog
-    if (showPrivacyDialog) {
-        AlertDialog(
-            onDismissRequest = { showPrivacyDialog = false },
-            title = { Text("Privacy Policy") },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .height(280.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Text(
-                        text = "Your privacy is extremely important to us. Q-Base maintains strict protocols to ensure your learning telemetry and personal information remain secure.",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "1. Data Collection & Storage",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    Text(
-                        text = "Your personal study habits, custom collections, and application configurations are cached locally on your device using AES-256 encryption. Core data necessary for multi-device sync, including peer connections and session records, are stored securely on our Appwrite cloud infrastructure.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "2. End-to-End Encrypted Communications",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    Text(
-                        text = "All direct messages and shared study collections between peers use End-to-End Encryption (E2EE). Q-Base servers only route the encrypted payloads and cannot decrypt your private discussions or shared materials.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "3. AI Interactions",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    Text(
-                        text = "AI requests processed through the brain system rely on official Google Gemini and Groq APIs. No private friend data, conversational records, or PII are shared with third-party advertising algorithms.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "4. Usage Telemetry",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    Text(
-                        text = "We do not collect granular usage telemetry for advertising purposes. Limited diagnostic logs may be collected to improve application stability if you explicitly opt-in.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "5. User Rights & Data Deletion",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    Text(
-                        text = "You retain full control over your data. You may initiate a complete wipe of your local cache and remote cloud presence at any time via the Settings menu. This action is irreversible.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showPrivacyDialog = false }) {
-                    Text("Close")
-                }
-            }
-        )
-    }
 
-    // Help Center Dialog
-    if (showHelpDialog) {
-        AlertDialog(
-            onDismissRequest = { showHelpDialog = false },
-            title = { Text("Help Center") },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .height(280.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Text(
-                        text = "Welcome to the Q-Base support guide! Here are the core details to help you get the most out of your study companion:",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "• Timed Practice Sessions",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    Text(
-                        text = "Click 'Practice Lab' on Home to launch custom session timers. Your answers are marked and logged into 'Sessions' so you can track progress trends over time.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "• Peer Study Rooms",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    Text(
-                        text = "Use the 'Study Sync' tab to share complete question sets and chat in real-time with other students using their unique friend codes.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showHelpDialog = false }) {
-                    Text("Got It")
-                }
-            }
-        )
-    }
 
     // Report a Bug Dialog
     if (showBugDialog) {

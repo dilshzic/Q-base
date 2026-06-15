@@ -55,6 +55,8 @@ fun ChooseMethodScreen(
             description = "Upload an exam paper or textbook to extract structured questions.",
             icon = Icons.Rounded.DocumentScanner,
             color = Color(0xFF43A047), // Premium green
+            isEnabled = false,
+            badgeText = "Shelved",
             onClick = onExtractClick
         )
 
@@ -75,16 +77,23 @@ private fun MethodCard(
     description: String,
     icon: ImageVector,
     color: Color,
+    isEnabled: Boolean = true,
+    badgeText: String? = null,
     onClick: () -> Unit
 ) {
+    val displayColor = if (isEnabled) color else MaterialTheme.colorScheme.outline
+    val containerColor = if (isEnabled) color.copy(alpha = 0.05f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+    val borderStroke = BorderStroke(1.dp, if (isEnabled) color.copy(alpha = 0.2f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
     Card(
-        onClick = onClick,
+        onClick = if (isEnabled) onClick else ({}),
+        enabled = isEnabled,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = color.copy(alpha = 0.05f)
+            containerColor = containerColor
         ),
-        border = BorderStroke(1.dp, color.copy(alpha = 0.2f)),
+        border = borderStroke,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -95,14 +104,14 @@ private fun MethodCard(
         ) {
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                color = color.copy(alpha = 0.15f),
+                color = displayColor.copy(alpha = 0.15f),
                 modifier = Modifier.size(56.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = color,
+                        tint = displayColor,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -111,17 +120,34 @@ private fun MethodCard(
             Spacer(modifier = Modifier.width(16.dp))
             
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isEnabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    if (badgeText != null) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(
+                                text = badgeText.uppercase(),
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isEnabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
             }
             

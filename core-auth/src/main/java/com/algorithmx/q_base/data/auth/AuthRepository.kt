@@ -195,7 +195,8 @@ class AuthRepository @Inject constructor(
         return try {
             appwriteAccount.createOAuth2Session(
                 activity = activity,
-                provider = OAuthProvider.GOOGLE
+                provider = OAuthProvider.GOOGLE,
+                scopes = listOf("profile", "email", "openid")
             )
             val user = appwriteAccount.get()
             val photoUrl = fetchGooglePhotoUrl()

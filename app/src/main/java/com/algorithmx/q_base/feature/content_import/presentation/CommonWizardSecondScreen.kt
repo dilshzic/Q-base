@@ -59,7 +59,7 @@ fun ImportConfigView(onProceed: (List<String>, String) -> Unit) {
                     clip = true
                 },
             label = { Text("Custom Focus Instructions for AI") }, 
-            placeholder = { Text("e.g. Only extract pathology questions. Emphasize laboratory markers...") },
+            placeholder = { Text("e.g. Only extract history questions. Emphasize key dates and events...") },
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -202,7 +202,7 @@ fun GenerateConfigView(onProceed: (ExtractionConfigData) -> Unit) {
                     clip = true
                 },
             label = { Text("Special Context & Core Focus") }, 
-            placeholder = { Text("Focus on mechanism of action, key diagnostics...") },
+            placeholder = { Text("Focus on core concepts, key definitions...") },
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,

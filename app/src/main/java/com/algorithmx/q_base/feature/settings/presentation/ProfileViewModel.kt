@@ -117,6 +117,15 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun checkBackupStatus() {
+        viewModelScope.launch {
+            val user = authRepository.currentUserId
+            if (user != null) {
+                _hasSecureBackup.value = profileRepository.checkHasSecureBackup(user)
+            }
+        }
+    }
+
     private fun loadStats() {
         viewModelScope.launch {
             combine(
