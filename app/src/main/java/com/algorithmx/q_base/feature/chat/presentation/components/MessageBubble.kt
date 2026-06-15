@@ -57,6 +57,29 @@ fun AnimatedMessageItem(
     isFirstInGroup: Boolean = true,
     isLastInGroup: Boolean = true
 ) {
+    if (message.type == "COLLECTION_MICRO_UPDATE" || message.type == "COLLECTION_PATCH") {
+        val collectionName = try {
+            val json = org.json.JSONObject(message.payload)
+            json.optJSONObject("diff")?.optString("collectionName") 
+                ?: json.optJSONObject("data")?.optString("collectionName") 
+                ?: json.optString("collectionName").takeIf { it.isNotBlank() }
+                ?: "a collection"
+        } catch(e: Exception) { "a collection" }
+        
+        val op = try { org.json.JSONObject(message.payload).optString("op") } catch(e: Exception) { "" }
+        val action = if (op == "UPDATE_ADMIN_ONLY") "changed admin-only settings for" else "updated"
+        val displayName = senderName ?: "A user"
+        
+        Text(
+            text = "$displayName $action '$collectionName'",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        return
+    }
+
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
 

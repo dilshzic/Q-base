@@ -138,7 +138,7 @@ fun ChatDetailScreen(
                         Tab(
                             selected = isLibraryMode,
                             onClick = { viewModel.toggleLibraryMode(true) },
-                            text = { Text("Question Collections") }
+                            text = { Text("Shared collections") }
                         )
                     }
                 }
@@ -162,6 +162,7 @@ fun ChatDetailScreen(
         }
     ) { padding ->
         val sharedCollections by viewModel.sharedCollections.collectAsStateWithLifecycle()
+        val isLoadingCollections by viewModel.isLoadingCollections.collectAsStateWithLifecycle()
 
         Box(
             modifier = Modifier
@@ -182,7 +183,9 @@ fun ChatDetailScreen(
                     accessRequests = accessRequests,
                     onRequestAccess = { viewModel.requestAccess(it) },
                     onGrantAccess = { collId, reqId -> viewModel.grantAccess(collId, reqId) },
-                    onNavigateToCollection = onNavigateToCollection
+                    onNavigateToCollection = onNavigateToCollection,
+                    onDelete = { collectionId -> viewModel.deleteSharedCollection(collectionId) },
+                    isLoading = isLoadingCollections
                 )
             } else {
                 val messagesByDate = remember(state.messages) {

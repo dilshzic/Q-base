@@ -53,7 +53,7 @@ class AiRepository @Inject constructor(
             Return ONLY a valid JSON object with this exact structure:
             {
               "collectionTitle": "Physics Basics",
-              "collectionDescription": "Fundamentals of cardiology",
+              "collectionDescription": "Fundamentals of Newtonian physics",
               "questions": [
                 {
                   "id": "generate-a-uuid",

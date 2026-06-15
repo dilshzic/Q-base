@@ -249,7 +249,7 @@ class ChatRemoteRepository @Inject constructor(
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
-            "reportedAt" to System.currentTimeMillis() / 1000,
+            "reportedAt" to (System.currentTimeMillis() / 1000).toInt(),
             "groupId" to group.chatId,
             "contentJson" to com.google.gson.Gson().toJson(group)
         )
@@ -270,7 +270,7 @@ class ChatRemoteRepository @Inject constructor(
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
-            "reportedAt" to System.currentTimeMillis() / 1000,
+            "reportedAt" to (System.currentTimeMillis() / 1000).toInt(),
             "messageId" to message.messageId,
             "contentJson" to com.google.gson.Gson().toJson(message)
         )

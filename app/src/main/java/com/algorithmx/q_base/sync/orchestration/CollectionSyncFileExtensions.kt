@@ -220,19 +220,28 @@ suspend fun CollectionSyncRepository.acknowledgeCollectionDownload(chatId: Strin
     }
 }
 
+suspend fun CollectionSyncRepository.deleteZipFileFromUrl(url: String) {
+    val fileId = extractFileIdFromUrl(url)
+    if (fileId != null) {
+        try {
+            deleteQuestionBankZip(fileId)
+            Log.d("CollectionSyncRepository", "Zero-retention triggered: deleted ZIP file $fileId from Appwrite Storage")
+        } catch (e: Exception) {
+            Log.e("CollectionSyncRepository", "Failed to delete storage ZIP file", e)
+        }
+    }
+}
+
 fun CollectionSyncRepository.observeGroupLibrary(chatId: String): Flow<List<Map<String, Any>>> {
     return callbackFlow {
         repositoryScope.launch {
             try {
                 val docs = databases.queryDocuments(
                     collectionId = "shared_collections",
-                    queries = emptyList()
+                    queries = listOf(CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId))
                 ).getOrThrow()
-                Log.e("CollectionSyncRepository", "observeGroupLibrary: fetched ${docs.size} docs from Appwrite. Filtering for chatId=$chatId")
-                docs.forEach { Log.e("CollectionSyncRepository", "Doc found: id=${it["\$id"]} chatId=${it["chatId"]} collectionId=${it["collectionId"]}") }
-                val filtered = docs.filter { it["chatId"] == chatId }
-                Log.e("CollectionSyncRepository", "observeGroupLibrary: filtered down to ${filtered.size} docs")
-                val mapped = mapGroupLibrary(filtered)
+                Log.e("CollectionSyncRepository", "observeGroupLibrary: fetched ${docs.size} docs for chatId=$chatId")
+                val mapped = mapGroupLibrary(docs)
                 trySend(mapped).isSuccess
             } catch (e: Exception) {
                 Log.e("CollectionSyncRepository", "Initial fetch in observeGroupLibrary failed", e)
@@ -240,16 +249,14 @@ fun CollectionSyncRepository.observeGroupLibrary(chatId: String): Flow<List<Map<
         }
 
         val realtime = io.appwrite.services.Realtime(appwriteClient)
-        val subscription = realtime.subscribe("tablesdb.qbase_db.tables.shared_collections.rows") { event ->
+        val subscription = realtime.subscribe("databases.qbase_db.collections.shared_collections.documents") { event ->
             repositoryScope.launch {
                 try {
                     val docs = databases.queryDocuments(
                         collectionId = "shared_collections",
-                        queries = emptyList()
+                        queries = listOf(CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId))
                     ).getOrThrow()
-                    Log.e("CollectionSyncRepository", "observeGroupLibrary Realtime: fetched ${docs.size} docs. Filtering for chatId=$chatId")
-                    val filtered = docs.filter { it["chatId"] == chatId }
-                    val mapped = mapGroupLibrary(filtered)
+                    val mapped = mapGroupLibrary(docs)
                     trySend(mapped).isSuccess
                 } catch (e: Exception) {
                     Log.e("CollectionSyncRepository", "Realtime update in observeGroupLibrary failed", e)
@@ -294,5 +301,39 @@ private suspend fun CollectionSyncRepository.mapGroupLibrary(list: List<Map<Stri
         val rawUpdatedAt = (doc["updatedAt"] as? Number)?.toLong() ?: 0L
         data["updatedAt"] = if (rawUpdatedAt < 1000000000000L) rawUpdatedAt * 1000 else rawUpdatedAt
         data
+    }
+}
+
+suspend fun CollectionSyncRepository.deleteSharedCollectionFromGroup(chatId: String, collectionId: String) {
+    withContext(Dispatchers.IO) {
+        try {
+            val queries = listOf(
+                CoreQuery("chatId", CoreQueryOperator.EQUAL, chatId),
+                CoreQuery("collectionId", CoreQueryOperator.EQUAL, collectionId)
+            )
+            val docs = databases.queryDocuments("shared_collections", queries).getOrThrow()
+            val targetDoc = docs.firstOrNull()
+            
+            if (targetDoc != null) {
+                val docId = targetDoc["\$id"] as? String ?: return@withContext
+                val downloadUrl = targetDoc["downloadUrl"] as? String
+                
+                databases.deleteDocument("shared_collections", docId).getOrThrow()
+                
+                if (!downloadUrl.isNullOrBlank()) {
+                    val fileId = extractFileIdFromUrl(downloadUrl)
+                    if (fileId != null) {
+                        try {
+                            deleteQuestionBankZip(fileId)
+                        } catch (e: Exception) {
+                            Log.e("CollectionSyncRepository", "Failed to delete storage ZIP file", e)
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("CollectionSyncRepository", "Failed to delete shared collection", e)
+            throw e
+        }
     }
 }

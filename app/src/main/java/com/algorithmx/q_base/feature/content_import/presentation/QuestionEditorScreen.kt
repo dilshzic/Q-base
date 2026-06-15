@@ -103,33 +103,66 @@ fun QuestionEditorScreen(
                 Text("Options", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             }
 
-            items(state.options) { (letter, text) ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(
-                        selected = state.correctAnswer == letter,
-                        onClick = { viewModel.updateCorrectAnswer(letter) }
-                    )
-                    Text(letter, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
-                    OutlinedTextField(
-                        value = text,
-                        onValueChange = { viewModel.updateOption(letter, it) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .graphicsLayer {
-                                shadowElevation = 1.5f
-                                shape = RoundedCornerShape(12.dp)
-                                clip = true
-                            },
-                        shape = RoundedCornerShape(12.dp),
-                        placeholder = { Text("Option $letter text") },
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                            focusedContainerColor = MaterialTheme.colorScheme.surface,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+            items(state.options) { optionState ->
+                val letter = optionState.letter
+                val text = optionState.text
+                val explanation = optionState.explanation
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(
+                            selected = state.correctAnswer == letter,
+                            onClick = { viewModel.updateCorrectAnswer(letter) }
                         )
-                    )
+                        Text(letter, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
+                        OutlinedTextField(
+                            value = text,
+                            onValueChange = { viewModel.updateOption(letter, it) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .graphicsLayer {
+                                    shadowElevation = 1.5f
+                                    shape = RoundedCornerShape(12.dp)
+                                    clip = true
+                                },
+                            shape = RoundedCornerShape(12.dp),
+                            placeholder = { Text("Option $letter text") },
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                            )
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    Row(verticalAlignment = Alignment.Top) {
+                        Spacer(modifier = Modifier.width(56.dp)) // Aligns with the text field above (48dp RadioButton + 8dp spacing or so)
+                        OutlinedTextField(
+                            value = explanation,
+                            onValueChange = { viewModel.updateOptionExplanation(letter, it) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .graphicsLayer {
+                                    shadowElevation = 1f
+                                    shape = RoundedCornerShape(12.dp)
+                                    clip = true
+                                },
+                            shape = RoundedCornerShape(12.dp),
+                            placeholder = { Text("Option $letter explanation (optional)") },
+                            minLines = 2,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                            )
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
 

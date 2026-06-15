@@ -34,7 +34,7 @@ class ReportSyncRepository @Inject constructor(
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
-            "reportedAt" to System.currentTimeMillis() / 1000,
+            "reportedAt" to (System.currentTimeMillis() / 1000).toInt(),
             "sessionId" to session.sessionId,
             "contentJson" to com.google.gson.Gson().toJson(session)
         )
@@ -68,7 +68,7 @@ class ReportSyncRepository @Inject constructor(
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
-            "reportedAt" to System.currentTimeMillis() / 1000,
+            "reportedAt" to (System.currentTimeMillis() / 1000).toInt(),
             "questionId" to question.questionId,
             "contentJson" to com.google.gson.Gson().toJson(contentMap)
         )
@@ -94,7 +94,7 @@ class ReportSyncRepository @Inject constructor(
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
-            "reportedAt" to System.currentTimeMillis() / 1000,
+            "reportedAt" to (System.currentTimeMillis() / 1000).toInt(),
             "reportedUserId" to user.userId,
             "contentJson" to com.google.gson.Gson().toJson(user)
         )
@@ -115,7 +115,7 @@ class ReportSyncRepository @Inject constructor(
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
-            "reportedAt" to System.currentTimeMillis() / 1000,
+            "reportedAt" to (System.currentTimeMillis() / 1000).toInt(),
             "collectionId" to collection.collectionId,
             "contentJson" to com.google.gson.Gson().toJson(collection)
         )

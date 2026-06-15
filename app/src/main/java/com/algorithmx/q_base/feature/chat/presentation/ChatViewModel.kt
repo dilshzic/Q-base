@@ -65,6 +65,9 @@ class ChatViewModel @Inject constructor(
     internal val _isRefreshing = MutableStateFlow(false)
     val isRefreshing = _isRefreshing.asStateFlow()
 
+    internal val _isLoadingCollections = MutableStateFlow(false)
+    val isLoadingCollections = _isLoadingCollections.asStateFlow()
+
     internal val _isAiLoading = MutableStateFlow(false)
     val isAiLoading = _isAiLoading.asStateFlow()
 
@@ -380,6 +383,24 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    fun deleteSharedCollection(collectionId: String) {
+        val chatId = _currentChatId.value ?: return
+        
+        // Immediate local UI update
+        val currentList = _sharedCollections.value.toMutableList()
+        currentList.removeAll { it["collectionId"] == collectionId }
+        _sharedCollections.value = currentList
+
+        viewModelScope.launch {
+            try {
+                syncRepository.deleteSharedCollectionFromGroup(chatId, collectionId)
+                _actionFeedback.emit("Shared collection deleted")
+            } catch (e: Exception) {
+                _actionFeedback.emit("Failed to delete shared collection: ${e.message}")
+            }
+        }
+    }
+
     fun toggleLibraryMode(enabled: Boolean) {
         _isLibraryMode.value = enabled
     }
@@ -459,8 +480,10 @@ class ChatViewModel @Inject constructor(
                 
             val chat = chatLocalDataSource.getChatById(chatId)
             if (chat?.isGroup == true) {
+                _isLoadingCollections.value = true
                 groupLibraryJob = viewModelScope.launch {
                     syncRepository.observeGroupLibrary(chatId)
+                        .onEach { _isLoadingCollections.value = false }
                         .collect { _sharedCollections.value = it }
                 }
                 sharedSessionsJob = viewModelScope.launch {

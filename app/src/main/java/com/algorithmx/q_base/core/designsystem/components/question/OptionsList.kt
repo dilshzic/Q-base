@@ -361,7 +361,7 @@ fun OptionsListPreview() {
             onOptionToggled = {},
             isAnswerRevealed = true,
             correctAnswers = listOf("A"),
-            explanation = "The **Sinoatrial (SA) node** is known as the natural pacemaker of the heart.",
+            explanation = "Mars appears red because its surface is covered with **iron oxide**, commonly known as rust.",
             references = "General Science Textbook",
             onCheckAnswer = {}
         )

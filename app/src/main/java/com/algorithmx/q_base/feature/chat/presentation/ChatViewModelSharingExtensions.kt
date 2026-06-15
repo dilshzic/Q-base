@@ -58,12 +58,19 @@ fun ChatViewModel.importSharedCollection(payload: String) {
             if (result.isSuccess) {
                 _actionFeedback.emit("Collection imported successfully to your library!")
                 
-                if (collectionId.isNotEmpty()) {
+                if (groupId.isNotBlank() && collectionId.isNotEmpty()) {
                     try {
-                        syncRepository.acknowledgeCollectionDownload(groupId.ifBlank { null }, collectionId)
+                        syncRepository.acknowledgeCollectionDownload(groupId, collectionId)
                         Log.d("ChatViewModel", "Acknowledged collection download for $collectionId")
                     } catch (ae: Exception) {
                         Log.e("ChatViewModel", "Failed to acknowledge download receipt", ae)
+                    }
+                } else if (groupId.isBlank() && url.isNotBlank()) {
+                    try {
+                        syncRepository.deleteZipFileFromUrl(url)
+                        Log.d("ChatViewModel", "Deleted P2P collection zip from cloud")
+                    } catch (e: Exception) {
+                        Log.e("ChatViewModel", "Failed to delete P2P collection zip", e)
                     }
                 }
             } else {

@@ -206,20 +206,26 @@ suspend fun CollectionSyncRepository.applyCollectionPatch(jsonString: String) {
             "UPSERT_QUESTION" -> {
                 val qId = data.getString("id")
                 val collectionName = data.getString("collectionName")
+                val resolvedCollectionName = collectionDao.getStudyCollectionByIdOnce(collectionId)?.name ?: collectionName
                 val qText = data.getString("text")
                 val category = data.optString("category", "General")
                 val tags = data.optString("tags", "")
 
                 val question = Question(
                     questionId = qId,
-                    collection = collectionName,
-                    category = category,
+                    collection = resolvedCollectionName,
+                    category = resolvedCollectionName,
                     tags = tags,
-                    questionType = "Multiple Choice",
+                    questionType = "SBA",
                     stem = qText,
                     isPinned = false
                 )
-                questionDao.insertQuestion(question)
+                val existingQuestion = questionDao.getQuestionById(qId)
+                if (existingQuestion != null) {
+                    questionDao.updateQuestion(question)
+                } else {
+                    questionDao.insertQuestion(question)
+                }
 
                 questionDao.deleteOptionsForQuestion(qId)
                 val optionsArray = data.getJSONArray("options")
@@ -235,11 +241,19 @@ suspend fun CollectionSyncRepository.applyCollectionPatch(jsonString: String) {
                 }
 
                 val correctAns = data.getString("correctAnswer")
+                val explanation = data.optString("explanation", "")
+                val references = data.optString("references", "")
                 questionDao.insertAnswer(Answer(
                     questionId = qId,
                     correctAnswerString = correctAns,
-                    generalExplanation = ""
+                    generalExplanation = explanation,
+                    references = references
                 ))
+                
+                val setId = data.optString("setId", "")
+                if (setId.isNotEmpty()) {
+                    questionDao.insertSetQuestionCrossRef(com.algorithmx.q_base.data.collections.SetQuestionCrossRef(setId = setId, questionId = qId))
+                }
                 
                 collectionDao.updateStudyCollectionTimestamp(collectionId, System.currentTimeMillis())
             }
@@ -247,6 +261,13 @@ suspend fun CollectionSyncRepository.applyCollectionPatch(jsonString: String) {
                 val qId = data.getString("id")
                 questionDao.deleteQuestionById(qId)
                 collectionDao.updateStudyCollectionTimestamp(collectionId, System.currentTimeMillis())
+            }
+            "UPDATE_ADMIN_ONLY" -> {
+                val isAdminOnly = data.getBoolean("isAdminOnly")
+                val collection = collectionDao.getStudyCollectionByIdOnce(collectionId)
+                if (collection != null) {
+                    collectionDao.updateStudyCollection(collection.copy(isAdminOnly = isAdminOnly))
+                }
             }
         }
     } catch (e: Exception) {

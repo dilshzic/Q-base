@@ -11,10 +11,20 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
+import com.algorithmx.q_base.sync.orchestration.SyncRepository
+import org.json.JSONObject
+
+data class OptionState(
+    val letter: String,
+    val text: String,
+    val explanation: String = ""
+)
 
 data class QuestionEditorState(
     val stem: String = "",
-    val options: List<Pair<String, String>> = listOf("A" to "", "B" to "", "C" to "", "D" to "", "E" to ""),
+    val options: List<OptionState> = listOf(
+        OptionState("A", ""), OptionState("B", ""), OptionState("C", ""), OptionState("D", ""), OptionState("E", "")
+    ),
     val correctAnswer: String = "A",
     val explanation: String = "",
     val references: String = "",
@@ -32,7 +42,8 @@ data class QuestionEditorState(
 class QuestionEditorViewModel @Inject constructor(
     private val questionDao: QuestionDao,
     private val collectionDao: CollectionDao,
-    private val aiRepository: AiRepository
+    private val aiRepository: AiRepository,
+    private val syncRepository: SyncRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(QuestionEditorState())
@@ -40,8 +51,12 @@ class QuestionEditorViewModel @Inject constructor(
 
     private var currentQuestionId: String? = null
     private var targetSetId: String? = null
+    private var isInitialized = false
 
     fun init(questionId: String?, setId: String) {
+        if (isInitialized && currentQuestionId == questionId && targetSetId == setId) return
+        
+        isInitialized = true
         currentQuestionId = questionId
         targetSetId = setId
         
@@ -52,19 +67,16 @@ class QuestionEditorViewModel @Inject constructor(
             viewModelScope.launch {
                 val q = questionDao.getQuestionById(questionId)
                 if (q != null) {
-                    // Combine flows to update state once
-                    val optionsFlow = questionDao.getOptionsForQuestion(questionId)
-                    val answerFlow = questionDao.getAnswerForQuestion(questionId)
+                    val opts = questionDao.getOptionsForQuestionOnce(questionId)
+                    val ans = questionDao.getAnswerForQuestionOnce(questionId)
                     
-                    optionsFlow.combine(answerFlow) { opts, ans ->
-                        _state.value = _state.value.copy(
-                            stem = q.stem,
-                            options = opts.map { it.optionLetter to (it.optionText ?: "") },
-                            correctAnswer = ans?.correctAnswerString ?: "A",
-                            explanation = ans?.generalExplanation ?: "",
-                            references = ans?.references ?: ""
-                        )
-                    }.collect()
+                    _state.value = _state.value.copy(
+                        stem = q.stem,
+                        options = opts.map { OptionState(it.optionLetter, it.optionText ?: "", it.optionExplanation ?: "") },
+                        correctAnswer = ans?.correctAnswerString ?: "A",
+                        explanation = ans?.generalExplanation ?: "",
+                        references = ans?.references ?: ""
+                    )
                 }
             }
         }
@@ -76,7 +88,14 @@ class QuestionEditorViewModel @Inject constructor(
 
     fun updateOption(letter: String, text: String) {
         val newOptions = _state.value.options.map { 
-            if (it.first == letter) it.first to text else it 
+            if (it.letter == letter) it.copy(text = text) else it 
+        }
+        _state.value = _state.value.copy(options = newOptions)
+    }
+
+    fun updateOptionExplanation(letter: String, explanation: String) {
+        val newOptions = _state.value.options.map { 
+            if (it.letter == letter) it.copy(explanation = explanation) else it 
         }
         _state.value = _state.value.copy(options = newOptions)
     }
@@ -97,7 +116,7 @@ class QuestionEditorViewModel @Inject constructor(
         val currentState = _state.value
         _state.value = currentState.copy(isAiLoading = true)
         viewModelScope.launch {
-            val optionsList = currentState.options.joinToString { "${it.first}: ${it.second}" }
+            val optionsList = currentState.options.joinToString { "${it.letter}: ${it.text}" }
             val result = aiRepository.assistQuestionEditing(currentState.stem, optionsList)
             if (result.isSuccess) {
                 _state.value = _state.value.copy(aiSuggestions = result.getOrNull(), isAiLoading = false)
@@ -111,7 +130,7 @@ class QuestionEditorViewModel @Inject constructor(
         val currentState = _state.value
         _state.value = currentState.copy(isAiLoading = true)
         viewModelScope.launch {
-            val optionsList = currentState.options.joinToString { "${it.first}: ${it.second}" }
+            val optionsList = currentState.options.joinToString { "${it.letter}: ${it.text}" }
             val prompt = """
                 Explain the following question and why the correct answer is ${currentState.correctAnswer}.
                 Stem: ${currentState.stem}
@@ -153,9 +172,22 @@ class QuestionEditorViewModel @Inject constructor(
             val qId = currentQuestionId ?: UUID.randomUUID().toString()
             val sId = targetSetId ?: return@launch
             
-            val question = Question(
+            val existingQuestion = if (currentQuestionId != null) {
+                questionDao.getQuestionById(currentQuestionId!!)
+            } else null
+            
+            val set = questionDao.getSetWithContent(sId)?.set
+            var colName: String? = null
+            set?.parentCollectionId?.let { colId ->
+                colName = collectionDao.getStudyCollectionByIdOnce(colId)?.name
+            }
+
+            val question = existingQuestion?.copy(
+                stem = currentState.stem,
+                collection = existingQuestion.collection ?: colName
+            ) ?: Question(
                 questionId = qId,
-                collection = null, // Will be linked via Set
+                collection = colName,
                 category = "General",
                 tags = "User Created, Manual",
                 questionType = "SBA",
@@ -163,15 +195,21 @@ class QuestionEditorViewModel @Inject constructor(
                 isPinned = false
             )
 
-            questionDao.insertQuestion(question)
+            if (currentQuestionId != null) {
+                questionDao.updateQuestion(question)
+            } else {
+                questionDao.insertQuestion(question)
+                questionDao.insertSetQuestionCrossRef(SetQuestionCrossRef(setId = sId, questionId = qId))
+            }
+
             questionDao.deleteOptionsForQuestion(qId)
             
             val options = currentState.options.map { 
                 QuestionOption(
                     questionId = qId,
-                    optionLetter = it.first,
-                    optionText = it.second,
-                    optionExplanation = null
+                    optionLetter = it.letter,
+                    optionText = it.text,
+                    optionExplanation = it.explanation.takeIf { exp -> exp.isNotBlank() }
                 )
             }
             questionDao.insertOptions(options)
@@ -184,16 +222,37 @@ class QuestionEditorViewModel @Inject constructor(
             )
             questionDao.insertAnswer(answer)
             
-            // Link to set if new
-            if (currentQuestionId == null) {
-                questionDao.insertSetQuestionCrossRef(SetQuestionCrossRef(setId = sId, questionId = qId))
-            }
-
             // Refresh collection timestamp for smart update logic
-            val set = questionDao.getSetWithContent(sId)?.set
             set?.parentCollectionId?.let { colId ->
-                collectionDao.updateStudyCollectionTimestamp(colId, System.currentTimeMillis())
-                android.util.Log.d("QuestionEditorViewModel", "Updated collection $colId timestamp")
+                val col = collectionDao.getStudyCollectionByIdOnce(colId)
+                if (col != null) {
+                    collectionDao.updateStudyCollectionTimestamp(colId, System.currentTimeMillis())
+                    android.util.Log.d("QuestionEditorViewModel", "Updated collection $colId timestamp")
+                    
+                    if (col.sharedWithGroupId != null) {
+                        try {
+                            val data = JSONObject().apply {
+                                put("id", qId)
+                                put("setId", sId)
+                                put("collectionName", col.name)
+                                put("text", currentState.stem)
+                                put("category", "General")
+                                put("tags", "User Created, Manual")
+                                
+                                val optsArray = org.json.JSONArray()
+                                currentState.options.forEach { optsArray.put(it.text) }
+                                put("options", optsArray)
+                                
+                                put("correctAnswer", currentState.correctAnswer)
+                                put("explanation", currentState.explanation)
+                                put("references", currentState.references)
+                            }
+                            syncRepository.sendCollectionPatch(col.sharedWithGroupId, colId, "UPSERT_QUESTION", data)
+                        } catch (e: Exception) {
+                            android.util.Log.e("QuestionEditorViewModel", "Failed to send UPSERT_QUESTION patch", e)
+                        }
+                    }
+                }
             }
             
             _state.value = _state.value.copy(isSaving = false, isSaved = true)

@@ -41,6 +41,10 @@ fun ManualBuilderScreen(
         viewModel.initialize(targetId, name)
     }
 
+    androidx.activity.compose.BackHandler {
+        viewModel.cleanupIfEmpty { onBack() }
+    }
+
     Scaffold(
         topBar = {
             UnifiedTopAppBar(
@@ -52,13 +56,17 @@ fun ManualBuilderScreen(
                 isLarge = false,
                 titleCentered = true,
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { 
+                        viewModel.cleanupIfEmpty { onBack() }
+                    }) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
                     Button(
-                        onClick = onBack,
+                        onClick = { 
+                            viewModel.cleanupIfEmpty { onBack() }
+                        },
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Icon(Icons.Rounded.Check, contentDescription = null)

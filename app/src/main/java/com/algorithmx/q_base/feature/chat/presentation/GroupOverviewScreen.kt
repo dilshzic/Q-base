@@ -41,7 +41,8 @@ fun GroupOverviewScreen(
     val currentUser by viewModel.currentUser.collectAsState()
     val state by viewModel.chatDetailState.collectAsState()
     val chat = state.chat
-    val participants = chat?.participantIds?.split(",")?.mapNotNull { state.participants[it] } ?: emptyList()
+    val participants = chat?.participantIds?.split(",")?.mapNotNull { state.participants[it] }
+        ?.sortedByDescending { chat.isAdmin(it.userId) } ?: emptyList()
 
     var showReportDialog by remember { mutableStateOf(false) }
     var showLeaveDialog by remember { mutableStateOf(false) }
@@ -202,7 +203,7 @@ fun GroupOverviewScreen(
                     Spacer(modifier = Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Collections & Sessions",
+                            text = "Shared collections",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )

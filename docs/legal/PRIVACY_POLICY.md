@@ -1,4 +1,4 @@
-# Privacy Policy for Q-base Medical Quiz App
+# Privacy Policy for Q-base Quiz App
 
 **Last Updated:** March 21, 2026
 

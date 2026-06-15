@@ -131,12 +131,18 @@ class ChatManagerRepository @Inject constructor(
                         val isGroupVal = doc["isGroup"] as? Boolean ?: false
 
                         Log.d("ChatManagerRepository", "Synced chat doc keys: ${doc.keys}, values: ${doc.values}")
+                        val localChat = chatLocalDataSource.getChatById(doc["\$id"] as String)
                         val chat = ChatEntity(
                             chatId = doc["\$id"] as String,
                             chatName = doc["chatName"] as? String,
                             isGroup = isGroupVal,
                             participantIds = participantsList.joinToString(","),
-                            adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList())
+                            adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList()),
+                            isBlocked = localChat?.isBlocked ?: false,
+                            isReported = localChat?.isReported ?: false,
+                            isMuted = localChat?.isMuted ?: false,
+                            unreadCount = localChat?.unreadCount ?: 0,
+                            lastUsedKeyFingerprint = localChat?.lastUsedKeyFingerprint
                         )
                         chatLocalDataSource.upsertChat(chat)
                         Log.d("ChatManagerRepository", "Synced chat from remote: ${chat.chatId} (${chat.chatName}), participants: ${chat.participantIds}")
@@ -207,12 +213,18 @@ class ChatManagerRepository @Inject constructor(
                         else -> emptyList()
                     }
                     val remoteAdminId = doc["adminId"] as? String
+                    val localChat = chatLocalDataSource.getChatById(doc["\$id"] as String)
                     val chat = ChatEntity(
                         chatId = doc["\$id"] as String,
                         chatName = doc["chatName"] as? String,
                         isGroup = false,
                         participantIds = participantsList.joinToString(","),
-                        adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList())
+                        adminIds = if (!remoteAdminIds.isNullOrEmpty()) remoteAdminIds else (remoteAdminId?.let { listOf(it) } ?: emptyList()),
+                        isBlocked = localChat?.isBlocked ?: false,
+                        isReported = localChat?.isReported ?: false,
+                        isMuted = localChat?.isMuted ?: false,
+                        unreadCount = localChat?.unreadCount ?: 0,
+                        lastUsedKeyFingerprint = localChat?.lastUsedKeyFingerprint
                     )
                     chatLocalDataSource.upsertChat(chat)
                     return chat

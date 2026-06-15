@@ -292,7 +292,7 @@ fun SessionCardPreview() {
             session = StudySession(
                 sessionId = "1",
                 collectionId = "1",
-                title = "Cardiology Practice",
+                title = "Physics Practice",
                 timeLimitSeconds = 3600,
                 createdTimestamp = System.currentTimeMillis()
             ),

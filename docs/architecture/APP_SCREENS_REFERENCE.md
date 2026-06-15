@@ -9,7 +9,7 @@ The central hub of the application, prioritizing quick access to study material 
 - **Sections:**
     - **Top Bar:** Pinned title and user profile access.
     - **Quick Actions:** High-priority buttons for AI Search, Scanner, and Manual Builder.
-    - **Collections Category:** Horizontal list of medical categories (Heart, Brain, etc.).
+    - **Collections Category:** Horizontal list of study categories (Science, History, etc.).
     - **Ongoing Sessions:** List of active, unfinished study sessions.
     - **Pinned Questions:** Vertical list of questions marked for quick review.
 - **Key Components:**

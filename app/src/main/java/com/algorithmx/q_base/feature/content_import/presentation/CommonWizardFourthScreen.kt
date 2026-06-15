@@ -116,7 +116,7 @@ fun ReviewView(
             OutlinedTextField(
                 value = collectionName,
                 onValueChange = onNameChanged,
-                placeholder = { Text("e.g. Neurology Quiz") },
+                placeholder = { Text("e.g. Astronomy Quiz") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .graphicsLayer {

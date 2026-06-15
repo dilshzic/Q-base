@@ -48,6 +48,23 @@ fun AiChatBottomSheet(
                 OutlinedButton(onClick = onDismiss) { Text("Close") }
             }
 
+            // Question Preview
+            if (!questionStem.isNullOrBlank()) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                ) {
+                    Text(
+                        text = questionStem,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(12.dp),
+                        maxLines = 3,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                }
+            }
+
             // Messages
             val rawMessages by viewModel.messages.collectAsStateWithLifecycle()
             val isAiLoading by viewModel.isAiLoading.collectAsStateWithLifecycle()
@@ -103,7 +120,7 @@ fun AiChatBottomSheet(
             }
 
             // Input bar
-            var messageText by remember(viewModel.aiQuestionStem) { mutableStateOf(viewModel.aiQuestionStem ?: "") }
+            var messageText by remember { mutableStateOf("") }
             
             ChatDetailBottomBar(
                 chat = null,
@@ -116,7 +133,6 @@ fun AiChatBottomSheet(
                     if (messageText.isNotBlank()) {
                         viewModel.sendMessage(messageText)
                         messageText = ""
-                        viewModel.aiQuestionStem = ""
                         scope.launch { listState.animateScrollToItem(messages.size) }
                     }
                 }

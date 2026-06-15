@@ -176,6 +176,18 @@ fun ExploreViewModel.deleteQuestion(index: Int) {
         }
 
         questionDao.deleteQuestionById(state.question.questionId)
+        
+        if (collection != null && collection.sharedWithGroupId != null) {
+            try {
+                val data = org.json.JSONObject().apply {
+                    put("id", state.question.questionId)
+                }
+                syncRepository.sendCollectionPatch(collection.sharedWithGroupId, collection.collectionId, "DELETE_QUESTION", data)
+            } catch (e: Exception) {
+                android.util.Log.e("ExploreViewModel", "Failed to send DELETE_QUESTION patch", e)
+            }
+        }
+        
         _questionStates.update { current ->
             val mutableList = current.toMutableList()
             mutableList.removeAt(index)

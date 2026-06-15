@@ -43,7 +43,16 @@ class QuestionAiChatViewModel @Inject constructor(
                 if (isFirstLoad) {
                     isFirstLoad = false
                     if (msgs.isEmpty()) {
-                        sendMessage("Can you provide a brief overview of this question, and then ask me what I would like to explore regarding it?")
+                        val dummyMessage = QuestionAiMessageEntity(
+                            messageId = UUID.randomUUID().toString(),
+                            questionId = questionId,
+                            sender = "AI",
+                            payload = "What you need to explore about this question",
+                            timestamp = System.currentTimeMillis()
+                        )
+                        viewModelScope.launch {
+                            questionAiMessageDao.insertMessage(dummyMessage)
+                        }
                     }
                 }
             }
@@ -70,6 +79,7 @@ class QuestionAiChatViewModel @Inject constructor(
             try {
                 val fullPrompt = buildString {
                     appendLine("You are an expert educational AI tutor. You are helping a user with a specific multiple choice question.")
+                    appendLine("System Instruction: Make your chat replies short and concise unless the user explicitly states to 'Explain' or asks for detailed explanations.")
                     if (!aiQuestionStem.isNullOrBlank()) {
                         appendLine("The question context is:")
                         appendLine(aiQuestionStem)

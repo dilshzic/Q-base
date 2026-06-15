@@ -143,6 +143,10 @@ class SyncRepository @Inject constructor(
         collectionSyncRepository.shareCollectionToGroup(chatId, collectionMetadata)
     }
 
+    suspend fun deleteZipFileFromUrl(url: String) {
+        collectionSyncRepository.deleteZipFileFromUrl(url)
+    }
+
     suspend fun acknowledgeCollectionDownload(chatId: String?, collectionId: String) {
         collectionSyncRepository.acknowledgeCollectionDownload(chatId, collectionId)
     }
@@ -203,5 +207,9 @@ class SyncRepository @Inject constructor(
 
     suspend fun reportMessage(message: MessageEntity, reason: String) {
         reportSyncRepository.reportMessage(message, reason)
+    }
+
+    suspend fun deleteSharedCollectionFromGroup(chatId: String, collectionId: String) {
+        collectionSyncRepository.deleteSharedCollectionFromGroup(chatId, collectionId)
     }
 }

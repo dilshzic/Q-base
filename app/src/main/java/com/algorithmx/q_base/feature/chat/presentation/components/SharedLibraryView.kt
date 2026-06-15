@@ -33,7 +33,9 @@ fun SharedLibraryView(
     accessRequests: List<Map<String, Any>>,
     onRequestAccess: (String) -> Unit,
     onGrantAccess: (String, String) -> Unit,
-    onNavigateToCollection: (String) -> Unit
+    onNavigateToCollection: (String) -> Unit,
+    onDelete: (String) -> Unit,
+    isLoading: Boolean = false
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -47,7 +49,9 @@ fun SharedLibraryView(
                 accessRequests = accessRequests,
                 onRequestAccess = onRequestAccess,
                 onGrantAccess = onGrantAccess,
-                onNavigateToCollection = onNavigateToCollection
+                onNavigateToCollection = onNavigateToCollection,
+                onDelete = onDelete,
+                isLoading = isLoading
             )
         }
     }
@@ -64,9 +68,15 @@ fun CollectionsTabContent(
     accessRequests: List<Map<String, Any>>,
     onRequestAccess: (String) -> Unit,
     onGrantAccess: (String, String) -> Unit,
-    onNavigateToCollection: (String) -> Unit
+    onNavigateToCollection: (String) -> Unit,
+    onDelete: (String) -> Unit,
+    isLoading: Boolean
 ) {
-    if (collections.isEmpty()) {
+    if (isLoading && collections.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        }
+    } else if (collections.isEmpty()) {
         LibraryEmptyState("No collections shared yet.")
     } else {
         LazyColumn(
@@ -105,6 +115,7 @@ fun CollectionsTabContent(
                     onRequestAccess = { onRequestAccess(collectionId) },
                     onResend = { onResend(collectionId) },
                     onNavigate = { onNavigateToCollection(collectionId) },
+                    onDelete = if (isAdmin) { { onDelete(collectionId) } } else null,
                     localCollections = localCollections
                 )
             }
@@ -187,6 +198,7 @@ fun SharedCollectionCard(
     onRequestAccess: () -> Unit,
     onResend: (() -> Unit)? = null,
     onNavigate: (() -> Unit)? = null,
+    onDelete: (() -> Unit)? = null,
     localCollections: List<StudyCollection>
 ) {
     val localCopy = localCollections.find { it.collectionId == collectionId }
@@ -225,6 +237,15 @@ fun SharedCollectionCard(
                             style = MaterialTheme.typography.bodySmall, 
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+                if (onDelete != null) {
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            Icons.Rounded.Delete,
+                            contentDescription = "Delete",
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -386,7 +407,9 @@ fun SharedLibraryViewPreview() {
             accessRequests = mockRequests,
             onRequestAccess = {},
             onGrantAccess = { _, _ -> },
-            onNavigateToCollection = {}
+            onNavigateToCollection = {},
+            onDelete = {},
+            isLoading = false
         )
     }
 }

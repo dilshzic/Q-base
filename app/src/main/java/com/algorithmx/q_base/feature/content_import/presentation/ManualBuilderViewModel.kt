@@ -9,10 +9,13 @@ import com.algorithmx.q_base.data.collections.Question
 import com.algorithmx.q_base.data.collections.QuestionSet
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ManualBuilderViewModel @Inject constructor(
@@ -62,6 +65,7 @@ class ManualBuilderViewModel @Inject constructor(
         val colId = UUID.randomUUID().toString()
         val colName = name ?: "Manual Collection ${getCurrentDate()}"
         _targetName.value = colName
+        _createdCollectionId = colId
         
         val collection = StudyCollection(
             collectionId = colId,
@@ -97,5 +101,31 @@ class ManualBuilderViewModel @Inject constructor(
 
     private fun getCurrentDate(): String {
         return SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(Date())
+    }
+
+    private var _createdCollectionId: String? = null
+
+    fun cleanupIfEmpty(onComplete: () -> Unit = {}) {
+        // Use GlobalScope + NonCancellable to ensure it finishes even if the screen pops and ViewModel is cleared
+        GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO + NonCancellable) {
+            val setId = _targetSetId.value
+            if (setId != null) {
+                val questions = collectionDao.getQuestionsForSetOnce(setId)
+                if (questions.isEmpty()) {
+                    questionDao.deleteSetById(setId)
+                    
+                    val colId = _createdCollectionId
+                    if (colId != null) {
+                        val sets = collectionDao.getSetsByStudyCollectionIdOnce(colId)
+                        if (sets.size <= 1) {
+                            collectionDao.deleteStudyCollectionById(colId)
+                        }
+                    }
+                }
+            }
+            withContext(kotlinx.coroutines.Dispatchers.Main) {
+                onComplete()
+            }
+        }
     }
 }

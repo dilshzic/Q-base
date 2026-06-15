@@ -120,6 +120,37 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
                             sessionSyncRepository.get().applySessionPatch(payload)
                         }
 
+                        if (type == "FILE_TRANSFER" && decryptionStatus == "SUCCESS") {
+                            val isGroup = chatLocalDataSource.getChatById(chatId)?.isGroup == true
+                            if (isGroup && payload.contains("|E2EE_KEY|")) {
+                                val parts = payload.split("|E2EE_KEY|")
+                                if (parts.size >= 2) {
+                                    val url = parts[0]
+                                    val remainder = parts[1]
+                                    val key = remainder.substringBefore("|UPDATED_AT|")
+                                    val isAdminOnly = remainder.contains("|ADMIN_ONLY|true")
+                                    val groupId = remainder.substringAfter("|GROUP_ID|", "").substringBefore("|")
+                                    val collectionId = remainder.substringAfter("|COLLECTION_ID|", "").substringBefore("|")
+
+                                    collectionSyncRepository.get().repositoryScope.launch {
+                                        try {
+                                            val result = collectionSyncRepository.get().mockDownloader.downloadAndImportMock(
+                                                url = url,
+                                                symmetricKeyBase64 = key,
+                                                sharedWithGroupId = groupId.ifBlank { null },
+                                                isAdminOnly = isAdminOnly
+                                            )
+                                            if (result.isSuccess && groupId.isNotBlank() && collectionId.isNotEmpty()) {
+                                                collectionSyncRepository.get().acknowledgeCollectionDownload(groupId, collectionId)
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.e("MessageSyncIncoming", "Auto-import failed", e)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         if (decryptionStatus == "SUCCESS" && keyFingerprint != null) {
                             chatLocalDataSource.getChatById(chatId)?.let { chat ->
                                 if (chat.lastUsedKeyFingerprint != keyFingerprint) {
@@ -224,6 +255,37 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
 
                             if (type == "SESSION_PATCH" && decryptionStatus == "SUCCESS") {
                                 sessionSyncRepository.get().applySessionPatch(payload)
+                            }
+
+                            if (type == "FILE_TRANSFER" && decryptionStatus == "SUCCESS") {
+                                val isGroup = chatLocalDataSource.getChatById(chatId)?.isGroup == true
+                                if (isGroup && payload.contains("|E2EE_KEY|")) {
+                                    val parts = payload.split("|E2EE_KEY|")
+                                    if (parts.size >= 2) {
+                                        val url = parts[0]
+                                        val remainder = parts[1]
+                                        val key = remainder.substringBefore("|UPDATED_AT|")
+                                        val isAdminOnly = remainder.contains("|ADMIN_ONLY|true")
+                                        val groupId = remainder.substringAfter("|GROUP_ID|", "").substringBefore("|")
+                                        val collectionId = remainder.substringAfter("|COLLECTION_ID|", "").substringBefore("|")
+
+                                        collectionSyncRepository.get().repositoryScope.launch {
+                                            try {
+                                                val result = collectionSyncRepository.get().mockDownloader.downloadAndImportMock(
+                                                    url = url,
+                                                    symmetricKeyBase64 = key,
+                                                    sharedWithGroupId = groupId.ifBlank { null },
+                                                    isAdminOnly = isAdminOnly
+                                                )
+                                                if (result.isSuccess && groupId.isNotBlank() && collectionId.isNotEmpty()) {
+                                                    collectionSyncRepository.get().acknowledgeCollectionDownload(groupId, collectionId)
+                                                }
+                                            } catch (e: Exception) {
+                                                Log.e("MessageSyncIncoming", "Auto-import failed", e)
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
                             if (decryptionStatus == "SUCCESS" && keyFingerprint != null) {

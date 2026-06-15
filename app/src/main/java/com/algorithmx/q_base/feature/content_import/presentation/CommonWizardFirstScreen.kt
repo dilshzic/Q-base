@@ -114,7 +114,7 @@ fun CommonWizardFirstScreen(
                 label = { Text("Describe your ideas") },
                 placeholder = {
                     Text(
-                            "e.g. Create practice questions about neurology emphasizing neurotransmitters..."
+                            "e.g. Create practice questions about astrophysics emphasizing black holes..."
                     )
                 },
                 modifier = Modifier

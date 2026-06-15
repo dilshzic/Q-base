@@ -144,9 +144,25 @@ class ExploreViewModel @Inject constructor(
                 collection?.let {
                     val isEditable = checkIsEditable(it)
                     repository.getQuestionsByStudyCollection(it.name).collect { questions ->
-                        val states = questions.map { ExploreQuestionState(it, isEditable = isEditable) }
+                        val currentMap = _questionStates.value.associateBy { q -> q.question.questionId }
+                        val states = questions.map { newQ ->
+                            val old = currentMap[newQ.questionId]
+                            ExploreQuestionState(
+                                question = newQ,
+                                isEditable = isEditable,
+                                selectedOption = old?.selectedOption,
+                                isAnswerRevealed = old?.isAnswerRevealed ?: false,
+                                aiResponse = old?.aiResponse,
+                                isAiLoading = old?.isAiLoading ?: false
+                            )
+                        }
                         _questionStates.value = states
-                        if (states.isNotEmpty()) loadQuestionDetails(0)
+                        states.forEachIndexed { i, state ->
+                            val old = currentMap[state.question.questionId]
+                            if (old == null || old.options.isNotEmpty() || i == 0) {
+                                loadQuestionDetails(i)
+                            }
+                        }
                     }
                 }
             }
@@ -160,9 +176,25 @@ class ExploreViewModel @Inject constructor(
                 val collection = collectionName?.let { repository.getStudyCollectionByNameOnce(it) }
                 val isEditable = checkIsEditable(collection)
                 
-                val states = questions.map { ExploreQuestionState(it, isEditable = isEditable) }
+                val currentMap = _questionStates.value.associateBy { q -> q.question.questionId }
+                val states = questions.map { newQ ->
+                    val old = currentMap[newQ.questionId]
+                    ExploreQuestionState(
+                        question = newQ,
+                        isEditable = isEditable,
+                        selectedOption = old?.selectedOption,
+                        isAnswerRevealed = old?.isAnswerRevealed ?: false,
+                        aiResponse = old?.aiResponse,
+                        isAiLoading = old?.isAiLoading ?: false
+                    )
+                }
                 _questionStates.value = states
-                if (states.isNotEmpty()) loadQuestionDetails(0)
+                states.forEachIndexed { i, state ->
+                    val old = currentMap[state.question.questionId]
+                    if (old == null || old.options.isNotEmpty() || i == 0) {
+                        loadQuestionDetails(i)
+                    }
+                }
             }
         }
     }
@@ -179,13 +211,27 @@ class ExploreViewModel @Inject constructor(
     fun loadPinnedQuestions() {
         viewModelScope.launch {
             repository.getPinnedQuestions().collect { questions ->
+                val currentMap = _questionStates.value.associateBy { q -> q.question.questionId }
                 val states = questions.map { question ->
                     val collection = question.collection?.let { repository.getStudyCollectionByNameOnce(it) }
                     val isEditable = checkIsEditable(collection)
-                    ExploreQuestionState(question, isEditable = isEditable)
+                    val old = currentMap[question.questionId]
+                    ExploreQuestionState(
+                        question = question,
+                        isEditable = isEditable,
+                        selectedOption = old?.selectedOption,
+                        isAnswerRevealed = old?.isAnswerRevealed ?: false,
+                        aiResponse = old?.aiResponse,
+                        isAiLoading = old?.isAiLoading ?: false
+                    )
                 }
                 _questionStates.value = states
-                if (states.isNotEmpty()) loadQuestionDetails(0)
+                states.forEachIndexed { i, state ->
+                    val old = currentMap[state.question.questionId]
+                    if (old == null || old.options.isNotEmpty() || i == 0) {
+                        loadQuestionDetails(i)
+                    }
+                }
             }
         }
     }
@@ -213,6 +259,19 @@ class ExploreViewModel @Inject constructor(
                 val updated = col.copy(isAdminOnly = isAdminOnly)
                 repository.updateStudyCollection(updated)
                 _selectedCollection.value = updated
+                
+                if (groupId != null) {
+                    try {
+                        val patchData = org.json.JSONObject().apply {
+                            put("collectionName", col.name)
+                            put("isAdminOnly", isAdminOnly)
+                        }
+                        syncRepository.sendCollectionPatch(groupId, collectionId, "UPDATE_ADMIN_ONLY", patchData)
+                    } catch (e: Exception) {
+                        Log.e("ExploreViewModel", "Failed to send admin-only patch", e)
+                    }
+                }
+                
                 _actionFeedback.emit("Collection access updated: ${if (isAdminOnly) "Admin-Only" else "Editable & Sharable by Members"}")
             }
         }

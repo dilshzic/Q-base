@@ -78,7 +78,7 @@ fun AiGenerationScreen(
             OutlinedTextField(
                 value = topic,
                 onValueChange = { topic = it },
-                label = { Text("Topic (e.g. Early signs of Heart Failure)") },
+                label = { Text("Topic (e.g. History of Space Exploration)") },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
                 enabled = accessState == AppAccessState.Online

@@ -146,8 +146,25 @@ fun ChatItem(
                 
                 Spacer(modifier = Modifier.height(2.dp))
                 
+                val displayMessage = remember(latestMessage) {
+                    if (latestMessage == null) {
+                        "No messages yet"
+                    } else {
+                        when (latestMessage.type) {
+                            "FILE_TRANSFER" -> {
+                                val name = latestMessage.payload.substringAfter("|NAME|", "").substringBefore("|")
+                                if (name.isNotBlank()) "📄 Shared collection: $name" else "📄 Shared a collection"
+                            }
+                            "SESSION_INVITE" -> "🎮 Shared a session"
+                            "COLLECTION_PATCH" -> "📝 Collection updated"
+                            "SESSION_PATCH" -> "🔄 Session updated"
+                            else -> latestMessage.payload
+                        }
+                    }
+                }
+                
                 Text(
-                    text = latestMessage?.payload ?: "No messages yet",
+                    text = displayMessage,
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (chatUi.unreadCount > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = if (chatUi.unreadCount > 0) FontWeight.Bold else FontWeight.Normal,
