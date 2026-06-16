@@ -149,6 +149,12 @@ fun SessionsListScreen(
                             onLongClick = {
                                 viewModel.toggleSessionSelection(session.sessionId)
                             },
+                            onPracticeAgainClick = {
+                                viewModel.practiceSessionAgain(session.sessionId)
+                            },
+                            onReviewClick = {
+                                onSessionClick(session.sessionId)
+                            },
                             onReportClick = {
                                 reportingSessionId = session.sessionId
                                 reportingSessionTitle = session.title.ifEmpty { "Practice Session" }
@@ -224,6 +230,8 @@ fun SessionListItemExpressive(
     selectionMode: Boolean = false,
     onSessionClick: (String) -> Unit,
     onLongClick: () -> Unit = {},
+    onPracticeAgainClick: () -> Unit = {},
+    onReviewClick: () -> Unit = {},
     onReportClick: () -> Unit = {}
 ) {
     Surface(
@@ -240,78 +248,160 @@ fun SessionListItemExpressive(
         tonalElevation = if (isSelected) 4.dp else 1.dp,
         border = if (isSelected) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(16.dp)
         ) {
-            val score = session.scoreAchieved
-            val scoreColor = if (score >= 70) Color(0xFF4CAF50) else if (score >= 40) Color(0xFFFF9800) else Color(0xFFF44336)
-            
-            Box(contentAlignment = Alignment.Center) {
-                if (selectionMode) {
-                    Checkbox(
-                        checked = isSelected,
-                        onCheckedChange = { onSessionClick(session.sessionId) },
-                        colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val score = session.scoreAchieved
+                val scoreColor = if (score >= 70) Color(0xFF4CAF50) else if (score >= 40) Color(0xFFFF9800) else Color(0xFFF44336)
+                
+                Box(contentAlignment = Alignment.Center) {
+                    if (selectionMode) {
+                        Checkbox(
+                            checked = isSelected,
+                            onCheckedChange = { onSessionClick(session.sessionId) },
+                            colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
+                        )
+                    } else {
+                        CircularProgressIndicator(
+                            progress = { score / 100f },
+                            modifier = Modifier.size(48.dp),
+                            color = scoreColor,
+                            strokeWidth = 4.dp,
+                            trackColor = scoreColor.copy(alpha = 0.1f),
+                            strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+                        )
+                        Text(
+                            text = "${score.toInt()}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = session.title.ifEmpty { "Practice Session" },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Rounded.Timer, 
+                            contentDescription = null, 
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.outline
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = java.text.SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(session.createdTimestamp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                }
+                
+                if (!selectionMode) {
+                    var showMenu by remember { mutableStateOf(false) }
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(
+                                Icons.Rounded.MoreVert, 
+                                contentDescription = "More options",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Report") },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Rounded.Flag, 
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    onReportClick()
+                                }
+                            )
+                        }
+                    }
                 } else {
-                    CircularProgressIndicator(
-                        progress = { score.toFloat() / 100f },
-                        modifier = Modifier.size(48.dp),
-                        color = scoreColor,
-                        strokeWidth = 4.dp,
-                        trackColor = scoreColor.copy(alpha = 0.1f),
-                        strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
-                    )
-                    Text(
-                        text = "${score.toInt()}%",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 10.sp
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = session.title.ifEmpty { "Practice Session" },
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.Rounded.Timer, 
-                        contentDescription = null, 
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.outline
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = java.text.SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(session.createdTimestamp),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline
+                        Icons.Rounded.ChevronRight, 
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.outlineVariant
                     )
                 }
             }
-            
+
             if (!selectionMode) {
-                IconButton(onClick = onReportClick) {
-                    Icon(
-                        Icons.Rounded.Flag, 
-                        contentDescription = "Report",
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                        modifier = Modifier.size(20.dp)
-                    )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilledTonalButton(
+                        onClick = onPracticeAgainClick,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                            contentColor = MaterialTheme.colorScheme.primary
+                        ),
+                        contentPadding = PaddingValues(vertical = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Replay,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Practice Again",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = onReviewClick,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant
+                        ),
+                        contentPadding = PaddingValues(vertical = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Visibility,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Review",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
-            
-            Icon(
-                Icons.Rounded.ChevronRight, 
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.outlineVariant
-            )
         }
     }
 }

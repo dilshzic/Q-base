@@ -111,6 +111,9 @@ class SessionRepository @Inject constructor(
     fun getAttemptsForSession(sessionId: String): Flow<List<SessionAttempt>> =
         sessionDao.getAttemptsForSession(sessionId)
 
+    suspend fun getAttemptsForSessionOnce(sessionId: String): List<SessionAttempt> =
+        sessionDao.getAttemptsForSessionOnce(sessionId)
+
     suspend fun getQuestionById(questionId: String): Question? =
         questionDao.getQuestionById(questionId)
 

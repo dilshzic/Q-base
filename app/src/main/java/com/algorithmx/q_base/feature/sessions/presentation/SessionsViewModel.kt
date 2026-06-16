@@ -216,4 +216,24 @@ class SessionsViewModel @Inject constructor(
             syncRepository.reportSession(sessionId, reason)
         }
     }
+
+    fun practiceSessionAgain(sessionId: String) {
+        viewModelScope.launch {
+            val session = repository.getSessionById(sessionId) ?: return@launch
+            val attempts = repository.getAttemptsForSessionOnce(sessionId)
+            val questionIds = attempts.map { it.questionId }
+            if (questionIds.isEmpty()) return@launch
+            
+            val newSessionId = repository.createNewSession(
+                title = session.title,
+                questionIds = questionIds,
+                timeLimitSeconds = session.timeLimitSeconds,
+                timingType = session.timingType,
+                isRandom = session.isRandom,
+                isAdminOnly = session.isAdminOnly,
+                collectionId = session.collectionId
+            )
+            _sessionCreated.emit(newSessionId)
+        }
+    }
 }
