@@ -188,7 +188,7 @@ class MainActivity : ComponentActivity() {
             val brainConfig by dataStoreManager.brainConfigFlow.collectAsStateWithLifecycle(
                 initialValue = com.algorithmx.q_base.core.ai.brain.models.StoredBrainConfig(
                     provider = com.algorithmx.androidmodules.coreai.brain.models.BrainProvider.GEMINI,
-                    modelName = "gemini-1.5-flash",
+                    modelName = "gemini-3.1-flash-lite",
                     systemInstruction = "",
                     totalRequests = 0,
                     totalTokens = 0,

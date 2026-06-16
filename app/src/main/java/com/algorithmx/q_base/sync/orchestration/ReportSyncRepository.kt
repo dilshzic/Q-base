@@ -220,6 +220,8 @@ class ReportSyncRepository @Inject constructor(
             throw e
         }
 
+        // Disabled warning messages sent to reported user and group admins
+        /*
         sendSystemMessageToUser(
             targetUserId = user.userId,
             payloadText = "⚠️ WARNING: You have been reported for suspicious or abusive behavior. Reason: $reason"
@@ -245,6 +247,7 @@ class ReportSyncRepository @Inject constructor(
         } catch (e: Exception) {
             Log.e("ReportSyncRepository", "Failed to notify group admins of user report", e)
         }
+        */
     }
 
     suspend fun reportCollection(collection: StudyCollection, reason: String) {

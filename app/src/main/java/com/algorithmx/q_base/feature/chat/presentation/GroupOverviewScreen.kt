@@ -28,6 +28,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.algorithmx.q_base.core.data.UserEntity
 import com.algorithmx.q_base.core.data.chat.isAdmin
 import com.algorithmx.q_base.core.designsystem.components.reusable.UnifiedTopAppBar
+import com.algorithmx.q_base.core.designsystem.components.reusable.ReportDialog
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -352,6 +353,8 @@ fun GroupOverviewScreen(
 
     if (showReportDialog) {
         ReportDialog(
+            itemType = "Group",
+            itemName = chat?.chatName ?: "Group",
             onDismiss = { showReportDialog = false },
             onConfirm = { reason ->
                 chat?.let { viewModel.reportGroup(it.chatId, reason) }

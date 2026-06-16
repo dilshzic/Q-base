@@ -28,6 +28,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.compose.foundation.clickable
 import com.algorithmx.q_base.core.data.UserEntity
 import com.algorithmx.q_base.core.designsystem.components.reusable.ProfileIconButton
+import com.algorithmx.q_base.core.designsystem.components.reusable.ReportDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -179,6 +180,8 @@ fun ContactOverviewScreen(
 
     if (showReportDialog) {
         ReportDialog(
+            itemType = "User",
+            itemName = otherUser?.displayName ?: chat?.chatName ?: "User",
             onDismiss = { showReportDialog = false },
             onConfirm = { reason ->
                 otherUser?.let { viewModel.reportUser(it.userId, reason) }
@@ -254,50 +257,4 @@ fun SettingsItem(
             }
         }
     }
-}
-
-@Composable
-fun ReportDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
-) {
-    var reason by remember { mutableStateOf("") }
-    val reasons = listOf("Spam", "Abuse", "Harassment", "Inappropriate Content", "Other")
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Report Chat") },
-        text = {
-            Column {
-                Text("Why are you reporting this chat?")
-                Spacer(modifier = Modifier.height(16.dp))
-                reasons.forEach { r ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { reason = r }
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(selected = reason == r, onClick = { reason = r })
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(r)
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onConfirm(reason) },
-                enabled = reason.isNotBlank()
-            ) {
-                Text("Report")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
 }

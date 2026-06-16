@@ -102,6 +102,8 @@ fun CollectionOverviewScreen(
                                 showReportDialog = true
                             }
                         )
+                        // Temporarily hidden Report to Group function
+                        /*
                         if (collection.sharedWithGroupId != null) {
                             DropdownMenuItem(
                                 text = { Text("Report to Group") },
@@ -112,6 +114,7 @@ fun CollectionOverviewScreen(
                                 }
                             )
                         }
+                        */
                         DropdownMenuItem(
                             text = { Text("Delete Collection") },
                             leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
@@ -351,6 +354,8 @@ fun CollectionOverviewScreen(
         )
     }
 
+    // Temporarily hidden Report to Group dialog
+    /*
     if (showReportToGroupDialog) {
         ReportDialog(
             itemType = "Group Report",
@@ -362,6 +367,7 @@ fun CollectionOverviewScreen(
             }
         )
     }
+    */
 
     // AI Response Content Bottom Sheet
     val collectionAiResponse by viewModel?.collectionAiResponse?.collectAsState() ?: remember { mutableStateOf(null) }

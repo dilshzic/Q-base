@@ -62,6 +62,9 @@ class ReportSyncRepositoryTest {
         every { android.util.Log.e(any<String>(), any<String>()) } returns 0
         every { android.util.Log.e(any<String>(), any<String>(), any<Throwable>()) } returns 0
         every { android.util.Log.w(any<String>(), any<String>()) } returns 0
+
+        mockkStatic("com.algorithmx.q_base.sync.orchestration.MessageSyncOutgoingExtensionsKt")
+        coEvery { any<MessageSyncRepository>().sendMessage(any()) } returns Unit
     }
 
     @After
@@ -118,9 +121,6 @@ class ReportSyncRepositoryTest {
                 data = capture(slot)
             )
         } returns Result.success(mockk())
-
-        // Stub warnings (ignore actual sending logic)
-        coEvery { messageSyncRepository.sendMessage(any()) } returns Unit
 
         // When
         repository.reportCollection(collection, "Inappropriate content")
@@ -200,7 +200,6 @@ class ReportSyncRepositoryTest {
 
         // Stub warning to user/admins
         coEvery { userDao.getUserById("reported_user_id") } returns reportedUser
-        coEvery { messageSyncRepository.sendMessage(any()) } returns Unit
 
         // When
         repository.reportUser(reportedUser, "Abuse")
