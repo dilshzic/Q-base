@@ -42,6 +42,7 @@ class RestoreBackupViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 profileRepository.deleteSecureBackup(userId)
+                profileRepository.syncUserProfile(userId)
                 _state.value = RestoreBackupState(isFreshStart = true)
             } catch (e: Exception) {
                 _state.value = RestoreBackupState(error = "Failed to start fresh: ${e.message}")

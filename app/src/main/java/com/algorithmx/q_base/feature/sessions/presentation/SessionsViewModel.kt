@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import com.algorithmx.q_base.core.data.chat.isAdmin
 import com.algorithmx.q_base.core.data.UserEntity
 
 @HiltViewModel
@@ -93,6 +94,9 @@ class SessionsViewModel @Inject constructor(
     private val _lastRandomCount = MutableStateFlow<Int?>(null)
     val lastRandomCount = _lastRandomCount.asStateFlow()
 
+    private val _isUserGroupAdmin = MutableStateFlow(false)
+    val isUserGroupAdmin = _isUserGroupAdmin.asStateFlow()
+
     fun onSearchQueryChange(query: String) {
         _searchQuery.value = query
     }
@@ -106,6 +110,15 @@ class SessionsViewModel @Inject constructor(
         viewModelScope.launch {
             repository.getQuestionsByStudyCollection(name).take(1).collect { questions ->
                 _availableQuestions.value = questions
+            }
+            val collection = repository.getStudyCollectionByNameOnce(name)
+            val groupId = collection?.sharedWithGroupId
+            if (groupId != null) {
+                val chat = syncRepository.getChatById(groupId)
+                val currentUid = currentUser.value?.userId ?: authRepository.currentUser.firstOrNull()?.uid
+                _isUserGroupAdmin.value = (chat != null && chat.isAdmin(currentUid ?: ""))
+            } else {
+                _isUserGroupAdmin.value = true
             }
         }
         _wizardStep.value = 2
@@ -169,6 +182,7 @@ class SessionsViewModel @Inject constructor(
         _timingType.value = "NONE"
         _lastRandomCount.value = null
         _sessionIsAdminOnly.value = false
+        _isUserGroupAdmin.value = false
     }
 
     fun toggleSessionSelection(sessionId: String) {

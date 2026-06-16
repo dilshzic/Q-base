@@ -9,6 +9,7 @@ sealed class Screen : NavKey {
     @Serializable data object Login : Screen()
     @Serializable data object Signup : Screen()
     @Serializable data class RestoreBackup(val userId: String) : Screen()
+    @Serializable data class CheckingBackup(val userId: String) : Screen()
 
     // --- Main Top-Level Destinations ---
     @Serializable data object Home : Screen()

@@ -36,15 +36,15 @@ class DatabaseSeeder @Inject constructor(
         val collectionDao = database.collectionDao()
         val questionDao = database.questionDao()
 
-        val seedApplied = dataStoreManager.isSeedAppliedFlow.first()
+        val seedApplied = dataStoreManager.isSeedAppliedV2Flow.first()
         val collectionCount = collectionDao.getStudyCollectionCount()
 
         if (seedApplied && collectionCount > 0) {
-            Log.d("DatabaseSeeder", "Seed already applied and data exists. Skipping.")
+            Log.d("DatabaseSeeder", "Seed V2 already applied and data exists. Skipping.")
             return@withContext
         }
 
-        Log.d("DatabaseSeeder", "Seeding database from assets (seedApplied=$seedApplied, count=$collectionCount)...")
+        Log.d("DatabaseSeeder", "Seeding database from assets (seedAppliedV2=$seedApplied, count=$collectionCount)...")
 
         val tempDbFile = File(context.cacheDir, "seed_temp.db")
         try {
@@ -60,6 +60,14 @@ class DatabaseSeeder @Inject constructor(
 
             try {
                 database.withTransaction {
+                    // Clear old tables to prevent duplicates/clashes
+                    database.openHelper.writableDatabase.execSQL("DELETE FROM Question_Sets")
+                    database.openHelper.writableDatabase.execSQL("DELETE FROM Set_Questions_CrossRef")
+                    database.openHelper.writableDatabase.execSQL("DELETE FROM Questions")
+                    database.openHelper.writableDatabase.execSQL("DELETE FROM Question_Options")
+                    database.openHelper.writableDatabase.execSQL("DELETE FROM Answers")
+                    database.openHelper.writableDatabase.execSQL("DELETE FROM StudyCollections")
+
                     val batchSize = 500
 
                     // --- Step 1: Seed raw Questions ---
@@ -169,9 +177,10 @@ class DatabaseSeeder @Inject constructor(
                             val masterName = cursor.getString(mcIdx)
                             if (!category.isNullOrEmpty() && !masterName.isNullOrEmpty()) {
                                 val masterCategoryId = masterCategoryMap[masterName] ?: continue
-                                if (!collectionMap.containsKey(category)) {
+                                val key = "$category|$masterName"
+                                if (!collectionMap.containsKey(key)) {
                                     val setId = UUID.randomUUID().toString()
-                                    collectionMap[category] = setId
+                                    collectionMap[key] = setId
                                     collectionDao.insertSets(listOf(
                                         QuestionSet(
                                             setId = setId,
@@ -185,25 +194,30 @@ class DatabaseSeeder @Inject constructor(
                         }
                     }
 
-                    sqliteDb.rawQuery("SELECT question_id, category FROM Questions", null).use { cursor ->
+                    sqliteDb.rawQuery("SELECT question_id, category, master_category FROM Questions", null).use { cursor ->
                         val idIdx = cursor.getColumnIndexOrThrow("question_id")
                         val catIdx = cursor.getColumnIndexOrThrow("category")
+                        val mcIdx = cursor.getColumnIndexOrThrow("master_category")
                         
                         val batch = mutableListOf<SetQuestionCrossRef>()
                         while (cursor.moveToNext()) {
                             val questionId = cursor.getString(idIdx)
                             val category = cursor.getString(catIdx)
-                            val setId = collectionMap[category] ?: continue
-                            batch.add(SetQuestionCrossRef(setId = setId, questionId = questionId))
-                            if (batch.size >= batchSize) {
-                                collectionDao.insertCrossRefs(batch)
-                                batch.clear()
+                            val masterName = cursor.getString(mcIdx)
+                            if (!category.isNullOrEmpty() && !masterName.isNullOrEmpty()) {
+                                val key = "$category|$masterName"
+                                val setId = collectionMap[key] ?: continue
+                                batch.add(SetQuestionCrossRef(setId = setId, questionId = questionId))
+                                if (batch.size >= batchSize) {
+                                    collectionDao.insertCrossRefs(batch)
+                                    batch.clear()
+                                }
                             }
                         }
                         if (batch.isNotEmpty()) collectionDao.insertCrossRefs(batch)
                     }
                     
-                    dataStoreManager.markSeedAsApplied()
+                    dataStoreManager.markSeedV2AsApplied()
                 }
                 Log.d("DatabaseSeeder", "Seeding completed successfully.")
             } finally {

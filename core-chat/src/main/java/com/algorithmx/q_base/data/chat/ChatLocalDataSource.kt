@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 interface ChatLocalDataSource {
+    var activeChatId: String?
     fun getTotalUnreadCount(): Flow<Int>
     fun getAllChats(): Flow<List<ChatEntity>>
     fun getChatByIdFlow(chatId: String): Flow<ChatEntity?>
@@ -35,6 +36,8 @@ class ChatLocalDataSourceImpl @Inject constructor(
     private val chatDao: ChatDao,
     private val messageDao: MessageDao
 ) : ChatLocalDataSource {
+    override var activeChatId: String? = null
+
     override fun getTotalUnreadCount(): Flow<Int> =
         chatDao.getTotalUnreadCount().map { it ?: 0 }
 

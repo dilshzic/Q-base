@@ -39,6 +39,7 @@ class BrainDataStoreManager @Inject constructor(
         val MASTER_AI_FREEZE = booleanPreferencesKey("master_ai_freeze")
         val TASK_CONFIGS_JSON = stringPreferencesKey("task_configs_json")
         val IS_SEED_APPLIED = booleanPreferencesKey("is_seed_applied")
+        val IS_SEED_APPLIED_V2 = booleanPreferencesKey("is_seed_applied_v2")
     }
 
     val brainConfigFlow: Flow<StoredBrainConfig> = context.dataStore.data.map { preferences ->
@@ -78,9 +79,19 @@ class BrainDataStoreManager @Inject constructor(
         preferences[PreferencesKeys.IS_SEED_APPLIED] ?: false
     }
 
+    val isSeedAppliedV2Flow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.IS_SEED_APPLIED_V2] ?: false
+    }
+
     suspend fun markSeedAsApplied() {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.IS_SEED_APPLIED] = true
+        }
+    }
+
+    suspend fun markSeedV2AsApplied() {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.IS_SEED_APPLIED_V2] = true
         }
     }
 

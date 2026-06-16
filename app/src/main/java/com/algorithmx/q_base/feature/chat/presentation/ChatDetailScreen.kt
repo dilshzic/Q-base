@@ -183,8 +183,10 @@ fun ChatDetailScreen(
                     accessRequests = accessRequests,
                     onRequestAccess = { viewModel.requestAccess(it) },
                     onGrantAccess = { collId, reqId -> viewModel.grantAccess(collId, reqId) },
+                    onDenyAccess = { collId, reqId -> viewModel.denyAccess(collId, reqId) },
                     onNavigateToCollection = onNavigateToCollection,
                     onDelete = { collectionId -> viewModel.deleteSharedCollection(collectionId) },
+                    currentUserId = state.currentUserId,
                     isLoading = isLoadingCollections
                 )
             } else {

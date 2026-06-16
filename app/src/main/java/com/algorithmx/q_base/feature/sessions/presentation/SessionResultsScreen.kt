@@ -75,13 +75,8 @@ fun SessionResultsScreen(
                     }
                 }
                 is ResultsUiState.Success -> {
-                    val isUserGroupAdmin by viewModel.isUserGroupAdmin.collectAsStateWithLifecycle()
                     ResultsContent(
                         state = state,
-                        isUserGroupAdmin = isUserGroupAdmin,
-                        onIsAdminOnlyChange = { isAdminOnly ->
-                            state.session?.let { viewModel.updateSessionAdminOnly(it.sessionId, isAdminOnly) }
-                        },
                         onReviewQuestion = { viewModel.selectQuestionForReview(it) },
                         onReportSession = {
                             showReportDialog = true
@@ -161,8 +156,6 @@ fun SessionResultsScreen(
 @Composable
 fun ResultsContent(
     state: ResultsUiState.Success,
-    isUserGroupAdmin: Boolean,
-    onIsAdminOnlyChange: (Boolean) -> Unit,
     onReviewQuestion: (com.algorithmx.q_base.feature.sessions.data.SessionAttempt) -> Unit,
     onReportSession: () -> Unit,
     onDone: () -> Unit
@@ -209,58 +202,6 @@ fun ResultsContent(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-
-        if (isUserGroupAdmin && state.session != null) {
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.15f)
-                ),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Rounded.AdminPanelSettings,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "Access Settings (Admin Only)",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Admin-Only Restrictions",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = if (state.session.isAdminOnly) "Only admins can answer or share this session" else "All group members can answer & share",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Switch(
-                            checked = state.session.isAdminOnly,
-                            onCheckedChange = onIsAdminOnlyChange
-                        )
-                    }
-                }
-            }
-        }
 
         Text(
             text = "Performance Summary",

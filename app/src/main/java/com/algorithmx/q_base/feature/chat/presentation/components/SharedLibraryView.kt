@@ -33,8 +33,10 @@ fun SharedLibraryView(
     accessRequests: List<Map<String, Any>>,
     onRequestAccess: (String) -> Unit,
     onGrantAccess: (String, String) -> Unit,
+    onDenyAccess: (String, String) -> Unit,
     onNavigateToCollection: (String) -> Unit,
     onDelete: (String) -> Unit,
+    currentUserId: String = "",
     isLoading: Boolean = false
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -49,8 +51,10 @@ fun SharedLibraryView(
                 accessRequests = accessRequests,
                 onRequestAccess = onRequestAccess,
                 onGrantAccess = onGrantAccess,
+                onDenyAccess = onDenyAccess,
                 onNavigateToCollection = onNavigateToCollection,
                 onDelete = onDelete,
+                currentUserId = currentUserId,
                 isLoading = isLoading
             )
         }
@@ -68,8 +72,10 @@ fun CollectionsTabContent(
     accessRequests: List<Map<String, Any>>,
     onRequestAccess: (String) -> Unit,
     onGrantAccess: (String, String) -> Unit,
+    onDenyAccess: (String, String) -> Unit,
     onNavigateToCollection: (String) -> Unit,
     onDelete: (String) -> Unit,
+    currentUserId: String,
     isLoading: Boolean
 ) {
     if (isLoading && collections.isEmpty()) {
@@ -88,7 +94,7 @@ fun CollectionsTabContent(
                 LibraryHeader("Group Collections", "This is a persistent drive for all collections shared within the group.")
                 
                 if (isAdmin && accessRequests.isNotEmpty()) {
-                    PendingRequestsSection(accessRequests, onGrantAccess)
+                    PendingRequestsSection(accessRequests, onGrantAccess, onDenyAccess)
                 }
             }
             
@@ -102,6 +108,11 @@ fun CollectionsTabContent(
                 val isExpired = data["isExpired"] as? Boolean ?: false
                 val isRestricted = data["isRestricted"] as? Boolean ?: false
                 val isAdminOnly = data["isAdminOnly"] as? Boolean ?: false
+
+                // Check if the current user has a pending access request for this collection
+                val hasPendingRequest = accessRequests.any {
+                    it["collectionId"] == collectionId && it["requesterId"] == currentUserId
+                }
  
                 val payload = "$downloadUrl|E2EE_KEY|$symmetricKey|UPDATED_AT|$updatedAt|COLLECTION_ID|$collectionId|ADMIN_ONLY|$isAdminOnly|GROUP_ID|$chatId"
                 
@@ -111,6 +122,7 @@ fun CollectionsTabContent(
                     description = description,
                     isExpired = isExpired,
                     isRestricted = isRestricted || symmetricKey.isBlank(),
+                    hasPendingRequest = hasPendingRequest,
                     onImport = { onImport(payload) },
                     onRequestAccess = { onRequestAccess(collectionId) },
                     onResend = { onResend(collectionId) },
@@ -174,14 +186,24 @@ fun SharedSessionCard(title: String, timestamp: Long, onJoin: () -> Unit) {
 }
 
 @Composable
-fun PendingRequestsSection(accessRequests: List<Map<String, Any>>, onGrantAccess: (String, String) -> Unit) {
+fun PendingRequestsSection(
+    accessRequests: List<Map<String, Any>>,
+    onGrantAccess: (String, String) -> Unit,
+    onDenyAccess: (String, String) -> Unit
+) {
     Text("Pending Access Requests", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
     Spacer(modifier = Modifier.height(8.dp))
     accessRequests.forEach { request ->
         val collectionId = request["collectionId"] as? String ?: ""
         val requesterId = request["requesterId"] as? String ?: ""
         val requesterName = request["requesterName"] as? String ?: "Someone"
-        AccessRequestItem(requesterName = requesterName, onApprove = { onGrantAccess(collectionId, requesterId) })
+        val collectionName = request["collectionName"] as? String ?: "Collection"
+        AccessRequestItem(
+            requesterName = requesterName,
+            collectionName = collectionName,
+            onApprove = { onGrantAccess(collectionId, requesterId) },
+            onDeny = { onDenyAccess(collectionId, requesterId) }
+        )
         Spacer(modifier = Modifier.height(8.dp))
     }
     HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
@@ -194,6 +216,7 @@ fun SharedCollectionCard(
     description: String,
     isExpired: Boolean,
     isRestricted: Boolean,
+    hasPendingRequest: Boolean = false,
     onImport: () -> Unit,
     onRequestAccess: () -> Unit,
     onResend: (() -> Unit)? = null,
@@ -203,6 +226,7 @@ fun SharedCollectionCard(
 ) {
     val localCopy = localCollections.find { it.collectionId == collectionId }
     val isImported = localCopy != null
+    val needsAccess = (isExpired || isRestricted) && !isImported
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -258,11 +282,12 @@ fun SharedCollectionCard(
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(top = 4.dp)
                 )
-            } else if (isRestricted) {
+            } else if (isRestricted && !isImported) {
                 Text(
-                    "Encrypted metadata not available yet. Request access from group admins.",
+                    if (hasPendingRequest) "Access request sent. Waiting for admin approval."
+                    else "Encrypted metadata not available yet. Request access from group admins.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
+                    color = if (hasPendingRequest) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(top = 4.dp)
                 )
             }
@@ -272,14 +297,20 @@ fun SharedCollectionCard(
             Button(
                 onClick = when {
                     isImported -> { onNavigate ?: {} }
-                    isExpired || isRestricted -> onRequestAccess
+                    needsAccess && hasPendingRequest -> { {} } // Disabled — already pending
+                    needsAccess -> onRequestAccess
                     else -> onImport
                 },
+                enabled = !(needsAccess && hasPendingRequest),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = when {
                     isImported -> ButtonDefaults.buttonColors()
-                    isExpired || isRestricted -> ButtonDefaults.buttonColors(
+                    needsAccess && hasPendingRequest -> ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    needsAccess -> ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
@@ -289,7 +320,8 @@ fun SharedCollectionCard(
                 Icon(
                     when {
                         isImported -> Icons.Rounded.OpenInNew
-                        isExpired || isRestricted -> Icons.Rounded.LockOpen
+                        needsAccess && hasPendingRequest -> Icons.Rounded.HourglassTop
+                        needsAccess -> Icons.Rounded.LockOpen
                         else -> Icons.Rounded.CloudDownload
                     }, 
                     contentDescription = null,
@@ -299,7 +331,8 @@ fun SharedCollectionCard(
                 Text(
                     when {
                         isImported -> "Open Collection"
-                        isExpired || isRestricted -> "Request Access"
+                        needsAccess && hasPendingRequest -> "Request Pending"
+                        needsAccess -> "Request Access"
                         else -> "Import to Library"
                     }
                 )
@@ -331,7 +364,9 @@ fun SharedCollectionCard(
 @Composable
 fun AccessRequestItem(
     requesterName: String,
-    onApprove: () -> Unit
+    collectionName: String = "Collection",
+    onApprove: () -> Unit,
+    onDeny: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -340,25 +375,43 @@ fun AccessRequestItem(
             containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
         )
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Rounded.PersonPin, 
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = "$requesterName requested access",
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
-            )
-            TextButton(onClick = onApprove) {
-                Text("Approve")
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Rounded.PersonPin, 
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = requesterName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Requested access to \"$collectionName\"",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(onClick = onDeny) {
+                    Text("Deny", color = MaterialTheme.colorScheme.error)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = onApprove,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Approve")
+                }
             }
         }
     }
@@ -407,8 +460,10 @@ fun SharedLibraryViewPreview() {
             accessRequests = mockRequests,
             onRequestAccess = {},
             onGrantAccess = { _, _ -> },
+            onDenyAccess = { _, _ -> },
             onNavigateToCollection = {},
             onDelete = {},
+            currentUserId = "me",
             isLoading = false
         )
     }

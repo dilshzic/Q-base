@@ -106,7 +106,6 @@ fun NewSessionWizardScreen(
                             }
                         }
                         2 -> {
-                            val isAdminOnly by viewModel.sessionIsAdminOnly.collectAsStateWithLifecycle()
                             SessionSetupStep(
                                 questions = availableQuestions,
                                 selectedIds = selectedIds,
@@ -114,13 +113,11 @@ fun NewSessionWizardScreen(
                                 order = order,
                                 timingType = timingType,
                                 timeLimitSeconds = timeLimitSeconds,
-                                isAdminOnly = isAdminOnly,
                                 onRandomSelect = { viewModel.selectRandomQuestions(it) },
                                 onSelectAll = { viewModel.selectAllQuestions() },
                                 onOrderChange = { viewModel.setOrder(it) },
                                 onTimingChange = { viewModel.setTimingType(it) },
                                 onTimeLimitChange = { viewModel.setTimeLimit(it) },
-                                onIsAdminOnlyChange = { viewModel.setSessionIsAdminOnly(it) },
                                 onLaunch = { title -> viewModel.launchSession(title) },
                                 onOpenCustomSelection = { showCustomSelection = true }
                             )

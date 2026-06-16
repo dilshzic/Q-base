@@ -85,7 +85,9 @@ fun MessageSyncRepository.observeAllIncomingMessages(notificationHelper: Notific
 
                     if (chatLocalDataSource.getMessageById(docId) == null) {
                         chatLocalDataSource.upsertMessage(message)
-                        chatLocalDataSource.incrementUnreadCount(docChatId)
+                        if (chatLocalDataSource.activeChatId != docChatId) {
+                            chatLocalDataSource.incrementUnreadCount(docChatId)
+                        }
 
                         val localChat = chatLocalDataSource.getChatById(docChatId)
                         if (localChat?.isMuted != true && localChat?.isBlocked != true) {

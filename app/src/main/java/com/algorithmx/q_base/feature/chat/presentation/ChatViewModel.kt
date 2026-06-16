@@ -484,6 +484,7 @@ class ChatViewModel @Inject constructor(
         accessRequestsJob?.cancel()
 
         _currentChatId.value = chatId
+        chatLocalDataSource.activeChatId = chatId
         prefetchChatParticipantProfiles(chatId)
         viewModelScope.launch {
             chatLocalDataSource.clearUnreadCount(chatId)
@@ -549,6 +550,13 @@ class ChatViewModel @Inject constructor(
                     Log.w("ChatViewModel", "Background profile refresh failed for $participantId", e)
                 }
             }
+    }
+
+    fun clearActiveChatId(chatId: String) {
+        if (_currentChatId.value == chatId) {
+            _currentChatId.value = null
+            chatLocalDataSource.activeChatId = null
+        }
     }
 
     companion object {

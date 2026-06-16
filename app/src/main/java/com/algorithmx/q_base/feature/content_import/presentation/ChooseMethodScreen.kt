@@ -1,4 +1,4 @@
-2package com.algorithmx.q_base.feature.content_import.presentation
+package com.algorithmx.q_base.feature.content_import.presentation
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*

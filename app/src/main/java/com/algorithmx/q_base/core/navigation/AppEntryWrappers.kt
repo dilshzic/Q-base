@@ -2,6 +2,7 @@ package com.algorithmx.q_base.core.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
@@ -273,6 +274,11 @@ fun ChatDetailWrapper(key: Screen.ChatDetail, navigator: Navigator) {
     val state by viewModel.chatDetailState.collectAsStateWithLifecycle()
     LaunchedEffect(key.chatId) {
         viewModel.setChatId(key.chatId)
+    }
+    DisposableEffect(key.chatId) {
+        onDispose {
+            viewModel.clearActiveChatId(key.chatId)
+        }
     }
     ChatDetailScreen(
         onBack = { navigator.goBack() },

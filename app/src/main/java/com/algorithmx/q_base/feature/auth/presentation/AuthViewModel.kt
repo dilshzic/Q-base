@@ -36,16 +36,8 @@ class AuthViewModel @Inject constructor(
             android.util.Log.d("AuthViewModel", "Starting sign in for $email")
             val result = authRepository.signInWithEmail(email, pass)
             result.onSuccess { user ->
-                android.util.Log.d("AuthViewModel", "Sign in successful for ${user.uid}, syncing profile...")
-                try {
-                    val hasBackup = profileRepository.checkHasSecureBackup(user.uid)
-                    profileRepository.syncUserProfile(user.uid)
-                    android.util.Log.d("AuthViewModel", "Profile sync complete, setting state. Backup=$hasBackup")
-                    _state.value = AuthState(user = user, isSuccess = !hasBackup, isProfileCreated = true, requiresBackupRestore = hasBackup)
-                } catch (e: Exception) {
-                    android.util.Log.e("AuthViewModel", "Profile sync failed", e)
-                    _state.value = AuthState(error = "Sync profile failed: ${e.message}")
-                }
+                android.util.Log.d("AuthViewModel", "Sign in successful for ${user.uid}")
+                _state.value = AuthState(user = user, isSuccess = true, isProfileCreated = true)
             }.onFailure { error ->
                 android.util.Log.e("AuthViewModel", "Sign in failed", error)
                 _state.value = AuthState(error = error.message)
@@ -80,13 +72,7 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             val result = authRepository.signInWithGoogle(activity)
             result.onSuccess { user ->
-                try {
-                    val hasBackup = profileRepository.checkHasSecureBackup(user.uid)
-                    profileRepository.syncUserProfile(user.uid)
-                    _state.value = AuthState(user = user, isSuccess = !hasBackup, isProfileCreated = true, requiresBackupRestore = hasBackup)
-                } catch (e: Exception) {
-                    _state.value = AuthState(error = "Sync profile failed: ${e.message}")
-                }
+                _state.value = AuthState(user = user, isSuccess = true, isProfileCreated = true)
             }.onFailure { error ->
                 _state.value = AuthState(error = error.message)
             }
@@ -94,16 +80,7 @@ class AuthViewModel @Inject constructor(
     }
 
     fun onGoogleSignInSuccess(user: AppwriteUser) {
-        _state.value = AuthState(isLoading = true)
-        viewModelScope.launch {
-            try {
-                val hasBackup = profileRepository.checkHasSecureBackup(user.uid)
-                profileRepository.syncUserProfile(user.uid)
-                _state.value = AuthState(user = user, isSuccess = !hasBackup, isProfileCreated = true, requiresBackupRestore = hasBackup)
-            } catch (e: Exception) {
-                _state.value = AuthState(error = "Sync profile failed: ${e.message}")
-            }
-        }
+        _state.value = AuthState(user = user, isSuccess = true, isProfileCreated = true)
     }
 
     fun clearError() {

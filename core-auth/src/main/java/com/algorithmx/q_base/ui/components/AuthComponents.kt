@@ -70,7 +70,7 @@ fun AuthFormSection(
             )
             OutlinedTextField(
                 value = emailValue,
-                onValueChange = onEmailChange,
+                onValueChange = { onEmailChange(it.filter { !it.isWhitespace() }) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .graphicsLayer {

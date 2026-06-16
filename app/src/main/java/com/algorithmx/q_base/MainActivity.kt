@@ -219,14 +219,6 @@ class MainActivity : ComponentActivity() {
                     mutableStateOf(sharedPrefs.getBoolean("is_logged_in", false))
                 }
 
-                // If user becomes non-null, mark login instance as persisted reactively
-                LaunchedEffect(user) {
-                    if (user != null && !isLoggedInInstancePersisted) {
-                        sharedPrefs.edit().putBoolean("is_logged_in", true).apply()
-                        isLoggedInInstancePersisted = true
-                    }
-                }
-
                 // Decide the starting route based on login instance persistence (guests are not allowed)
                 val startRoute = remember(isLoggedInInstancePersisted) {
                     if (isLoggedInInstancePersisted) Screen.Home else Screen.Login
@@ -250,6 +242,15 @@ class MainActivity : ComponentActivity() {
                 )
                 val navigator = remember(navigationState) { Navigator(navigationState) }
                 val snackbarHostState = remember { SnackbarHostState() }
+
+                // If user is logged in and reaches Home screen, mark login instance as persisted reactively
+                val currentRoute = navigationState.topLevelRoute
+                LaunchedEffect(user, currentRoute) {
+                    if (user != null && (currentRoute == Screen.Home || currentRoute is Screen.Sessions || currentRoute == Screen.Explore || currentRoute == Screen.Connect) && !isLoggedInInstancePersisted) {
+                        sharedPrefs.edit().putBoolean("is_logged_in", true).apply()
+                        isLoggedInInstancePersisted = true
+                    }
+                }
 
 
 

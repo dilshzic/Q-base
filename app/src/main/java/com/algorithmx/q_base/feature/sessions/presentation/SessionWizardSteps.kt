@@ -82,13 +82,11 @@ fun SessionSetupStep(
     order: String,
     timingType: String,
     timeLimitSeconds: Int,
-    isAdminOnly: Boolean,
     onRandomSelect: (Int) -> Unit,
     onSelectAll: () -> Unit,
     onOrderChange: (String) -> Unit,
     onTimingChange: (String) -> Unit,
     onTimeLimitChange: (Int) -> Unit,
-    onIsAdminOnlyChange: (Boolean) -> Unit,
     onLaunch: (String) -> Unit,
     onOpenCustomSelection: () -> Unit
 ) {
@@ -199,25 +197,6 @@ fun SessionSetupStep(
                         )
                     }
                 }
-            }
-        }
-
-        // 4. ADMIN ONLY
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
-            shape = RoundedCornerShape(16.dp),
-            border = androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
-                    Text("Admin-Only Session", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                    Text("Only group admins can answer or edit.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Switch(checked = isAdminOnly, onCheckedChange = onIsAdminOnlyChange)
             }
         }
 

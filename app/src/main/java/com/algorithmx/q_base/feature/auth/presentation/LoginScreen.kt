@@ -35,9 +35,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit,
+    onLoginSuccess: (String) -> Unit,
     onNavigateToSignup: () -> Unit,
-    onRestoreBackupRequired: (String) -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -47,11 +46,10 @@ fun LoginScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(state.isSuccess, state.requiresBackupRestore) {
-        if (state.isSuccess) {
-            onLoginSuccess()
-        } else if (state.requiresBackupRestore && state.user != null) {
-            onRestoreBackupRequired(state.user!!.uid)
+    LaunchedEffect(state.isSuccess) {
+        val currentUser = state.user
+        if (state.isSuccess && currentUser != null) {
+            onLoginSuccess(currentUser.uid)
         }
     }
 
@@ -142,7 +140,8 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            val canSubmit = !state.isLoading && email.isNotBlank() && password.isNotBlank()
+            val isEmailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+            val canSubmit = !state.isLoading && email.isNotBlank() && isEmailValid && password.isNotBlank()
             val buttonScale by animateFloatAsState(
                 targetValue = if (canSubmit) 1f else 0.95f,
                 animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
