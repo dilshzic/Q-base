@@ -25,6 +25,7 @@ usage_statistics.xml
 
 # Built artifacts
 *.apk
+*.aab
 *.ap_
 *.dex
 *.class
