@@ -344,6 +344,8 @@ class ChatViewModel @Inject constructor(
             try {
                 syncRepository.requestCollectionAccess(chatId, collectionId)
                 _actionFeedback.emit("Access request sent to group admins")
+            } catch (e: IllegalStateException) {
+                _actionFeedback.emit(e.message ?: "Request failed")
             } catch (e: Exception) {
                 _actionFeedback.emit("Failed to send request: ${e.message}")
             }
@@ -368,6 +370,18 @@ class ChatViewModel @Inject constructor(
                 _actionFeedback.emit("Access granted!")
             } catch (e: Exception) {
                 _actionFeedback.emit("Failed to grant access: ${e.message}")
+            }
+        }
+    }
+
+    fun denyAccess(collectionId: String, requesterId: String) {
+        val chatId = _currentChatId.value ?: return
+        viewModelScope.launch {
+            try {
+                syncRepository.denyCollectionAccess(chatId, collectionId, requesterId)
+                _actionFeedback.emit("Access request denied")
+            } catch (e: Exception) {
+                _actionFeedback.emit("Failed to deny access: ${e.message}")
             }
         }
     }

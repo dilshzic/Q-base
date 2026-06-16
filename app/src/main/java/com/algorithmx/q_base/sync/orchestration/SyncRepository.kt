@@ -179,6 +179,10 @@ class SyncRepository @Inject constructor(
         collectionSyncRepository.grantCollectionAccess(chatId, collectionId, requesterId)
     }
 
+    suspend fun denyCollectionAccess(chatId: String, collectionId: String, requesterId: String) {
+        collectionSyncRepository.denyCollectionAccess(chatId, collectionId, requesterId)
+    }
+
     // Reports
     suspend fun reportSession(sessionId: String, reason: String) {
         reportSyncRepository.reportSession(sessionId, reason)
