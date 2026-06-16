@@ -16,6 +16,7 @@ import com.algorithmx.q_base.data.collections.QuestionOption
 import com.algorithmx.q_base.data.collections.QuestionSet
 import com.algorithmx.q_base.data.collections.StudyCollection
 import com.algorithmx.q_base.feature.sessions.data.SessionDao
+import io.appwrite.Client
 import com.google.gson.Gson
 import dagger.Lazy
 import io.mockk.*
@@ -31,6 +32,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class ReportSyncRepositoryTest {
 
+    private val client: Client = mockk()
     private val databases: CoreDatabase = mockk()
     private val authRepository: AuthRepository = mockk()
     private val chatRemoteRepository: ChatRemoteRepository = mockk()
@@ -43,6 +45,7 @@ class ReportSyncRepositoryTest {
     private val userDao: UserDao = mockk()
 
     private val repository = ReportSyncRepository(
+        appwriteClient = client,
         databases = databases,
         authRepository = authRepository,
         chatRemoteRepository = chatRemoteRepository,

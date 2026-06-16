@@ -213,6 +213,26 @@ class SyncRepository @Inject constructor(
         reportSyncRepository.reportMessage(message, reason)
     }
 
+    fun observeGroupReports(groupId: String): Flow<List<Map<String, Any>>> {
+        return reportSyncRepository.observeGroupReports(groupId)
+    }
+
+    fun observeMessageReports(chatId: String): Flow<List<Map<String, Any>>> {
+        return reportSyncRepository.observeMessageReports(chatId)
+    }
+
+    suspend fun dismissGroupReport(reportId: String) {
+        reportSyncRepository.dismissGroupReport(reportId)
+    }
+
+    suspend fun dismissMessageReport(reportId: String) {
+        reportSyncRepository.dismissMessageReport(reportId)
+    }
+
+    suspend fun deleteReportedMessage(messageId: String, reportId: String) {
+        reportSyncRepository.deleteReportedMessage(messageId, reportId)
+    }
+
     suspend fun deleteSharedCollectionFromGroup(chatId: String, collectionId: String) {
         collectionSyncRepository.deleteSharedCollectionFromGroup(chatId, collectionId)
     }

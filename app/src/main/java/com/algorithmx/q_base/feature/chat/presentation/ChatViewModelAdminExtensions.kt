@@ -224,3 +224,36 @@ fun ChatViewModel.clearChatMessages(chatId: String) {
         }
     }
 }
+
+fun ChatViewModel.dismissGroupReport(reportId: String) {
+    viewModelScope.launch {
+        try {
+            syncRepository.dismissGroupReport(reportId)
+            _actionFeedback.emit("Group report dismissed")
+        } catch (e: Exception) {
+            _actionFeedback.emit("Failed to dismiss report: ${e.message}")
+        }
+    }
+}
+
+fun ChatViewModel.dismissMessageReport(reportId: String) {
+    viewModelScope.launch {
+        try {
+            syncRepository.dismissMessageReport(reportId)
+            _actionFeedback.emit("Message report dismissed")
+        } catch (e: Exception) {
+            _actionFeedback.emit("Failed to dismiss report: ${e.message}")
+        }
+    }
+}
+
+fun ChatViewModel.deleteReportedMessage(messageId: String, reportId: String) {
+    viewModelScope.launch {
+        try {
+            syncRepository.deleteReportedMessage(messageId, reportId)
+            _actionFeedback.emit("Message deleted and report resolved")
+        } catch (e: Exception) {
+            _actionFeedback.emit("Failed to delete message: ${e.message}")
+        }
+    }
+}

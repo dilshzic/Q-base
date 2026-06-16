@@ -16,7 +16,14 @@ import com.algorithmx.q_base.data.collections.CollectionDao
 import com.algorithmx.q_base.data.collections.QuestionDao
 import com.algorithmx.q_base.core.data.chat.ChatLocalDataSource
 import com.algorithmx.q_base.core.data.UserDao
+import com.algorithmx.q_base.core.data.backend.CoreQuery
+import com.algorithmx.q_base.core.data.backend.CoreQueryOperator
+import io.appwrite.Client
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.launch
 import dagger.Lazy
 import java.util.UUID
 import javax.inject.Inject
@@ -24,6 +31,7 @@ import javax.inject.Singleton
 
 @Singleton
 class ReportSyncRepository @Inject constructor(
+    private val appwriteClient: Client,
     private val databases: CoreDatabase,
     private val authRepository: AuthRepository,
     private val chatRemoteRepository: ChatRemoteRepository,
@@ -306,5 +314,116 @@ class ReportSyncRepository @Inject constructor(
 
     suspend fun reportMessage(message: MessageEntity, reason: String) {
         chatRemoteRepository.reportMessage(message, reason)
+    }
+
+    fun observeGroupReports(groupId: String): Flow<List<Map<String, Any>>> {
+        return callbackFlow {
+            suspend fun fetchReports(): List<Map<String, Any>> {
+                val queries = listOf(
+                    CoreQuery("groupId", CoreQueryOperator.EQUAL, groupId)
+                )
+                return try {
+                    databases.queryDocuments("reported_groups", queries).getOrNull() ?: emptyList()
+                } catch (e: Exception) {
+                    Log.e("ReportSyncRepository", "Failed to query reported_groups for $groupId", e)
+                    emptyList()
+                }
+            }
+
+            launch {
+                try {
+                    trySend(fetchReports())
+                } catch (_: Exception) {}
+            }
+
+            val realtime = io.appwrite.services.Realtime(appwriteClient)
+            val subscription = realtime.subscribe("tablesdb.qbase_db.tables.reported_groups.rows") { event ->
+                launch {
+                    try {
+                        trySend(fetchReports())
+                    } catch (_: Exception) {}
+                }
+            }
+
+            awaitClose { subscription.close() }
+        }
+    }
+
+    fun observeMessageReports(chatId: String): Flow<List<Map<String, Any>>> {
+        return callbackFlow {
+            suspend fun fetchAndFilterReports(): List<Map<String, Any>> {
+                return try {
+                    val allReports = databases.queryDocuments("reported_messages", emptyList()).getOrNull() ?: emptyList()
+                    allReports.filter { doc ->
+                        val contentJson = doc["contentJson"] as? String ?: ""
+                        try {
+                            val jsonObj = org.json.JSONObject(contentJson)
+                            val msgChatId = jsonObj.optString("chatId")
+                            msgChatId == chatId
+                        } catch (e: Exception) {
+                            false
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("ReportSyncRepository", "Failed to query reported_messages for $chatId", e)
+                    emptyList()
+                }
+            }
+
+            launch {
+                try {
+                    trySend(fetchAndFilterReports())
+                } catch (_: Exception) {}
+            }
+
+            val realtime = io.appwrite.services.Realtime(appwriteClient)
+            val subscription = realtime.subscribe("tablesdb.qbase_db.tables.reported_messages.rows") { event ->
+                launch {
+                    try {
+                        trySend(fetchAndFilterReports())
+                    } catch (_: Exception) {}
+                }
+            }
+
+            awaitClose { subscription.close() }
+        }
+    }
+
+    suspend fun dismissGroupReport(reportId: String) {
+        try {
+            databases.deleteDocument("reported_groups", reportId).getOrThrow()
+        } catch (e: Exception) {
+            Log.e("ReportSyncRepository", "Failed to dismiss group report $reportId", e)
+            throw e
+        }
+    }
+
+    suspend fun dismissMessageReport(reportId: String) {
+        try {
+            databases.deleteDocument("reported_messages", reportId).getOrThrow()
+        } catch (e: Exception) {
+            Log.e("ReportSyncRepository", "Failed to dismiss message report $reportId", e)
+            throw e
+        }
+    }
+
+    suspend fun deleteReportedMessage(messageId: String, reportId: String) {
+        try {
+            // Delete locally
+            chatLocalDataSource.get().deleteMessageById(messageId)
+            
+            // Delete globally from Appwrite messages collection (if it hasn't been deleted yet due to ephemeral delivery)
+            try {
+                databases.deleteDocument("messages", messageId).getOrThrow()
+            } catch (e: Exception) {
+                // Ignore, message might already be deleted globally due to ephemeral acknowledgment
+            }
+            
+            // Delete the report record
+            databases.deleteDocument("reported_messages", reportId).getOrThrow()
+        } catch (e: Exception) {
+            Log.e("ReportSyncRepository", "Failed to delete reported message $messageId", e)
+            throw e
+        }
     }
 }

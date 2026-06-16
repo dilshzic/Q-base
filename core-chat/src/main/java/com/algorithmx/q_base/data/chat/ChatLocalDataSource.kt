@@ -21,6 +21,7 @@ interface ChatLocalDataSource {
     suspend fun upsertMessage(message: MessageEntity)
     suspend fun getPendingMessages(): List<MessageEntity>
     suspend fun updateMessageStatus(messageId: String, status: String)
+    suspend fun deleteMessageById(messageId: String)
     suspend fun deleteMessagesByChatId(chatId: String)
 
     suspend fun updateParticipants(chatId: String, participantIds: String)
@@ -108,6 +109,10 @@ class ChatLocalDataSourceImpl @Inject constructor(
 
     override suspend fun deleteMessagesByChatId(chatId: String) {
         messageDao.deleteMessagesByChatId(chatId)
+    }
+
+    override suspend fun deleteMessageById(messageId: String) {
+        messageDao.deleteMessageById(messageId)
     }
 
     override suspend fun clearAllChatsAndMessages() {

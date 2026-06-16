@@ -20,6 +20,9 @@ interface MessageDao {
     @Delete
     suspend fun deleteMessage(message: MessageEntity)
 
+    @Query("DELETE FROM messages WHERE messageId = :messageId")
+    suspend fun deleteMessageById(messageId: String)
+
     @Query("DELETE FROM messages WHERE chatId = :chatId")
     suspend fun deleteMessagesByChatId(chatId: String)
 

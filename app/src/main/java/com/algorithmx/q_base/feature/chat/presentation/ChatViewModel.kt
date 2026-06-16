@@ -48,6 +48,8 @@ class ChatViewModel @Inject constructor(
     private var groupLibraryJob: Job? = null
     private var sharedSessionsJob: Job? = null
     private var accessRequestsJob: Job? = null
+    private var groupReportsJob: Job? = null
+    private var messageReportsJob: Job? = null
     private var keyPrefetchJob: Job? = null
     private var keyRefreshJob: Job? = null
 
@@ -58,6 +60,12 @@ class ChatViewModel @Inject constructor(
     
     internal val _accessRequests = MutableStateFlow<List<Map<String, Any>>>(emptyList())
     val accessRequests = _accessRequests.asStateFlow()
+
+    internal val _groupReports = MutableStateFlow<List<Map<String, Any>>>(emptyList())
+    val groupReports = _groupReports.asStateFlow()
+
+    internal val _messageReports = MutableStateFlow<List<Map<String, Any>>>(emptyList())
+    val messageReports = _messageReports.asStateFlow()
 
     internal val _isSharing = MutableStateFlow(false)
     val isSharing = _isSharing.asStateFlow()
@@ -482,6 +490,8 @@ class ChatViewModel @Inject constructor(
         groupLibraryJob?.cancel()
         sharedSessionsJob?.cancel()
         accessRequestsJob?.cancel()
+        groupReportsJob?.cancel()
+        messageReportsJob?.cancel()
 
         _currentChatId.value = chatId
         chatLocalDataSource.activeChatId = chatId
@@ -509,10 +519,20 @@ class ChatViewModel @Inject constructor(
                     syncRepository.observeAccessRequests(chatId)
                         .collect { _accessRequests.value = it }
                 }
+                groupReportsJob = viewModelScope.launch {
+                    syncRepository.observeGroupReports(chatId)
+                        .collect { _groupReports.value = it }
+                }
+                messageReportsJob = viewModelScope.launch {
+                    syncRepository.observeMessageReports(chatId)
+                        .collect { _messageReports.value = it }
+                }
             } else {
                 _sharedCollections.value = emptyList()
                 _sharedSessions.value = emptyList()
                 _accessRequests.value = emptyList()
+                _groupReports.value = emptyList()
+                _messageReports.value = emptyList()
             }
         }
     }

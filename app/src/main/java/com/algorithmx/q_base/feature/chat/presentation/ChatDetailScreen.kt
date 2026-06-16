@@ -38,6 +38,9 @@ fun ChatDetailScreen(
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val localCollections by viewModel.localStudyCollections.collectAsStateWithLifecycle()
     val isAiLoading by viewModel.isAiLoading.collectAsState()
+    val accessRequests by viewModel.accessRequests.collectAsStateWithLifecycle()
+    val groupReports by viewModel.groupReports.collectAsStateWithLifecycle()
+    val messageReports by viewModel.messageReports.collectAsStateWithLifecycle()
     var messageText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -58,6 +61,15 @@ fun ChatDetailScreen(
 
     val currentChatId by viewModel.currentChatId.collectAsStateWithLifecycle()
     val isLibraryMode by viewModel.isLibraryMode.collectAsStateWithLifecycle()
+    var selectedTab by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(isLibraryMode) {
+        if (!isLibraryMode && selectedTab != 0) {
+            selectedTab = 0
+        } else if (isLibraryMode && selectedTab == 0) {
+            selectedTab = 1
+        }
+    }
     
     BackHandler(enabled = isLibraryMode) {
         viewModel.toggleLibraryMode(false)
@@ -125,21 +137,52 @@ fun ChatDetailScreen(
                     onReportGroupClick = { showReportGroupDialog = true },
                     onDeleteChatClick = { showDeleteConfirm = true }
                 )
-                if (state.chat?.isGroup == true) {
+                if (chat?.isGroup == true) {
+                    val isAdmin = chat.isAdmin(state.currentUserId)
+                    val badgeCount = accessRequests.size + groupReports.size + messageReports.size
                     TabRow(
-                        selectedTabIndex = if (isLibraryMode) 1 else 0,
+                        selectedTabIndex = selectedTab,
                         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
                     ) {
                         Tab(
-                            selected = !isLibraryMode,
-                            onClick = { viewModel.toggleLibraryMode(false) },
+                            selected = selectedTab == 0,
+                            onClick = {
+                                selectedTab = 0
+                                viewModel.toggleLibraryMode(false)
+                            },
                             text = { Text("Chat") }
                         )
                         Tab(
-                            selected = isLibraryMode,
-                            onClick = { viewModel.toggleLibraryMode(true) },
+                            selected = selectedTab == 1,
+                            onClick = {
+                                selectedTab = 1
+                                viewModel.toggleLibraryMode(true)
+                            },
                             text = { Text("Shared collections") }
                         )
+                        if (isAdmin) {
+                            Tab(
+                                selected = selectedTab == 2,
+                                onClick = {
+                                    selectedTab = 2
+                                    viewModel.toggleLibraryMode(true)
+                                },
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("Admin")
+                                        if (badgeCount > 0) {
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Badge(
+                                                containerColor = MaterialTheme.colorScheme.error,
+                                                contentColor = MaterialTheme.colorScheme.onError
+                                            ) {
+                                                Text(text = badgeCount.toString(), style = MaterialTheme.typography.labelSmall)
+                                            }
+                                        }
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -170,8 +213,18 @@ fun ChatDetailScreen(
                 .padding(padding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            if (isLibraryMode && chat?.isGroup == true) {
-                val accessRequests by viewModel.accessRequests.collectAsStateWithLifecycle()
+            if (selectedTab == 2 && chat?.isGroup == true) {
+                AdminReviewPanelView(
+                    accessRequests = accessRequests,
+                    groupReports = groupReports,
+                    messageReports = messageReports,
+                    onGrantAccess = { collId, reqId -> viewModel.grantAccess(collId, reqId) },
+                    onDenyAccess = { collId, reqId -> viewModel.denyAccess(collId, reqId) },
+                    onDismissGroupReport = { reportId -> viewModel.dismissGroupReport(reportId) },
+                    onDismissMessageReport = { reportId -> viewModel.dismissMessageReport(reportId) },
+                    onDeleteMessage = { msgId, reportId -> viewModel.deleteReportedMessage(msgId, reportId) }
+                )
+            } else if (selectedTab == 1 && chat?.isGroup == true) {
                 val isAdmin = chat.isAdmin(state.currentUserId)
                 SharedLibraryView(
                     chatId = chat.chatId,
