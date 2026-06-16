@@ -51,16 +51,6 @@ fun ChooseMethodScreen(
         )
 
         MethodCard(
-            title = "Extract from Document",
-            description = "Upload an exam paper or textbook to extract structured questions.",
-            icon = Icons.Rounded.DocumentScanner,
-            color = Color(0xFF43A047), // Premium green
-            isEnabled = false,
-            badgeText = "Shelved",
-            onClick = onExtractClick
-        )
-
-        MethodCard(
             title = "Manual Entry",
             description = "Create questions manually from scratch.",
             icon = Icons.Rounded.EditNote,

@@ -39,7 +39,9 @@ class AppwriteDatabaseImpl @Inject constructor(
                 io.appwrite.Permission.read(io.appwrite.Role.user(documentId)),
                 io.appwrite.Permission.write(io.appwrite.Role.user(documentId))
             )
-            "chats", "messages", "shared_collections", "shared_sessions" -> {
+            "chats", "messages", "shared_collections", "shared_sessions", "collection_requests",
+            "reported_questions", "reported_groups", "reported_users", "reported_collections",
+            "reported_sessions", "reported_messages" -> {
                 listOf(
                     io.appwrite.Permission.read(io.appwrite.Role.users()),
                     io.appwrite.Permission.write(io.appwrite.Role.users())

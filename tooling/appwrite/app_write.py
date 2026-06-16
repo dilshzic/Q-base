@@ -220,7 +220,8 @@ collections = {
             {"method": db.create_text_column, "args": [DATABASE_ID, "reported_questions", "reporterId", 36, True]},
             {"method": db.create_text_column, "args": [DATABASE_ID, "reported_questions", "reason", 1024, True]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "reported_questions", "reportedAt", True]},
-            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_questions", "questionId", 36, True]}
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_questions", "questionId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_questions", "contentJson", 16384, False]}
         ],
         "indexes": []
     },
@@ -234,7 +235,8 @@ collections = {
             {"method": db.create_text_column, "args": [DATABASE_ID, "reported_collections", "reporterId", 36, True]},
             {"method": db.create_text_column, "args": [DATABASE_ID, "reported_collections", "reason", 1024, True]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "reported_collections", "reportedAt", True]},
-            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_collections", "collectionId", 36, True]}
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_collections", "collectionId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_collections", "contentJson", 16384, False]}
         ],
         "indexes": []
     },
@@ -248,7 +250,8 @@ collections = {
             {"method": db.create_text_column, "args": [DATABASE_ID, "reported_users", "reporterId", 36, True]},
             {"method": db.create_text_column, "args": [DATABASE_ID, "reported_users", "reason", 1024, True]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "reported_users", "reportedAt", True]},
-            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_users", "reportedUserId", 36, True]}
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_users", "reportedUserId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_users", "contentJson", 16384, False]}
         ],
         "indexes": []
     },
@@ -262,7 +265,8 @@ collections = {
             {"method": db.create_text_column, "args": [DATABASE_ID, "reported_groups", "reporterId", 36, True]},
             {"method": db.create_text_column, "args": [DATABASE_ID, "reported_groups", "reason", 1024, True]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "reported_groups", "reportedAt", True]},
-            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_groups", "groupId", 36, True]}
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_groups", "groupId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_groups", "contentJson", 16384, False]}
         ],
         "indexes": []
     },
@@ -276,7 +280,8 @@ collections = {
             {"method": db.create_text_column, "args": [DATABASE_ID, "reported_messages", "reporterId", 36, True]},
             {"method": db.create_text_column, "args": [DATABASE_ID, "reported_messages", "reason", 1024, True]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "reported_messages", "reportedAt", True]},
-            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_messages", "messageId", 36, True]}
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_messages", "messageId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_messages", "contentJson", 16384, False]}
         ],
         "indexes": []
     },
@@ -290,7 +295,8 @@ collections = {
             {"method": db.create_text_column, "args": [DATABASE_ID, "reported_sessions", "reporterId", 36, True]},
             {"method": db.create_text_column, "args": [DATABASE_ID, "reported_sessions", "reason", 1024, True]},
             {"method": db.create_integer_column, "args": [DATABASE_ID, "reported_sessions", "reportedAt", True]},
-            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_sessions", "sessionId", 36, True]}
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_sessions", "sessionId", 36, True]},
+            {"method": db.create_text_column, "args": [DATABASE_ID, "reported_sessions", "contentJson", 16384, False]}
         ],
         "indexes": []
     }

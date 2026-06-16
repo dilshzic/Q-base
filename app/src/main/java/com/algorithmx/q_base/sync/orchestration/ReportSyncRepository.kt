@@ -13,6 +13,7 @@ import com.algorithmx.q_base.feature.sessions.data.SessionDao
 import com.algorithmx.q_base.core.data.auth.AuthRepository
 import com.algorithmx.q_base.core.data.backend.CoreDatabase
 import com.algorithmx.q_base.data.collections.CollectionDao
+import com.algorithmx.q_base.data.collections.QuestionDao
 import com.algorithmx.q_base.core.data.chat.ChatLocalDataSource
 import com.algorithmx.q_base.core.data.UserDao
 import kotlinx.coroutines.flow.firstOrNull
@@ -28,6 +29,7 @@ class ReportSyncRepository @Inject constructor(
     private val chatRemoteRepository: ChatRemoteRepository,
     private val sessionDao: SessionDao,
     private val collectionDao: Lazy<CollectionDao>,
+    private val questionDao: Lazy<QuestionDao>,
     private val chatLocalDataSource: Lazy<ChatLocalDataSource>,
     private val messageSyncRepository: Lazy<MessageSyncRepository>,
     private val chatManagerRepository: Lazy<ChatManagerRepository>,
@@ -119,8 +121,11 @@ class ReportSyncRepository @Inject constructor(
             ).getOrThrow()
         } catch (e: Exception) {
             Log.e("ReportSyncRepository", "Failed to submit reported session for $sessionId", e)
+            throw e
         }
 
+        // Temporarily disabled sending problem reports to groups for shared sessions
+        /*
         val colId = session.collectionId
         if (!colId.isNullOrBlank()) {
             try {
@@ -136,6 +141,7 @@ class ReportSyncRepository @Inject constructor(
                 Log.e("ReportSyncRepository", "Failed to send session warning to group", e)
             }
         }
+        */
     }
 
     suspend fun reportQuestion(
@@ -169,22 +175,39 @@ class ReportSyncRepository @Inject constructor(
             ).getOrThrow()
         } catch (e: Exception) {
             Log.e("ReportSyncRepository", "Failed to submit reported question", e)
+            throw e
         }
     }
 
     suspend fun reportGroup(group: ChatEntity, reason: String) {
-        chatRemoteRepository.reportGroup(group, reason)
+        val sampleMessages = chatLocalDataSource.get().getMessagesForChat(group.chatId).firstOrNull()?.takeLast(20) ?: emptyList()
+        chatRemoteRepository.reportGroup(group, reason, sampleMessages)
     }
 
     suspend fun reportUser(user: UserEntity, reason: String) {
         val reporterId = currentUserId ?: return
         val reportRefId = UUID.randomUUID().toString()
+        
+        val allChats = chatLocalDataSource.get().getAllChats().firstOrNull() ?: emptyList()
+        val directChat = allChats.find { chat ->
+            !chat.isGroup && chat.participantIds.split(",").contains(reporterId) && chat.participantIds.split(",").contains(user.userId)
+        }
+        val sampleMessages = if (directChat != null) {
+            chatLocalDataSource.get().getMessagesForChat(directChat.chatId).firstOrNull()?.takeLast(20) ?: emptyList()
+        } else {
+            emptyList()
+        }
+
+        val contentMap = mapOf(
+            "user" to user,
+            "sampleMessages" to sampleMessages
+        )
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
             "reportedAt" to (System.currentTimeMillis() / 1000).toInt(),
             "reportedUserId" to user.userId,
-            "contentJson" to com.google.gson.Gson().toJson(user)
+            "contentJson" to com.google.gson.Gson().toJson(contentMap)
         )
         try {
             databases.createDocument(
@@ -194,6 +217,7 @@ class ReportSyncRepository @Inject constructor(
             ).getOrThrow()
         } catch (e: Exception) {
             Log.e("ReportSyncRepository", "Failed to submit reported user ${user.userId}", e)
+            throw e
         }
 
         sendSystemMessageToUser(
@@ -226,12 +250,33 @@ class ReportSyncRepository @Inject constructor(
     suspend fun reportCollection(collection: StudyCollection, reason: String) {
         val reporterId = currentUserId ?: return
         val reportRefId = UUID.randomUUID().toString()
+        
+        val sets = collectionDao.get().getSetsByStudyCollectionIdOnce(collection.collectionId)
+        val questionsList = mutableListOf<Map<String, Any?>>()
+        for (set in sets) {
+            val questions = collectionDao.get().getQuestionsForSetOnce(set.setId)
+            for (question in questions) {
+                val options = questionDao.get().getOptionsForQuestionOnce(question.questionId)
+                val answer = questionDao.get().getAnswerForQuestionOnce(question.questionId)
+                questionsList.add(mapOf(
+                    "question" to question,
+                    "options" to options,
+                    "answer" to answer
+                ))
+            }
+        }
+
+        val contentMap = mapOf(
+            "collection" to collection,
+            "questions" to questionsList
+        )
+
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
             "reportedAt" to (System.currentTimeMillis() / 1000).toInt(),
             "collectionId" to collection.collectionId,
-            "contentJson" to com.google.gson.Gson().toJson(collection)
+            "contentJson" to com.google.gson.Gson().toJson(contentMap)
         )
         try {
             databases.createDocument(
@@ -241,8 +286,11 @@ class ReportSyncRepository @Inject constructor(
             ).getOrThrow()
         } catch (e: Exception) {
             Log.e("ReportSyncRepository", "Failed to submit reported collection", e)
+            throw e
         }
 
+        // Temporarily disabled sending problem reports to groups for shared collections
+        /*
         val groupId = collection.sharedWithGroupId
         if (!groupId.isNullOrBlank()) {
             sendWarningToGroup(
@@ -250,6 +298,7 @@ class ReportSyncRepository @Inject constructor(
                 payloadText = "⚠️ PROBLEM REPORT: Issue with shared collection '${collection.name}'. Reason: $reason"
             )
         }
+        */
     }
 
     suspend fun reportMessage(message: MessageEntity, reason: String) {

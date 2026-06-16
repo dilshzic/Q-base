@@ -244,14 +244,18 @@ class ChatRemoteRepository @Inject constructor(
         }
     }
 
-    suspend fun reportGroup(group: ChatEntity, reason: String) {
+    suspend fun reportGroup(group: ChatEntity, reason: String, sampleMessages: List<MessageEntity> = emptyList()) {
         val reporterId = getCurrentUserId() ?: throw IllegalStateException("User not authenticated")
+        val contentMap = mapOf(
+            "group" to group,
+            "sampleMessages" to sampleMessages
+        )
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
             "reportedAt" to (System.currentTimeMillis() / 1000).toInt(),
             "groupId" to group.chatId,
-            "contentJson" to com.google.gson.Gson().toJson(group)
+            "contentJson" to com.google.gson.Gson().toJson(contentMap)
         )
         try {
             databases.createDocument(
