@@ -26,6 +26,7 @@ interface ChatLocalDataSource {
 
     suspend fun updateParticipants(chatId: String, participantIds: String)
     suspend fun updateBlockedStatus(chatId: String, isBlocked: Boolean)
+    suspend fun updateBlockedByPeerStatus(chatId: String, isBlockedByPeer: Boolean)
     suspend fun updateReportedStatus(chatId: String, isReported: Boolean)
     suspend fun updateMutedStatus(chatId: String, isMuted: Boolean)
     suspend fun updateChatName(chatId: String, newName: String)
@@ -60,6 +61,10 @@ class ChatLocalDataSourceImpl @Inject constructor(
 
     override suspend fun updateBlockedStatus(chatId: String, isBlocked: Boolean) {
         chatDao.updateBlockedStatus(chatId, isBlocked)
+    }
+
+    override suspend fun updateBlockedByPeerStatus(chatId: String, isBlockedByPeer: Boolean) {
+        chatDao.updateBlockedByPeerStatus(chatId, isBlockedByPeer)
     }
 
     override suspend fun updateReportedStatus(chatId: String, isReported: Boolean) {

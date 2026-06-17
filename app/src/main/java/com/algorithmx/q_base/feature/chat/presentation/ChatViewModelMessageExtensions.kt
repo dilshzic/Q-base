@@ -92,6 +92,11 @@ fun ChatViewModel.sendMessage(chatId: String, text: String, type: String = "TEXT
     
     viewModelScope.launch {
         val chat = chatLocalDataSource.getChatById(chatId)
+        if (chat?.isBlockedByPeer == true && type != "BLOCK_STATUS_PATCH") {
+            _actionFeedback.emit("Cannot send message: You are blocked by this contact.")
+            return@launch
+        }
+
         val isAiChat = chat?.participantIds
             ?.split(",")
             ?.any { it.trim() == ChatViewModel.QBASE_AI_BOT_ID } == true

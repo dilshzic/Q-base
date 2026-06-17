@@ -142,7 +142,8 @@ class ChatManagerRepository @Inject constructor(
                             isReported = localChat?.isReported ?: false,
                             isMuted = localChat?.isMuted ?: false,
                             unreadCount = localChat?.unreadCount ?: 0,
-                            lastUsedKeyFingerprint = localChat?.lastUsedKeyFingerprint
+                            lastUsedKeyFingerprint = localChat?.lastUsedKeyFingerprint,
+                            isBlockedByPeer = localChat?.isBlockedByPeer ?: false
                         )
                         chatLocalDataSource.upsertChat(chat)
                         Log.d("ChatManagerRepository", "Synced chat from remote: ${chat.chatId} (${chat.chatName}), participants: ${chat.participantIds}")
@@ -224,7 +225,8 @@ class ChatManagerRepository @Inject constructor(
                         isReported = localChat?.isReported ?: false,
                         isMuted = localChat?.isMuted ?: false,
                         unreadCount = localChat?.unreadCount ?: 0,
-                        lastUsedKeyFingerprint = localChat?.lastUsedKeyFingerprint
+                        lastUsedKeyFingerprint = localChat?.lastUsedKeyFingerprint,
+                        isBlockedByPeer = localChat?.isBlockedByPeer ?: false
                     )
                     chatLocalDataSource.upsertChat(chat)
                     return chat

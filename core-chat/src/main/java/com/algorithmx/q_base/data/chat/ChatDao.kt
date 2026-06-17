@@ -12,7 +12,8 @@ data class ChatSummary(
     val isBlocked: Boolean,
     val lastMessagePayload: String?,
     val lastMessageTimestamp: Long?,
-    val lastMessageType: String?
+    val lastMessageType: String?,
+    val isBlockedByPeer: Boolean = false
 )
 
 @Dao
@@ -35,7 +36,8 @@ interface ChatDao {
     @Query("""
         SELECT 
             c.chatId, c.chatName, c.isGroup, c.participantIds, c.unreadCount, c.isBlocked,
-            m.payload as lastMessagePayload, m.timestamp as lastMessageTimestamp, m.type as lastMessageType
+            m.payload as lastMessagePayload, m.timestamp as lastMessageTimestamp, m.type as lastMessageType,
+            c.isBlockedByPeer
         FROM chats c
         LEFT JOIN (
             SELECT chatId, payload, timestamp, type
@@ -72,8 +74,11 @@ interface ChatDao {
     @Query("UPDATE chats SET unreadCount = 0 WHERE chatId = :chatId")
     suspend fun clearUnreadCount(chatId: String)
 
-    @Query("SELECT SUM(unreadCount) FROM chats")
+    @Query("SELECT SUM(unreadCount) FROM chats WHERE isBlocked = 0")
     fun getTotalUnreadCount(): Flow<Int?>
+
+    @Query("UPDATE chats SET isBlockedByPeer = :isBlockedByPeer WHERE chatId = :chatId")
+    suspend fun updateBlockedByPeerStatus(chatId: String, isBlockedByPeer: Boolean)
 
     @Query("DELETE FROM chats")
     suspend fun deleteAllChats()

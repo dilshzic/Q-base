@@ -85,11 +85,17 @@ fun MessageSyncRepository.observeAllIncomingMessages(notificationHelper: Notific
 
                     if (chatLocalDataSource.getMessageById(docId) == null) {
                         chatLocalDataSource.upsertMessage(message)
-                        if (chatLocalDataSource.activeChatId != docChatId) {
-                            chatLocalDataSource.incrementUnreadCount(docChatId)
+                        
+                        if (type == "BLOCK_STATUS_PATCH" && decryptionStatus == "SUCCESS") {
+                            val isBlockedByPeer = payload == "BLOCK"
+                            chatLocalDataSource.updateBlockedByPeerStatus(docChatId, isBlockedByPeer)
                         }
 
                         val localChat = chatLocalDataSource.getChatById(docChatId)
+                        if (chatLocalDataSource.activeChatId != docChatId && localChat?.isBlocked != true) {
+                            chatLocalDataSource.incrementUnreadCount(docChatId)
+                        }
+
                         if (localChat?.isMuted != true && localChat?.isBlocked != true) {
                             val senderUser = userDao.getUserById(senderId)
                             val senderName = senderUser?.displayName 

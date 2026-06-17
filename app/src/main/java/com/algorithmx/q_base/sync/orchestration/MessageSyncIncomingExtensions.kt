@@ -112,6 +112,11 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
                     if (chatLocalDataSource.getMessageById(docId) == null) {
                         chatLocalDataSource.upsertMessage(message)
                         
+                        if (type == "BLOCK_STATUS_PATCH" && decryptionStatus == "SUCCESS") {
+                            val isBlockedByPeer = payload == "BLOCK"
+                            chatLocalDataSource.updateBlockedByPeerStatus(chatId, isBlockedByPeer)
+                        }
+                        
                         if (type == "COLLECTION_PATCH" && decryptionStatus == "SUCCESS") {
                             collectionSyncRepository.get().applyCollectionPatch(payload)
                         }
@@ -248,6 +253,11 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
 
                         if (chatLocalDataSource.getMessageById(docId) == null) {
                             chatLocalDataSource.upsertMessage(message)
+
+                            if (type == "BLOCK_STATUS_PATCH" && decryptionStatus == "SUCCESS") {
+                                val isBlockedByPeer = payload == "BLOCK"
+                                chatLocalDataSource.updateBlockedByPeerStatus(chatId, isBlockedByPeer)
+                            }
 
                             if (type == "COLLECTION_PATCH" && decryptionStatus == "SUCCESS") {
                                 collectionSyncRepository.get().applyCollectionPatch(payload)

@@ -206,6 +206,28 @@ fun ChatViewModel.toggleBlock(chatId: String, isBlocked: Boolean) {
         val chat = chatLocalDataSource.getChatById(chatId)
         val label = if (chat?.isGroup == true) "Group" else "Chat"
         _actionFeedback.emit(if (isBlocked) "$label blocked" else "$label unblocked")
+
+        // Sync block status to the peer in P2P chats
+        if (chat != null && !chat.isGroup) {
+            val peerId = chat.participantIds.split(",")
+                .map { it.trim() }
+                .firstOrNull { it != currentUserId && it.isNotEmpty() }
+            if (peerId != null) {
+                val systemMessage = MessageEntity(
+                    messageId = java.util.UUID.randomUUID().toString(),
+                    chatId = chatId,
+                    senderId = currentUserId,
+                    payload = if (isBlocked) "BLOCK" else "UNBLOCK",
+                    type = "BLOCK_STATUS_PATCH",
+                    timestamp = System.currentTimeMillis()
+                )
+                try {
+                    syncRepository.sendMessage(systemMessage)
+                } catch (e: Exception) {
+                    Log.e("ChatViewModel", "Failed to send block status sync message", e)
+                }
+            }
+        }
     }
 }
 

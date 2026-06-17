@@ -16,7 +16,8 @@ data class ChatEntity(
     val isReported: Boolean = false,
     val isMuted: Boolean = false,
     val unreadCount: Int = 0,
-    val lastUsedKeyFingerprint: String? = null
+    val lastUsedKeyFingerprint: String? = null,
+    val isBlockedByPeer: Boolean = false
 )
 
 fun ChatEntity.isAdmin(userId: String): Boolean {

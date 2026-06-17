@@ -221,6 +221,21 @@ fun ChatDetailBottomBar(
                 color = MaterialTheme.colorScheme.onErrorContainer
             )
         }
+    } else if (chat?.isBlockedByPeer == true) {
+        Surface(
+            color = MaterialTheme.colorScheme.errorContainer,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .clip(RoundedCornerShape(12.dp))
+        ) {
+            Text(
+                text = "You have been blocked by this contact. You cannot send messages.",
+                modifier = Modifier.padding(16.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+        }
     } else if (!isLibraryMode) {
         Surface(
             tonalElevation = 0.dp,
