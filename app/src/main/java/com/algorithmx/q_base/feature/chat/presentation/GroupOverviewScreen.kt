@@ -41,7 +41,15 @@ fun GroupOverviewScreen(
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
     val state by viewModel.chatDetailState.collectAsState()
-    val chat = state.chat
+    
+    var fallbackChat by remember { mutableStateOf<com.algorithmx.q_base.core.data.chat.ChatEntity?>(null) }
+    LaunchedEffect(chatId) {
+        if (state.chat == null) {
+            fallbackChat = viewModel.chatLocalDataSource.getChatById(chatId)
+        }
+    }
+    
+    val chat = state.chat ?: fallbackChat
     val participants = chat?.participantIds?.split(",")?.mapNotNull { state.participants[it] }
         ?.sortedByDescending { chat.isAdmin(it.userId) } ?: emptyList()
 
@@ -155,7 +163,7 @@ fun GroupOverviewScreen(
                     ActionButton(
                         icon = if (chat?.isMuted == true) Icons.Rounded.NotificationsOff else Icons.Rounded.Notifications,
                         label = if (chat?.isMuted == true) "Unmute" else "Mute",
-                        onClick = { chat?.let { viewModel.toggleMute(it.chatId, !it.isMuted) } }
+                        onClick = { viewModel.toggleMute(chatId, !(chat?.isMuted ?: false)) }
                     )
                     ActionButton(
                         icon = Icons.Rounded.Edit,
@@ -323,7 +331,7 @@ fun GroupOverviewScreen(
                         icon = Icons.Rounded.DeleteSweep,
                         title = "Clear Chat History",
                         subtitle = "Delete all messages in this group",
-                        onClick = { chat?.let { viewModel.clearChatMessages(it.chatId) } }
+                        onClick = { viewModel.clearChatMessages(chatId) }
                     )
                     SettingsItem(
                         icon = Icons.Rounded.Report,
@@ -344,7 +352,7 @@ fun GroupOverviewScreen(
         AddParticipantDialog(
             onDismiss = { showAddDialog = false },
             onUserSelected = { userId ->
-                chat?.let { viewModel.addParticipant(it.chatId, userId) }
+                viewModel.addParticipant(chatId, userId)
                 showAddDialog = false
             },
             availableUsers = usersToAdd
@@ -357,7 +365,7 @@ fun GroupOverviewScreen(
             itemName = chat?.chatName ?: "Group",
             onDismiss = { showReportDialog = false },
             onConfirm = { reason ->
-                chat?.let { viewModel.reportGroup(it.chatId, reason) }
+                viewModel.reportGroup(chatId, reason)
                 showReportDialog = false
             }
         )
@@ -371,7 +379,7 @@ fun GroupOverviewScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        chat?.let { viewModel.leaveGroup(it.chatId) }
+                        viewModel.leaveGroup(chatId)
                         showLeaveDialog = false
                         onBack()
                     },

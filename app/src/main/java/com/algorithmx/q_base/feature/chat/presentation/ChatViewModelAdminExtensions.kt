@@ -203,12 +203,12 @@ fun ChatViewModel.toggleMute(chatId: String, isMuted: Boolean) {
 fun ChatViewModel.toggleBlock(chatId: String, isBlocked: Boolean) {
     viewModelScope.launch {
         chatLocalDataSource.updateBlockedStatus(chatId, isBlocked)
-        val chat = chatLocalDataSource.getChatById(chatId)
-        val label = if (chat?.isGroup == true) "Group" else "Chat"
+        val chat = chatLocalDataSource.getChatById(chatId) ?: return@launch
+        val label = if (chat.isGroup) "Group" else "Chat"
         _actionFeedback.emit(if (isBlocked) "$label blocked" else "$label unblocked")
 
         // Sync block status to the peer in P2P chats
-        if (chat != null && !chat.isGroup) {
+        if (!chat.isGroup) {
             val peerId = chat.participantIds.split(",")
                 .map { it.trim() }
                 .firstOrNull { it != currentUserId && it.isNotEmpty() }
@@ -217,7 +217,7 @@ fun ChatViewModel.toggleBlock(chatId: String, isBlocked: Boolean) {
                     messageId = java.util.UUID.randomUUID().toString(),
                     chatId = chatId,
                     senderId = currentUserId,
-                    payload = if (isBlocked) "BLOCK" else "UNBLOCK",
+                    payload = "{\"op\":\"BLOCK_STATE\",\"value\":$isBlocked}",
                     type = "BLOCK_STATUS_PATCH",
                     timestamp = System.currentTimeMillis()
                 )

@@ -27,6 +27,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 import androidx.compose.foundation.clickable
 import com.algorithmx.q_base.core.data.UserEntity
+import com.algorithmx.q_base.core.data.chat.ChatEntity
 import com.algorithmx.q_base.core.designsystem.components.reusable.ProfileIconButton
 import com.algorithmx.q_base.core.designsystem.components.reusable.ReportDialog
 
@@ -40,7 +41,15 @@ fun ContactOverviewScreen(
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
     val state by viewModel.chatDetailState.collectAsState()
-    val chat = state.chat
+    
+    var fallbackChat by remember { mutableStateOf<ChatEntity?>(null) }
+    LaunchedEffect(chatId) {
+        if (state.chat == null) {
+            fallbackChat = viewModel.chatLocalDataSource.getChatById(chatId)
+        }
+    }
+    
+    val chat = state.chat ?: fallbackChat
     val otherUser = if (chat?.isGroup == false) {
         val otherId = chat.participantIds.split(",").firstOrNull { it != state.currentUserId }
         state.participants[otherId]
@@ -141,7 +150,7 @@ fun ContactOverviewScreen(
                     ActionButton(
                         icon = if (chat?.isMuted == true) Icons.Rounded.NotificationsOff else Icons.Rounded.Notifications,
                         label = if (chat?.isMuted == true) "Unmute" else "Mute",
-                        onClick = { chat?.let { viewModel.toggleMute(it.chatId, !it.isMuted) } }
+                        onClick = { viewModel.toggleMute(chatId, !(chat?.isMuted ?: false)) }
                     )
                 }
             }
@@ -158,7 +167,7 @@ fun ContactOverviewScreen(
                         title = if (chat?.isBlocked == true) "Unblock User" else "Block User",
                         subtitle = "Stop receiving messages from this person",
                         isDestructive = true,
-                        onClick = { chat?.let { viewModel.toggleBlock(it.chatId, !it.isBlocked) } }
+                        onClick = { viewModel.toggleBlock(chatId, !(chat?.isBlocked ?: false)) }
                     )
                     SettingsItem(
                         icon = Icons.Rounded.Report,
@@ -171,7 +180,7 @@ fun ContactOverviewScreen(
                         icon = Icons.Rounded.DeleteSweep,
                         title = "Clear Chat History",
                         subtitle = "Delete all messages in this chat",
-                        onClick = { chat?.let { viewModel.clearChatMessages(it.chatId) } }
+                        onClick = { viewModel.clearChatMessages(chatId) }
                     )
                 }
             }

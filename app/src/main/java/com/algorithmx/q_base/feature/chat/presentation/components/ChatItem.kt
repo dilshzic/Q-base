@@ -158,6 +158,10 @@ fun ChatItem(
                             "SESSION_INVITE" -> "🎮 Shared a session"
                             "COLLECTION_PATCH" -> "📝 Collection updated"
                             "SESSION_PATCH" -> "🔄 Session updated"
+                            "BLOCK_STATUS_PATCH" -> {
+                                val isBlocked = try { org.json.JSONObject(latestMessage.payload).optBoolean("value", false) } catch(e: Exception) { false }
+                                if (isBlocked) "User has blocked you" else "User has unblocked you"
+                            }
                             else -> latestMessage.payload
                         }
                     }

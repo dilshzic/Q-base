@@ -113,7 +113,11 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
                         chatLocalDataSource.upsertMessage(message)
                         
                         if (type == "BLOCK_STATUS_PATCH" && decryptionStatus == "SUCCESS") {
-                            val isBlockedByPeer = payload == "BLOCK"
+                            val isBlockedByPeer = try {
+                                JSONObject(payload).optBoolean("value", false)
+                            } catch (e: Exception) {
+                                false
+                            }
                             chatLocalDataSource.updateBlockedByPeerStatus(chatId, isBlockedByPeer)
                         }
                         
@@ -255,7 +259,11 @@ fun MessageSyncRepository.observeAndSyncMessages(chatId: String): Flow<MessageEn
                             chatLocalDataSource.upsertMessage(message)
 
                             if (type == "BLOCK_STATUS_PATCH" && decryptionStatus == "SUCCESS") {
-                                val isBlockedByPeer = payload == "BLOCK"
+                                val isBlockedByPeer = try {
+                                    JSONObject(payload).optBoolean("value", false)
+                                } catch (e: Exception) {
+                                    false
+                                }
                                 chatLocalDataSource.updateBlockedByPeerStatus(chatId, isBlockedByPeer)
                             }
 

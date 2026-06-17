@@ -80,6 +80,21 @@ fun AnimatedMessageItem(
         return
     }
 
+    if (message.type == "BLOCK_STATUS_PATCH") {
+        val isBlocked = try { org.json.JSONObject(message.payload).optBoolean("value", false) } catch (e: Exception) { false }
+        val action = if (isBlocked) "blocked you" else "unblocked you"
+        val displayName = senderName ?: "The other user"
+        
+        Text(
+            text = "$displayName $action",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        return
+    }
+
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
 

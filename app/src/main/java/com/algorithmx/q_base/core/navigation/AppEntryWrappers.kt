@@ -275,11 +275,7 @@ fun ChatDetailWrapper(key: Screen.ChatDetail, navigator: Navigator) {
     LaunchedEffect(key.chatId) {
         viewModel.setChatId(key.chatId)
     }
-    DisposableEffect(key.chatId) {
-        onDispose {
-            viewModel.clearActiveChatId(key.chatId)
-        }
-    }
+
     ChatDetailScreen(
         onBack = { navigator.goBack() },
         onProfileClick = { navigator.navigate(Screen.Profile) },
@@ -306,9 +302,6 @@ fun ChatDetailWrapper(key: Screen.ChatDetail, navigator: Navigator) {
 @Composable
 fun ContactOverviewWrapper(key: Screen.ContactOverview, navigator: Navigator) {
     val viewModel: ChatViewModel = hiltViewModel()
-    LaunchedEffect(key.chatId) {
-        viewModel.setChatId(key.chatId)
-    }
     ContactOverviewScreen(
         chatId = key.chatId,
         onBack = { navigator.goBack() },
@@ -320,9 +313,6 @@ fun ContactOverviewWrapper(key: Screen.ContactOverview, navigator: Navigator) {
 @Composable
 fun GroupOverviewWrapper(key: Screen.GroupOverview, navigator: Navigator) {
     val viewModel: ChatViewModel = hiltViewModel()
-    LaunchedEffect(key.chatId) {
-        viewModel.setChatId(key.chatId)
-    }
     GroupOverviewScreen(
         chatId = key.chatId,
         onBack = { navigator.goBack() },
