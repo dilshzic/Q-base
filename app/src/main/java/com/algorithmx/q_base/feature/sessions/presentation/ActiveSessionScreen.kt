@@ -312,14 +312,17 @@ fun ActiveSessionScreen(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
                 verticalAlignment = Alignment.Top,
-                beyondViewportPageCount = 1
+                beyondViewportPageCount = 1,
+                userScrollEnabled = !isAiLoading
             ) { page ->
                 val attemptForIndex = attempts.getOrNull(page)
                 val clipboard = LocalClipboardManager.current
                 
                 Box(modifier = Modifier.fillMaxSize()) {
                     val question: Question? = currentQuestion
-                    if (question != null && page == currentIndex) {
+                    // We only show the QuestionViewer if the loaded question matches the pager index.
+                    // This prevents showing the wrong question content on the wrong page while swiping.
+                    if (question != null && question.questionId == attemptForIndex?.questionId) {
                         QuestionViewer(
                             question = question,
                             options = options,

@@ -186,27 +186,6 @@ fun SettingsContent(
                     )
                 }
             }
-
-            item {
-                Spacer(modifier = Modifier.height(24.dp))
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            "Q-BASE CORE",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 2.sp,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            "Version 1.1.2 Build (STABLE)",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.outlineVariant
-                        )
-                    }
-                }
-            }
         }
     }
 

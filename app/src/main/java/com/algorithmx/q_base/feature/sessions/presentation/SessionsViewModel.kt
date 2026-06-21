@@ -107,6 +107,8 @@ class SessionsViewModel @Inject constructor(
 
     fun selectCollection(name: String) {
         _selectedCollection.value = name
+        _selectedQuestionIds.value = emptySet()
+        _lastRandomCount.value = null
         viewModelScope.launch {
             repository.getQuestionsByStudyCollection(name).take(1).collect { questions ->
                 _availableQuestions.value = questions
@@ -223,9 +225,15 @@ class SessionsViewModel @Inject constructor(
             val attempts = repository.getAttemptsForSessionOnce(sessionId)
             val questionIds = attempts.map { it.questionId }
             if (questionIds.isEmpty()) return@launch
+
+            // Determine naming with attempt indicator
+            val baseTitle = session.title.replace(Regex(" \\(Attempt \\d+\\)$"), "")
+            val allSessions = repository.getAllSessionsOnce()
+            val attemptCount = allSessions.count { it.title.startsWith(baseTitle) }
+            val newTitle = "$baseTitle (Attempt ${attemptCount + 1})"
             
             val newSessionId = repository.createNewSession(
-                title = session.title,
+                title = newTitle,
                 questionIds = questionIds,
                 timeLimitSeconds = session.timeLimitSeconds,
                 timingType = session.timingType,

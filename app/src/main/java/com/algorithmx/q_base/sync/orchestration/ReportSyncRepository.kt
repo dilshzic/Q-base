@@ -41,7 +41,8 @@ class ReportSyncRepository @Inject constructor(
     private val chatLocalDataSource: Lazy<ChatLocalDataSource>,
     private val messageSyncRepository: Lazy<MessageSyncRepository>,
     private val chatManagerRepository: Lazy<ChatManagerRepository>,
-    private val userDao: Lazy<UserDao>
+    private val userDao: Lazy<UserDao>,
+    private val actionQueueDao: com.algorithmx.q_base.data.sync.ActionQueueDao
 ) {
     private val currentUserId: String?
         get() = authRepository.currentUserId
@@ -109,6 +110,25 @@ class ReportSyncRepository @Inject constructor(
     }
 
     suspend fun reportSession(sessionId: String, reason: String) {
+        val payload = org.json.JSONObject().apply {
+            put("sessionId", sessionId)
+            put("reason", reason)
+        }
+        
+        try {
+            submitSessionReportInternal(sessionId, reason)
+        } catch (e: Exception) {
+            Log.w("ReportSyncRepository", "Offline: Queuing session report for $sessionId")
+            actionQueueDao.insertAction(
+                OfflineActionEntity(
+                    actionType = "REPORT_SESSION",
+                    payloadJson = payload.toString()
+                )
+            )
+        }
+    }
+
+    internal suspend fun submitSessionReportInternal(sessionId: String, reason: String) {
         val reporterId = currentUserId ?: return
         val session = sessionDao.getSessionById(sessionId) ?: return
         
@@ -121,35 +141,11 @@ class ReportSyncRepository @Inject constructor(
             "contentJson" to com.google.gson.Gson().toJson(session)
         )
 
-        try {
-            databases.createDocument(
-                collectionId = "reported_sessions",
-                documentId = reportRefId,
-                data = reportMap
-            ).getOrThrow()
-        } catch (e: Exception) {
-            Log.e("ReportSyncRepository", "Failed to submit reported session for $sessionId", e)
-            throw e
-        }
-
-        // Temporarily disabled sending problem reports to groups for shared sessions
-        /*
-        val colId = session.collectionId
-        if (!colId.isNullOrBlank()) {
-            try {
-                val collection = collectionDao.get().getStudyCollectionByIdOnce(colId)
-                val groupId = collection?.sharedWithGroupId
-                if (!groupId.isNullOrBlank()) {
-                    sendWarningToGroup(
-                        groupId = groupId,
-                        payloadText = "⚠️ PROBLEM REPORT: Issue with shared session '${session.title}'. Reason: $reason"
-                    )
-                }
-            } catch (e: Exception) {
-                Log.e("ReportSyncRepository", "Failed to send session warning to group", e)
-            }
-        }
-        */
+        databases.createDocument(
+            collectionId = "reported_sessions",
+            documentId = reportRefId,
+            data = reportMap
+        ).getOrThrow()
     }
 
     suspend fun reportQuestion(
@@ -159,32 +155,50 @@ class ReportSyncRepository @Inject constructor(
         reason: String
     ) {
         val reporterId = currentUserId ?: throw IllegalStateException("User not authenticated")
-        val reportRefId = UUID.randomUUID().toString()
         
         val contentMap = mapOf(
             "question" to question,
             "options" to options,
             "answer" to answer
         )
+        val contentJson = com.google.gson.Gson().toJson(contentMap)
 
+        val payload = org.json.JSONObject().apply {
+            put("questionId", question.questionId)
+            put("reason", reason)
+            put("contentJson", contentJson)
+        }
+
+        try {
+            submitQuestionReportInternal(question.questionId, reason, contentJson)
+        } catch (e: Exception) {
+            Log.w("ReportSyncRepository", "Offline: Queuing question report for ${question.questionId}")
+            actionQueueDao.insertAction(
+                OfflineActionEntity(
+                    actionType = "REPORT_QUESTION",
+                    payloadJson = payload.toString()
+                )
+            )
+        }
+    }
+
+    internal suspend fun submitQuestionReportInternal(questionId: String, reason: String, contentJson: String) {
+        val reporterId = currentUserId ?: throw IllegalStateException("User not authenticated")
+        val reportRefId = UUID.randomUUID().toString()
+        
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
             "reportedAt" to (System.currentTimeMillis() / 1000).toInt(),
-            "questionId" to question.questionId,
-            "contentJson" to com.google.gson.Gson().toJson(contentMap)
+            "questionId" to questionId,
+            "contentJson" to contentJson
         )
 
-        try {
-            databases.createDocument(
-                collectionId = "reported_questions",
-                documentId = reportRefId,
-                data = reportMap
-            ).getOrThrow()
-        } catch (e: Exception) {
-            Log.e("ReportSyncRepository", "Failed to submit reported question", e)
-            throw e
-        }
+        databases.createDocument(
+            collectionId = "reported_questions",
+            documentId = reportRefId,
+            data = reportMap
+        ).getOrThrow()
     }
 
     suspend fun reportGroup(group: ChatEntity, reason: String) {
@@ -260,7 +274,6 @@ class ReportSyncRepository @Inject constructor(
 
     suspend fun reportCollection(collection: StudyCollection, reason: String) {
         val reporterId = currentUserId ?: return
-        val reportRefId = UUID.randomUUID().toString()
         
         val sets = collectionDao.get().getSetsByStudyCollectionIdOnce(collection.collectionId)
         val questionsList = mutableListOf<Map<String, Any?>>()
@@ -281,35 +294,44 @@ class ReportSyncRepository @Inject constructor(
             "collection" to collection,
             "questions" to questionsList
         )
+        val contentJson = com.google.gson.Gson().toJson(contentMap)
 
+        val payload = org.json.JSONObject().apply {
+            put("collectionId", collection.collectionId)
+            put("reason", reason)
+            put("contentJson", contentJson)
+        }
+
+        try {
+            submitCollectionReportInternal(collection.collectionId, reason, contentJson)
+        } catch (e: Exception) {
+            Log.w("ReportSyncRepository", "Offline: Queuing collection report for ${collection.collectionId}")
+            actionQueueDao.insertAction(
+                OfflineActionEntity(
+                    actionType = "REPORT_COLLECTION",
+                    payloadJson = payload.toString()
+                )
+            )
+        }
+    }
+
+    internal suspend fun submitCollectionReportInternal(collectionId: String, reason: String, contentJson: String) {
+        val reporterId = currentUserId ?: return
+        val reportRefId = UUID.randomUUID().toString()
+        
         val reportMap = mapOf(
             "reporterId" to reporterId,
             "reason" to reason,
             "reportedAt" to (System.currentTimeMillis() / 1000).toInt(),
-            "collectionId" to collection.collectionId,
-            "contentJson" to com.google.gson.Gson().toJson(contentMap)
+            "collectionId" to collectionId,
+            "contentJson" to contentJson
         )
-        try {
-            databases.createDocument(
-                collectionId = "reported_collections",
-                documentId = reportRefId,
-                data = reportMap
-            ).getOrThrow()
-        } catch (e: Exception) {
-            Log.e("ReportSyncRepository", "Failed to submit reported collection", e)
-            throw e
-        }
 
-        // Temporarily disabled sending problem reports to groups for shared collections
-        /*
-        val groupId = collection.sharedWithGroupId
-        if (!groupId.isNullOrBlank()) {
-            sendWarningToGroup(
-                groupId = groupId,
-                payloadText = "⚠️ PROBLEM REPORT: Issue with shared collection '${collection.name}'. Reason: $reason"
-            )
-        }
-        */
+        databases.createDocument(
+            collectionId = "reported_collections",
+            documentId = reportRefId,
+            data = reportMap
+        ).getOrThrow()
     }
 
     suspend fun reportMessage(message: MessageEntity, reason: String) {

@@ -171,13 +171,12 @@ suspend fun MessageSyncRepository.sendMessage(message: MessageEntity) {
             data = messageMap
         ).getOrThrow()
 
-        repositoryScope.launch {
-            chatLocalDataSource.upsertMessage(message.copy(
-                keyFingerprint = myFingerprint,
-                wrappedKey = wrappedKeys[senderUid],
-                decryptionStatus = "SUCCESS"
-            ))
-        }
+        chatLocalDataSource.upsertMessage(message.copy(
+            keyFingerprint = myFingerprint,
+            wrappedKey = wrappedKeys[senderUid],
+            decryptionStatus = "SUCCESS",
+            status = "SENT"
+        ))
     } catch (e: Exception) {
         Log.e("MessageSyncRepository", "Failed to send message to Appwrite", e)
         throw e

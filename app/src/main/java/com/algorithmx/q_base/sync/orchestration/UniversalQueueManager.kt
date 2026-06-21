@@ -10,6 +10,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import dagger.Lazy
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,7 +19,8 @@ class UniversalQueueManager @Inject constructor(
     private val actionQueueDao: ActionQueueDao,
     private val chatRemoteRepository: ChatRemoteRepository,
     private val profileRepository: ProfileRepository,
-    private val problemReportDao: ProblemReportDao
+    private val problemReportDao: ProblemReportDao,
+    private val reportSyncRepository: Lazy<ReportSyncRepository>
 ) {
     suspend fun flushUniversalQueue() {
         withContext(Dispatchers.IO) {
@@ -135,6 +137,38 @@ class UniversalQueueManager @Inject constructor(
 
                 val result = profileRepository.updateProfile(updatedProfile)
                 result.isSuccess
+            }
+            "REPORT_SESSION" -> {
+                val sessionId = payload["sessionId"]?.jsonPrimitive?.content ?: return false
+                val reason = payload["reason"]?.jsonPrimitive?.content ?: return false
+                try {
+                    reportSyncRepository.get().submitSessionReportInternal(sessionId, reason)
+                    true
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            "REPORT_QUESTION" -> {
+                val questionId = payload["questionId"]?.jsonPrimitive?.content ?: return false
+                val reason = payload["reason"]?.jsonPrimitive?.content ?: return false
+                val contentJson = payload["contentJson"]?.jsonPrimitive?.content ?: return false
+                try {
+                    reportSyncRepository.get().submitQuestionReportInternal(questionId, reason, contentJson)
+                    true
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            "REPORT_COLLECTION" -> {
+                val collectionId = payload["collectionId"]?.jsonPrimitive?.content ?: return false
+                val reason = payload["reason"]?.jsonPrimitive?.content ?: return false
+                val contentJson = payload["contentJson"]?.jsonPrimitive?.content ?: return false
+                try {
+                    reportSyncRepository.get().submitCollectionReportInternal(collectionId, reason, contentJson)
+                    true
+                } catch (e: Exception) {
+                    false
+                }
             }
             else -> {
                 Log.w("UniversalQueueManager", "Unknown action type: ${action.actionType}")

@@ -90,8 +90,21 @@ class SessionResultsViewModel @Inject constructor(
                 }
             }
             repository.getAttemptsForSession(_sessionId).collect { attempts ->
-                val totalMarks = attempts.sumOf { it.marksObtained.toDouble() }.toFloat()
-                val maxPossibleMarks = attempts.size * 4f 
+                var totalMarks = 0f
+                var maxPossibleMarks = 0f
+                
+                attempts.forEach { att ->
+                    totalMarks += att.marksObtained
+                    val q = repository.getQuestionById(att.questionId)
+                    val qType = q?.questionType?.trim()?.uppercase() ?: "SBA"
+                    if (qType == "SBA") {
+                        maxPossibleMarks += 4f
+                    } else {
+                        val optCount = repository.getOptionsForQuestion(att.questionId).size
+                        maxPossibleMarks += optCount.toFloat().coerceAtLeast(1f)
+                    }
+                }
+
                 val scorePercentage = if (maxPossibleMarks > 0) (totalMarks / maxPossibleMarks) * 100 else 0f
                 
                 _attempts.value = attempts
@@ -128,7 +141,7 @@ class SessionResultsViewModel @Inject constructor(
     fun selectQuestionForReview(attempt: SessionAttempt) {
         viewModelScope.launch {
             val question = repository.getQuestionById(attempt.questionId) ?: return@launch
-            val options = repository.getOptionsForQuestion(attempt.questionId).first()
+            val options = repository.getOptionsForQuestion(attempt.questionId)
             val answer = repository.getAnswerForQuestion(attempt.questionId)
             
             _reviewQuestion.value = ReviewState(

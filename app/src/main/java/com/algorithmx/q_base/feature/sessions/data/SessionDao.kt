@@ -19,6 +19,9 @@ interface SessionDao {
     @Query("SELECT * FROM Study_Sessions ORDER BY created_timestamp DESC")
     fun getAllSessions(): Flow<List<StudySession>>
 
+    @Query("SELECT * FROM Study_Sessions ORDER BY created_timestamp DESC")
+    suspend fun getAllSessionsOnce(): List<StudySession>
+
     @Query("SELECT * FROM Study_Sessions WHERE is_completed = 0 ORDER BY created_timestamp DESC")
     fun getOngoingSessions(): Flow<List<StudySession>>
 

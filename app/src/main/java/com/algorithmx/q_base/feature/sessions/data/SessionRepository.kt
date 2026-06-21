@@ -28,6 +28,8 @@ class SessionRepository @Inject constructor(
 
     fun getAllSessions(): Flow<List<StudySession>> = sessionDao.getAllSessions()
 
+    suspend fun getAllSessionsOnce(): List<StudySession> = sessionDao.getAllSessionsOnce()
+
     fun getAllStudyCollections(): Flow<List<StudyCollection>> = collectionDao.getAllStudyCollections()
 
     suspend fun getStudyCollectionByIdOnce(collectionId: String): StudyCollection? =
@@ -117,15 +119,15 @@ class SessionRepository @Inject constructor(
     suspend fun getQuestionById(questionId: String): Question? =
         questionDao.getQuestionById(questionId)
 
-    fun getOptionsForQuestion(questionId: String): Flow<List<QuestionOption>> =
-        questionDao.getOptionsForQuestion(questionId)
+    suspend fun getOptionsForQuestion(questionId: String): List<QuestionOption> =
+        questionDao.getOptionsForQuestionOnce(questionId)
 
     suspend fun getAnswerForQuestion(questionId: String): Answer? =
-        questionDao.getAnswerForQuestion(questionId).first()
+        questionDao.getAnswerForQuestionOnce(questionId)
 
     suspend fun updateAttemptAndRecalculate(attempt: SessionAttempt) {
         val question = questionDao.getQuestionById(attempt.questionId) ?: return
-        val answer = questionDao.getAnswerForQuestion(attempt.questionId).first()
+        val answer = questionDao.getAnswerForQuestionOnce(attempt.questionId)
         val options = questionDao.getOptionsForQuestionOnce(attempt.questionId)
         
         val type = question.questionType?.trim()?.uppercase()

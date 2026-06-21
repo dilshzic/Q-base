@@ -475,8 +475,10 @@ class ChatViewModel @Inject constructor(
             _isRefreshing.value = true
             try {
                 syncRepository.syncUserChatsFromRemote()
+                // Also trigger a queue flush if there are pending messages
+                syncRepository.flushQueue()
             } catch (e: Exception) {
-                Log.e("ChatViewModel", "Error syncing remote chats", e)
+                Log.e("ChatViewModel", "Error syncing remote chats or flushing queue", e)
             } finally {
                 _isRefreshing.value = false
             }

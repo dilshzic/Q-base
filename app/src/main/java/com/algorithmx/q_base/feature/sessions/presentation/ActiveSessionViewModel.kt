@@ -131,7 +131,8 @@ class ActiveSessionViewModel @Inject constructor(
         viewModelScope.launch {
             repository.getSessionById(_sessionId)?.let { session ->
                 _session.value = session
-                _timeLimitSeconds.value = session.timeLimitSeconds 
+                _timeLimitSeconds.value = session.timeLimitSeconds
+                _currentQuestionIndex.value = session.lastQuestionIndex
 
                 // Evaluate if session editing is restricted to admins only
                 if (session.isAdminOnly) {
@@ -199,16 +200,24 @@ class ActiveSessionViewModel @Inject constructor(
                 _elapsedSeconds.value = 0
             }
             loadQuestion(_attempts.value[index].questionId)
+            
+            // Persist progress
+            viewModelScope.launch {
+                _session.value?.let { currentSession ->
+                    repository.updateSession(currentSession.copy(lastQuestionIndex = index))
+                }
+            }
         }
     }
 
+    private var loadQuestionJob: Job? = null
+
     private fun loadQuestion(questionId: String) {
-        viewModelScope.launch {
+        loadQuestionJob?.cancel()
+        loadQuestionJob = viewModelScope.launch {
             val question = repository.getQuestionById(questionId)
             _currentQuestion.value = question
-            repository.getOptionsForQuestion(questionId).collect { options ->
-                _currentOptions.value = options
-            }
+            _currentOptions.value = repository.getOptionsForQuestion(questionId)
             _currentAnswer.value = repository.getAnswerForQuestion(questionId)
         }
     }

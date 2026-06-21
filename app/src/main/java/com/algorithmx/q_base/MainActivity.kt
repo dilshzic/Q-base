@@ -152,20 +152,26 @@ class MainActivity : ComponentActivity() {
                     restSyncJob?.cancel()
                     if (userId != null && isOnline) {
                         restSyncJob = launch {
-                            try {
-                                profileRepository.syncUserProfile(userId)
-
-                                syncRepository.syncUserChatsFromRemote()
-
-                                // Flush pending messages after chat metadata and participant keys are fresh.
-                                syncRepository.flushQueue()
-
-                                // Flush universal background actions (Profile updates, Moderation, Admin changes)
-                                universalQueueManager.flushUniversalQueue()
-                            } catch (e: Exception) {
-                                android.util.Log.e("MainActivity", "Failed to sync or flush on network restore", e)
-                            }
+                        try {
+                            profileRepository.syncUserProfile(userId)
+                            syncRepository.syncUserChatsFromRemote()
+                        } catch (e: Exception) {
+                            android.util.Log.e("MainActivity", "Failed to sync metadata on network restore", e)
                         }
+
+                        // Flush queues regardless of metadata sync success to be resilient
+                        try {
+                            syncRepository.flushQueue()
+                        } catch (e: Exception) {
+                            android.util.Log.e("MainActivity", "Failed to flush message queue on network restore", e)
+                        }
+
+                        try {
+                            universalQueueManager.flushUniversalQueue()
+                        } catch (e: Exception) {
+                            android.util.Log.e("MainActivity", "Failed to flush universal queue on network restore", e)
+                        }
+                    }
                     }
 
                     if (userId == null || !isOnline) {
